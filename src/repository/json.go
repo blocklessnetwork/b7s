@@ -10,7 +10,7 @@ func (r JSONRepository) GetEndpoint() string {
 	return ""
 }
 
-func (r JSONRepository) SetEndpoint() {
+func (r JSONRepository) SetEndpoint(endpoint string) {
 
 }
 

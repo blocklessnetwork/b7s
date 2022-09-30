@@ -6,9 +6,9 @@ import (
 	"github.com/blocklessnetworking/b7s/src/models"
 )
 
-func WithEndpoint(ctx context.Context) JSONRepository {
+func WithEndpoint(ctx context.Context, endPoint string) JSONRepository {
 	repo := JSONRepository{
-		Endpoint: ctx.Value("config").(models.Config).Repository.Url,
+		Endpoint: endPoint,
 	}
 	return repo
 }

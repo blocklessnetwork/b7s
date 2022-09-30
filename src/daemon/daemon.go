@@ -41,12 +41,13 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	// start health monitoring
 	ticker := time.NewTicker(1 * time.Minute)
 	go health.StartPing(ctx, ticker)
-	defer ticker.Stop()
 
 	// start other services
 	rest.Start(ctx)
-	repository.Start(ctx)
+	go repository.Start(ctx, ticker)
 	chain.Start(ctx)
+
+	defer ticker.Stop()
 
 	// discover peers
 	go dht.DiscoverPeers(ctx, host, topicName)
