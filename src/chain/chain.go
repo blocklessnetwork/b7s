@@ -90,6 +90,11 @@ func registerNode(ctx context.Context) {
 	}
 }
 
+func startClient(ctx context.Context) {
+
+}
+
 func Start(ctx context.Context) {
-	go registerNode(ctx)
+	registerNode(ctx)
+	go startClient(ctx)
 }
