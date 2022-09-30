@@ -39,7 +39,7 @@ func registerNode(ctx context.Context) {
 		cosmosclient.WithNodeAddress(cfg.Chain.RPC),
 	}
 
-	cosmos, err := cosmosclient.New(ctx, chainOptions...)
+	cosmosclient, err := cosmosclient.New(ctx, chainOptions...)
 
 	if err != nil {
 		log.Fatal(err)
@@ -49,7 +49,7 @@ func registerNode(ctx context.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	address := account.Address(addressPrefix)
+	address, _ := account.Address(addressPrefix)
 	msg := &types.MsgRegisterHeadNode{
 		Creator:   address,
 		NodeId:    host.ID().Pretty(),
@@ -57,7 +57,7 @@ func registerNode(ctx context.Context) {
 		NodeIp:    cfg.Node.IpAddress,
 		NodeOwner: address,
 	}
-	queryClient := types.NewQueryClient(s.cosmosClient.Context())
+	queryClient := types.NewQueryClient(cosmosclient.Context())
 	registrations, _ := queryClient.NodeRegistration(context.Background(), &types.QueryGetNodeRegistrationRequest{
 		Index: address + "-" + host.ID().Pretty(),
 	})
@@ -68,10 +68,9 @@ func registerNode(ctx context.Context) {
 			"NodeId":    address + "-" + host.ID().Pretty(),
 		}).Info("[chainservice] node already registered ")
 	} else {
-		txResp, err := s.cosmosClient.BroadcastTx(s.accountName, msg)
+		txResp, err := cosmosclient.BroadcastTx(account, msg)
 		if err != nil {
 			log.Fatal(err)
-			return err
 		}
 
 		log.WithFields(log.Fields{
