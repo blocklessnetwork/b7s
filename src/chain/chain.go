@@ -14,16 +14,23 @@ import (
 )
 
 func registerNode(ctx context.Context) {
+	var cfg = ctx.Value("config").(models.Config)
+
+	log.WithFields(log.Fields{
+		"config": cfg.Chain,
+	}).Info("starting chain service")
+
 	var chainClientPath string
 	addressPrefix := "bls"
-	cfg, _ := ctx.Value("config").(*models.Config)
+
 	host := ctx.Value("host").(host.Host)
 
 	userHomeDir, err := os.UserHomeDir()
 	accountName := cfg.Chain.AddressKey
 
 	if err != nil {
-		panic(err)
+		log.Warn(err)
+		return
 	}
 
 	if len(cfg.Chain.Home) > 0 {
@@ -42,12 +49,14 @@ func registerNode(ctx context.Context) {
 	cosmosclient, err := cosmosclient.New(ctx, chainOptions...)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Warn(err)
+		return
 	}
 
 	account, err := cosmosclient.Account(accountName)
 	if err != nil {
-		log.Fatal(err)
+		log.Warn(err)
+		return
 	}
 	address, _ := account.Address(addressPrefix)
 	msg := &types.MsgRegisterHeadNode{
@@ -70,7 +79,7 @@ func registerNode(ctx context.Context) {
 	} else {
 		txResp, err := cosmosclient.BroadcastTx(account, msg)
 		if err != nil {
-			log.Fatal(err)
+			log.Warn(err)
 		}
 
 		log.WithFields(log.Fields{
@@ -82,8 +91,5 @@ func registerNode(ctx context.Context) {
 }
 
 func Start(ctx context.Context) {
-	// var config = ctx.Value("config").(models.Config)
-
-	log.Info("starting blockchain client")
 	go registerNode(ctx)
 }
