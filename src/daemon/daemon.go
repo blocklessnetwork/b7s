@@ -11,7 +11,6 @@ import (
 	"github.com/blocklessnetworking/b7s/src/health"
 	"github.com/blocklessnetworking/b7s/src/host"
 	"github.com/blocklessnetworking/b7s/src/messaging"
-	"github.com/blocklessnetworking/b7s/src/repository"
 	"github.com/blocklessnetworking/b7s/src/rest"
 	"github.com/spf13/cobra"
 )
@@ -44,7 +43,6 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 
 	// start other services
 	rest.Start(ctx)
-	go repository.Start(ctx, ticker)
 	chain.Start(ctx)
 
 	defer ticker.Stop()

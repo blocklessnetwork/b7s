@@ -1,23 +1,22 @@
 package repository
 
-import "github.com/blocklessnetworking/b7s/src/models"
+import (
+	"github.com/blocklessnetworking/b7s/src/models"
+	"github.com/blocklessnetworking/b7s/src/rest"
+	log "github.com/sirupsen/logrus"
+)
 
 type JSONRepository struct {
 	Endpoint string
 }
 
-func (r JSONRepository) GetEndpoint() string {
-	return ""
-}
+func (r JSONRepository) Get() models.FunctionManifest {
+	jsonResponse := models.FunctionManifest{}
+	err := rest.GetJson(r.Endpoint, &jsonResponse)
 
-func (r JSONRepository) SetEndpoint(endpoint string) {
+	if err != nil {
+		log.Warn(err)
+	}
 
-}
-
-func (r JSONRepository) List() []models.RepoPackage {
-	return []models.RepoPackage{}
-}
-
-func (r JSONRepository) Get() models.RepoPackage {
-	return models.RepoPackage{}
+	return jsonResponse
 }

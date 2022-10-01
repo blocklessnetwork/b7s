@@ -1,23 +1,24 @@
 package models
 
-type Package struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-	CID     string `json:"cid"`
+type FunctionManifest struct {
+	Id      string                   `json:"id"`
+	Methods []FunctionMethod         `json:"methods"`
+	Runtime *FunctionManifestRuntime `json:"runtime"`
 }
 
-type Repo struct {
-	version      string   `json:"version"`
-	id           string   `json:"id"`
-	pageType     string   `json:"type"`
-	pages        []string `json:"pages"`
-	lastModified string   `json:"lastModified"`
+type FunctionManifestRuntime struct {
+	Cid      string `json:"cid"`
+	Checksum string `json:"checksum"`
 }
 
-type RepoPage struct {
-	version      string    `json:"version"`
-	id           string    `json:"id"`
-	pageType     string    `json:"type"`
-	packages     []Package `json:"packages"`
-	lastModified string    `json:"lastModified"`
+type FunctionMethod struct {
+	Name       string           `json:"name"`
+	Entry      string           `json:"entry"`
+	Arguments  []MethodArgument `json:"arguments"`
+	ResultType string           `json:"result_type"`
+}
+
+type MethodArgument struct {
+	Name  string `json:"name"`
+	Type_ string `json:"type"`
 }
