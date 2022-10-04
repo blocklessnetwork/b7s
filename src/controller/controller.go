@@ -21,9 +21,9 @@ func ExecuteFunction(ctx context.Context) string {
 	return string(out)
 }
 
-func InstallFunction(ctx context.Context, manifestPath string) string {
+func InstallFunction(ctx context.Context, manifestPath string) error {
 	repository.GetPackage(ctx, manifestPath)
-	return "install function"
+	return nil
 }
 
 func RollCall(ctx context.Context) {

@@ -39,13 +39,17 @@ func handleInstallFunction(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&request)
 
 	// install the function
-	out := controller.InstallFunction(r.Context(), request.Uri)
+	err := controller.InstallFunction(r.Context(), request.Uri)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	response := models.ResponseInstall{
 		Code:   enums.ResponseCodeOk,
 		Type:   enums.ResponseInstall,
-		Id:     "",
-		Result: out,
+		Result: "",
 	}
 
 	json.NewEncoder(w).Encode(response)
