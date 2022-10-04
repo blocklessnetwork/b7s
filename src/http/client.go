@@ -55,5 +55,8 @@ Loop:
 		log.WithFields(log.Fields{
 			"uri": functionManifest.Runtime.Uri,
 		}).Info("function sync field will try again")
+		return err
 	}
+
+	return nil
 }
