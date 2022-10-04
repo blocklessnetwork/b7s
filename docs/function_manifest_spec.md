@@ -10,7 +10,7 @@
     "extensions": ["foundation/ipfs/>=1.0.0"]
   },
   "deployment": {
-    "uri": "http://localhost:8080/someid/web-framework.tar.gz",
+    "cid": "basy1234566",
     "checksum": "0cbaf5c9d0aa075d546a9084096ce380",
     "permission": "private",
     "methods": [
