@@ -24,7 +24,7 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 	http.Download(ctx, functionManifest)
 
 	log.WithFields(log.Fields{
-		"uri": functionManifest.Runtime.Uri,
+		"uri": functionManifest.Deployment.URI,
 	}).Info("function sync completed")
 
 	return functionManifest

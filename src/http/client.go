@@ -26,11 +26,11 @@ func GetJson(url string, target interface{}) error {
 func Download(ctx context.Context, functionManifest models.FunctionManifest) error {
 	WorkSpaceRoot := ctx.Value("config").(models.Config).Node.WorkSpaceRoot
 	client := grab.NewClient()
-	req, _ := grab.NewRequest(WorkSpaceRoot+"/"+functionManifest.Id, functionManifest.Runtime.Uri)
+	req, _ := grab.NewRequest(WorkSpaceRoot+"/"+functionManifest.Function.ID, functionManifest.Deployment.URI)
 	resp := client.Do(req)
 
 	log.WithFields(log.Fields{
-		"uri": functionManifest.Runtime.Uri,
+		"uri": functionManifest.Deployment.URI,
 	}).Info("function scheduled for sync")
 
 	// start UI loop
@@ -41,7 +41,7 @@ Loop:
 		select {
 		case <-t.C:
 			log.WithFields(log.Fields{
-				"uri": functionManifest.Runtime.Uri,
+				"uri": functionManifest.Deployment.URI,
 			}).Info("function sync progress")
 
 		case <-resp.Done:
@@ -53,7 +53,7 @@ Loop:
 	// check for errors
 	if err := resp.Err(); err != nil {
 		log.WithFields(log.Fields{
-			"uri": functionManifest.Runtime.Uri,
+			"uri": functionManifest.Deployment.URI,
 		}).Info("function sync field will try again")
 		return err
 	}

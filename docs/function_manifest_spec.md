@@ -1,3 +1,7 @@
+# function manifest spec
+
+this is the `json` specification for the manifests that describe how a function should work. Be deployed, and it's dependencies.
+
 ```json
 {
   "function": {
@@ -11,6 +15,7 @@
   },
   "deployment": {
     "cid": "basy1234566",
+    "uri": "basy1234566",
     "checksum": "0cbaf5c9d0aa075d546a9084096ce380",
     "permission": "private",
     "methods": [
