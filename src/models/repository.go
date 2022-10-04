@@ -7,18 +7,22 @@ type FunctionManifest struct {
 }
 
 type FunctionManifestRuntime struct {
-	Cid      string `json:"cid"`
 	Checksum string `json:"checksum"`
+	Uri      string `json:"uri"`
 }
 
 type FunctionMethod struct {
-	Name       string           `json:"name"`
-	Entry      string           `json:"entry"`
-	Arguments  []MethodArgument `json:"arguments"`
-	ResultType string           `json:"result_type"`
+	Name      string           `json:"name"`
+	Entry     string           `json:"entry"`
+	Arguments []MethodArgument `json:"arguments"`
 }
 
 type MethodArgument struct {
 	Name  string `json:"name"`
-	Type_ string `json:"type"`
+	Value string `json:"value"`
+}
+
+type MethodEnvironment struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }

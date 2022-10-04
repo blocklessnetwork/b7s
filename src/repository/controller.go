@@ -6,9 +6,7 @@ import (
 	"github.com/blocklessnetworking/b7s/src/models"
 )
 
-func GetPackage(ctx context.Context) models.FunctionManifest {
-	repo := JSONRepository{
-		Endpoint: ctx.Value("config").(models.Config).Repository.Url,
-	}
-	return repo.Get()
+func GetPackage(ctx context.Context, manifestPath string) models.FunctionManifest {
+	repo := JSONRepository{}
+	return repo.Get(ctx, manifestPath)
 }

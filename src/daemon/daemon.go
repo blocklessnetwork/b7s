@@ -11,7 +11,7 @@ import (
 	"github.com/blocklessnetworking/b7s/src/health"
 	"github.com/blocklessnetworking/b7s/src/host"
 	"github.com/blocklessnetworking/b7s/src/messaging"
-	"github.com/blocklessnetworking/b7s/src/rest"
+	"github.com/blocklessnetworking/b7s/src/restapi"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +42,7 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	go health.StartPing(ctx, ticker)
 
 	// start other services
-	rest.Start(ctx)
+	restapi.Start(ctx)
 	chain.Start(ctx)
 
 	defer ticker.Stop()

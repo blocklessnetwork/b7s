@@ -9,6 +9,7 @@ import (
 
 // executes a shell command to execute a wasm file
 func Execute(ctx context.Context) ([]byte, error) {
+
 	cmd := "echo \"hello world\""
 	run := exec.Command("bash", "-c", cmd)
 

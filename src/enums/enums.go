@@ -27,6 +27,8 @@ var (
 var (
 	RequestExecute  = "RequestExecute"
 	ResponseExecute = "ResponseExecute"
+	RequestInstall  = "RequestInstall"
+	ResponseInstall = "ResponseInstall"
 )
 
 var (

@@ -3,6 +3,7 @@ module github.com/blocklessnetworking/b7s
 go 1.18
 
 require (
+	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cockroachdb/pebble v0.0.0-20220929203247-18d98601a233
 	github.com/ignite/cli v0.24.0
 	github.com/libp2p/go-libp2p v0.23.2

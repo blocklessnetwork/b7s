@@ -9,14 +9,11 @@ import (
 
 func TestGetPackage(t *testing.T) {
 	ctx := context.Background()
-	config := models.Config{
-		Repository: struct {
-			Url string "yaml:\"url\""
-		}{
-			Url: "http://localhost:8080/manifest.json",
-		},
-	}
+
+	config := models.Config{}
+	config.Node.WorkSpaceRoot = "/tmp/b7s_test"
 	ctx = context.WithValue(ctx, "config", config)
-	p := GetPackage(ctx)
+
+	p := GetPackage(ctx, "http://localhost:8080/someid/manifest.json")
 	t.Log(p)
 }
