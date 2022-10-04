@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/blocklessnetworking/b7s/src/enums"
 	"github.com/blocklessnetworking/b7s/src/models"
 )
 
@@ -50,9 +51,11 @@ func TestHandleInstallFunction(t *testing.T) {
 			status, http.StatusOK)
 	}
 	// Check the response body is what we expect.
-	expected := `{"alive": true}`
-	if rr.Body.String() != expected {
+	returned := models.ResponseInstall{}
+	json.Unmarshal(rr.Body.Bytes(), &returned)
+
+	if returned.Code != enums.ResponseCodeOk {
 		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr.Body.String(), expected)
+			returned.Code, enums.ResponseCodeOk)
 	}
 }
