@@ -5,6 +5,7 @@ import (
 
 	"github.com/blocklessnetworking/b7s/src/http"
 	"github.com/blocklessnetworking/b7s/src/models"
+	"github.com/cockroachdb/pebble"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -21,7 +22,18 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 		log.Warn(err)
 	}
 
-	http.Download(ctx, functionManifest)
+	err = http.Download(ctx, functionManifest)
+
+	if err != nil {
+		log.Warn(err)
+	}
+
+	appDb := ctx.Value("appDb").(*pebble.DB)
+	key := []byte(functionManifest.Function.ID)
+
+	if err := appDb.Set(key, []byte("world"), pebble.Sync); err != nil {
+		log.Warn(err)
+	}
 
 	log.WithFields(log.Fields{
 		"uri": functionManifest.Deployment.URI,

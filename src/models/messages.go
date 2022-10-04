@@ -5,12 +5,12 @@ import (
 )
 
 type MsgBase struct {
-	Type string `json:"type"`
+	Type string `json:"type,omitempty"`
 }
 
 type MsgHealthPing struct {
-	Type string `json:"type"`
-	Code string `json:"code"`
+	Type string `json:"type,omitempty"`
+	Code string `json:"code,omitempty"`
 }
 
 func NewMsgHealthPing(code string) *MsgHealthPing {
@@ -21,8 +21,8 @@ func NewMsgHealthPing(code string) *MsgHealthPing {
 }
 
 type MsgExecute struct {
-	Type string `json:"type"`
-	Code string `json:"code"`
+	Type string `json:"type,omitempty"`
+	Code string `json:"code,omitempty"`
 }
 
 func NewMsgExecute(code string) *MsgExecute {
@@ -33,7 +33,7 @@ func NewMsgExecute(code string) *MsgExecute {
 }
 
 type MsgRollCall struct {
-	Type string `json:"type"`
+	Type string `json:"type,omitempty"`
 }
 
 func NewMsgRollCall() *MsgRollCall {
@@ -43,9 +43,9 @@ func NewMsgRollCall() *MsgRollCall {
 }
 
 type MsgRollCallResponse struct {
-	Type string `json:"type"`
-	Code string `json:"code"`
-	Role string `json:"role"`
+	Type string `json:"type,omitempty"`
+	Code string `json:"code,omitempty"`
+	Role string `json:"role,omitempty"`
 }
 
 func NewMsgRollCallResponse(code string, role string) *MsgRollCallResponse {

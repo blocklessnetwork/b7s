@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/blocklessnetworking/b7s/src/models"
@@ -25,8 +26,13 @@ func GetJson(url string, target interface{}) error {
 
 func Download(ctx context.Context, functionManifest models.FunctionManifest) error {
 	WorkSpaceRoot := ctx.Value("config").(models.Config).Node.WorkSpaceRoot
+	WorkSpaceDirectory := WorkSpaceRoot + "/" + functionManifest.Function.ID
 	client := grab.NewClient()
-	req, _ := grab.NewRequest(WorkSpaceRoot+"/"+functionManifest.Function.ID, functionManifest.Deployment.URI)
+
+	// ensure path exists
+	os.MkdirAll(WorkSpaceDirectory, os.ModePerm)
+	// download function
+	req, _ := grab.NewRequest(WorkSpaceDirectory, functionManifest.Deployment.URI)
 	resp := client.Do(req)
 
 	log.WithFields(log.Fields{

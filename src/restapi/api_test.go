@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/enums"
 	"github.com/blocklessnetworking/b7s/src/models"
 )
@@ -19,10 +20,12 @@ func TestHandleInstallFunction(t *testing.T) {
 	// pass 'nil' as the third parameter.
 	req, err := http.NewRequest("GET", "/health-check", nil)
 
+	// set test context and test appdb
 	config := models.Config{}
 	config.Node.WorkSpaceRoot = "/tmp/b7s_test"
-
 	ctx = context.WithValue(ctx, "config", config)
+	appDb := db.Get("/tmp/b7s_test/_appDb")
+	ctx = context.WithValue(ctx, "appDb", appDb)
 
 	req = req.WithContext(ctx)
 	if err != nil {

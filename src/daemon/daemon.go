@@ -7,6 +7,7 @@ import (
 
 	"github.com/blocklessnetworking/b7s/src/chain"
 	"github.com/blocklessnetworking/b7s/src/config"
+	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/dht"
 	"github.com/blocklessnetworking/b7s/src/health"
 	"github.com/blocklessnetworking/b7s/src/host"
@@ -21,6 +22,7 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	topicName := "blockless.networking/networking/general"
 	ctx := context.Background()
 
+	// load config
 	err := config.Load(configPath)
 	if err != nil {
 		log.Fatal(err)
@@ -32,6 +34,10 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	// create a new node hode
 	host := host.NewHost(ctx, config.C.Node.Port, config.C.Node.IpAddress)
 	ctx = context.WithValue(ctx, "host", host)
+
+	// set appdb config
+	appDb := db.Get(host.ID().Pretty() + "_appDb")
+	ctx = context.WithValue(ctx, "appDb", appDb)
 
 	// subscribe to public topic
 	topic := messaging.Subscribe(ctx, host, topicName)
