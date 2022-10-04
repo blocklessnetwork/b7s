@@ -17,8 +17,8 @@
       {
         "name": "web-framework",
         "entry": "web-framework.wasm",
-        "arguments": [{name:, value:],
-        "envvars":[{name:, value:}]
+        "arguments":[{"name": "name", "value": "value"}]
+        "envvars":[{"name": "name", "value": "value"}]
       }
     ],
     "aggregation": "foundation/average/>=1.0.0",
