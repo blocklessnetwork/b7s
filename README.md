@@ -2,7 +2,7 @@
 
 # b7s daemon
 
-`b`lockles`s` the peer to peer networking daemon for the blockless network.
+`blockless` the peer to peer networking daemon for the blockless network.
 
 ## installation
 
