@@ -28,6 +28,7 @@ type Methods struct {
 	Envvars   []Envvars   `json:"envvars,omitempty"`
 }
 type Deployment struct {
+	Cid         string    `json:"cid,omitempty"`
 	Checksum    string    `json:"checksum,omitempty"`
 	URI         string    `json:"uri,omitempty"`
 	Permission  string    `json:"permission,omitempty"`
