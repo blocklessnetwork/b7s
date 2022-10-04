@@ -29,7 +29,7 @@ func TestHandleInstallFunction(t *testing.T) {
 	}
 
 	installFunctionReq := models.RequestFunctionInstall{
-		Uri: "http://localhost:8080/someid/manifest.json",
+		Uri: "https://bafybeibyniiukxqmb7qae7ljif6atvo7ipg6wnpwvtqb4stf4ubjjterha.ipfs.w3s.link/manifest.json",
 	}
 
 	data, _ := json.Marshal(installFunctionReq)
