@@ -1,3 +1,5 @@
+![Coverage](https://img.shields.io/badge/Coverage-0.0%25-red)
+
 # b7s daemon
 
 `b`lockles`s` the peer to peer networking daemon for the blockless network.
