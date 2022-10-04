@@ -1,0 +1,40 @@
+FROM --platform=linux/amd64 ubuntu:latest 
+
+WORKDIR /app
+
+## curl, unzip other utilities
+RUN apt-get update && \
+  apt-get install --no-install-recommends --assume-yes curl unzip pv ca-certificates gnupg2
+
+## install blsd for chain identity
+RUN curl https://raw.githubusercontent.com/txlabs/blockless-chain/main/download.sh | bash
+
+
+# gomplete for updating config with env vars
+RUN curl -o ./gomplate -sSL https://github.com/hairyhenderson/gomplate/releases/download/v3.10.0/gomplate_linux-amd64
+RUN chmod 755 gomplate
+
+# Install AWS
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+  && unzip awscliv2.zip -d /usr/src && rm -f awscliv2.zip \
+  && /usr/src/aws/install --bin-dir /usr/bin
+
+## setup 
+COPY ./build/txnode-linux-amd64 txnode
+COPY ./build/txkeygen-linux-amd64 txkeygen
+COPY ./docker/configuration/coordinator/config.yaml config.yaml
+
+## run script
+COPY ./run.sh ./run.sh
+RUN chmod +x ./run.sh
+
+
+ENV CONFIG_PATH="/app/keys"
+ENV AWS_ACCESS_KEY_ID=
+ENV AWS_SECRET_ACCESS_KEY=
+ENV S3_HOST="${S3_HOST:-https://s3.filebase.com}"
+ENV KEY_PATH=""
+ENV KEY_PASSWORD=""
+
+
+ENTRYPOINT ["/app/run.sh"]
