@@ -5,13 +5,11 @@ type FunctionManifest struct {
 	Deployment Deployment `json:"deployment,omitempty"`
 }
 type Function struct {
-	ID           string   `json:"id,omitempty"`
-	Name         string   `json:"name,omitempty"`
-	Version      string   `json:"version,omitempty"`
-	BuildCommand string   `json:"build-command,omitempty"`
-	BuildOutput  string   `json:"build-output,omitempty"`
-	Runtime      string   `json:"runtime,omitempty"`
-	Extensions   []string `json:"extensions,omitempty"`
+	ID         string   `json:"id,omitempty"`
+	Name       string   `json:"name,omitempty"`
+	Version    string   `json:"version,omitempty"`
+	Runtime    string   `json:"runtime,omitempty"`
+	Extensions []string `json:"extensions,omitempty"`
 }
 type Arguments struct {
 	Name  string `json:"name,omitempty"`
@@ -30,8 +28,7 @@ type Methods struct {
 type Deployment struct {
 	Cid         string    `json:"cid,omitempty"`
 	Checksum    string    `json:"checksum,omitempty"`
-	URI         string    `json:"uri,omitempty"`
-	Permission  string    `json:"permission,omitempty"`
+	Uri         string    `json:"uri,omitempty"`
 	Methods     []Methods `json:"methods,omitempty"`
 	Aggregation string    `json:"aggregation,omitempty"`
 	Nodes       int       `json:"nodes,omitempty"`

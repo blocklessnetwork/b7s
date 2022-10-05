@@ -24,7 +24,7 @@ func GetJson(url string, target interface{}) error {
 	return json.NewDecoder(r.Body).Decode(target)
 }
 
-func Download(ctx context.Context, functionManifest models.FunctionManifest) error {
+func Download(ctx context.Context, functionManifest models.FunctionManifest) (string, error) {
 	WorkSpaceRoot := ctx.Value("config").(models.Config).Node.WorkSpaceRoot
 	WorkSpaceDirectory := WorkSpaceRoot + "/" + functionManifest.Function.ID
 	client := grab.NewClient()
@@ -32,11 +32,11 @@ func Download(ctx context.Context, functionManifest models.FunctionManifest) err
 	// ensure path exists
 	os.MkdirAll(WorkSpaceDirectory, os.ModePerm)
 	// download function
-	req, _ := grab.NewRequest(WorkSpaceDirectory, functionManifest.Deployment.URI)
+	req, _ := grab.NewRequest(WorkSpaceDirectory, functionManifest.Deployment.Uri)
 	resp := client.Do(req)
 
 	log.WithFields(log.Fields{
-		"uri": functionManifest.Deployment.URI,
+		"uri": functionManifest.Deployment.Uri,
 	}).Info("function scheduled for sync")
 
 	// start UI loop
@@ -47,7 +47,7 @@ Loop:
 		select {
 		case <-t.C:
 			log.WithFields(log.Fields{
-				"uri": functionManifest.Deployment.URI,
+				"uri": functionManifest.Deployment.Uri,
 			}).Info("function sync progress")
 
 		case <-resp.Done:
@@ -59,10 +59,10 @@ Loop:
 	// check for errors
 	if err := resp.Err(); err != nil {
 		log.WithFields(log.Fields{
-			"uri": functionManifest.Deployment.URI,
+			"uri": functionManifest.Deployment.Uri,
 		}).Info("function sync field will try again")
-		return err
+		return "", err
 	}
 
-	return nil
+	return resp.Filename, nil
 }
