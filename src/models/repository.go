@@ -33,4 +33,5 @@ type Deployment struct {
 	Methods     []Methods `json:"methods,omitempty"`
 	Aggregation string    `json:"aggregation,omitempty"`
 	Nodes       int       `json:"nodes,omitempty"`
+	File        string    `json:"file,omitempty"`
 }

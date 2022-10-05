@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/http"
@@ -34,18 +35,28 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 			log.Warn(err)
 		}
 
-		db.Set(appDb, functionManifest.Function.ID, fileName)
+		functionManifest.Deployment.File = fileName
+		functionManifest.Cached = true
+
+		functionManifestJson, error := json.Marshal(functionManifest)
+
+		if error != nil {
+			log.Warn(error)
+		}
+
+		db.Set(appDb, functionManifest.Function.ID, string(functionManifestJson))
 
 		log.WithFields(log.Fields{
 			"uri": functionManifest.Deployment.Uri,
 		}).Info("function sync completed")
 
 	} else {
+
+		json.Unmarshal([]byte(cachedFunction), &functionManifest)
 		log.WithFields(log.Fields{
 			"uri": functionManifest.Deployment.Uri,
 		}).Info("function sync skipped, already present")
 	}
 
-	functionManifest.Cached = true
 	return functionManifest
 }
