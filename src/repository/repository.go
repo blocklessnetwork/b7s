@@ -52,7 +52,11 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 
 	} else {
 
-		json.Unmarshal([]byte(cachedFunction), &functionManifest)
+		err := json.Unmarshal([]byte(cachedFunction), &functionManifest)
+		if err != nil {
+			log.Warn(err)
+		}
+
 		log.WithFields(log.Fields{
 			"uri": functionManifest.Deployment.Uri,
 		}).Info("function sync skipped, already present")
