@@ -33,7 +33,7 @@ func TestHandleInstallFunction(t *testing.T) {
 	}
 
 	installFunctionReq := models.RequestFunctionInstall{
-		Uri: "https://bafybeiho3scwi3njueloobzhg7ndn7yjb5rkcaydvsoxmnhmu2adv6oxzq.ipfs.w3s.link/manifest.json",
+		Uri: "https://bafybeiawxwfxlqvuefqzk6efhbmuax6kzzut3d7tkhh3ekyzshba4cpwka.ipfs.w3s.link/manifest.json",
 	}
 
 	data, _ := json.Marshal(installFunctionReq)

@@ -20,12 +20,12 @@ func TestGetPackage(t *testing.T) {
 	ctx = context.WithValue(ctx, "appDb", appDb)
 
 	// file uri reference manifest
-	manifest := GetPackage(ctx, "https://bafybeiho3scwi3njueloobzhg7ndn7yjb5rkcaydvsoxmnhmu2adv6oxzq.ipfs.w3s.link/manifest.json")
+	manifest := GetPackage(ctx, "https://bafybeiawxwfxlqvuefqzk6efhbmuax6kzzut3d7tkhh3ekyzshba4cpwka.ipfs.w3s.link/manifest.json")
 
 	assert.Equal(manifest.Function.ID, "org.blockless.functions.myfunction", "manifest with known function id returned")
 
 	// ask for the file again, should be cached
-	manifest = GetPackage(ctx, "https://bafybeiho3scwi3njueloobzhg7ndn7yjb5rkcaydvsoxmnhmu2adv6oxzq.ipfs.w3s.link/manifest.json")
+	manifest = GetPackage(ctx, "https://bafybeiawxwfxlqvuefqzk6efhbmuax6kzzut3d7tkhh3ekyzshba4cpwka.ipfs.w3s.link/manifest.json")
 	assert.Equal(manifest.Cached, true, "manifest is marked as cached")
 
 	db.Close(appDb)

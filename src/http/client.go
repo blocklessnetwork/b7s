@@ -2,6 +2,8 @@ package http
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -33,6 +35,17 @@ func Download(ctx context.Context, functionManifest models.FunctionManifest) (st
 	os.MkdirAll(WorkSpaceDirectory, os.ModePerm)
 	// download function
 	req, _ := grab.NewRequest(WorkSpaceDirectory, functionManifest.Deployment.Uri)
+
+	client.UserAgent = "b7s"
+
+	// set request checksum
+	sum, err := hex.DecodeString(functionManifest.Deployment.Checksum)
+	if err != nil {
+		panic(err)
+	}
+
+	// check hash of the function after downloading
+	req.SetChecksum(sha256.New(), sum, true)
 	resp := client.Do(req)
 
 	log.WithFields(log.Fields{
