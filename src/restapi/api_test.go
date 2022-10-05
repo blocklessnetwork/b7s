@@ -24,7 +24,7 @@ func TestHandleInstallFunction(t *testing.T) {
 	config := models.Config{}
 	config.Node.WorkSpaceRoot = "/tmp/b7s_test"
 	ctx = context.WithValue(ctx, "config", config)
-	appDb := db.Get("/tmp/b7s_test/_appDb")
+	appDb := db.Get("/tmp/b7s_test/api_testdb")
 	ctx = context.WithValue(ctx, "appDb", appDb)
 
 	req = req.WithContext(ctx)
@@ -57,6 +57,7 @@ func TestHandleInstallFunction(t *testing.T) {
 	returned := models.ResponseInstall{}
 	json.Unmarshal(rr.Body.Bytes(), &returned)
 
+	db.Close(appDb)
 	if returned.Code != enums.ResponseCodeOk {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			returned.Code, enums.ResponseCodeOk)

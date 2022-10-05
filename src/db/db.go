@@ -9,7 +9,7 @@ import (
 func Get(DatabaseId string) *pebble.DB {
 
 	dbPath := DatabaseId
-
+	log.Info("Opening database: ", dbPath)
 	db, err := pebble.Open(dbPath, &pebble.Options{})
 	if err != nil {
 		log.Warn(err)
