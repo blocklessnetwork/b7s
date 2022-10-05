@@ -31,8 +31,9 @@ func Value(db *pebble.DB, key string) string {
 		log.Warn(err)
 		return ""
 	}
+	stringVal := string(value)
 	defer closer.Close()
-	return string(value)
+	return stringVal
 }
 
 func Close(db *pebble.DB) {

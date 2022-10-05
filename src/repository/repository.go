@@ -46,5 +46,6 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 		}).Info("function sync skipped, already present")
 	}
 
+	functionManifest.Cached = true
 	return functionManifest
 }

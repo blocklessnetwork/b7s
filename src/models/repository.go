@@ -3,6 +3,7 @@ package models
 type FunctionManifest struct {
 	Function   Function   `json:"function,omitempty"`
 	Deployment Deployment `json:"deployment,omitempty"`
+	Cached     bool       `json:"cached,omitempty"`
 }
 type Function struct {
 	ID         string   `json:"id,omitempty"`

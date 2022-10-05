@@ -6,11 +6,12 @@ import (
 
 	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/models"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetPackage(t *testing.T) {
 	ctx := context.Background()
-
+	assert := assert.New(t)
 	// set test context and test appdb
 	config := models.Config{}
 	config.Node.WorkSpaceRoot = "/tmp/b7s_test"
@@ -19,8 +20,13 @@ func TestGetPackage(t *testing.T) {
 	ctx = context.WithValue(ctx, "appDb", appDb)
 
 	// file uri reference manifest
-	p := GetPackage(ctx, "https://bafybeiho3scwi3njueloobzhg7ndn7yjb5rkcaydvsoxmnhmu2adv6oxzq.ipfs.w3s.link/manifest.json")
+	manifest := GetPackage(ctx, "https://bafybeiho3scwi3njueloobzhg7ndn7yjb5rkcaydvsoxmnhmu2adv6oxzq.ipfs.w3s.link/manifest.json")
+
+	assert.Equal(manifest.Function.ID, "org.blockless.functions.myfunction", "manifest with function id returned")
+
+	// ask for the file again, should be cached
+	manifest = GetPackage(ctx, "https://bafybeiho3scwi3njueloobzhg7ndn7yjb5rkcaydvsoxmnhmu2adv6oxzq.ipfs.w3s.link/manifest.json")
+	assert.Equal(manifest.Cached, true, "manifest is cached")
 
 	db.Close(appDb)
-	t.Log(p)
 }
