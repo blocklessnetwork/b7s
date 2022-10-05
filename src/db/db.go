@@ -1,22 +1,14 @@
 package db
 
 import (
-	"os"
-	"path/filepath"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/cockroachdb/pebble"
 )
 
 func Get(DatabaseId string) *pebble.DB {
-	ex, err := os.Executable()
-	if err != nil {
-		log.Warn(err)
-	}
 
-	exPath := filepath.Dir(ex)
-	dbPath := filepath.Join(exPath, DatabaseId)
+	dbPath := DatabaseId
 
 	db, err := pebble.Open(dbPath, &pebble.Options{})
 	if err != nil {

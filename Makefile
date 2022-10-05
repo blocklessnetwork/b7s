@@ -1,6 +1,13 @@
 .phony: all
 all: clean build
 
+.phony: test
+test:
+	@echo "Testing..."
+	go clean -testcache
+	go test ./src/...
+	@echo "Done."
+
 .phony: build
 build:
 	@echo "Building node..."
@@ -11,10 +18,4 @@ build:
 clean:
 	@echo "Cleaning..."
 	rm -rf dist
-	@echo "Done."
-
-.phony: test
-test:
-	@echo "Testing..."
-	go test ./...
 	@echo "Done."

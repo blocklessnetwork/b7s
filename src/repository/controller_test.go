@@ -15,7 +15,7 @@ func TestGetPackage(t *testing.T) {
 	config := models.Config{}
 	config.Node.WorkSpaceRoot = "/tmp/b7s_test"
 	ctx = context.WithValue(ctx, "config", config)
-	appDb := db.Get("../../dist/b7s_test_appDb")
+	appDb := db.Get("/tmp/b7s_test/_appDb")
 	ctx = context.WithValue(ctx, "appDb", appDb)
 
 	// file uri reference manifest

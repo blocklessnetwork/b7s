@@ -2,7 +2,9 @@ package daemon
 
 import (
 	"context"
-	"log"
+
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/blocklessnetworking/b7s/src/chain"
@@ -13,6 +15,7 @@ import (
 	"github.com/blocklessnetworking/b7s/src/host"
 	"github.com/blocklessnetworking/b7s/src/messaging"
 	"github.com/blocklessnetworking/b7s/src/restapi"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -21,9 +24,15 @@ import (
 func Run(cmd *cobra.Command, args []string, configPath string) {
 	topicName := "blockless.networking/networking/general"
 	ctx := context.Background()
+	ex, err := os.Executable()
+	if err != nil {
+		log.Warn(err)
+	}
+
+	exPath := filepath.Dir(ex)
 
 	// load config
-	err := config.Load(configPath)
+	err = config.Load(configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,7 +45,7 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	ctx = context.WithValue(ctx, "host", host)
 
 	// set appdb config
-	appDb := db.Get(host.ID().Pretty() + "_appDb")
+	appDb := db.Get(exPath + "/" + host.ID().Pretty() + "_appDb")
 	ctx = context.WithValue(ctx, "appDb", appDb)
 
 	// subscribe to public topic
