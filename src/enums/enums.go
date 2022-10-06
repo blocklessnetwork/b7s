@@ -22,6 +22,7 @@ var (
 	MsgExecuteNotUpgraded    = "MsgExecuteNotUpgraded"
 	MsgRollCall              = "MsgRollCall"
 	MsgRollCallResponse      = "MsgRollCallResponse"
+	MsgExecuteResponse       = "MsgExecuteResponse"
 )
 
 var (

@@ -13,7 +13,7 @@ type ReqRespStore interface {
 	Set(string, *models.MsgExecuteResponse) error
 }
 
-type respDB map[string]*dm.RequestResponse
+type respDB map[string]*models.MsgExecuteResponse
 
 type localStorageReqRespStore struct {
 	db   respDB

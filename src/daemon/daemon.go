@@ -13,6 +13,7 @@ import (
 	"github.com/blocklessnetworking/b7s/src/dht"
 	"github.com/blocklessnetworking/b7s/src/health"
 	"github.com/blocklessnetworking/b7s/src/host"
+	"github.com/blocklessnetworking/b7s/src/memstore"
 	"github.com/blocklessnetworking/b7s/src/messaging"
 	"github.com/blocklessnetworking/b7s/src/restapi"
 	log "github.com/sirupsen/logrus"
@@ -47,6 +48,9 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	// set appdb config
 	appDb := db.Get(exPath + "/" + host.ID().Pretty() + "_appDb")
 	ctx = context.WithValue(ctx, "appDb", appDb)
+
+	executionResponseMemStore := memstore.NewReqRespStore()
+	ctx = context.WithValue(ctx, "executionResponseMemStore", executionResponseMemStore)
 
 	// subscribe to public topic
 	topic := messaging.Subscribe(ctx, host, topicName)
