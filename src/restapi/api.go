@@ -15,13 +15,19 @@ func handleRequestExecute(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&request)
 
 	// execute the function
-	out := controller.ExecuteFunction(r.Context())
+	out, err := controller.ExecuteFunction(r.Context())
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
 	response := models.ResponseExecute{
 		Code:   enums.ResponseCodeOk,
 		Type:   enums.ResponseExecute,
-		Id:     "",
-		Result: out,
+		Id:     out.RequestId,
+		Result: out.Result,
 	}
 
 	json.NewEncoder(w).Encode(response)
@@ -57,4 +63,14 @@ func handleInstallFunction(w http.ResponseWriter, r *http.Request) {
 
 func handleRootRequest(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ok"))
+}
+
+func handleGetExecuteResponse(w http.ResponseWriter, r *http.Request) {
+	// body decode
+	request := models.RequestFunctionResponse{}
+	json.NewDecoder(r.Body).Decode(&request)
+
+	// get the response
+	response := controller.GetExecutionResponse(r.Context(), request.Id)
+	json.NewEncoder(w).Encode(response)
 }

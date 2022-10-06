@@ -12,7 +12,8 @@ import (
 )
 
 // executes a shell command to execute a wasm file
-func Execute(ctx context.Context) ([]byte, error) {
+func Execute(ctx context.Context) (models.ExecutorResponse, error) {
+	var executorResponse models.ExecutorResponse
 	requestId, _ := uuid.NewRandom()
 	cmd := "echo \"hello world\""
 	run := exec.Command("bash", "-c", cmd)
@@ -26,7 +27,7 @@ func Execute(ctx context.Context) ([]byte, error) {
 			"err": err,
 		}).Error("failed to execute request")
 
-		return nil, err
+		return executorResponse, err
 	}
 
 	executionResponseMemStore := ctx.Value("executionResponseMemStore").(memstore.ReqRespStore)
@@ -46,5 +47,11 @@ func Execute(ctx context.Context) ([]byte, error) {
 		"requestId": requestId,
 	}).Info("function executed")
 
-	return out, nil
+	executorResponse = models.ExecutorResponse{
+		RequestId: requestId.String(),
+		Code:      enums.ResponseCodeOk,
+		Result:    string(out),
+	}
+
+	return executorResponse, nil
 }

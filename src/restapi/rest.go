@@ -30,7 +30,7 @@ func startServer(ctx context.Context) {
 
 	myRouter.HandleFunc("/function/request", handleRequestExecute).Methods("POST")
 	myRouter.HandleFunc("/function/install", handleInstallFunction).Methods("POST")
-	myRouter.HandleFunc("/function/result", handleWeb).Methods("POST")
+	myRouter.HandleFunc("/function/result", handleGetExecuteResponse).Methods("POST")
 
 	log.Info(http.ListenAndServe(":"+config.Rest.Port, myRouter))
 }

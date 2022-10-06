@@ -42,3 +42,7 @@ type ResponseInstall struct {
 	Code   string `json:"code"`
 	Result string `json:"result"`
 }
+
+type RequestFunctionResponse struct {
+	Id string `json:"id"`
+}
