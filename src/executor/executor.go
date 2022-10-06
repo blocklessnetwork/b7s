@@ -44,7 +44,7 @@ func Execute(ctx context.Context) ([]byte, error) {
 
 	log.WithFields(log.Fields{
 		"requestId": requestId,
-	}).Error("function executed")
+	}).Info("function executed")
 
 	return out, nil
 }
