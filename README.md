@@ -22,6 +22,10 @@ flags
 - `config` path to the configuration file
 - `out` style of logging used in the daemon (rich|text|json)
 
+```bash
+b7s --config=../configs/head-config.yaml --out=json
+```
+
 ## depends
 
 - [blocklessnetwork/runtime](https://github.com/blocklessnetwork/runtime)
