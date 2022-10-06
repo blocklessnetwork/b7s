@@ -30,6 +30,7 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 		log.Warn(err)
 	}
 
+	// get the path to the executable
 	exPath := filepath.Dir(ex)
 
 	// load config
@@ -49,6 +50,8 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	appDb := db.Get(exPath + "/" + host.ID().Pretty() + "_appDb")
 	ctx = context.WithValue(ctx, "appDb", appDb)
 
+	// response memstore
+	// todo flush memstore occasionally
 	executionResponseMemStore := memstore.NewReqRespStore()
 	ctx = context.WithValue(ctx, "executionResponseMemStore", executionResponseMemStore)
 
