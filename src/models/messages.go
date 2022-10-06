@@ -32,6 +32,12 @@ func NewMsgExecute(code string) *MsgExecute {
 	}
 }
 
+type MsgExecuteResponse struct {
+	Type   string `json:"type,omitempty"`
+	Code   string `json:"code,omitempty"`
+	Result string `json:"result,omitempty"`
+}
+
 type MsgRollCall struct {
 	Type string `json:"type,omitempty"`
 }

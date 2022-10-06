@@ -27,11 +27,9 @@ func startServer(ctx context.Context) {
 
 	// router declaration
 	myRouter.HandleFunc("/", handleRootRequest)
-	myRouter.HandleFunc("/peers", handleWeb)
-	myRouter.HandleFunc("/function", handleWeb)
+
 	myRouter.HandleFunc("/function/request", handleRequestExecute).Methods("POST")
 	myRouter.HandleFunc("/function/install", handleInstallFunction).Methods("POST")
-	myRouter.HandleFunc("/function/list", handleWeb)
 	myRouter.HandleFunc("/function/result", handleWeb).Methods("POST")
 
 	log.Info(http.ListenAndServe(":"+config.Rest.Port, myRouter))

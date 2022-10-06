@@ -18,7 +18,7 @@ func TestHandleInstallFunction(t *testing.T) {
 	ctx := context.Background()
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("GET", "/health-check", nil)
+	req, err := http.NewRequest("GET", "/install", nil)
 
 	// set test context and test appdb
 	config := models.Config{}
