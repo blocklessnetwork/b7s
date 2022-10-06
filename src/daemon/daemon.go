@@ -60,9 +60,11 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	ticker := time.NewTicker(1 * time.Minute)
 	go health.StartPing(ctx, ticker)
 
-	// start other services
-	restapi.Start(ctx)
-	chain.Start(ctx)
+	// start other services based on config
+	if config.C.Protocol.Role == "head" {
+		restapi.Start(ctx)
+		chain.Start(ctx)
+	}
 
 	defer ticker.Stop()
 
