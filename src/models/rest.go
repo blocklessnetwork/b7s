@@ -24,6 +24,7 @@ type ExecutionRequestConfig struct {
 	NumberOfNodes     int                             `json:"number_of_nodes"`
 	ResultAggregation RequestExecuteResultAggregation `json:"result_aggregation"`
 	Stdin             *string                         `json:"stdin"`
+	Permissions       []string                        `json:"permissions"`
 }
 
 type ResponseExecute struct {

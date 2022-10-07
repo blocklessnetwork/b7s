@@ -1,9 +1,11 @@
 package repository
 
 import (
+	"archive/tar"
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -80,26 +82,94 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 	return functionManifest
 }
 
-func UnGzip(source, target string) error {
-	reader, err := os.Open(source)
+func UnGzip(archive, destination string) error {
+	dest := destination
+	if len(dest) == 0 {
+		log.WithFields(log.Fields{
+			"archive": archive,
+		}).Warn("extract archive destination is not specified and cwd is used.")
+		dest = "./"
+	} else {
+
+		if err := os.MkdirAll(dest, os.ModePerm); err != nil {
+			return err
+		}
+	}
+	gzipStream, err := os.Open(archive)
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
-
-	archive, err := gzip.NewReader(reader)
+	defer gzipStream.Close()
+	uncompressedStream, err := gzip.NewReader(gzipStream)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"archive": archive,
+			"err":     err,
+		}).Error("extract archive failed.")
 		return err
 	}
-	defer archive.Close()
+	defer uncompressedStream.Close()
 
-	target = filepath.Join(target, "inflated")
-	writer, err := os.Create(target)
-	if err != nil {
-		return err
+	tarReader := tar.NewReader(uncompressedStream)
+
+	for {
+		header, err := tarReader.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"archive": archive,
+				"err":     err,
+			}).Error("extract archive failed.")
+			return err
+		}
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			dir := filepath.Join(dest, header.Name)
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				log.WithFields(log.Fields{
+					"archive": archive,
+					"err":     err,
+					"dir":     dir,
+				}).Error("extract archive mkdir failed")
+				return err
+			}
+		case tar.TypeReg:
+			file := filepath.Join(dest, header.Name)
+			outFile, err := os.Create(file)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"archive": archive,
+					"err":     err,
+					"file":    file,
+				}).Error("extract archive create new file failed")
+				return err
+			}
+			if _, err := io.Copy(outFile, tarReader); err != nil {
+				log.WithFields(log.Fields{
+					"archive": archive,
+					"err":     err,
+					"file":    file,
+				}).Error("extract archive copy content to new file failed")
+				outFile.Close()
+				return err
+			}
+			outFile.Close()
+
+		default:
+			log.WithFields(log.Fields{
+				"archive":  archive,
+				"typeflag": header.Typeflag,
+				"header":   header.Name,
+			}).Error("extract archive unknown header")
+			return errors.New("extract tgz file failed: unknown header")
+		}
+
 	}
-	defer writer.Close()
 
-	_, err = io.Copy(writer, archive)
-	return err
+	return nil
 }

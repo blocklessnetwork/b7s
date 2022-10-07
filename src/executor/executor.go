@@ -15,10 +15,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func prepExecutionManifest(ctx context.Context, requestId string, method string, manifest models.FunctionManifest) (string, error) {
+func prepExecutionManifest(ctx context.Context, requestId string, request models.RequestExecute, manifest models.FunctionManifest) (string, error) {
 	config := ctx.Value("config").(models.Config)
 
-	functionPath := filepath.Join(config.Node.WorkspaceRoot, manifest.Function.ID, method)
+	functionPath := filepath.Join(config.Node.WorkspaceRoot, manifest.Function.ID, request.Method)
 	manifestPath := filepath.Join(config.Node.WorkspaceRoot, "t", requestId, "runtime-manifest.json")
 	tempFS := filepath.Join(config.Node.WorkspaceRoot, "t", requestId, "fs")
 
@@ -35,7 +35,7 @@ func prepExecutionManifest(ctx context.Context, requestId string, method string,
 		ENTRY:          functionPath,
 		LIMITED_FUEL:   100000000,
 		LIMITED_MEMORY: 200,
-		PERMISSIONS:    []string{"network", "storage"},
+		PERMISSIONS:    request.Config.Permissions,
 	}
 
 	file, jsonError := json.MarshalIndent(data, "", " ")
@@ -47,13 +47,12 @@ func prepExecutionManifest(ctx context.Context, requestId string, method string,
 		return "", jsonError
 	}
 
-	os.MkdirAll(tempFS, os.ModePerm)
 	_ = ioutil.WriteFile(manifestPath, file, 0644)
 	return manifestPath, nil
 }
 
-func queryRuntime() error {
-	cmd := exec.Command("./runtime/blockless-cli")
+func queryRuntime(runtimePath string) error {
+	cmd := exec.Command(runtimePath + "/blockless-cli")
 	_, err := cmd.Output()
 	if err != nil {
 		log.Error(err)
@@ -67,16 +66,10 @@ func Execute(ctx context.Context, request models.RequestExecute, functionManifes
 	requestId, _ := uuid.NewRandom()
 	config := ctx.Value("config").(models.Config)
 	tempFSPath := filepath.Join(config.Node.WorkspaceRoot, "t", requestId.String(), "fs")
-	ex, err := os.Executable()
-	if err != nil {
-		log.Warn(err)
-	}
-
-	// get the path to the executable
-	exPath := filepath.Dir(ex)
+	os.MkdirAll(tempFSPath, os.ModePerm)
 
 	// check to see if runtime is available
-	err = queryRuntime()
+	err := queryRuntime(config.Node.RuntimePath)
 
 	if err != nil {
 		return models.ExecutorResponse{
@@ -85,7 +78,7 @@ func Execute(ctx context.Context, request models.RequestExecute, functionManifes
 		}, err
 	}
 
-	runtimeManifestPath, err := prepExecutionManifest(ctx, requestId.String(), request.Method, functionManifest)
+	runtimeManifestPath, err := prepExecutionManifest(ctx, requestId.String(), request, functionManifest)
 
 	var executorResponse models.ExecutorResponse
 
@@ -108,7 +101,7 @@ func Execute(ctx context.Context, request models.RequestExecute, functionManifes
 		input = *request.Config.Stdin
 	}
 
-	cmd := "echo \"" + input + "\" | " + envVarString + " BLS_LIST_VARS=\"" + envVarKeys + "\" " + exPath + "/runtime/blockless-cli " + runtimeManifestPath
+	cmd := "echo \"" + input + "\" | " + envVarString + " BLS_LIST_VARS=\"" + envVarKeys + "\" " + config.Node.RuntimePath + "/blockless-cli " + runtimeManifestPath
 	run := exec.Command("bash", "-c", cmd)
 	run.Dir = tempFSPath
 	out, err := run.Output()
