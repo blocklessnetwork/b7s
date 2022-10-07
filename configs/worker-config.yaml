@@ -1,7 +1,7 @@
 node:
   name: worker#1
   ip: 0.0.0.0
-  port: 0
+  port: 0 # 0 means random port
   boot_nodes:
   use_static_keys: true
   workspace_root: /tmp/worker
