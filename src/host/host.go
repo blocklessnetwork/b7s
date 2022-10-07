@@ -9,7 +9,17 @@ import (
 )
 
 func NewHost(ctx context.Context, port int, address string) host.Host {
-	host, err := libp2p.New(libp2p.ListenAddrStrings("/ip4/" + address + "/tcp/" + strconv.FormatInt(int64(port), 10)))
+
+	opts := []libp2p.Option{
+		libp2p.ListenAddrStrings("/ip4/" + address + "/tcp/" + strconv.FormatInt(int64(port), 10)),
+		// libp2p.Identity(priv),
+		libp2p.DefaultTransports,
+		libp2p.DefaultMuxers,
+		libp2p.DefaultSecurity,
+		libp2p.NATPortMap(),
+	}
+
+	host, err := libp2p.New(opts...)
 	if err != nil {
 		panic(err)
 	}
