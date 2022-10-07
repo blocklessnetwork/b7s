@@ -47,11 +47,3 @@ func Load(cfgFile string) error {
 	}
 	return nil
 }
-
-func GetPrivKeyFilePath() string {
-	return filepath.Join(C.Node.ConPath, "keys/priv.bin")
-}
-
-func GetLocalFunctionListFile() string {
-	return filepath.Join(C.Node.ConPath, "function_list.json")
-}

@@ -22,7 +22,7 @@ func TestHandleInstallFunction(t *testing.T) {
 
 	// set test context and test appdb
 	config := models.Config{}
-	config.Node.WorkSpaceRoot = "/tmp/b7s_test"
+	config.Node.WorkspaceRoot = "/tmp/b7s_test"
 	ctx = context.WithValue(ctx, "config", config)
 	appDb := db.Get("/tmp/b7s_test/api_testdb")
 	ctx = context.WithValue(ctx, "appDb", appDb)

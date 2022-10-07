@@ -12,8 +12,8 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 )
 
-func ExecuteFunction(ctx context.Context) (models.ExecutorResponse, error) {
-	out, err := executor.Execute(ctx)
+func ExecuteFunction(ctx context.Context, request models.RequestExecute, functionManifest models.FunctionManifest) (models.ExecutorResponse, error) {
+	out, err := executor.Execute(ctx, request, functionManifest)
 
 	if err != nil {
 		return out, err

@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/blocklessnetwork/orchestration-chain/x/market/types"
 	"github.com/blocklessnetworking/b7s/src/models"
@@ -60,8 +59,8 @@ func registerNode(ctx context.Context) {
 	msg := &types.MsgRegisterHeadNode{
 		Creator:   address,
 		NodeId:    host.ID().Pretty(),
-		NodePort:  strconv.Itoa(cfg.Node.Port),
-		NodeIp:    cfg.Node.IpAddress,
+		NodePort:  cfg.Node.Port,
+		NodeIp:    cfg.Node.IP,
 		NodeOwner: address,
 	}
 	queryClient := types.NewQueryClient(cosmosclient.Context())

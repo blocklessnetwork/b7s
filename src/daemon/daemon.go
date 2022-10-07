@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"context"
+	"strconv"
 
 	"os"
 	"path/filepath"
@@ -43,7 +44,12 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	ctx = context.WithValue(ctx, "config", config.C)
 
 	// create a new node hode
-	host := host.NewHost(ctx, config.C.Node.Port, config.C.Node.IpAddress)
+	port, err := strconv.Atoi(config.C.Node.Port)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	host := host.NewHost(ctx, port, config.C.Node.IP)
 	ctx = context.WithValue(ctx, "host", host)
 
 	// set appdb config

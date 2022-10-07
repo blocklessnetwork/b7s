@@ -25,15 +25,14 @@ func Set(db *pebble.DB, key string, value string) error {
 	return nil
 }
 
-func Value(db *pebble.DB, key string) string {
+func Value(db *pebble.DB, key string) (string, error) {
 	value, closer, err := db.Get([]byte(key))
 	if err != nil {
-		log.Warn(err)
-		return ""
+		return "", err
 	}
 	stringVal := string(value)
 	defer closer.Close()
-	return stringVal
+	return stringVal, nil
 }
 
 func Close(db *pebble.DB) {

@@ -1,7 +1,7 @@
 package models
 
 type RequestExecute struct {
-	FunctionID string                     `json:"function_id"`
+	FunctionId string                     `json:"function_id"`
 	Method     string                     `json:"method"`
 	Parameters []RequestExecuteParameters `json:"parameters"`
 	Config     ExecutionRequestConfig     `json:"config"`
@@ -23,24 +23,22 @@ type ExecutionRequestConfig struct {
 	EnvVars           []RequestExecuteEnvVars         `json:"env_vars"`
 	NumberOfNodes     int                             `json:"number_of_nodes"`
 	ResultAggregation RequestExecuteResultAggregation `json:"result_aggregation"`
+	Stdin             *string                         `json:"stdin"`
 }
 
 type ResponseExecute struct {
-	Type   string `json:"type"`
 	Code   string `json:"code"`
 	Id     string `json:"id"`
 	Result string `json:"result"`
 }
 
 type RequestFunctionInstall struct {
-	Type string `json:"type"`
-	Uri  string `json:"uri"`
+	Uri   string `json:"uri"`
+	Count int    `json:"count"`
 }
 
 type ResponseInstall struct {
-	Type   string `json:"type"`
-	Code   string `json:"code"`
-	Result string `json:"result"`
+	Code string `json:"code"`
 }
 
 type RequestFunctionResponse struct {

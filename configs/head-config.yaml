@@ -5,6 +5,7 @@ node:
   boot_nodes:
   use_static_keys: true
   workspace_root: /tmp/head
+  runtime_path: /tmp/runtime
 rest:
   ip: 0.0.0.0
   port: 8081

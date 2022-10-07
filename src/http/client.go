@@ -27,7 +27,7 @@ func GetJson(url string, target interface{}) error {
 }
 
 func Download(ctx context.Context, functionManifest models.FunctionManifest) (string, error) {
-	WorkSpaceRoot := ctx.Value("config").(models.Config).Node.WorkSpaceRoot
+	WorkSpaceRoot := ctx.Value("config").(models.Config).Node.WorkspaceRoot
 	WorkSpaceDirectory := WorkSpaceRoot + "/" + functionManifest.Function.ID
 	client := grab.NewClient()
 

@@ -40,7 +40,7 @@ func Start(ctx context.Context) {
 
 	log.WithFields(log.Fields{
 		"port":    config.Rest.Port,
-		"address": config.Rest.Address,
+		"address": config.Rest.IP,
 	}).Info("starting rest server")
 
 	go startServer(ctx)

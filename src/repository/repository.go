@@ -1,8 +1,12 @@
 package repository
 
 import (
+	"compress/gzip"
 	"context"
 	"encoding/json"
+	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/http"
@@ -16,6 +20,7 @@ type JSONRepository struct{}
 // get the manifest from the repository
 // downloads the binary
 func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.FunctionManifest {
+	WorkSpaceRoot := ctx.Value("config").(models.Config).Node.WorkspaceRoot
 
 	functionManifest := models.FunctionManifest{}
 	err := http.GetJson(manifestPath, &functionManifest)
@@ -25,12 +30,22 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 	}
 
 	appDb := ctx.Value("appDb").(*pebble.DB)
-	cachedFunction := db.Value(appDb, functionManifest.Function.ID)
+	cachedFunction, err := db.Value(appDb, functionManifest.Function.ID)
+	WorkSpaceDirectory := WorkSpaceRoot + "/" + functionManifest.Function.ID
+
+	if err != nil {
+		if err.Error() == "pebble: not found" {
+			log.Info("function not found in cache, syncing")
+		} else {
+			log.Warn(err)
+		}
+	}
 
 	if cachedFunction == "" {
 		// download the function
 		fileName, err := http.Download(ctx, functionManifest)
 
+		UnGzip(fileName, WorkSpaceDirectory)
 		if err != nil {
 			log.Warn(err)
 		}
@@ -63,4 +78,28 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 	}
 
 	return functionManifest
+}
+
+func UnGzip(source, target string) error {
+	reader, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	archive, err := gzip.NewReader(reader)
+	if err != nil {
+		return err
+	}
+	defer archive.Close()
+
+	target = filepath.Join(target, "inflated")
+	writer, err := os.Create(target)
+	if err != nil {
+		return err
+	}
+	defer writer.Close()
+
+	_, err = io.Copy(writer, archive)
+	return err
 }

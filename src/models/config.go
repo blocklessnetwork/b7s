@@ -37,40 +37,38 @@ func (al *AddrList) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type Config struct {
-	Protocol struct {
-		Role           string `yaml:"role"`
-		Seed           int64  `yaml:"seed"`
-		ProtocolID     string `yaml:"protocol_id"`
-		PeerProtocolID string `yaml:"peer_protocol_id"`
-	} `yaml:"protocol"`
-	Node struct {
-		Name               string   `yaml:"name"`
-		IpAddress          string   `yaml:"ip"`
-		Port               int      `yaml:"port"`
-		Rendezvous         string   `yaml:"rendezvous"`
-		BootNodes          AddrList `yaml:"boot_nodes"`
-		UseStaticKeys      bool     `yaml:"use_static_keys"`
-		ConPath            string   `yaml:"conf_path"`
-		CoordinatorAddress string   `yaml:"coordinator_address"`
-		CoordinatorPort    int      `yaml:"coordinator_port"`
-		CoordinatorID      string   `yaml:"coordinator_id"`
-		WorkSpaceRoot      string   `yaml:"workspace_root"`
-	} `yaml:"node"`
-	Rest struct {
-		Port    string `yaml:"port"`
-		Address string `yaml:"address"`
-	} `yaml:"rest"`
-	Repository struct {
-		Url string `yaml:"url"`
-	} `yaml:"repository"`
-	Chain struct {
-		Disabled   bool   `yaml:"disabled"`
-		AddressKey string `yaml:"address_key"`
-		RPC        string `yaml:"rpc"`
-		Home       string `yaml:"home"`
-	} `yaml:"chain"`
-	Logging struct {
-		FilePath string `yaml:"file_path"`
-		Level    string `yaml:"level"`
-	} `yaml:"logging"`
+	Node       ConfigNode       `yaml:"node"`
+	Rest       ConfigRest       `yaml:"rest"`
+	Protocol   ConfigProtocol   `yaml:"protocol"`
+	Logging    ConfigLogging    `yaml:"logging"`
+	Repository ConfigRepository `yaml:"repository"`
+	Chain      ConfigChain      `yaml:"chain"`
+}
+type ConfigNode struct {
+	Name          string      `yaml:"name"`
+	IP            string      `yaml:"ip"`
+	Port          string      `yaml:"port"`
+	BootNodes     interface{} `yaml:"boot_nodes"`
+	UseStaticKeys bool        `yaml:"use_static_keys"`
+	WorkspaceRoot string      `yaml:"workspace_root"`
+	RuntimePath   string      `yaml:"runtime_path"`
+}
+type ConfigRest struct {
+	IP   string `yaml:"ip"`
+	Port string `yaml:"port"`
+}
+type ConfigProtocol struct {
+	Role string `yaml:"role"`
+}
+type ConfigLogging struct {
+	FilePath string `yaml:"file_path"`
+	Level    string `yaml:"level"`
+}
+type ConfigRepository struct {
+	URL string `yaml:"url"`
+}
+type ConfigChain struct {
+	AddressKey string `yaml:"address_key"`
+	RPC        string `yaml:"rpc"`
+	Home       string `yaml:"home"`
 }
