@@ -15,7 +15,7 @@ import (
 func registerNode(ctx context.Context) {
 	var cfg = ctx.Value("config").(models.Config)
 
-	log.Info("starting chain service")
+	log.Info("starting chain client service")
 
 	var chainClientPath string
 	addressPrefix := "bls"

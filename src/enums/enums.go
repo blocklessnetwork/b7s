@@ -23,6 +23,7 @@ var (
 	MsgRollCall              = "MsgRollCall"
 	MsgRollCallResponse      = "MsgRollCallResponse"
 	MsgExecuteResponse       = "MsgExecuteResponse"
+	MsgInstallFunction       = "MsgInstallFunction"
 )
 
 var (

@@ -49,6 +49,8 @@ func handleRequestExecute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	controller.RollCall(r.Context())
+
 	// execute the function
 	out, err := controller.ExecuteFunction(r.Context(), request, functionManifest)
 
@@ -88,12 +90,13 @@ func handleInstallFunction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// install the function
-	err := controller.InstallFunction(r.Context(), request.Uri)
+	// err := controller.InstallFunction(r.Context(), request.Uri)
+	controller.MsgInstallFunction(r.Context(), request.Uri)
 
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	// if err != nil {
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
 
 	response := models.ResponseInstall{
 		Code: enums.ResponseCodeOk,

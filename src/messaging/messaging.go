@@ -26,6 +26,7 @@ func Subscribe(ctx context.Context, host host.Host, topicName string) *pubsub.To
 		panic(err)
 	}
 
+	ctx = context.WithValue(ctx, "topic", topic)
 	// listen to messages
 	go ListenMessages(ctx, sub, host)
 	return topic

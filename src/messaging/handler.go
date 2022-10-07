@@ -26,6 +26,8 @@ func HandleMessage(ctx context.Context, message *pubsub.Message) {
 		handlers.HandleMsgExecute(ctx, message.Data)
 	case enums.MsgRollCall:
 		response = handlers.HandleMsgRollCall(ctx, message.Data)
+	case enums.MsgInstallFunction:
+		handlers.HandleMsgInstall(ctx, message.Data)
 	}
 
 	if response != nil {

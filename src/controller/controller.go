@@ -10,6 +10,7 @@ import (
 	"github.com/blocklessnetworking/b7s/src/models"
 	"github.com/blocklessnetworking/b7s/src/repository"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	log "github.com/sirupsen/logrus"
 )
 
 func ExecuteFunction(ctx context.Context, request models.RequestExecute, functionManifest models.FunctionManifest) (models.ExecutorResponse, error) {
@@ -20,6 +21,17 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute, functio
 	}
 
 	return out, nil
+}
+
+func MsgInstallFunction(ctx context.Context, manifestPath string) {
+	msg := models.MsgInstallFunction{
+		Type:        enums.MsgInstallFunction,
+		ManifestUrl: manifestPath,
+	}
+
+	log.Info("request to message peer for install function")
+
+	messaging.SendMessage(ctx, ctx.Value("topic").(*pubsub.Topic), msg)
 }
 
 func InstallFunction(ctx context.Context, manifestPath string) error {

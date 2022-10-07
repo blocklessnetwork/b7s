@@ -20,7 +20,6 @@ func startServer(ctx context.Context) {
 	myRouter := mux.NewRouter().StrictSlash(true).PathPrefix("/api/v1").Subrouter()
 	myRouter.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// pass the app config down through the context
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	})

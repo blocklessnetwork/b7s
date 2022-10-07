@@ -10,12 +10,14 @@ import (
 
 	"github.com/blocklessnetworking/b7s/src/chain"
 	"github.com/blocklessnetworking/b7s/src/config"
+	"github.com/blocklessnetworking/b7s/src/controller"
 	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/dht"
 	"github.com/blocklessnetworking/b7s/src/health"
 	"github.com/blocklessnetworking/b7s/src/host"
 	"github.com/blocklessnetworking/b7s/src/memstore"
 	"github.com/blocklessnetworking/b7s/src/messaging"
+	"github.com/blocklessnetworking/b7s/src/models"
 	"github.com/blocklessnetworking/b7s/src/restapi"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -61,7 +63,20 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	executionResponseMemStore := memstore.NewReqRespStore()
 	ctx = context.WithValue(ctx, "executionResponseMemStore", executionResponseMemStore)
 
-	// subscribe to public topic
+	// internal handler channel concurrent
+	channelHandler := make(chan models.MsgInstallFunction)
+	ctx = context.WithValue(ctx, "channelHandler", channelHandler)
+
+	go (func() {
+		for {
+			select {
+			case msg := <-channelHandler:
+				controller.InstallFunction(ctx, msg.ManifestUrl)
+			}
+		}
+	})()
+
+	// pubsub topics from p2p
 	topic := messaging.Subscribe(ctx, host, topicName)
 	ctx = context.WithValue(ctx, "topic", topic)
 

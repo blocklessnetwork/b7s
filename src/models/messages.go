@@ -61,3 +61,15 @@ func NewMsgRollCallResponse(code string, role string) *MsgRollCallResponse {
 		Role: role,
 	}
 }
+
+type MsgInstallFunction struct {
+	Type        string `json:"type,omitempty"`
+	ManifestUrl string `json:"manifestUrl,omitempty"`
+}
+
+func NewMsgInstallFunction(manifestUrl string) *MsgInstallFunction {
+	return &MsgInstallFunction{
+		Type:        enums.MsgInstallFunction,
+		ManifestUrl: manifestUrl,
+	}
+}
