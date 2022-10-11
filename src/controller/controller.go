@@ -98,37 +98,15 @@ func RollCall(ctx context.Context, functionId string) {
 
 func RollCallResponse(ctx context.Context, msg models.MsgRollCall) {
 	_, err := IsFunctionInstalled(ctx, msg.FunctionId)
-	var code string
-
-	if err != nil {
-		code = enums.ResponseCodeNotFound
-	} else {
-		code = enums.ResponseCodeAccepted
-	}
-
-	// this is terribad, fix this
-	if err != nil {
-		response := models.MsgRollCallResponse{
-			Type:       enums.MsgRollCallResponse,
-			FunctionId: msg.FunctionId,
-			Code:       code,
-		}
-
-		responseJSON, err := json.Marshal(response)
-
-		if err != nil {
-			log.Debug("error marshalling roll call response")
-			return
-		}
-
-		messaging.SendMessage(ctx, msg.From, responseJSON)
-		return
-	}
 
 	response := models.MsgRollCallResponse{
 		Type:       enums.MsgRollCallResponse,
 		FunctionId: msg.FunctionId,
-		Code:       code,
+		Code:       enums.ResponseCodeAccepted,
+	}
+
+	if err != nil {
+		response.Code = enums.ResponseCodeNotFound
 	}
 
 	responseJSON, err := json.Marshal(response)
