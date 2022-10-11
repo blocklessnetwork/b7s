@@ -10,6 +10,7 @@ type MsgBase struct {
 
 type MsgHealthPing struct {
 	Type string `json:"type,omitempty"`
+	From string `json:"from,omitempty"`
 	Code string `json:"code,omitempty"`
 }
 
@@ -22,6 +23,7 @@ func NewMsgHealthPing(code string) *MsgHealthPing {
 
 type MsgExecute struct {
 	Type string `json:"type,omitempty"`
+	From string `json:"from,omitempty"`
 	Code string `json:"code,omitempty"`
 }
 
@@ -34,6 +36,7 @@ func NewMsgExecute(code string) *MsgExecute {
 
 type MsgExecuteResponse struct {
 	Type   string `json:"type,omitempty"`
+	From   string `json:"from,omitempty"`
 	Code   string `json:"code,omitempty"`
 	Result string `json:"result,omitempty"`
 }
@@ -52,6 +55,7 @@ func NewMsgRollCall(functionId string) *MsgRollCall {
 
 type MsgRollCallResponse struct {
 	Type       string `json:"type,omitempty"`
+	From       string `json:"from,omitempty"`
 	Code       string `json:"code,omitempty"`
 	Role       string `json:"role,omitempty"`
 	FunctionId string `json:"functionId,omitempty"`
@@ -67,6 +71,7 @@ func NewMsgRollCallResponse(code string, role string) *MsgRollCallResponse {
 
 type MsgInstallFunction struct {
 	Type        string `json:"type,omitempty"`
+	From        string `json:"from,omitempty"`
 	ManifestUrl string `json:"manifestUrl,omitempty"`
 }
 

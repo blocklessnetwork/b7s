@@ -67,7 +67,7 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	msgInstallFunctionChannel := make(chan models.MsgInstallFunction)
 	msgRollCallChannel := make(chan models.MsgRollCall)
 	ctx = context.WithValue(ctx, "msgInstallFunctionChannel", msgInstallFunctionChannel)
-	ctx = context.WithValue(ctx, "msgRollCallChannel", msgInstallFunctionChannel)
+	ctx = context.WithValue(ctx, "msgRollCallChannel", msgRollCallChannel)
 
 	go (func() {
 		for {
