@@ -1,5 +1,7 @@
 package enums
 
+import "github.com/libp2p/go-libp2p/core/protocol"
+
 var (
 	MsgHealthCheck           = "MsgHealthCheck"
 	MsgExecute               = "MsgExecute"
@@ -45,4 +47,13 @@ var (
 	ResponseCodeNotAuthorized  = "401"
 	ResponseCodeNotPermitted   = "403"
 	ResponseCodeNotAvailable   = "503"
+)
+
+var (
+	WorkerProtocolId protocol.ID = "/b7s/worker/1.0.0"
+)
+
+var (
+	RoleWorker = "worker"
+	RoleHead   = "head"
 )

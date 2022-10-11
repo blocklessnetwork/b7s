@@ -9,16 +9,27 @@ import (
 	"github.com/blocklessnetworking/b7s/src/messaging"
 	"github.com/blocklessnetworking/b7s/src/models"
 	"github.com/blocklessnetworking/b7s/src/repository"
-	"github.com/libp2p/go-libp2p-core/host"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	log "github.com/sirupsen/logrus"
 )
 
 func ExecuteFunction(ctx context.Context, request models.RequestExecute, functionManifest models.FunctionManifest) (models.ExecutorResponse, error) {
-	out, err := executor.Execute(ctx, request, functionManifest)
+	config := ctx.Value("config").(models.Config)
+	executorRole := config.Protocol.Role
+	var out models.ExecutorResponse
 
-	if err != nil {
-		return out, err
+	// if the role is a peer, then we need to send the request to the peer
+	if executorRole == enums.RoleWorker {
+		out, err := executor.Execute(ctx, request, functionManifest)
+
+		if err != nil {
+			return out, err
+		}
+
+		return out, nil
+	} else {
+		// perform rollcall to see who is available
+		RollCall(ctx, request.FunctionId)
 	}
 
 	return out, nil
@@ -30,23 +41,7 @@ func MsgInstallFunction(ctx context.Context, manifestPath string) {
 		ManifestUrl: manifestPath,
 	}
 
-	log.Info("request to message peer for install function")
-	host := ctx.Value("host").(host.Host)
-	connectedPeers := host.Peerstore().PeersWithAddrs()
-	for _, peer := range connectedPeers {
-		if peer.Pretty() != host.ID().Pretty() {
-			log.Info("sending install function message to peer: ", peer)
-			s, err := host.NewStream(context.Background(), peer, "/echo/1.0.0")
-			if err != nil {
-				log.Warn(err)
-			}
-			_, err = s.Write([]byte("Hello, world!\n"))
-			if err != nil {
-				log.Warn(err)
-			}
-		}
-	}
-
+	log.Debug("request to message peer for install function")
 	messaging.PublishMessage(ctx, ctx.Value("topic").(*pubsub.Topic), msg)
 }
 
@@ -55,8 +50,8 @@ func InstallFunction(ctx context.Context, manifestPath string) error {
 	return nil
 }
 
-func RollCall(ctx context.Context) {
-	msgRollCall := models.NewMsgRollCall()
+func RollCall(ctx context.Context, functionId string) {
+	msgRollCall := models.NewMsgRollCall(functionId)
 	messaging.PublishMessage(ctx, ctx.Value("topic").(*pubsub.Topic), msgRollCall)
 }
 

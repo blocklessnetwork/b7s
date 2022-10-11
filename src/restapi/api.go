@@ -49,8 +49,6 @@ func handleRequestExecute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	controller.RollCall(r.Context())
-
 	// execute the function
 	out, err := controller.ExecuteFunction(r.Context(), request, functionManifest)
 

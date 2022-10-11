@@ -10,10 +10,10 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 )
 
-func HandleMessage(ctx context.Context, message *pubsub.Message) {
+func HandleMessage(ctx context.Context, message []byte) {
 	var msg models.MsgBase
 
-	err := json.Unmarshal([]byte(message.Data), &msg)
+	err := json.Unmarshal([]byte(message), &msg)
 	if err != nil {
 		panic(err)
 	}
@@ -21,13 +21,13 @@ func HandleMessage(ctx context.Context, message *pubsub.Message) {
 	var response interface{}
 	switch msg.Type {
 	case enums.MsgHealthCheck:
-		handlers.HandleMsgHealthCheck(ctx, message.Data)
+		handlers.HandleMsgHealthCheck(ctx, message)
 	case enums.MsgExecute:
-		handlers.HandleMsgExecute(ctx, message.Data)
+		handlers.HandleMsgExecute(ctx, message)
 	case enums.MsgRollCall:
-		response = handlers.HandleMsgRollCall(ctx, message.Data)
+		response = handlers.HandleMsgRollCall(ctx, message)
 	case enums.MsgInstallFunction:
-		handlers.HandleMsgInstall(ctx, message.Data)
+		handlers.HandleMsgInstall(ctx, message)
 	}
 
 	if response != nil {

@@ -39,12 +39,14 @@ type MsgExecuteResponse struct {
 }
 
 type MsgRollCall struct {
-	Type string `json:"type,omitempty"`
+	Type       string `json:"type,omitempty"`
+	FunctionId string `json:"functionId,omitempty"`
 }
 
-func NewMsgRollCall() *MsgRollCall {
+func NewMsgRollCall(functionId string) *MsgRollCall {
 	return &MsgRollCall{
-		Type: enums.MsgRollCall,
+		Type:       enums.MsgRollCall,
+		FunctionId: functionId,
 	}
 }
 

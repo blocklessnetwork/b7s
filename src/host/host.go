@@ -1,17 +1,16 @@
 package host
 
 import (
-	"bufio"
 	"context"
 	"io/ioutil"
 
 	"strconv"
 
+	"github.com/blocklessnetworking/b7s/src/messaging"
 	"github.com/blocklessnetworking/b7s/src/models"
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/host"
-	"github.com/libp2p/go-libp2p-core/network"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -56,30 +55,8 @@ func NewHost(ctx context.Context, port int, address string) host.Host {
 	// set a stream handler on the worker to listen for incoming streams
 	// from a head node
 	if ctx.Value("config").(models.Config).Protocol.Role == "worker" {
-		go func() {
-			host.SetStreamHandler("/echo/1.0.0", func(s network.Stream) {
-				log.Println("listener received new stream")
-				if err := doEcho(s); err != nil {
-					log.Println(err)
-					s.Reset()
-				} else {
-					s.Close()
-				}
-			})
-		}()
+		messaging.ListenMessages(ctx, host)
 	}
 
 	return host
-}
-
-func doEcho(s network.Stream) error {
-	buf := bufio.NewReader(s)
-	str, err := buf.ReadString('\n')
-	if err != nil {
-		return err
-	}
-
-	log.Printf("read: %s", str)
-	_, err = s.Write([]byte(str))
-	return err
 }
