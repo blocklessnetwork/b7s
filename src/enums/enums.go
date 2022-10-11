@@ -1,6 +1,8 @@
 package enums
 
-import "github.com/libp2p/go-libp2p/core/protocol"
+import (
+	"github.com/libp2p/go-libp2p/core/protocol"
+)
 
 var (
 	MsgHealthCheck           = "MsgHealthCheck"
@@ -51,10 +53,18 @@ var (
 )
 
 var (
-	WorkerProtocolId protocol.ID = "/b7s/worker/1.0.0"
+	WorkProtocolId protocol.ID = "/b7s/work/1.0.0"
 )
 
 var (
 	RoleWorker = "worker"
 	RoleHead   = "head"
+)
+
+var (
+	ChannelMsgInstallFunction  = "ChannelMsgInstallFunction"
+	ChannelMsgExecute          = "ChannelMsgExecute"
+	ChannelMsgRollCall         = "ChannelMsgRollCall"
+	ChannelMsgHealthCheck      = "ChannelMsgHealthCheck"
+	ChannelMsgRollCallResponse = "ChannelMsgRollCallResponse"
 )

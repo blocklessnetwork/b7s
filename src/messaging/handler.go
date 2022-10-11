@@ -8,11 +8,12 @@ import (
 	handlers "github.com/blocklessnetworking/b7s/src/messaging/handlers"
 	"github.com/blocklessnetworking/b7s/src/models"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-func HandleMessage(ctx context.Context, message []byte) {
+func HandleMessage(ctx context.Context, message []byte, peerID peer.ID) {
 	var msg models.MsgBase
-
+	ctx = context.WithValue(ctx, "peerID", peerID)
 	err := json.Unmarshal([]byte(message), &msg)
 	if err != nil {
 		panic(err)
@@ -26,6 +27,8 @@ func HandleMessage(ctx context.Context, message []byte) {
 		handlers.HandleMsgExecute(ctx, message)
 	case enums.MsgRollCall:
 		handlers.HandleMsgRollCall(ctx, message)
+	case enums.MsgRollCallResponse:
+		handlers.HandleMsgRollCallResponse(ctx, message)
 	case enums.MsgInstallFunction:
 		handlers.HandleMsgInstall(ctx, message)
 	}

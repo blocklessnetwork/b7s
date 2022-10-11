@@ -13,7 +13,6 @@ import (
 	"github.com/blocklessnetworking/b7s/src/models"
 	"github.com/blocklessnetworking/b7s/src/repository"
 	"github.com/cockroachdb/pebble"
-	"github.com/libp2p/go-libp2p-core/peer"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	log "github.com/sirupsen/logrus"
 )
@@ -64,6 +63,14 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 	} else {
 		// perform rollcall to see who is available
 		RollCall(ctx, request.FunctionId)
+		rollcallResponseChannel := ctx.Value(enums.ChannelMsgRollCallResponse).(chan models.MsgRollCallResponse)
+		select {
+		case msg := <-rollcallResponseChannel:
+			log.WithFields(log.Fields{
+				"msg": msg,
+			}).Info("roll call response received")
+		}
+
 	}
 
 	return out, nil
@@ -91,16 +98,30 @@ func RollCall(ctx context.Context, functionId string) {
 
 func RollCallResponse(ctx context.Context, msg models.MsgRollCall) {
 	_, err := IsFunctionInstalled(ctx, msg.FunctionId)
-	recievedFrom := ctx.Value("ReceivedFrom").(peer.ID)
 	var code string
 
 	if err != nil {
-		code = enums.ResponseCodeAccepted
-	} else {
 		code = enums.ResponseCodeNotFound
+	} else {
+		code = enums.ResponseCodeAccepted
 	}
 
+	// this is terribad, fix this
 	if err != nil {
+		response := models.MsgRollCallResponse{
+			Type:       enums.MsgRollCallResponse,
+			FunctionId: msg.FunctionId,
+			Code:       code,
+		}
+
+		responseJSON, err := json.Marshal(response)
+
+		if err != nil {
+			log.Debug("error marshalling roll call response")
+			return
+		}
+
+		messaging.SendMessage(ctx, msg.From, responseJSON)
 		return
 	}
 
@@ -117,7 +138,7 @@ func RollCallResponse(ctx context.Context, msg models.MsgRollCall) {
 		return
 	}
 
-	messaging.SendMessage(ctx, recievedFrom, responseJSON)
+	messaging.SendMessage(ctx, msg.From, responseJSON)
 }
 
 func HealthStatus(ctx context.Context) {

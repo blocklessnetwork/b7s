@@ -2,16 +2,18 @@ package models
 
 import (
 	"github.com/blocklessnetworking/b7s/src/enums"
+	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 type MsgBase struct {
-	Type string `json:"type,omitempty"`
+	Type string  `json:"type,omitempty"`
+	From peer.ID `json:"from,omitempty"`
 }
 
 type MsgHealthPing struct {
-	Type string `json:"type,omitempty"`
-	From string `json:"from,omitempty"`
-	Code string `json:"code,omitempty"`
+	Type string  `json:"type,omitempty"`
+	From peer.ID `json:"from,omitempty"`
+	Code string  `json:"code,omitempty"`
 }
 
 func NewMsgHealthPing(code string) *MsgHealthPing {
@@ -22,9 +24,9 @@ func NewMsgHealthPing(code string) *MsgHealthPing {
 }
 
 type MsgExecute struct {
-	Type string `json:"type,omitempty"`
-	From string `json:"from,omitempty"`
-	Code string `json:"code,omitempty"`
+	Type string  `json:"type,omitempty"`
+	From peer.ID `json:"from,omitempty"`
+	Code string  `json:"code,omitempty"`
 }
 
 func NewMsgExecute(code string) *MsgExecute {
@@ -35,15 +37,16 @@ func NewMsgExecute(code string) *MsgExecute {
 }
 
 type MsgExecuteResponse struct {
-	Type   string `json:"type,omitempty"`
-	From   string `json:"from,omitempty"`
-	Code   string `json:"code,omitempty"`
-	Result string `json:"result,omitempty"`
+	Type   string  `json:"type,omitempty"`
+	From   peer.ID `json:"from,omitempty"`
+	Code   string  `json:"code,omitempty"`
+	Result string  `json:"result,omitempty"`
 }
 
 type MsgRollCall struct {
-	Type       string `json:"type,omitempty"`
-	FunctionId string `json:"functionId,omitempty"`
+	From       peer.ID `json:"from,omitempty"`
+	Type       string  `json:"type,omitempty"`
+	FunctionId string  `json:"functionId,omitempty"`
 }
 
 func NewMsgRollCall(functionId string) *MsgRollCall {
@@ -54,11 +57,11 @@ func NewMsgRollCall(functionId string) *MsgRollCall {
 }
 
 type MsgRollCallResponse struct {
-	Type       string `json:"type,omitempty"`
-	From       string `json:"from,omitempty"`
-	Code       string `json:"code,omitempty"`
-	Role       string `json:"role,omitempty"`
-	FunctionId string `json:"functionId,omitempty"`
+	Type       string  `json:"type,omitempty"`
+	From       peer.ID `json:"from,omitempty"`
+	Code       string  `json:"code,omitempty"`
+	Role       string  `json:"role,omitempty"`
+	FunctionId string  `json:"functionId,omitempty"`
 }
 
 func NewMsgRollCallResponse(code string, role string) *MsgRollCallResponse {
@@ -70,9 +73,9 @@ func NewMsgRollCallResponse(code string, role string) *MsgRollCallResponse {
 }
 
 type MsgInstallFunction struct {
-	Type        string `json:"type,omitempty"`
-	From        string `json:"from,omitempty"`
-	ManifestUrl string `json:"manifestUrl,omitempty"`
+	Type        string  `json:"type,omitempty"`
+	From        peer.ID `json:"from,omitempty"`
+	ManifestUrl string  `json:"manifestUrl,omitempty"`
 }
 
 func NewMsgInstallFunction(manifestUrl string) *MsgInstallFunction {

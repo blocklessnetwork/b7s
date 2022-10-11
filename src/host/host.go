@@ -53,10 +53,7 @@ func NewHost(ctx context.Context, port int, address string) host.Host {
 	}
 
 	// set a stream handler on the worker to listen for incoming streams
-	// from a head node
-	if ctx.Value("config").(models.Config).Protocol.Role == "worker" {
-		messaging.ListenMessages(ctx, host)
-	}
+	messaging.ListenMessages(ctx, host)
 
 	return host
 }

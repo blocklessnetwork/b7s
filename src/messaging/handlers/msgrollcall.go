@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/blocklessnetworking/b7s/src/enums"
 	"github.com/blocklessnetworking/b7s/src/models"
+	"github.com/libp2p/go-libp2p/core/peer"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -13,11 +15,25 @@ import (
 func HandleMsgRollCall(ctx context.Context, message []byte) {
 	msgRollCall := &models.MsgRollCall{}
 	json.Unmarshal(message, msgRollCall)
+	msgRollCall.From = ctx.Value("peerID").(peer.ID)
 
 	log.WithFields(log.Fields{
 		"message": string(message),
-	}).Info("message from peer")
+	}).Info("rollcall message")
 
-	channel := ctx.Value("msgRollCallChannel").(chan models.MsgRollCall)
+	channel := ctx.Value(enums.ChannelMsgRollCall).(chan models.MsgRollCall)
 	channel <- *msgRollCall
+}
+
+func HandleMsgRollCallResponse(ctx context.Context, message []byte) {
+	msgRollCallResponse := &models.MsgRollCallResponse{}
+	json.Unmarshal(message, msgRollCallResponse)
+	msgRollCallResponse.From = ctx.Value("peerID").(peer.ID)
+
+	log.WithFields(log.Fields{
+		"message": string(message),
+	}).Info("rollcall response")
+
+	rollcallResponseChannel := ctx.Value(enums.ChannelMsgRollCallResponse).(chan models.MsgRollCallResponse)
+	rollcallResponseChannel <- *msgRollCallResponse
 }

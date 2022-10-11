@@ -54,28 +54,28 @@ func ListenPublishedMessages(ctx context.Context, sub *pubsub.Subscription, host
 			panic(err)
 		}
 		if message.ReceivedFrom != host.ID() {
-			ctx = context.WithValue(ctx, "ReceivedFrom", message.ReceivedFrom)
-			HandleMessage(ctx, message.Data)
+			HandleMessage(ctx, message.Data, message.ReceivedFrom)
 		}
 	}
 }
 
 // listen to direct messages from peers
 func ListenMessages(ctx context.Context, host host.Host) {
-	host.SetStreamHandler(enums.WorkerProtocolId, func(s network.Stream) {
+	host.SetStreamHandler(enums.WorkProtocolId, func(s network.Stream) {
 		buf := make([]byte, 1024)
 		n, err := s.Read(buf)
 		if err != nil {
 			log.Warn(err)
 		}
-		HandleMessage(ctx, buf[:n])
+
+		HandleMessage(ctx, buf[:n], s.Conn().RemotePeer())
 	})
 }
 
 // sends a message directly to a peer
 func SendMessage(ctx context.Context, peer peer.ID, message []byte) {
 	host := ctx.Value("host").(host.Host)
-	s, err := host.NewStream(context.Background(), peer, enums.WorkerProtocolId)
+	s, err := host.NewStream(context.Background(), peer, enums.WorkProtocolId)
 	if err != nil {
 		log.Warn(err)
 	}
