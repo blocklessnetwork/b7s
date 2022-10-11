@@ -32,7 +32,7 @@ func Subscribe(ctx context.Context, host host.Host, topicName string) *pubsub.To
 	return topic
 }
 
-func SendMessage(ctx context.Context, topic *pubsub.Topic, message any) {
+func PublishMessage(ctx context.Context, topic *pubsub.Topic, message any) {
 	messageString, _ := json.Marshal(message)
 	if err := topic.Publish(ctx, []byte(messageString)); err != nil {
 		log.WithFields(log.Fields{

@@ -9,5 +9,5 @@ import (
 func HandleMsgHealthCheck(ctx context.Context, message []byte) {
 	log.WithFields(log.Fields{
 		"message": string(message),
-	}).Info("peer health check recieved")
+	}).Debug("peer health check recieved")
 }

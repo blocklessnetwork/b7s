@@ -31,6 +31,6 @@ func HandleMessage(ctx context.Context, message *pubsub.Message) {
 	}
 
 	if response != nil {
-		SendMessage(ctx, ctx.Value("topic").(*pubsub.Topic), response)
+		PublishMessage(ctx, ctx.Value("topic").(*pubsub.Topic), response)
 	}
 }

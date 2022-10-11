@@ -45,13 +45,13 @@ type Config struct {
 	Chain      ConfigChain      `yaml:"chain"`
 }
 type ConfigNode struct {
-	Name          string      `yaml:"name"`
-	IP            string      `yaml:"ip"`
-	Port          string      `yaml:"port"`
-	BootNodes     interface{} `yaml:"boot_nodes"`
-	UseStaticKeys bool        `yaml:"use_static_keys"`
-	WorkspaceRoot string      `yaml:"workspace_root"`
-	RuntimePath   string      `yaml:"runtime_path"`
+	Name          string   `yaml:"name"`
+	IP            string   `yaml:"ip"`
+	Port          string   `yaml:"port"`
+	BootNodes     []string `yaml:"boot_nodes"`
+	KeyPath       string   `yaml:"key_path"`
+	WorkspaceRoot string   `yaml:"workspace_root"`
+	RuntimePath   string   `yaml:"runtime_path"`
 }
 type ConfigRest struct {
 	IP   string `yaml:"ip"`

@@ -1,9 +1,11 @@
 node:
   name: worker#1
   ip: 0.0.0.0
-  port: 0 # 0 means random port
+  # 0 means random port
+  port: 0
+  # join the blockless network by boot strapping to one of our worker nodes
   boot_nodes:
-  use_static_keys: true
+    - /ip4/127.0.0.1/tcp/9527/p2p/12D3KooWH9GerdSEroL2nqjpd2GuE5dwmqNi7uHX7FoywBdKcP4q
   workspace_root: /tmp/worker
   runtime_path: /tmp/runtime
 rest:
