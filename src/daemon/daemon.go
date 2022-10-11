@@ -64,14 +64,18 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	ctx = context.WithValue(ctx, "executionResponseMemStore", executionResponseMemStore)
 
 	// internal handler channel concurrent
-	channelHandler := make(chan models.MsgInstallFunction)
-	ctx = context.WithValue(ctx, "channelHandler", channelHandler)
+	msgInstallFunctionChannel := make(chan models.MsgInstallFunction)
+	msgRollCallChannel := make(chan models.MsgRollCall)
+	ctx = context.WithValue(ctx, "msgInstallFunctionChannel", msgInstallFunctionChannel)
+	ctx = context.WithValue(ctx, "msgRollCallChannel", msgInstallFunctionChannel)
 
 	go (func() {
 		for {
 			select {
-			case msg := <-channelHandler:
+			case msg := <-msgInstallFunctionChannel:
 				controller.InstallFunction(ctx, msg.ManifestUrl)
+			case msg := <-msgRollCallChannel:
+				controller.RollCallResponse(ctx, msg)
 			}
 		}
 	})()

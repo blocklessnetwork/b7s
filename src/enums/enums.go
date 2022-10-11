@@ -37,6 +37,7 @@ var (
 
 var (
 	ResponseCodeOk             = "200"
+	ResponseCodeAccepted       = "202"
 	ResponseCodeError          = "500"
 	ResponseCodeTimeout        = "408"
 	ResponseCodeUnknown        = "520"

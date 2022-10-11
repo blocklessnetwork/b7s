@@ -6,6 +6,7 @@ import (
 
 	"github.com/blocklessnetworking/b7s/src/enums"
 	"github.com/libp2p/go-libp2p-core/network"
+	"github.com/libp2p/go-libp2p-core/peer"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
 	log "github.com/sirupsen/logrus"
@@ -53,6 +54,7 @@ func ListenPublishedMessages(ctx context.Context, sub *pubsub.Subscription, host
 			panic(err)
 		}
 		if message.ReceivedFrom != host.ID() {
+			ctx = context.WithValue(ctx, "ReceivedFrom", message.ReceivedFrom)
 			HandleMessage(ctx, message.Data)
 		}
 	}
@@ -71,20 +73,14 @@ func ListenMessages(ctx context.Context, host host.Host) {
 }
 
 // sends a message directly to a peer
-func SendMessage(ctx context.Context, message string) {
+func SendMessage(ctx context.Context, peer peer.ID, message []byte) {
 	host := ctx.Value("host").(host.Host)
-	connectedPeers := host.Peerstore().PeersWithAddrs()
-	for _, peer := range connectedPeers {
-		if peer.Pretty() != host.ID().Pretty() {
-			log.Debug("sending message to peer: ", peer)
-			s, err := host.NewStream(context.Background(), peer, enums.WorkerProtocolId)
-			if err != nil {
-				log.Warn(err)
-			}
-			_, err = s.Write([]byte(message))
-			if err != nil {
-				log.Warn(err)
-			}
-		}
+	s, err := host.NewStream(context.Background(), peer, enums.WorkerProtocolId)
+	if err != nil {
+		log.Warn(err)
+	}
+	_, err = s.Write(message)
+	if err != nil {
+		log.Warn(err)
 	}
 }

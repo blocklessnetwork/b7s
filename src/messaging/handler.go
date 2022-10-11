@@ -25,7 +25,7 @@ func HandleMessage(ctx context.Context, message []byte) {
 	case enums.MsgExecute:
 		handlers.HandleMsgExecute(ctx, message)
 	case enums.MsgRollCall:
-		response = handlers.HandleMsgRollCall(ctx, message)
+		handlers.HandleMsgRollCall(ctx, message)
 	case enums.MsgInstallFunction:
 		handlers.HandleMsgInstall(ctx, message)
 	}
