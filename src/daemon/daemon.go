@@ -27,7 +27,7 @@ import (
 // the daemonm service loop
 // also the rootCommand for cobra
 func Run(cmd *cobra.Command, args []string, configPath string) {
-	topicName := "blockless.networking/networking/general"
+	topicName := "blockless/b7s/general"
 	ctx := context.Background()
 	ex, err := os.Executable()
 	if err != nil {
