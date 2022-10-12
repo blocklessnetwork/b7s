@@ -66,11 +66,30 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 		rollcallResponseChannel := ctx.Value(enums.ChannelMsgRollCallResponse).(chan models.MsgRollCallResponse)
 		select {
 		case msg := <-rollcallResponseChannel:
-			log.WithFields(log.Fields{
-				"msg": msg,
-			}).Info("roll call response received")
-		}
+			if msg.Code == enums.ResponseCodeAccepted {
+				// request an execution from first responding node
+				// we should queue these responses into a pool first
+				// for selection
 
+				msgExecute := models.MsgExecute{
+					Type:       enums.MsgExecute,
+					FunctionId: request.FunctionId,
+				}
+
+				jsonBytes, err := json.Marshal(msgExecute)
+
+				if err != nil {
+					return out, err
+				}
+
+				messaging.SendMessage(ctx, msg.From, jsonBytes)
+			} else {
+				out := models.ExecutorResponse{
+					Code: enums.ResponseCodeNotFound,
+				}
+				return out, errors.New("function not found")
+			}
+		}
 	}
 
 	return out, nil
