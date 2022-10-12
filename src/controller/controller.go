@@ -82,17 +82,21 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 					return out, err
 				}
 
+				// send execute message to node
 				messaging.SendMessage(ctx, msg.From, jsonBytes)
 
+				// wait for response
 				executeResponseChannel := ctx.Value(enums.ChannelMsgExecuteResponse).(chan models.MsgExecuteResponse)
 				select {
 				case msg := <-executeResponseChannel:
 
 					// too many models here ?
 					out := models.ExecutorResponse{
-						Code:   msg.Code,
-						Result: msg.Result,
+						Code:      msg.Code,
+						Result:    msg.Result,
+						RequestId: msg.RequestId,
 					}
+
 					return out, nil
 				}
 

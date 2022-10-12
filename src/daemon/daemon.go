@@ -97,11 +97,13 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 				}
 
 				jsonBytes, err := json.Marshal(&models.MsgExecuteResponse{
-					Type:   enums.MsgExecuteResponse,
-					Code:   msg.Code,
-					Result: executorResponse.Result,
+					RequestId: executorResponse.RequestId,
+					Type:      enums.MsgExecuteResponse,
+					Code:      executorResponse.Code,
+					Result:    executorResponse.Result,
 				})
 
+				// send exect response back to head node
 				messaging.SendMessage(ctx, msg.From, jsonBytes)
 			}
 		}

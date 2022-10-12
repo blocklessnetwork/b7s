@@ -39,10 +39,11 @@ func NewMsgExecute(code string) *MsgExecute {
 }
 
 type MsgExecuteResponse struct {
-	Type   string  `json:"type,omitempty"`
-	From   peer.ID `json:"from,omitempty"`
-	Code   string  `json:"code,omitempty"`
-	Result string  `json:"result,omitempty"`
+	Type      string  `json:"type,omitempty"`
+	RequestId string  `json:"requestId,omitempty"`
+	From      peer.ID `json:"from,omitempty"`
+	Code      string  `json:"code,omitempty"`
+	Result    string  `json:"result,omitempty"`
 }
 
 type MsgRollCall struct {
