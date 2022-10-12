@@ -70,7 +70,6 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 				// request an execution from first responding node
 				// we should queue these responses into a pool first
 				// for selection
-
 				msgExecute := models.MsgExecute{
 					Type:       enums.MsgExecute,
 					FunctionId: request.FunctionId,
@@ -84,6 +83,19 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 				}
 
 				messaging.SendMessage(ctx, msg.From, jsonBytes)
+
+				executeResponseChannel := ctx.Value(enums.ChannelMsgExecuteResponse).(chan models.MsgExecuteResponse)
+				select {
+				case msg := <-executeResponseChannel:
+
+					// too many models here ?
+					out := models.ExecutorResponse{
+						Code:   msg.Code,
+						Result: msg.Result,
+					}
+					return out, nil
+				}
+
 			} else {
 				out := models.ExecutorResponse{
 					Code: enums.ResponseCodeNotFound,

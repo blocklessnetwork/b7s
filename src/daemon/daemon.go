@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 
 	"os"
@@ -55,9 +56,11 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	// define channels before instanciating the host
 	msgInstallFunctionChannel := make(chan models.MsgInstallFunction)
 	msgExecute := make(chan models.MsgExecute)
+	msgExecuteResponse := make(chan models.MsgExecuteResponse)
 	msgRollCallChannel := make(chan models.MsgRollCall)
 	msgRollCallResponseChannel := make(chan models.MsgRollCallResponse)
 	ctx = context.WithValue(ctx, enums.ChannelMsgExecute, msgExecute)
+	ctx = context.WithValue(ctx, enums.ChannelMsgExecuteResponse, msgExecuteResponse)
 	ctx = context.WithValue(ctx, enums.ChannelMsgInstallFunction, msgInstallFunctionChannel)
 	ctx = context.WithValue(ctx, enums.ChannelMsgRollCall, msgRollCallChannel)
 	ctx = context.WithValue(ctx, enums.ChannelMsgRollCallResponse, msgRollCallResponseChannel)
@@ -88,7 +91,18 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 					FunctionId: msg.FunctionId,
 					Method:     msg.Method,
 				}
-				controller.ExecuteFunction(ctx, requestExecute)
+				executorResponse, err := controller.ExecuteFunction(ctx, requestExecute)
+				if err != nil {
+					log.Error(err)
+				}
+
+				jsonBytes, err := json.Marshal(&models.MsgExecuteResponse{
+					Type:   enums.MsgExecuteResponse,
+					Code:   msg.Code,
+					Result: executorResponse.Result,
+				})
+
+				messaging.SendMessage(ctx, msg.From, jsonBytes)
 			}
 		}
 	})()

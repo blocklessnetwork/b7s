@@ -25,6 +25,8 @@ func HandleMessage(ctx context.Context, message []byte, peerID peer.ID) {
 		handlers.HandleMsgHealthCheck(ctx, message)
 	case enums.MsgExecute:
 		handlers.HandleMsgExecute(ctx, message)
+	case enums.MsgExecuteResponse:
+		handlers.HandleMsgExecuteResponse(ctx, message)
 	case enums.MsgRollCall:
 		handlers.HandleMsgRollCall(ctx, message)
 	case enums.MsgRollCallResponse:
