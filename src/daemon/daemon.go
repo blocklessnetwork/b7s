@@ -54,8 +54,10 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 
 	// define channels before instanciating the host
 	msgInstallFunctionChannel := make(chan models.MsgInstallFunction)
+	msgExecute := make(chan models.MsgExecute)
 	msgRollCallChannel := make(chan models.MsgRollCall)
 	msgRollCallResponseChannel := make(chan models.MsgRollCallResponse)
+	ctx = context.WithValue(ctx, enums.ChannelMsgExecute, msgExecute)
 	ctx = context.WithValue(ctx, enums.ChannelMsgInstallFunction, msgInstallFunctionChannel)
 	ctx = context.WithValue(ctx, enums.ChannelMsgRollCall, msgRollCallChannel)
 	ctx = context.WithValue(ctx, enums.ChannelMsgRollCallResponse, msgRollCallResponseChannel)
@@ -79,6 +81,14 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 				controller.InstallFunction(ctx, msg.ManifestUrl)
 			case msg := <-msgRollCallChannel:
 				controller.RollCallResponse(ctx, msg)
+			case msg := <-msgExecute:
+				// todo no sir I don't like this
+				// I think this is duplicated in the controller
+				requestExecute := models.RequestExecute{
+					FunctionId: msg.FunctionId,
+					Method:     msg.Method,
+				}
+				controller.ExecuteFunction(ctx, requestExecute)
 			}
 		}
 	})()

@@ -27,7 +27,7 @@ func handleRequestExecute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := models.ResponseExecute{
-		Code:   enums.ResponseCodeOk,
+		Code:   out.Code,
 		Id:     out.RequestId,
 		Result: out.Result,
 	}

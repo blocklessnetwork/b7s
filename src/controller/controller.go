@@ -74,6 +74,7 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 				msgExecute := models.MsgExecute{
 					Type:       enums.MsgExecute,
 					FunctionId: request.FunctionId,
+					Method:     request.Method,
 				}
 
 				jsonBytes, err := json.Marshal(msgExecute)
@@ -87,7 +88,7 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 				out := models.ExecutorResponse{
 					Code: enums.ResponseCodeNotFound,
 				}
-				return out, errors.New("function not found")
+				return out, nil
 			}
 		}
 	}

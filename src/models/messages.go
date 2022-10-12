@@ -28,6 +28,7 @@ type MsgExecute struct {
 	From       peer.ID `json:"from,omitempty"`
 	Code       string  `json:"code,omitempty"`
 	FunctionId string  `json:"functionId,omitempty"`
+	Method     string  `json:"method,omitempty"`
 }
 
 func NewMsgExecute(code string) *MsgExecute {
