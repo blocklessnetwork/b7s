@@ -74,6 +74,8 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 					Type:       enums.MsgExecute,
 					FunctionId: request.FunctionId,
 					Method:     request.Method,
+					Parameters: request.Parameters,
+					Config:     request.Config,
 				}
 
 				jsonBytes, err := json.Marshal(msgExecute)

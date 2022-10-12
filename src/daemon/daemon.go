@@ -90,6 +90,8 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 				requestExecute := models.RequestExecute{
 					FunctionId: msg.FunctionId,
 					Method:     msg.Method,
+					Parameters: msg.Parameters,
+					Config:     msg.Config,
 				}
 				executorResponse, err := controller.ExecuteFunction(ctx, requestExecute)
 				if err != nil {

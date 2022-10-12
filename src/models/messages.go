@@ -24,11 +24,13 @@ func NewMsgHealthPing(code string) *MsgHealthPing {
 }
 
 type MsgExecute struct {
-	Type       string  `json:"type,omitempty"`
-	From       peer.ID `json:"from,omitempty"`
-	Code       string  `json:"code,omitempty"`
-	FunctionId string  `json:"functionId,omitempty"`
-	Method     string  `json:"method,omitempty"`
+	Type       string                     `json:"type,omitempty"`
+	From       peer.ID                    `json:"from,omitempty"`
+	Code       string                     `json:"code,omitempty"`
+	FunctionId string                     `json:"functionId,omitempty"`
+	Method     string                     `json:"method,omitempty"`
+	Parameters []RequestExecuteParameters `json:"parameters,omitempty"`
+	Config     ExecutionRequestConfig     `json:"config,omitempty"`
 }
 
 func NewMsgExecute(code string) *MsgExecute {

@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 
@@ -62,13 +63,16 @@ func ListenPublishedMessages(ctx context.Context, sub *pubsub.Subscription, host
 // listen to direct messages from peers
 func ListenMessages(ctx context.Context, host host.Host) {
 	host.SetStreamHandler(enums.WorkProtocolId, func(s network.Stream) {
-		buf := make([]byte, 1024)
-		n, err := s.Read(buf)
+		defer s.Close()
+		buf := bufio.NewReader(s)
+		response, err := buf.ReadString('\n')
+
 		if err != nil {
+			s.Reset()
 			log.Warn(err)
 		}
 
-		HandleMessage(ctx, buf[:n], s.Conn().RemotePeer())
+		HandleMessage(ctx, []byte(response), s.Conn().RemotePeer())
 	})
 }
 
@@ -81,6 +85,8 @@ func SendMessage(ctx context.Context, peer peer.ID, message []byte) {
 	}
 	_, err = s.Write(message)
 	if err != nil {
+		s.Reset()
 		log.Warn(err)
 	}
+	defer s.Close()
 }
