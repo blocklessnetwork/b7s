@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/blocklessnetworking/b7s/src/enums"
+	"github.com/google/uuid"
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
@@ -52,12 +53,15 @@ type MsgRollCall struct {
 	From       peer.ID `json:"from,omitempty"`
 	Type       string  `json:"type,omitempty"`
 	FunctionId string  `json:"functionId,omitempty"`
+	RequestId  string  `json:"request_id,omitempty"`
 }
 
 func NewMsgRollCall(functionId string) *MsgRollCall {
+	requestId, _ := uuid.NewRandom()
 	return &MsgRollCall{
 		Type:       enums.MsgRollCall,
 		FunctionId: functionId,
+		RequestId:  requestId.String(),
 	}
 }
 
@@ -67,6 +71,7 @@ type MsgRollCallResponse struct {
 	Code       string  `json:"code,omitempty"`
 	Role       string  `json:"role,omitempty"`
 	FunctionId string  `json:"functionId,omitempty"`
+	RequestId  string  `json:"request_id,omitempty"`
 }
 
 func NewMsgRollCallResponse(code string, role string) *MsgRollCallResponse {

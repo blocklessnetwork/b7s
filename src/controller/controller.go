@@ -65,7 +65,7 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 		return out, nil
 	} else {
 		// perform rollcall to see who is available
-		RollCall(ctx, request.FunctionId)
+		rollcallMessage := RollCall(ctx, request.FunctionId)
 
 		type rollcalled struct {
 			From peer.ID
@@ -92,7 +92,12 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 					return
 				case msg := <-rollcallResponseChannel:
 					conns := host.Network().ConnsToPeer(msg.From)
-					if msg.Code == enums.ResponseCodeAccepted && msg.FunctionId == request.FunctionId && len(conns) > 0 {
+
+					// pop off all the responses that don't match our first found connection
+					// worker with function
+					// worker responsed accepted has resources and is ready to execute
+					// worker knows RequestID
+					if msg.Code == enums.ResponseCodeAccepted && msg.FunctionId == request.FunctionId && len(conns) > 0 && rollcallMessage.RequestId == msg.RequestId {
 						log.WithFields(log.Fields{
 							"msg": msg,
 						}).Info("rollcalled")
@@ -177,9 +182,10 @@ func InstallFunction(ctx context.Context, manifestPath string) error {
 	return nil
 }
 
-func RollCall(ctx context.Context, functionId string) {
+func RollCall(ctx context.Context, functionId string) *models.MsgRollCall {
 	msgRollCall := models.NewMsgRollCall(functionId)
 	messaging.PublishMessage(ctx, ctx.Value("topic").(*pubsub.Topic), msgRollCall)
+	return msgRollCall
 }
 
 func RollCallResponse(ctx context.Context, msg models.MsgRollCall) {
@@ -189,6 +195,7 @@ func RollCallResponse(ctx context.Context, msg models.MsgRollCall) {
 		Type:       enums.MsgRollCallResponse,
 		FunctionId: msg.FunctionId,
 		Code:       enums.ResponseCodeAccepted,
+		RequestId:  msg.RequestId,
 	}
 
 	if err != nil {
