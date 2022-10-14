@@ -16,7 +16,7 @@ func HandleMsgExecute(ctx context.Context, message []byte) {
 	msgExecute.From = ctx.Value("peerID").(peer.ID)
 	log.WithFields(log.Fields{
 		"message": string(message),
-	}).Info("message from peer")
+	}).Debug("message from peer")
 
 	channel := ctx.Value(enums.ChannelMsgExecute).(chan models.MsgExecute)
 	channel <- *msgExecute
@@ -29,7 +29,7 @@ func HandleMsgExecuteResponse(ctx context.Context, message []byte) {
 	msgExecuteResponse.From = ctx.Value("peerID").(peer.ID)
 	log.WithFields(log.Fields{
 		"message": string(message),
-	}).Info("message from peer")
+	}).Debug("message from peer")
 
 	channel := ctx.Value(enums.ChannelMsgExecuteResponse).(chan models.MsgExecuteResponse)
 	channel <- *msgExecuteResponse

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/enums"
@@ -13,6 +14,8 @@ import (
 	"github.com/blocklessnetworking/b7s/src/models"
 	"github.com/blocklessnetworking/b7s/src/repository"
 	"github.com/cockroachdb/pebble"
+	"github.com/libp2p/go-libp2p-core/host"
+	"github.com/libp2p/go-libp2p-core/peer"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	log "github.com/sirupsen/logrus"
 )
@@ -63,55 +66,100 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 	} else {
 		// perform rollcall to see who is available
 		RollCall(ctx, request.FunctionId)
-		rollcallResponseChannel := ctx.Value(enums.ChannelMsgRollCallResponse).(chan models.MsgRollCallResponse)
-		select {
-		case msg := <-rollcallResponseChannel:
-			if msg.Code == enums.ResponseCodeAccepted {
-				// request an execution from first responding node
-				// we should queue these responses into a pool first
-				// for selection
-				msgExecute := models.MsgExecute{
-					Type:       enums.MsgExecute,
-					FunctionId: request.FunctionId,
-					Method:     request.Method,
-					Parameters: request.Parameters,
-					Config:     request.Config,
-				}
 
-				jsonBytes, err := json.Marshal(msgExecute)
-
-				if err != nil {
-					return out, err
-				}
-
-				// send execute message to node
-				messaging.SendMessage(ctx, msg.From, jsonBytes)
-
-				// wait for response
-				executeResponseChannel := ctx.Value(enums.ChannelMsgExecuteResponse).(chan models.MsgExecuteResponse)
-				select {
-				case msg := <-executeResponseChannel:
-
-					// too many models here ?
-					out := models.ExecutorResponse{
-						Code:      msg.Code,
-						Result:    msg.Result,
-						RequestId: msg.RequestId,
-					}
-
-					return out, nil
-				}
-
-			} else {
-				out := models.ExecutorResponse{
-					Code: enums.ResponseCodeNotFound,
-				}
-				return out, nil
-			}
+		type rollcalled struct {
+			From peer.ID
+			Code string
 		}
-	}
+		rollCalledChannel := make(chan rollcalled)
 
-	return out, nil
+		go func(ctx context.Context) {
+			// collect responses of nodes who want to work on the request
+			host := ctx.Value("host").(host.Host)
+			rollcallResponseChannel := ctx.Value(enums.ChannelMsgRollCallResponse).(chan models.MsgRollCallResponse)
+			_, timeoutCancel := context.WithCancel(ctx)
+			// time out
+			// should we retry this?
+			// possible no ne responds back
+			go func() {
+				timeout := time.After(5 * time.Second)
+			LOOP:
+				select {
+				case <-timeout:
+					rollCalledChannel <- rollcalled{
+						Code: enums.ResponseCodeTimeout,
+					}
+					return
+				case msg := <-rollcallResponseChannel:
+					conns := host.Network().ConnsToPeer(msg.From)
+					if msg.Code == enums.ResponseCodeAccepted && msg.FunctionId == request.FunctionId && len(conns) > 0 {
+						log.WithFields(log.Fields{
+							"msg": msg,
+						}).Info("rollcalled")
+						timeoutCancel()
+						rollCalledChannel <- rollcalled{
+							From: msg.From,
+						}
+						return
+					} else {
+						goto LOOP
+					}
+				case <-ctx.Done():
+					log.Warn("timeout cancelled")
+					return
+				}
+			}()
+		}(ctx)
+
+		msgRollCall := <-rollCalledChannel
+
+		if msgRollCall.Code == enums.ResponseCodeTimeout {
+			out := models.ExecutorResponse{
+				Code: enums.ResponseCodeTimeout,
+			}
+			return out, nil
+		}
+
+		// we got a message back before the timeout went off
+
+		// request an execution from first responding node
+		// we should queue these responses into a pool first
+		// for selection
+		msgExecute := models.MsgExecute{
+			Type:       enums.MsgExecute,
+			FunctionId: request.FunctionId,
+			Method:     request.Method,
+			Parameters: request.Parameters,
+			Config:     request.Config,
+		}
+
+		jsonBytes, err := json.Marshal(msgExecute)
+
+		if err != nil {
+			return out, err
+		}
+
+		// send execute message to node
+		messaging.SendMessage(ctx, msgRollCall.From, jsonBytes)
+
+		// wait for response
+		executeResponseChannel := ctx.Value(enums.ChannelMsgExecuteResponse).(chan models.MsgExecuteResponse)
+		msgExec := <-executeResponseChannel
+
+		// too many models here ?
+		out := models.ExecutorResponse{
+			Code:      msgExec.Code,
+			Result:    msgExec.Result,
+			RequestId: msgExec.RequestId,
+		}
+
+		log.WithFields(log.Fields{
+			"msg": msgExec,
+		}).Info("execute response")
+
+		defer close(rollCalledChannel)
+		return out, nil
+	}
 }
 
 func MsgInstallFunction(ctx context.Context, manifestPath string) {

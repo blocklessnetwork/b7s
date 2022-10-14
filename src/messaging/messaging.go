@@ -43,7 +43,7 @@ func PublishMessage(ctx context.Context, topic *pubsub.Topic, message any) {
 	if err := topic.Publish(ctx, []byte(messageString)); err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Info("message err")
+		}).Warn("message err")
 	}
 }
 
@@ -52,7 +52,7 @@ func ListenPublishedMessages(ctx context.Context, sub *pubsub.Subscription, host
 	for {
 		message, err := sub.Next(ctx)
 		if err != nil {
-			panic(err)
+			log.Warn(err)
 		}
 		if message.ReceivedFrom != host.ID() {
 			HandleMessage(ctx, message.Data, message.ReceivedFrom)
@@ -67,7 +67,7 @@ func ListenMessages(ctx context.Context, host host.Host) {
 		buf := bufio.NewReader(s)
 		response, err := buf.ReadString('\n')
 
-		if err != nil {
+		if err != nil && err.Error() != "EOF" {
 			s.Reset()
 			log.Warn(err)
 		}
