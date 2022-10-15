@@ -6,7 +6,7 @@
 
 ## structure
 
-The project structure is `mvc` style. The main entry uses `spf13/cobra`, and that setup can be found in `main.go`. The cobra `rootCMD` is set to start the `daemon`. While other sub commands, may run another service.
+The main entry uses `spf13/cobra`, and that setup can be found in `main.go`. The cobra `rootCMD` is set to start the `daemon`. While other sub commands, may run another service.
 
 ```
 src/
