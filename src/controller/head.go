@@ -43,14 +43,7 @@ func HeadExecuteFunction(ctx context.Context, request models.RequestExecute) (mo
 			case msg := <-rollcallResponseChannel:
 				conns := host.Network().ConnsToPeer(msg.From)
 
-				// pop off all the responses that don't match our first found connection
-				// worker with function
-				// worker responsed accepted has resources and is ready to execute
-				// worker knows RequestID
 				if msg.Code == enums.ResponseCodeAccepted && msg.FunctionId == request.FunctionId && len(conns) > 0 && rollcallMessage.RequestId == msg.RequestId {
-					log.WithFields(log.Fields{
-						"msg": msg,
-					}).Info("rollcalled")
 					timeoutCancel()
 					rollCalledChannel <- rollcalled{
 						From: msg.From,
