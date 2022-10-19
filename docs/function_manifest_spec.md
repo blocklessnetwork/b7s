@@ -4,6 +4,7 @@ this is the `json` specification for the manifests that describe how a function 
 
 ```json
 {
+  "version" : 2.0
   "function": {
     // organization and function identifier
     "id": "org.blockless.functions.myfunction",
