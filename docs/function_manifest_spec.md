@@ -4,7 +4,7 @@ this is the `json` specification for the manifests that describe how a function 
 
 ```json
 {
-  "version" : 2.0
+  "version" : 2.0,
   "function": {
     // organization and function identifier
     "id": "org.blockless.functions.myfunction",
@@ -40,7 +40,7 @@ this is the `json` specification for the manifests that describe how a function 
       {
         "name": "web-framework",
         "entry": "web-framework.wasm",
-        "arguments":[{"name": "name", "value": "value"}]
+        "arguments":[{"name": "name", "value": "value"}],
         "envvars":[{"name": "name", "value": "value"}]
       }
     ],
