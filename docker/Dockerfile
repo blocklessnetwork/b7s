@@ -34,5 +34,13 @@ COPY ./configs/docker-config.yaml docker-config.yaml
 COPY ./docker/run.sh ./run.sh
 RUN chmod +x ./run.sh
 
+ENV CONFIG_PATH="/app/keys"
+ENV AWS_ACCESS_KEY_ID=
+ENV AWS_SECRET_ACCESS_KEY=
+ENV S3_HOST="${S3_HOST:-https://s3.filebase.com}"
+ENV KEY_PATH=""
+ENV KEY_PASSWORD=""
+ENV CHAIN_RPC_NODE="http://0.0.0.0:26657"
+
 ## run script
 ENTRYPOINT ["/app/run.sh"]
