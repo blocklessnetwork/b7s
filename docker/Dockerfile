@@ -6,29 +6,33 @@ WORKDIR /app
 RUN apt-get update && \
   apt-get install --no-install-recommends --assume-yes curl unzip pv ca-certificates gnupg2
 
-
 # gomplete for updating config with env vars
 RUN curl -o ./gomplate -sSL https://github.com/hairyhenderson/gomplate/releases/download/v3.10.0/gomplate_linux-amd64
 RUN chmod 755 gomplate
 
 # get the runtime
-RUN curl -o ./runtime.tar.gz -sSL https://github.com/txlabs/builds/releases/download/v0.0.2/blockless-runtime.linux-latest.x86_64.tar.gz
+RUN curl -o ./runtime.tar.gz -sSL https://github.com/blocklessnetwork/runtime/releases/download/v0.0.6/blockless-runtime.linux-latest.x86_64.tar.gz
 RUN mkdir /app/runtime && tar -xvkf ./runtime.tar.gz -C /app/runtime
+
+# install blockchain client
+RUN curl https://raw.githubusercontent.com/blocklessnetwork/orchestration-chain/main/download.sh | bash
 
 # libssl 1.1
 RUN curl -o ./libssl.deb -sSL http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
 RUN dpkg -i ./libssl.deb
 
+# Install AWS CLI so we can use to backup to IPFS s3 compatible storage providers
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+  && unzip awscliv2.zip -d /usr/src && rm -f awscliv2.zip \
+  && /usr/src/aws/install --bin-dir /usr/bin
+
 ## setup 
-COPY ./build/txnode-linux-amd64 txnode
-COPY ./docker/configuration/worker/config.yaml config.yaml
+COPY ./dist/b7s b7s
+COPY ./configs/docker-config.yaml docker-config.yaml
 
 ## run script
-COPY ./run.sh ./run.sh
+COPY ./docker/run.sh ./run.sh
 RUN chmod +x ./run.sh
-
-## run as a worker for the run script
-ENV BOOT_WORKER=true
 
 ## run script
 ENTRYPOINT ["/app/run.sh"]

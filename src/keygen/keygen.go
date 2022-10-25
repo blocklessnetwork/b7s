@@ -16,12 +16,6 @@ var (
 )
 
 func GenerateKeys(outputFolder string) error {
-	ex, err := os.Executable()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	exPath := filepath.Dir(ex)
 
 	privKey, pubKey, err := crypto.GenerateKeyPair(
 		crypto.Ed25519,
@@ -47,20 +41,20 @@ func GenerateKeys(outputFolder string) error {
 		log.Fatal("failed to get peer identity from public key:" + err.Error())
 	}
 
-	if err := os.MkdirAll(exPath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(outputFolder, os.ModePerm); err != nil {
 		log.Fatal(err)
 	}
 
-	dir := filepath.Dir(exPath)
+	dir := filepath.Dir(outputFolder)
 	err = os.MkdirAll(dir, 0777)
 
 	if err != nil {
 		log.Fatal("failed to write to folder" + err.Error())
 	}
 
-	pubKeyFile := fmt.Sprintf("%s/pub.bin", exPath)
-	privKeyFile := fmt.Sprintf("%s/priv.bin", exPath)
-	peerIdFile := fmt.Sprintf("%s/identity", exPath)
+	pubKeyFile := fmt.Sprintf("%s/pub.bin", outputFolder)
+	privKeyFile := fmt.Sprintf("%s/priv.bin", outputFolder)
+	peerIdFile := fmt.Sprintf("%s/identity", outputFolder)
 
 	if err := ioutil.WriteFile(pubKeyFile, pubBytes, 0644); err != nil {
 		log.Fatal("failed to save pub key to file:" + err.Error())
@@ -74,7 +68,7 @@ func GenerateKeys(outputFolder string) error {
 		log.Fatal("failed to save identity to file:" + err.Error())
 	}
 
-	log.Info("Keys are generated at: ", exPath)
+	log.Info("Keys are generated at: ", outputFolder)
 	log.Info("identity:", identity)
 
 	return nil

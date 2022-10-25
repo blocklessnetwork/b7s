@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/blocklessnetworking/b7s/src/daemon"
 	"github.com/blocklessnetworking/b7s/src/keygen"
 	log "github.com/sirupsen/logrus"
@@ -42,7 +44,13 @@ func main() {
 		Long:  `Generate a new keypair`,
 		Run: func(cmd *cobra.Command, args []string) {
 			setLogging(logType)
-			err := keygen.GenerateKeys("")
+
+			path, err := os.Getwd()
+			if err != nil {
+				log.Println(err)
+			}
+
+			err = keygen.GenerateKeys(path)
 			if err != nil {
 				log.Fatal(err)
 			}
