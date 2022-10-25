@@ -33,6 +33,7 @@ this is the `json` specification for the manifests that describe how a function 
     "uri": "basy1234566",
 
     // this is the checksum of the gzipped package
+    // it is sha256 hex encoded
     "checksum": "0cbaf5c9d0aa075d546a9084096ce380",
 
     // describes the wasm builds located inside

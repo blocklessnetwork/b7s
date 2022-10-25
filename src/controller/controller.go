@@ -46,7 +46,19 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 	}
 }
 
-func MsgInstallFunction(ctx context.Context, manifestPath string) {
+func MsgInstallFunction(ctx context.Context, installRequest models.RequestFunctionInstall) {
+	var manifestPath string
+	// determine the manifest path
+	if installRequest.Uri != "" {
+		manifestPath = installRequest.Uri
+	}
+
+	if installRequest.Cid != "" {
+		// todo
+		// use other portals when available
+		manifestPath = "https://" + installRequest.Cid + ".ipfs.w3s.link/manifest.json"
+	}
+
 	msg := models.MsgInstallFunction{
 		Type:        enums.MsgInstallFunction,
 		ManifestUrl: manifestPath,

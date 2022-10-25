@@ -7,8 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/http"
@@ -29,6 +31,22 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 
 	if err != nil {
 		log.Warn(err)
+	}
+
+	if functionManifest.Runtime.Url != "" {
+		// this is an old manifest, letls popuplate the deoloy for download
+		// this manifest wont have a URL in it, instead use the same path as the manifest
+		DeploymentUrl := strings.Replace(manifestPath, "manifest.json", functionManifest.Runtime.Url, 1)
+		// get the cid from the host name
+		u, err := url.Parse(DeploymentUrl)
+		if err != nil {
+			log.Warn(err)
+		}
+		functionManifest.Deployment = models.Deployment{
+			Uri:      DeploymentUrl,
+			Checksum: functionManifest.Runtime.Checksum,
+		}
+		functionManifest.Function.ID = strings.Split(u.Hostname(), ".")[0]
 	}
 
 	appDb := ctx.Value("appDb").(*pebble.DB)

@@ -34,6 +34,7 @@ type ResponseExecute struct {
 }
 
 type RequestFunctionInstall struct {
+	Cid   string `json:"cid"`
 	Uri   string `json:"uri"`
 	Count int    `json:"count"`
 }

@@ -3,8 +3,16 @@ package models
 type FunctionManifest struct {
 	Function   Function   `json:"function,omitempty"`
 	Deployment Deployment `json:"deployment,omitempty"`
+	Runtime    Runtime    `json:"runtime,omitempty"`
 	Cached     bool       `json:"cached,omitempty"`
 }
+
+// legacy manifest support
+type Runtime struct {
+	Checksum string `json:"checksum,omitempty"`
+	Url      string `json:"url,omitempty"`
+}
+
 type Function struct {
 	ID         string   `json:"id,omitempty"`
 	Name       string   `json:"name,omitempty"`

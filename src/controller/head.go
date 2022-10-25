@@ -101,9 +101,9 @@ func HeadExecuteFunction(ctx context.Context, request models.RequestExecute) (mo
 		RequestId: msgExec.RequestId,
 	}
 
-	log.WithFields(log.Fields{
-		"msg": msgExec,
-	}).Info("execute response")
+	// log.WithFields(log.Fields{
+	// 	"msg": msgExec,
+	// }).Info("execute response")
 
 	defer close(rollCalledChannel)
 	return out, nil

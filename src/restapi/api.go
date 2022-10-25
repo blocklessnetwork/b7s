@@ -46,14 +46,14 @@ func handleInstallFunction(w http.ResponseWriter, r *http.Request) {
 
 	json.NewDecoder(r.Body).Decode(&request)
 
-	if request.Uri == "" {
+	if request.Uri == "" && request.Cid == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	// install the function
 	// err := controller.InstallFunction(r.Context(), request.Uri)
-	controller.MsgInstallFunction(r.Context(), request.Uri)
+	controller.MsgInstallFunction(r.Context(), request)
 
 	// if err != nil {
 	// 	w.WriteHeader(http.StatusInternalServerError)
