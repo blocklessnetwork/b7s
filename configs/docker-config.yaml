@@ -6,7 +6,7 @@ node:
   workspace_root: /tmp/node
   runtime_path: /app/runtime 
   boot_nodes: {{ range (ds "boot_nodes") }} 
-     {{ range (.) }}{{.}}{{ end }}{{ end }}
+     {{ range (.) }}- {{.}}{{ end }}{{ end }}
 rest:
   ip: 0.0.0.0
   port: 8081
