@@ -11,6 +11,14 @@ import (
 )
 
 func HandleMsgInstall(ctx context.Context, message []byte) {
+	cfg := ctx.Value("config").(models.Config)
+
+	// right now only workers should respond to install calls, so that
+	// they are not particpating in work just yet
+	if cfg.Protocol.Role != enums.RoleWorker {
+		return
+	}
+
 	msgInstall := &models.MsgInstallFunction{}
 	json.Unmarshal(message, msgInstall)
 	msgInstall.From = ctx.Value("peerID").(peer.ID)
