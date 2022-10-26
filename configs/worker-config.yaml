@@ -5,7 +5,7 @@ node:
   port: 0
   # join the blockless network by boot strapping to one of our worker nodes
   boot_nodes:
-    - /ip4/127.0.0.1/tcp/9527/p2p/12D3KooWH9GerdSEroL2nqjpd2GuE5dwmqNi7uHX7FoywBdKcP4q
+    - /ip4/147.75.84.103/tcp/32536/p2p/12D3KooWDCELEqCuHGqqRiMwSjPFLAKnVjL6mGVpSHASmmxTqovc
   workspace_root: /tmp/worker
   runtime_path: /tmp/runtime
 rest:

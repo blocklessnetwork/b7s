@@ -13,6 +13,14 @@ import (
 // roll call is recieved from pubsub peer
 // respond to the requestor of the roll call directly
 func HandleMsgRollCall(ctx context.Context, message []byte) {
+	cfg := ctx.Value("config").(models.Config)
+
+	// right now only workers should respond to roll calls
+	// todo : other nodes should be able to respond to roll calls
+	if cfg.Protocol.Role != enums.RoleWorker {
+		return
+	}
+
 	msgRollCall := &models.MsgRollCall{}
 	json.Unmarshal(message, msgRollCall)
 	msgRollCall.From = ctx.Value("peerID").(peer.ID)
