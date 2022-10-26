@@ -4,7 +4,9 @@ node:
   key_path: /app/keys/priv.bin
   use_static_keys: true
   workspace_root: /tmp/node
-  runtime_path: /app/runtime
+  runtime_path: /app/runtime 
+  boot_nodes: {{ range (ds "boot_nodes") }} 
+     {{ range (.) }}{{.}}{{ end }}{{ end }}
 rest:
   ip: 0.0.0.0
   port: 8081
@@ -17,4 +19,4 @@ repository:
   url: http://localhost:8080/
 chain:
   address_key: "alice"
-  rpc: "http://0.0.0.0:26657"
+  rpc: {{ .Env.CHAIN_RPC_NODE }}
