@@ -21,6 +21,5 @@ jobs:
         run: |
           GOOS=linux GOARCH=amd64 make
           echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
-          docker build . --tag ghcr.io/${{ github.repository }}:${{ github.event.inputs.tag }}-head -f HeadNode.Dockerfile 
-          docker build . --tag ghcr.io/${{ github.repository }}:${{ github.event.inputs.tag }}-worker -f WorkerNode.Dockerfile 
+          docker build . --tag ghcr.io/${{ github.repository }}:${{ github.event.inputs.tag }} -f docker/Dockerfile
           docker push ghcr.io/${{ github.repository }}:${{ github.event.inputs.tag }}
