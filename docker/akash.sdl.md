@@ -11,7 +11,7 @@ version: "2.0"
 
 services:
   web:
-    image: ghcr.io/blocklessnetwork/b7s:v0.0.2-rc1
+    image: ghcr.io/blocklessnetwork/b7s:v0.0.5-rc1
     env:
       - NODE_ROLE=worker
       - AWS_ACCESS_KEY_ID=s3_id
