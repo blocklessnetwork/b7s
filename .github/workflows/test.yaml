@@ -3,6 +3,7 @@ on:
     branches:
       - main
 
+name: Test and Coverage
 jobs:
   test:
     runs-on: ubuntu-latest
