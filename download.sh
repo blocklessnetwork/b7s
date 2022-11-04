@@ -112,7 +112,7 @@ function install {
 		unzip -o -qq tmp.zip || fail "unzip failed"
 		rm tmp.zip || fail "cleanup failed"
 	elif [[ $FTYPE = "" ]]; then
-		bash -c "$GET $URL" > "blockless-chain_${OS}_${ARCH}" || fail "download failed"
+		bash -c "$GET $URL" > "b7s_${OS}_${ARCH}" || fail "download failed"
 	else
 		fail "unknown file type: $FTYPE"
 	fi
