@@ -24,6 +24,8 @@ Using **wget**:
 sudo sh -c "wget https://raw.githubusercontent.com/blocklessnetwork/b7s/main/download.sh -v -O download.sh; chmod +x download.sh; ./download.sh; rm -rf download.sh"
 ```
 
+Use `docker` see docker [docs](docker/README.md)
+
 ## usage
 
 commands
