@@ -44,9 +44,10 @@ flags
 b7s --config=../configs/head-config.yaml --out=json
 ```
 
-## depends
+## depends on
 
 - [blocklessnetwork/runtime](https://github.com/blocklessnetwork/runtime)
+- [blocklessnetwork/orchestration-chain](https://github.com/blocklessnetwork/orchestration-chain)
 
 ## contributing
 
