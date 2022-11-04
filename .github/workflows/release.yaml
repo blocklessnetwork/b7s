@@ -43,3 +43,19 @@ jobs:
           asset_path: b7s-${{ matrix.goos }}.${{ matrix.goarch }}.tar.gz
           asset_name: b7s-${{ matrix.goos }}.${{ matrix.goarch }}.tar.gz
           asset_content_type: application/gzip
+      - name: Delete the "latest" Release
+        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          tag_name: latest
+          delete_release: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish the Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: latest
+          files: b7s-${{ matrix.goos }}.${{ matrix.goarch }}.tar.gz
+          prerelease: true
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
