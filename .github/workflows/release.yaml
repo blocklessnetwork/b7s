@@ -1,0 +1,44 @@
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+name: Networking Release All
+jobs:
+  blockless_networking_release:
+    strategy:
+      matrix:
+        goos: [darwin, linux, windows]
+        goarch: [amd64, arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: set goos
+        run: echo "GOOS=${{ matrix.goos }}"
+      - name: set goarch
+        run: echo "GOARCH=${{ matrix.goarch }}"
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v3
+        with:
+          go-version: "1.18"
+          check-latest: true
+      - name: Archive Release
+        uses: thedoctor0/zip-release@main
+        with:
+          type: "tar"
+          directory: build/
+          filename: ../blockless-txnode-${{ matrix.goos }}.${{ matrix.goarch }}.tar.gz
+          path: b7s*
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@v1.2.3
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: upload artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: blockless-txnode-${{ matrix.goos }}.${{ matrix.goarch }}.tar.gz
+          asset_name: blockless-txnode-${{ matrix.goos }}.${{ matrix.goarch }}.tar.gz
+          asset_content_type: application/gzip
