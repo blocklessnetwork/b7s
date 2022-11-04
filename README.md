@@ -4,9 +4,25 @@
 
 `blockless` the peer to peer networking daemon for the blockless network.
 
-## installation
+Supported Platforms
 
-coming
+| OS      | arm64 | x64 |
+| ------- | ----- | --- |
+| Windows |       | x   |
+| Linux   | x     | x   |
+| MacOS   | x     | x   |
+
+Using **curl**:
+
+```bash
+sudo sh -c "curl https://raw.githubusercontent.com/blocklessnetwork/b7s/main/download.sh | bash"
+```
+
+Using **wget**:
+
+```bash
+sudo sh -c "wget https://raw.githubusercontent.com/blocklessnetwork/b7s/main/download.sh -v -O download.sh; chmod +x download.sh; ./download.sh; rm -rf download.sh"
+```
 
 ## usage
 
