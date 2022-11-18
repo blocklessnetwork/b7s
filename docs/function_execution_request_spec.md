@@ -13,6 +13,7 @@
 
   // execution options
   "config": {
+    "stdin" : "",
     // environment variables to load before execution
     "env_vars": [
       {
