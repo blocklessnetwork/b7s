@@ -33,8 +33,9 @@ func NewHost(ctx context.Context, port int, address string) host.Host {
 		privKey = key
 	}
 
+	var hostAddress = "/ip4/" + address + "/tcp/" + strconv.FormatInt(int64(port), 10)
 	opts := []libp2p.Option{
-		libp2p.ListenAddrStrings("/ip4/" + address + "/tcp/" + strconv.FormatInt(int64(port), 10)),
+		libp2p.ListenAddrStrings(hostAddress),
 		libp2p.DefaultTransports,
 		libp2p.DefaultMuxers,
 		libp2p.DefaultSecurity,
@@ -51,6 +52,8 @@ func NewHost(ctx context.Context, port int, address string) host.Host {
 	if err != nil {
 		panic(err)
 	}
+
+	log.Info("host: ", hostAddress+"/p2p/"+host.ID().Pretty())
 
 	// set a stream handler on the worker to listen for incoming streams
 	messaging.ListenMessages(ctx, host)
