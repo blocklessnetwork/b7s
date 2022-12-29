@@ -1,3 +1,4 @@
 dist/
 runtime/
 *.env
+__debug*
