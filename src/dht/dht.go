@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/models"
 	"github.com/libp2p/go-libp2p-core/peer"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
@@ -64,7 +63,8 @@ func InitDHT(ctx context.Context, h host.Host) *dht.IpfsDHT {
 	return kademliaDHT
 }
 
-func DiscoverPeers(ctx context.Context, h host.Host, topicName string) {
+func DiscoverPeers(ctx context.Context, h host.Host) {
+	topicName := ctx.Value("topicName").(string)
 	kademliaDHT := InitDHT(ctx, h)
 	routingDiscovery := drouting.NewRoutingDiscovery(kademliaDHT)
 	dutil.Advertise(ctx, routingDiscovery, topicName)
@@ -86,11 +86,9 @@ func DiscoverPeers(ctx context.Context, h host.Host, topicName string) {
 				// this can be quite noisy with discovery
 				// fmt.Println("Failed connecting to ", peer.ID.Pretty(), ", error:", err)
 			} else {
-				pebble := db.Get(peer.ID.Pretty())
-				db.Set(pebble, "peerID", peer.ID.Pretty())
 				log.WithFields(log.Fields{
 					"peerID": peer.ID.Pretty(),
-				}).Info("connected to peer")
+				}).Info("connected to a peer")
 				anyConnected = true
 			}
 		}

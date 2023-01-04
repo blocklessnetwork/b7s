@@ -11,14 +11,12 @@ import (
 	"github.com/blocklessnetworking/b7s/src/messaging"
 	"github.com/blocklessnetworking/b7s/src/models"
 	"github.com/blocklessnetworking/b7s/src/repository"
-	"github.com/cockroachdb/pebble"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	log "github.com/sirupsen/logrus"
 )
 
 func IsFunctionInstalled(ctx context.Context, functionId string) (models.FunctionManifest, error) {
-	appDb := ctx.Value("appDb").(*pebble.DB)
-	functionManifestString, err := db.Value(appDb, functionId)
+	functionManifestString, err := db.GetString(ctx, functionId)
 	functionManifest := models.FunctionManifest{}
 
 	json.Unmarshal([]byte(functionManifestString), &functionManifest)

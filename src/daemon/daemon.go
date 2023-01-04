@@ -26,6 +26,8 @@ import (
 func Run(cmd *cobra.Command, args []string, configPath string) {
 	topicName := "blockless/b7s/general"
 	ctx := context.Background()
+	ctx = context.WithValue(ctx, "topicName", topicName)
+
 	ex, err := os.Executable()
 	if err != nil {
 		log.Warn(err)
@@ -53,12 +55,18 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	ctx = setupChannels(ctx)
 
 	// create a new libp2p host
-	host := host.NewHost(ctx, port, config.C.Node.IP)
-	ctx = context.WithValue(ctx, "host", host)
+	h := host.NewHost(ctx, port, config.C.Node.IP)
+	ctx = context.WithValue(ctx, "host", h)
 
 	// set appdb config
-	appDb := db.Get(exPath + "/" + host.ID().Pretty() + "_appDb")
+	appDb := db.GetDb(exPath + "/" + h.ID().Pretty() + "_appDb")
 	ctx = context.WithValue(ctx, "appDb", appDb)
+
+	n := &host.ConnectedNotifee{
+		Ctx: ctx,
+	}
+
+	h.Network().Notify(n)
 
 	// response memstore
 	// todo flush memstore occasionally
@@ -70,7 +78,7 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	go listenToChannels(ctx)
 
 	// pubsub topics from p2p
-	topic := messaging.Subscribe(ctx, host, topicName)
+	topic := messaging.Subscribe(ctx, h, topicName)
 	ctx = context.WithValue(ctx, "topic", topic)
 
 	// start health monitoring
@@ -86,7 +94,7 @@ func Run(cmd *cobra.Command, args []string, configPath string) {
 	defer ticker.Stop()
 
 	// discover peers
-	go dht.DiscoverPeers(ctx, host, topicName)
+	go dht.DiscoverPeers(ctx, h)
 
 	// daemon is running
 	// waiting for ctrl-c to exit
