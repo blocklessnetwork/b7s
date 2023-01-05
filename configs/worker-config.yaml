@@ -3,9 +3,9 @@ node:
   ip: 0.0.0.0
   # 0 means random port
   port: 0
-  # join the blockless network by boot strapping to one of our worker nodes
+  key_path: /Users/derekanderson/Projects/blockless/net2/configs/testkeys/ident2/priv.bin
   boot_nodes:
-    - /ip4/147.75.84.103/tcp/32536/p2p/12D3KooWDCELEqCuHGqqRiMwSjPFLAKnVjL6mGVpSHASmmxTqovc
+    - /ip4/0.0.0.0/tcp/9527/p2p/12D3KooWH9GerdSEroL2nqjpd2GuE5dwmqNi7uHX7FoywBdKcP4q
   workspace_root: /tmp/worker
   runtime_path: /tmp/runtime
 rest:

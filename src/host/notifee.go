@@ -15,10 +15,6 @@ type ConnectedNotifee struct {
 
 // Implement the Connected/Disconnected methods of the Notifee interface
 func (n *ConnectedNotifee) Connected(network network.Network, connection network.Conn) {
-	// log.Info("Connected to: ", connection.RemoteMultiaddr(), connection.RemotePeer())
-	// a peer has connected take the multiaddress and the peer id and store it in pebbleDB
-	// if the peer is already in the database, update the last seen time
-	// if the peer is not in the database, add it
 
 	// get the peer id
 	peerID := connection.RemotePeer()
