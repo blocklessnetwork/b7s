@@ -2,8 +2,10 @@ package dht
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 
+	db "github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/models"
 	"github.com/libp2p/go-libp2p-core/peer"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
@@ -30,9 +32,27 @@ func InitDHT(ctx context.Context, h host.Host) *dht.IpfsDHT {
 	if err = kademliaDHT.Bootstrap(ctx); err != nil {
 		panic(err)
 	}
-	var wg sync.WaitGroup
 
 	bootNodes := []multiaddr.Multiaddr{}
+	var dialBackPeers []models.Peer
+	peersRecordString, err := db.Get(ctx, "peers")
+
+	if err != nil {
+		peersRecordString = []byte("[]")
+	}
+	err = json.Unmarshal(peersRecordString, &dialBackPeers)
+	if err != nil {
+		log.Info("error unmarshalling peers record: %v", err)
+	}
+
+	if len(dialBackPeers) > 0 {
+		for _, peer := range dialBackPeers {
+			peerMultiAddr := peer.MultiAddr + "/p2p/" + peer.Id.Pretty()
+			bootNodes = append(bootNodes, multiaddr.StringCast(peerMultiAddr))
+		}
+	}
+
+	var wg sync.WaitGroup
 
 	cfg := ctx.Value("config").(models.Config)
 	for _, bootNode := range cfg.Node.BootNodes {

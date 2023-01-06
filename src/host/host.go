@@ -3,7 +3,6 @@ package host
 import (
 	"context"
 	"io/ioutil"
-
 	"strconv"
 
 	"github.com/blocklessnetworking/b7s/src/messaging"
@@ -14,10 +13,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// NewHost creates a new libp2p host
 func NewHost(ctx context.Context, port int, address string) host.Host {
-
-	// see if we have a private key to load
 	var privKey crypto.PrivKey
+
+	// Read the private key file if it exists
 	keyPath := ctx.Value("config").(models.Config).Node.KeyPath
 	if keyPath != "" {
 		log.Println("loading private key from: ", keyPath)
@@ -42,21 +42,20 @@ func NewHost(ctx context.Context, port int, address string) host.Host {
 		libp2p.NATPortMap(),
 	}
 
-	// load private key if we have one
-	// otherwise we will just generate an identity when we start the host
+	// Use the private key if it exists, otherwise generate an identity when starting the host
 	if privKey != nil {
 		opts = append(opts, libp2p.Identity(privKey))
 	}
 
-	host, err := libp2p.New(opts...)
+	h, err := libp2p.New(opts...)
 	if err != nil {
 		panic(err)
 	}
 
-	log.Info("host: ", hostAddress+"/p2p/"+host.ID().Pretty())
+	log.Info("host: ", hostAddress+"/p2p/"+h.ID().Pretty())
 
-	// set a stream handler on the worker to listen for incoming streams
-	messaging.ListenMessages(ctx, host)
+	// Set a stream handler to listen for incoming streams
+	messaging.ListenMessages(ctx, h)
 
-	return host
+	return h
 }
