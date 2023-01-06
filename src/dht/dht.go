@@ -3,6 +3,8 @@ package dht
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"sync"
 
 	db "github.com/blocklessnetworking/b7s/src/db"
@@ -17,69 +19,84 @@ import (
 )
 
 func InitDHT(ctx context.Context, h host.Host) *dht.IpfsDHT {
-	// Start a DHT, for use in peer discovery. We can't just make a new DHT
-	// client because we want each peer to maintain its own local copy of the
-	// DHT, so that the bootstrapping node of the DHT can go down without
-	// inhibiting future peer discovery.
+	// Start a DHT, for use in peer discovery.
 	kademliaDHT, err := dht.New(ctx, h)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// all nodes should respond to queries
+	// Set the DHT to server mode.
 	dht.Mode(dht.ModeServer)
 
-	if err != nil {
-		panic(err)
-	}
+	// Bootstrap the DHT.
 	if err = kademliaDHT.Bootstrap(ctx); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	bootNodes := []multiaddr.Multiaddr{}
+	// Get the list of bootstrap nodes from the configuration.
+	cfg := ctx.Value("config").(models.Config)
+	bootNodes := cfg.Node.BootNodes
+
+	// Get the list of dial-back peers from the database.
 	var dialBackPeers []models.Peer
 	peersRecordString, err := db.Get(ctx, "peers")
-
 	if err != nil {
 		peersRecordString = []byte("[]")
 	}
-	err = json.Unmarshal(peersRecordString, &dialBackPeers)
-	if err != nil {
-		log.Info("error unmarshalling peers record: %v", err)
+	if err = json.Unmarshal(peersRecordString, &dialBackPeers); err != nil {
+		log.WithError(err).Info("Error unmarshalling peers record")
 	}
 
-	if len(dialBackPeers) > 0 {
-		for _, peer := range dialBackPeers {
-			peerMultiAddr := peer.MultiAddr + "/p2p/" + peer.Id.Pretty()
-			bootNodes = append(bootNodes, multiaddr.StringCast(peerMultiAddr))
+	//log the length of dialBackPeers
+	log.WithField("dialBackPeers", len(dialBackPeers)).Info("dialBackPeers")
+
+	// Convert the dial-back peers to multiaddrs and add them to the list of bootstrap nodes if they do not already exist.
+	// likely good to limit the number of dial-back peers to a small number.
+	// and we need to limit to workers
+	for _, peer := range dialBackPeers {
+		peerMultiAddr := fmt.Sprintf("%s/p2p/%s", peer.MultiAddr, peer.Id.Pretty())
+		peerMultiAddr = strings.Replace(peerMultiAddr, "127.0.0.1", "0.0.0.0", 1)
+		//log peer add
+		log.WithField("peerMultiAddr", peerMultiAddr).Info("peerMultiAddr")
+		peerExists := false
+		for _, bootNode := range bootNodes {
+			if bootNode == peerMultiAddr {
+				peerExists = true
+				break
+			}
+		}
+		if !peerExists {
+			bootNodes = append(bootNodes, peerMultiAddr)
 		}
 	}
 
+	// Connect to the bootstrap nodes.
 	var wg sync.WaitGroup
-
-	cfg := ctx.Value("config").(models.Config)
-	for _, bootNode := range cfg.Node.BootNodes {
-		bootNodes = append(bootNodes, multiaddr.StringCast(bootNode))
-	}
-
-	for _, peerAddr := range bootNodes {
-		peerinfo, _ := peer.AddrInfoFromP2pAddr(peerAddr)
+	for _, bootNode := range bootNodes {
+		peerAddr, err := peer.AddrInfoFromP2pAddr(multiaddr.StringCast(bootNode))
+		log.Info("booting from: ", peerAddr)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"bootNode": bootNode,
+				"error":    err,
+			}).Warn("Invalid bootstrap node address")
+			continue
+		}
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if err := h.Connect(ctx, *peerinfo); err != nil {
-				// todo figure out what we want to do with no good addresses
-				// no reason to panic here get's noisy with discovery
+			if err := h.Connect(ctx, *peerAddr); err != nil {
 				if err.Error() != "no good addresses" {
 					log.WithFields(log.Fields{
 						"localMultiAddr": h.Addrs(),
 						"peerID":         h.ID(),
 						"err":            err,
-					}).Warn("bootstrap warn")
+					}).Warn("Error connecting to bootstrap node")
 				}
 			}
 		}()
 	}
-
 	wg.Wait()
-
 	return kademliaDHT
 }
 
@@ -90,9 +107,8 @@ func DiscoverPeers(ctx context.Context, h host.Host) {
 	dutil.Advertise(ctx, routingDiscovery, topicName)
 	log.Info("starting peer discovery")
 	// Look for others who have announced and attempt to connect to them
-	anyConnected := false
-	for !anyConnected {
-
+	numConnected := 0
+	for numConnected < 20 {
 		peerChan, err := routingDiscovery.FindPeers(ctx, topicName)
 		if err != nil {
 			panic(err)
@@ -109,7 +125,10 @@ func DiscoverPeers(ctx context.Context, h host.Host) {
 				log.WithFields(log.Fields{
 					"peerID": peer.ID.Pretty(),
 				}).Info("connected to a peer")
-				anyConnected = true
+				numConnected++
+				if numConnected >= 20 {
+					break
+				}
 			}
 		}
 	}

@@ -17,25 +17,31 @@ type ConnectedNotifee struct {
 }
 
 func (n *ConnectedNotifee) Connected(network network.Network, connection network.Conn) {
-	// Get the peer ID
+
+	// get the peer id and multiaddr.
 	peerID := connection.RemotePeer()
+
+	// this address doesn't give us the in bound port for a dialback
 	multiAddr := connection.RemoteMultiaddr()
+
+	// Get the peer record from the database.
 	peerRecord, err := db.Get(n.Ctx, peerID.Pretty())
 	if err != nil {
-		log.Info("error getting peer record from database: %v", err)
+		log.WithError(err).Info("Error getting peer record from database")
 	}
 
+	// Get the list of peers from the database.
 	peersRecordString, err := db.Get(n.Ctx, "peers")
 	if err != nil {
 		peersRecordString = []byte("[]")
 	}
 
 	var peers []models.Peer
-	err = json.Unmarshal(peersRecordString, &peers)
-	if err != nil {
-		log.Info("error unmarshalling peers record: %v", err)
+	if err = json.Unmarshal(peersRecordString, &peers); err != nil {
+		log.WithError(err).Info("Error unmarshalling peers record")
 	}
 
+	// Create a new peer info struct.
 	peerInfo := models.Peer{
 		Type:      "peer",
 		Id:        peerID,
@@ -43,28 +49,48 @@ func (n *ConnectedNotifee) Connected(network network.Network, connection network
 		AddrInfo:  network.Peerstore().PeerInfo(peerID),
 	}
 
-	j, err := json.Marshal(peerInfo)
-	if err != nil {
-		log.Info("error marshalling peer info: %v", err)
-		return
-	}
-
-	peers = append(peers, peerInfo)
-	peersRecordString, err = json.Marshal(peers)
-	if err != nil {
-		log.Info("error marshalling peers record: %v", err)
-	}
-
-	log.Info(string(j))
-	if peerRecord == nil {
-		if err := db.Set(n.Ctx, peerID.Pretty(), string(j)); err != nil {
-			log.Info("error setting peer record in database: %v", err)
+	// Check if the peer is already in the list.
+	peerExists := false
+	for _, peer := range peers {
+		if peer.Id == peerInfo.Id {
+			peerExists = true
+			break
 		}
 	}
 
-	log.Info("setting peers in database")
-	if err := db.Set(n.Ctx, "peers", string(peersRecordString)); err != nil {
-		log.Info("error setting peers record in database: %v", err)
+	// If the peer is not in the list, add it.
+	if !peerExists {
+		peers = append(peers, peerInfo)
+	}
+
+	// Marshal the peer info struct to JSON.
+	peerJSON, err := json.Marshal(peerInfo)
+	if err != nil {
+		log.WithError(err).Info("Error marshalling peer info")
+		return
+	}
+
+	// Marshal the list of peers to JSON.
+	peersJSON, err := json.Marshal(peers)
+	if err != nil {
+		log.WithError(err).Info("Error marshalling peers record")
+	}
+
+	//log the peerInfo
+	log.WithFields(log.Fields{
+		"peerInfo": peerInfo,
+	}).Info("Peer Info Stored")
+
+	// If the peer record does not exist in the database, set it.
+	if peerRecord == nil {
+		if err := db.Set(n.Ctx, peerID.Pretty(), string(peerJSON)); err != nil {
+			log.WithError(err).Info("Error setting peer record in database")
+		}
+	}
+
+	// Set the list of peers in the database.
+	if err := db.Set(n.Ctx, "peers", string(peersJSON)); err != nil {
+		log.WithError(err).Info("Error setting peers record in database")
 	}
 }
 
