@@ -1,15 +1,16 @@
 package db
 
 import (
+	"context"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/cockroachdb/pebble"
 )
 
-func Get(DatabaseId string) *pebble.DB {
-
+func GetDb(DatabaseId string) *pebble.DB {
 	dbPath := DatabaseId
-	log.Info("Opening database: ", dbPath)
+	log.Info("opening database: ", dbPath)
 	db, err := pebble.Open(dbPath, &pebble.Options{})
 	if err != nil {
 		log.Warn(err)
@@ -17,7 +18,8 @@ func Get(DatabaseId string) *pebble.DB {
 	return db
 }
 
-func Set(db *pebble.DB, key string, value string) error {
+func Set(ctx context.Context, key string, value string) error {
+	db := ctx.Value("appDb").(*pebble.DB)
 	if err := db.Set([]byte(key), []byte(value), pebble.Sync); err != nil {
 		log.Warn(err)
 		return err
@@ -25,7 +27,18 @@ func Set(db *pebble.DB, key string, value string) error {
 	return nil
 }
 
-func Value(db *pebble.DB, key string) (string, error) {
+func Get(ctx context.Context, key string) ([]byte, error) {
+	db := ctx.Value("appDb").(*pebble.DB)
+	value, closer, err := db.Get([]byte(key))
+	if err != nil {
+		return nil, err
+	}
+	defer closer.Close()
+	return value, nil
+}
+
+func GetString(ctx context.Context, key string) (string, error) {
+	db := ctx.Value("appDb").(*pebble.DB)
 	value, closer, err := db.Get([]byte(key))
 	if err != nil {
 		return "", err
