@@ -15,7 +15,6 @@ import (
 	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/http"
 	"github.com/blocklessnetworking/b7s/src/models"
-	"github.com/cockroachdb/pebble"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -49,8 +48,7 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 		functionManifest.Function.ID = strings.Split(u.Hostname(), ".")[0]
 	}
 
-	appDb := ctx.Value("appDb").(*pebble.DB)
-	cachedFunction, err := db.Value(appDb, functionManifest.Function.ID)
+	cachedFunction, err := db.GetString(ctx, functionManifest.Function.ID)
 	WorkSpaceDirectory := WorkSpaceRoot + "/" + functionManifest.Function.ID
 
 	if err != nil {
@@ -79,7 +77,7 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 			log.Warn(error)
 		}
 
-		db.Set(appDb, functionManifest.Function.ID, string(functionManifestJson))
+		db.Set(ctx, functionManifest.Function.ID, string(functionManifestJson))
 
 		log.WithFields(log.Fields{
 			"uri": functionManifest.Deployment.Uri,

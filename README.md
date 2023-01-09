@@ -1,54 +1,43 @@
-![Coverage](https://img.shields.io/badge/Coverage-48.1%25-yellow)
+![Coverage](https://img.shields.io/badge/Coverage-0.0%25-red)
 
 # b7s daemon
 
-`blockless` the peer to peer networking daemon for the blockless network.
+b7s is a peer-to-peer networking daemon for the blockless network. It is supported on Windows, Linux, and MacOS platforms for both x64 and arm64 architectures.
 
-Supported Platforms
+## Installation
 
-| OS      | arm64 | x64 |
-| ------- | ----- | --- |
-| Windows |       | x   |
-| Linux   | x     | x   |
-| MacOS   | x     | x   |
-
-Using **curl**:
+You can install b7s using either curl or wget:
 
 ```bash
+# using curl
 sudo sh -c "curl https://raw.githubusercontent.com/blocklessnetwork/b7s/main/download.sh | bash"
-```
 
-Using **wget**:
-
-```bash
+# using wget
 sudo sh -c "wget https://raw.githubusercontent.com/blocklessnetwork/b7s/main/download.sh -v -O download.sh; chmod +x download.sh; ./download.sh; rm -rf download.sh"
 ```
 
-Use `docker` see docker [docs](docker/README.md)
+You can also use Docker to install b7s. See the [Docker documentation](https://chat.openai.com/chat/docker/README.md) for more information.
 
-## usage
+Usage
+b7s can be run with a number of commands and flags:
 
-commands
-`b7s [command]`
+Commands:
 
-- `help` display help menu
-- `keygen` generate identity keys for the node
+- `help`: display the help menu
+- `keygen`: generate identity keys for the node
+  Flags:
 
-flags
-`b7s --flag value`
+- `config`: path to the configuration file
+- `out`: style of logging used in the daemon (rich, text, or json)
+  For example:
 
-- `config` path to the configuration file
-- `out` style of logging used in the daemon (rich|text|json)
+## Dependencies
 
-```bash
-b7s --config=../configs/head-config.yaml --out=json
-```
+b7s depends on the following repositories:
 
-## depends on
+- blocklessnetwork/runtime
+- blocklessnetwork/orchestration-chain
 
-- [blocklessnetwork/runtime](https://github.com/blocklessnetwork/runtime)
-- [blocklessnetwork/orchestration-chain](https://github.com/blocklessnetwork/orchestration-chain)
+## Contributing
 
-## contributing
-
-see [src/readme](src/README.md)
+See src/README for information on contributing to the b7s project.

@@ -2,7 +2,7 @@ node:
   name: head#1
   ip: 0.0.0.0
   port: 9527
-  key_path: /Users/derekanderson/Projects/blockless/net2/configs/testkeys/priv.bin
+  key_path: /Users/derekanderson/Projects/blockless/net2/configs/testkeys/ident1/priv.bin
   use_static_keys: true
   workspace_root: /tmp/head
   runtime_path: /tmp/runtime
