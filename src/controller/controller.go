@@ -62,7 +62,7 @@ func MsgInstallFunction(ctx context.Context, installRequest models.RequestFuncti
 		ManifestUrl: manifestPath,
 	}
 
-	log.Debug("request to message peer for install function")
+	log.Info("request to message peer for install function ", msg.ManifestUrl)
 	messaging.PublishMessage(ctx, ctx.Value("topic").(*pubsub.Topic), msg)
 }
 
