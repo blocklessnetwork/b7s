@@ -1,21 +1,21 @@
-.phony: all
+.PHONY: all
 all: clean build
 
-.phony: test
+.PHONY: test
 test:
-	@echo "Testing..."
+	@echo "\n🧪 Testing...\n"
 	go clean -testcache
 	go test ./src/...
-	@echo "Done."
+	@echo "\n✅ Done.\n"
 
-.phony: build
+.PHONY: build
 build:
-	@echo "Building node..."
+	@echo "\n🛠 Building node...\n"
 	cd src && go build -o ../dist/b7s
-	@echo "Done."
+	@echo "\n✅ Done.\n"
 
-.phony: clean
+.PHONY: clean
 clean:
-	@echo "Cleaning..."
+	@echo "\n🧹 Cleaning...\n"
 	rm -rf dist
-	@echo "Done."
+	@echo "\n✅ Done.\n"

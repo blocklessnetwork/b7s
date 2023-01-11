@@ -1,8 +1,10 @@
+// Executor provides functions for running and interacting with functions.
 package executor
 
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -15,6 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// prepExecutionManifest creates the execution manifest file for the specified function.
 func prepExecutionManifest(ctx context.Context, requestId string, request models.RequestExecute, manifest models.FunctionManifest) (string, error) {
 	config := ctx.Value("config").(models.Config)
 
@@ -60,34 +63,42 @@ func queryRuntime(runtimePath string) error {
 	}
 	return nil
 }
-
-// executes a shell command to execute a wasm file
 func Execute(ctx context.Context, request models.RequestExecute, functionManifest models.FunctionManifest) (models.ExecutorResponse, error) {
-	requestId, _ := uuid.NewRandom()
+	requestID, _ := uuid.NewRandom()
 	config := ctx.Value("config").(models.Config)
-	tempFSPath := filepath.Join(config.Node.WorkspaceRoot, "t", requestId.String(), "fs")
+	tempFSPath := filepath.Join(config.Node.WorkspaceRoot, "t", requestID.String(), "fs")
 	os.MkdirAll(tempFSPath, os.ModePerm)
 
-	// check to see if runtime is available
-	err := queryRuntime(config.Node.RuntimePath)
+	var execCommand func(string, ...string) *exec.Cmd
+	if ctxExecCommand, ok := ctx.Value("execCommand").(func(string, ...string) *exec.Cmd); ok {
+		execCommand = ctxExecCommand
+	} else {
+		// Check if the runtime is available.
+		if err := queryRuntime(config.Node.RuntimePath); err != nil {
+			return models.ExecutorResponse{
+				Code:      enums.ResponseCodeError,
+				RequestId: requestID.String(),
+			}, err
+		}
+		execCommand = exec.Command
+	}
 
+	// Prepare the execution manifest.
+	runtimeManifestPath, err := prepExecutionManifest(ctx, requestID.String(), request, functionManifest)
 	if err != nil {
 		return models.ExecutorResponse{
 			Code:      enums.ResponseCodeError,
-			RequestId: requestId.String(),
+			RequestId: requestID.String(),
 		}, err
 	}
 
-	runtimeManifestPath, err := prepExecutionManifest(ctx, requestId.String(), request, functionManifest)
-
-	var executorResponse models.ExecutorResponse
-
-	// check to see if there is any input to pass to the runtime
-	var input string = ""
-	var envVars []models.RequestExecuteEnvVars = request.Config.EnvVars
-	var envVarString string = ""
-	var envVarKeys string = ""
-
+	// Build the input and environment variable strings.
+	input := ""
+	if request.Config.Stdin != nil {
+		input = *request.Config.Stdin
+	}
+	envVars := request.Config.EnvVars
+	envVarString, envVarKeys := "", ""
 	if len(envVars) > 0 {
 		for _, envVar := range envVars {
 			envVarString += envVar.Name + "=\"" + envVar.Value + "\" "
@@ -97,26 +108,25 @@ func Execute(ctx context.Context, request models.RequestExecute, functionManifes
 		envVarKeys = envVarKeys[:len(envVarKeys)-1]
 	}
 
-	if request.Config.Stdin != nil {
-		input = *request.Config.Stdin
-	}
+	// Build the command string.
+	cmd := fmt.Sprintf("echo \"%s\" | %s BLS_LIST_VARS=\"%s\" %s/blockless-cli %s", input, envVarString, envVarKeys, config.Node.RuntimePath, runtimeManifestPath)
 
-	cmd := "echo \"" + input + "\" | " + envVarString + " BLS_LIST_VARS=\"" + envVarKeys + "\" " + config.Node.RuntimePath + "/blockless-cli " + runtimeManifestPath
-	run := exec.Command("bash", "-c", cmd)
+	// Execute the command.
+	run := execCommand("bash", "-c", cmd)
 	run.Dir = tempFSPath
 	out, err := run.Output()
-
 	if err != nil {
-
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to execute request")
-
-		return executorResponse, err
+		log.WithFields(log.Fields{"err": err}).Error("failed to execute request")
+		return models.ExecutorResponse{
+			Code:      enums.ResponseCodeError,
+			RequestId: requestID.String(),
+		}, err
 	}
 
+	// Store the result in the execution response memory store
+
 	executionResponseMemStore := ctx.Value("executionResponseMemStore").(memstore.ReqRespStore)
-	err = executionResponseMemStore.Set(requestId.String(), &models.MsgExecuteResponse{
+	err = executionResponseMemStore.Set(requestID.String(), &models.MsgExecuteResponse{
 		Type:   enums.MsgExecuteResponse,
 		Code:   enums.ResponseCodeOk,
 		Result: string(out),
@@ -129,11 +139,11 @@ func Execute(ctx context.Context, request models.RequestExecute, functionManifes
 	}
 
 	log.WithFields(log.Fields{
-		"requestId": requestId,
+		"requestId": requestID,
 	}).Info("function executed")
 
-	executorResponse = models.ExecutorResponse{
-		RequestId: requestId.String(),
+	executorResponse := models.ExecutorResponse{
+		RequestId: requestID.String(),
 		Code:      enums.ResponseCodeOk,
 		Result:    string(out),
 	}
