@@ -5,8 +5,16 @@ import (
 
 	"github.com/blocklessnetworking/b7s/src/enums"
 	"github.com/blocklessnetworking/b7s/src/models"
-	"github.com/libp2p/go-libp2p-core/host"
+	"github.com/libp2p/go-libp2p-core/peer"
 )
+
+type Network interface {
+	ConnsToPeer(id peer.ID) map[peer.ID]bool
+}
+
+type Host interface {
+	Network() Network
+}
 
 func SelectWorkerFromRollCall(
 	ctx context.Context,
@@ -15,8 +23,8 @@ func SelectWorkerFromRollCall(
 	rollcallRequest models.MsgRollCall,
 ) bool {
 
-	host := ctx.Value("host").(host.Host)
-	conns := host.Network().ConnsToPeer(rollcallResponse.From)
+	h := ctx.Value("host").(Host)
+	conns := h.Network().ConnsToPeer(rollcallResponse.From)
 
 	// pop off all the responses that don't match our first found connection
 	// worker with function
