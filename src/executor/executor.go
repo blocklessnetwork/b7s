@@ -25,6 +25,9 @@ func prepExecutionManifest(ctx context.Context, requestId string, request models
 	manifestPath := filepath.Join(config.Node.WorkspaceRoot, "t", requestId, "runtime-manifest.json")
 	tempFS := filepath.Join(config.Node.WorkspaceRoot, "t", requestId, "fs")
 
+	// Create the directory
+	os.MkdirAll(filepath.Dir(manifestPath), os.ModePerm)
+
 	type Manifest struct {
 		FS_ROOT_PATH   string   `json:"fs_root_path,omitempty"`
 		ENTRY          string   `json:"entry,omitempty"`
@@ -63,6 +66,7 @@ func queryRuntime(runtimePath string) error {
 	}
 	return nil
 }
+
 func Execute(ctx context.Context, request models.RequestExecute, functionManifest models.FunctionManifest) (models.ExecutorResponse, error) {
 	requestID, _ := uuid.NewRandom()
 	config := ctx.Value("config").(models.Config)
