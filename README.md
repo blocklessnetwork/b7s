@@ -1,4 +1,4 @@
-![Coverage](https://img.shields.io/badge/Coverage-18.1%25-red)
+![Coverage](https://img.shields.io/badge/Coverage-25.5%25-red)
 
 # b7s daemon
 
