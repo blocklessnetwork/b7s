@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +14,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type testStruct struct {
+	Field1 string `json:"field1"`
+	Field2 int    `json:"field2"`
+}
+
+func TestGetJson(t *testing.T) {
+	// setup test server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		jsonData := testStruct{
+			Field1: "value1",
+			Field2: 2,
+		}
+		json.NewEncoder(w).Encode(jsonData)
+	}))
+	defer ts.Close()
+
+	// test GetJson
+	var target testStruct
+	err := GetJson(ts.URL, &target)
+	assert.Nil(t, err)
+	assert.Equal(t, "value1", target.Field1)
+	assert.Equal(t, 2, target.Field2)
+}
 func TestDownload(t *testing.T) {
 	// setup test server
 	// create a test server to simulate the function repository
