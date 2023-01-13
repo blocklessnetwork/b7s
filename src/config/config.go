@@ -16,24 +16,23 @@ var (
 )
 
 func parseYamlFile(file string, o interface{}) error {
-
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-
 	if file == "" {
 		file = "config.yaml"
 	}
 
-	exPath := filepath.Dir(ex)
-	configPath := filepath.Join(exPath, file)
+	if !filepath.IsAbs(file) {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("get current working directory failed: %v", err)
+		}
+		file = filepath.Join(cwd, file)
+	}
 
 	log.WithFields(log.Fields{
-		"configPath": configPath,
+		"configPath": file,
 	}).Info("config path set")
 
-	b, err := ioutil.ReadFile(configPath)
+	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		return fmt.Errorf("read file %s failed (%s)", file, err.Error())
 	}
