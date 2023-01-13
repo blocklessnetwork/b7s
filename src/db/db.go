@@ -2,25 +2,45 @@ package db
 
 import (
 	"context"
+	"fmt"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/cockroachdb/pebble"
 )
 
-func GetDb(DatabaseId string) *pebble.DB {
-	dbPath := DatabaseId
-	log.Info("opening database: ", dbPath)
-	db, err := pebble.Open(dbPath, &pebble.Options{})
-	if err != nil {
-		log.Warn(err)
+var (
+	mtx      sync.RWMutex
+	db       *pebble.DB
+	isClosed bool
+)
+
+func GetDb(databaseID string) *pebble.DB {
+	mtx.Lock()
+	defer mtx.Unlock()
+	if db == nil {
+		log.Info("opening database: ", databaseID)
+		d, err := pebble.Open(databaseID, &pebble.Options{})
+		if err != nil {
+			log.Warn(err)
+		}
+		db = d
 	}
+	isClosed = false
 	return db
 }
 
 func Set(ctx context.Context, key string, value string) error {
-	db := ctx.Value("appDb").(*pebble.DB)
-	if err := db.Set([]byte(key), []byte(value), pebble.Sync); err != nil {
+	mtx.Lock()
+	defer mtx.Unlock()
+
+	if isClosed {
+		return fmt.Errorf("database is closed")
+	}
+
+	d := ctx.Value("appDb").(*pebble.DB)
+	if err := d.Set([]byte(key), []byte(value), pebble.Sync); err != nil {
 		log.Warn(err)
 		return err
 	}
@@ -28,8 +48,15 @@ func Set(ctx context.Context, key string, value string) error {
 }
 
 func Get(ctx context.Context, key string) ([]byte, error) {
-	db := ctx.Value("appDb").(*pebble.DB)
-	value, closer, err := db.Get([]byte(key))
+	mtx.RLock()
+	defer mtx.RUnlock()
+
+	if isClosed {
+		return nil, fmt.Errorf("database is closed")
+	}
+
+	d := ctx.Value("appDb").(*pebble.DB)
+	value, closer, err := d.Get([]byte(key))
 	if err != nil {
 		return nil, err
 	}
@@ -38,8 +65,15 @@ func Get(ctx context.Context, key string) ([]byte, error) {
 }
 
 func GetString(ctx context.Context, key string) (string, error) {
-	db := ctx.Value("appDb").(*pebble.DB)
-	value, closer, err := db.Get([]byte(key))
+	mtx.RLock()
+	defer mtx.RUnlock()
+
+	if isClosed {
+		return "", fmt.Errorf("database is closed")
+	}
+
+	d := ctx.Value("appDb").(*pebble.DB)
+	value, closer, err := d.Get([]byte(key))
 	if err != nil {
 		return "", err
 	}
@@ -48,8 +82,21 @@ func GetString(ctx context.Context, key string) (string, error) {
 	return stringVal, nil
 }
 
-func Close(db *pebble.DB) {
-	if err := db.Close(); err != nil {
-		log.Warn(err)
+func Close(ctx context.Context) error {
+	mtx.Lock()
+	defer mtx.Unlock()
+
+	if isClosed {
+		return fmt.Errorf("database is closed")
 	}
+
+	d := ctx.Value("appDb").(*pebble.DB)
+	if db != nil {
+		if err := d.Close(); err != nil {
+			log.Warn(err)
+		}
+		db = nil
+	}
+	isClosed = true
+	return nil
 }

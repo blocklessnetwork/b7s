@@ -43,8 +43,8 @@ func TestIsFunctionInstalled(t *testing.T) {
 	mockManifestBytes, _ := json.Marshal(mockManifest)
 
 	appDb := db.GetDb("/tmp/b7s")
-	defer db.Close(appDb)
 	ctx := context.WithValue(context.Background(), "appDb", appDb)
+	defer db.Close(ctx)
 
 	// Insert a test value into the database
 	db.Set(ctx, "test_key", string(mockManifestBytes))
@@ -110,8 +110,8 @@ func TestExecuteFunction(t *testing.T) {
 	mockManifestBytes, _ := json.Marshal(mockManifest)
 
 	appDb := db.GetDb("/tmp/b7s")
-	defer db.Close(appDb)
 	ctx = context.WithValue(ctx, "appDb", appDb)
+	defer db.Close(ctx)
 
 	// response memstore
 	executionResponseMemStore := memstore.NewReqRespStore()

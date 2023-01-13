@@ -29,8 +29,8 @@ func TestJSONRepository_Get(t *testing.T) {
 	ctx := context.WithValue(context.Background(), "config", mockConfig)
 
 	appDb := db.GetDb("/tmp/b7s_test")
-	defer db.Close(appDb)
 	ctx = context.WithValue(ctx, "appDb", appDb)
+	defer db.Close(ctx)
 
 	mockManifest := models.FunctionManifest{
 		Function: models.Function{
