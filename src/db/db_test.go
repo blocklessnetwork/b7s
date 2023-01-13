@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,21 +10,31 @@ import (
 
 func TestDb(t *testing.T) {
 	// setup
-	appDb := GetDb("/tmp/test_db")
-	defer Close(appDb)
-	ctx := context.WithValue(context.Background(), "appDb", appDb)
+	databaseID := "/tmp/test_db"
+	os.RemoveAll(databaseID)
 
-	// test set
+	// test GetDb
+	db := GetDb(databaseID)
+	assert.NotNil(t, db)
+
+	ctx := context.WithValue(context.Background(), "appDb", db)
+
+	// test Set and Get
 	err := Set(ctx, "test_key", "test_value")
 	assert.Nil(t, err)
 
-	// test get
-	val, err := Get(ctx, "test_key")
+	value, err := Get(ctx, "test_key")
 	assert.Nil(t, err)
-	assert.Equal(t, "test_value", string(val))
+	assert.Equal(t, "test_value", string(value))
 
-	// test get string
-	valStr, err := GetString(ctx, "test_key")
+	// test GetString
+	stringValue, err := GetString(ctx, "test_key")
 	assert.Nil(t, err)
-	assert.Equal(t, "test_value", valStr)
+	assert.Equal(t, "test_value", stringValue)
+
+	// test Close
+	Close(ctx)
+	value, err = Get(ctx, "test_key")
+	assert.Nil(t, value)
+	assert.NotNil(t, err)
 }
