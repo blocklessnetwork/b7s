@@ -1,6 +1,7 @@
 package restapi
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -35,6 +36,8 @@ func handleRequestExecute(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+type MsgInstallFunctionFunc func(context.Context, models.RequestFunctionInstall)
+
 func handleInstallFunction(w http.ResponseWriter, r *http.Request) {
 	// body decode
 	request := models.RequestFunctionInstall{}
@@ -51,14 +54,18 @@ func handleInstallFunction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// install the function
-	// err := controller.InstallFunction(r.Context(), request.Uri)
-	controller.MsgInstallFunction(r.Context(), request)
+	// get the MsgInstallFunction function from the context
+	var msgInstallFunc MsgInstallFunctionFunc
+	if r.Context().Value("msgInstallFunc") == nil {
+		msgInstallFunc = controller.MsgInstallFunction
+	} else {
+		msgInstallFunc = r.Context().Value("msgInstallFunc").(func(context.Context, models.RequestFunctionInstall))
+	}
 
-	// if err != nil {
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	// 	return
-	// }
+	// call the function
+	if msgInstallFunc != nil {
+		msgInstallFunc(r.Context(), request)
+	}
 
 	response := models.ResponseInstall{
 		Code: enums.ResponseCodeOk,
