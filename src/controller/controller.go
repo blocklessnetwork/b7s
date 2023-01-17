@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/enums"
@@ -45,29 +46,41 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 }
 
 func MsgInstallFunction(ctx context.Context, installRequest models.RequestFunctionInstall) {
-	var manifestPath string
-	// determine the manifest path
+	var manifestURL string
 	if installRequest.Uri != "" {
-		manifestPath = installRequest.Uri
-	}
-
-	if installRequest.Cid != "" {
-		// todo
-		// use other portals when available
-		manifestPath = "https://" + installRequest.Cid + ".ipfs.w3s.link/manifest.json"
+		manifestURL = installRequest.Uri
+	} else if installRequest.Cid != "" {
+		manifestURL = fmt.Sprintf("https://%s.ipfs.w3s.link/manifest.json", installRequest.Cid)
+	} else {
+		log.Error("Neither URI nor CID provided in install request")
+		return
 	}
 
 	msg := models.MsgInstallFunction{
 		Type:        enums.MsgInstallFunction,
-		ManifestUrl: manifestPath,
+		ManifestUrl: manifestURL,
 	}
 
-	log.Info("request to message peer for install function ", msg.ManifestUrl)
+	log.Info("Requesting to message peer for function installation", msg.ManifestUrl)
 	messaging.PublishMessage(ctx, ctx.Value("topic").(*pubsub.Topic), msg)
 }
 
-func InstallFunction(ctx context.Context, manifestPath string) error {
-	repository.GetPackage(ctx, manifestPath)
+func InstallFunction(ctx context.Context, installMessage models.MsgInstallFunction) error {
+	if _, err := repository.GetPackage(ctx, installMessage.ManifestUrl); err != nil {
+		return err
+	}
+
+	msg, err := json.Marshal(models.NewMsgInstallFunctionResponse(enums.ResponseCodeAccepted, "installed"))
+	if err != nil {
+		log.Error("Error marshalling install function response", err)
+		return err
+	}
+
+	if err := messaging.SendMessage(ctx, installMessage.From, msg); err != nil {
+		log.Error("Error sending message to peer", err)
+		return err
+	}
+
 	return nil
 }
 

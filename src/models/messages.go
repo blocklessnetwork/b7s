@@ -94,3 +94,18 @@ func NewMsgInstallFunction(manifestUrl string) *MsgInstallFunction {
 		ManifestUrl: manifestUrl,
 	}
 }
+
+type MsgInstallFunctionResponse struct {
+	Type    string  `json:"type,omitempty"`
+	From    peer.ID `json:"from,omitempty"`
+	Code    string  `json:"code,omitempty"`
+	Message string  `json:"message,omitempty"`
+}
+
+func NewMsgInstallFunctionResponse(code string, message string) *MsgInstallFunctionResponse {
+	return &MsgInstallFunctionResponse{
+		Type:    enums.MsgInstallFunctionResponse,
+		Code:    code,
+		Message: message,
+	}
+}

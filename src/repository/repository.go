@@ -21,7 +21,7 @@ type JSONRepository struct{}
 
 // get the manifest from the repository
 // downloads the binary
-func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.FunctionManifest {
+func (r JSONRepository) Get(ctx context.Context, manifestPath string) (models.FunctionManifest, error) {
 	WorkSpaceRoot := ctx.Value("config").(models.Config).Node.WorkspaceRoot
 
 	functionManifest := models.FunctionManifest{}
@@ -69,6 +69,7 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 
 		if error != nil {
 			log.Warn(error)
+			return functionManifest, error
 		}
 
 		db.Set(ctx, functionManifest.Function.ID, string(functionManifestJson))
@@ -89,7 +90,7 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) models.Fun
 		}).Info("function sync skipped, already present")
 	}
 
-	return functionManifest
+	return functionManifest, nil
 }
 
 func UnGzip(archive, destination string) error {

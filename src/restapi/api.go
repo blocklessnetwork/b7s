@@ -62,15 +62,23 @@ func handleInstallFunction(w http.ResponseWriter, r *http.Request) {
 		msgInstallFunc = r.Context().Value("msgInstallFunc").(func(context.Context, models.RequestFunctionInstall))
 	}
 
-	// call the function
-	if msgInstallFunc != nil {
-		msgInstallFunc(r.Context(), request)
-	}
+	// create a channel to wait for the response
+	responseCh := make(chan models.ResponseInstall)
+	go func() {
+		// call the function
+		ctx := context.WithValue(r.Context(), "installResponseChannel", responseCh)
+		if msgInstallFunc != nil {
+			msgInstallFunc(ctx, request)
+		}
+		response := models.ResponseInstall{
+			Code: enums.ResponseCodeOk,
+		}
+		// send the response to the channel
+		responseCh <- response
+	}()
 
-	response := models.ResponseInstall{
-		Code: enums.ResponseCodeOk,
-	}
-
+	// wait for the response from the channel
+	response := <-responseCh
 	json.NewEncoder(w).Encode(response)
 }
 

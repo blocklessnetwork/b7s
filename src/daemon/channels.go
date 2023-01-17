@@ -34,7 +34,7 @@ func listenToChannels(ctx context.Context) {
 	for {
 		select {
 		case msg := <-msgInstallFunctionChannel:
-			controller.InstallFunction(ctx, msg.ManifestUrl)
+			controller.InstallFunction(ctx, msg)
 		case msg := <-msgRollCallChannel:
 			controller.RollCallResponse(ctx, msg)
 		case msg := <-msgExecute:
