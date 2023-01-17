@@ -1,5 +1,6 @@
 ![Coverage](https://img.shields.io/badge/Coverage-47.9%25-yellow)
 
+
 # b7s daemon
 
 b7s is a peer-to-peer networking daemon for the blockless network. It is supported on Windows, Linux, and MacOS platforms for both x64 and arm64 architectures.
