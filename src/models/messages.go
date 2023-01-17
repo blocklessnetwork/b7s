@@ -6,6 +6,11 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
+type Message struct {
+	Type string
+	Data interface{}
+}
+
 type MsgBase struct {
 	Type string  `json:"type,omitempty"`
 	From peer.ID `json:"from,omitempty"`

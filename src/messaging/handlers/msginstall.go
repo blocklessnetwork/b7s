@@ -23,11 +23,16 @@ func HandleMsgInstall(ctx context.Context, message []byte) {
 	json.Unmarshal(message, msgInstall)
 	msgInstall.From = ctx.Value("peerID").(peer.ID)
 
-	channel := ctx.Value(enums.ChannelMsgInstallFunction).(chan models.MsgInstallFunction)
+	channel := ctx.Value(enums.ChannelMsgLocal).(chan models.Message)
 
 	log.WithFields(log.Fields{
 		"message": string(message),
 	}).Info("message to install")
 
-	channel <- *msgInstall
+	localMsg := models.Message{
+		Type: enums.MsgInstallFunction,
+		Data: msgInstall,
+	}
+
+	channel <- localMsg
 }

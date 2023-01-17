@@ -22,12 +22,13 @@ func HandleMessage(ctx context.Context, message []byte, peerID peer.ID) {
 	var response interface{}
 
 	handlers := map[string]func(context.Context, []byte){
-		enums.MsgHealthCheck:      handlers.HandleMsgHealthCheck,
-		enums.MsgExecute:          handlers.HandleMsgExecute,
-		enums.MsgExecuteResponse:  handlers.HandleMsgExecuteResponse,
-		enums.MsgRollCall:         handlers.HandleMsgRollCall,
-		enums.MsgRollCallResponse: handlers.HandleMsgRollCallResponse,
-		enums.MsgInstallFunction:  handlers.HandleMsgInstall,
+		enums.MsgHealthCheck:             handlers.HandleMsgHealthCheck,
+		enums.MsgExecute:                 handlers.HandleMsgExecute,
+		enums.MsgExecuteResponse:         handlers.HandleMsgExecuteResponse,
+		enums.MsgRollCall:                handlers.HandleMsgRollCall,
+		enums.MsgRollCallResponse:        handlers.HandleMsgRollCallResponse,
+		enums.MsgInstallFunction:         handlers.HandleMsgInstall,
+		enums.MsgInstallFunctionResponse: handlers.HandleMsgInstallResponse,
 	}
 
 	if handler, ok := handlers[msg.Type]; ok {

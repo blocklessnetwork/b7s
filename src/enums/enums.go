@@ -63,10 +63,11 @@ var (
 )
 
 var (
-	ChannelMsgInstallFunction  = "ChannelMsgInstallFunction"
-	ChannelMsgExecute          = "ChannelMsgExecute"
-	ChannelMsgExecuteResponse  = "ChannelMsgExecuteResponse"
-	ChannelMsgRollCall         = "ChannelMsgRollCall"
-	ChannelMsgHealthCheck      = "ChannelMsgHealthCheck"
+	ChannelMsgLocal = "ChannelMsgLocal"
+	// ChannelMsgInstallFunction  = "ChannelMsgInstallFunction"
+	// ChannelMsgExecute          = "ChannelMsgExecute"
+	ChannelMsgExecuteResponse = "ChannelMsgExecuteResponse"
+	// ChannelMsgRollCall         = "ChannelMsgRollCall"
+	// ChannelMsgHealthCheck      = "ChannelMsgHealthCheck"
 	ChannelMsgRollCallResponse = "ChannelMsgRollCallResponse"
 )

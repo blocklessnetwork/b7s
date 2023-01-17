@@ -29,8 +29,14 @@ func HandleMsgRollCall(ctx context.Context, message []byte) {
 		"message": string(message),
 	}).Info("rollcall message")
 
-	channel := ctx.Value(enums.ChannelMsgRollCall).(chan models.MsgRollCall)
-	channel <- *msgRollCall
+	channel := ctx.Value(enums.ChannelMsgLocal).(chan models.Message)
+
+	localMsg := models.Message{
+		Type: enums.MsgExecuteResponse,
+		Data: msgRollCall,
+	}
+
+	channel <- localMsg
 }
 
 func HandleMsgRollCallResponse(ctx context.Context, message []byte) {
@@ -42,6 +48,12 @@ func HandleMsgRollCallResponse(ctx context.Context, message []byte) {
 		"message": string(message),
 	}).Info("rollcall response")
 
-	rollcallResponseChannel := ctx.Value(enums.ChannelMsgRollCallResponse).(chan models.MsgRollCallResponse)
-	rollcallResponseChannel <- *msgRollCallResponse
+	channel := ctx.Value(enums.ChannelMsgLocal).(chan models.Message)
+
+	localMsg := models.Message{
+		Type: enums.MsgExecuteResponse,
+		Data: msgRollCallResponse,
+	}
+
+	channel <- localMsg
 }
