@@ -1,4 +1,5 @@
-![Coverage](https://img.shields.io/badge/Coverage-45.9%25-yellow)
+![Coverage](https://img.shields.io/badge/Coverage-47.9%25-yellow)
+
 
 # b7s daemon
 
@@ -16,7 +17,7 @@ sudo sh -c "curl https://raw.githubusercontent.com/blocklessnetwork/b7s/main/dow
 sudo sh -c "wget https://raw.githubusercontent.com/blocklessnetwork/b7s/main/download.sh -v -O download.sh; chmod +x download.sh; ./download.sh; rm -rf download.sh"
 ```
 
-You can also use Docker to install b7s. See the [Docker documentation](https://chat.openai.com/chat/docker/README.md) for more information.
+You can also use Docker to install b7s. See the [Docker documentation](/docker/README.md) for more information.
 
 Usage
 b7s can be run with a number of commands and flags:
