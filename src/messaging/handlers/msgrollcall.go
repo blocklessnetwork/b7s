@@ -32,8 +32,8 @@ func HandleMsgRollCall(ctx context.Context, message []byte) {
 	channel := ctx.Value(enums.ChannelMsgLocal).(chan models.Message)
 
 	localMsg := models.Message{
-		Type: enums.MsgExecuteResponse,
-		Data: msgRollCall,
+		Type: enums.MsgRollCall,
+		Data: *msgRollCall,
 	}
 
 	channel <- localMsg

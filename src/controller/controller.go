@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -47,11 +48,16 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 
 func MsgInstallFunction(ctx context.Context, installRequest models.RequestFunctionInstall) {
 	var manifestURL string
-	if installRequest.Uri != "" {
+
+	switch {
+	case installRequest.Uri != "":
 		manifestURL = installRequest.Uri
-	} else if installRequest.Cid != "" {
+		h := sha256.New()
+		h.Write([]byte(installRequest.Uri))
+		installRequest.Cid = fmt.Sprintf("%x", h.Sum(nil))
+	case installRequest.Cid != "":
 		manifestURL = fmt.Sprintf("https://%s.ipfs.w3s.link/manifest.json", installRequest.Cid)
-	} else {
+	default:
 		log.Error("Neither URI nor CID provided in install request")
 		return
 	}
@@ -59,6 +65,7 @@ func MsgInstallFunction(ctx context.Context, installRequest models.RequestFuncti
 	msg := models.MsgInstallFunction{
 		Type:        enums.MsgInstallFunction,
 		ManifestUrl: manifestURL,
+		Cid:         installRequest.Cid,
 	}
 
 	log.Info("Requesting to message peer for function installation", msg.ManifestUrl)
@@ -66,7 +73,7 @@ func MsgInstallFunction(ctx context.Context, installRequest models.RequestFuncti
 }
 
 func InstallFunction(ctx context.Context, installMessage models.MsgInstallFunction) error {
-	if _, err := repository.GetPackage(ctx, installMessage.ManifestUrl); err != nil {
+	if _, err := repository.GetPackage(ctx, installMessage); err != nil {
 		return err
 	}
 

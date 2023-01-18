@@ -6,7 +6,7 @@ import (
 	"github.com/blocklessnetworking/b7s/src/models"
 )
 
-func GetPackage(ctx context.Context, manifestPath string) (models.FunctionManifest, error) {
+func GetPackage(ctx context.Context, manifest models.MsgInstallFunction) (models.FunctionManifest, error) {
 	repo := JSONRepository{}
-	return repo.Get(ctx, manifestPath)
+	return repo.Get(ctx, manifest)
 }

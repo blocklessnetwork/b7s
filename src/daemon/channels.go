@@ -3,6 +3,7 @@ package daemon
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/blocklessnetworking/b7s/src/controller"
 	"github.com/blocklessnetworking/b7s/src/enums"
@@ -38,8 +39,12 @@ func listenToChannels(ctx context.Context) {
 		case msg := <-msgChannel:
 			switch msg.Type {
 			case enums.MsgInstallFunction:
-				msg := msg.Data.(models.MsgInstallFunction)
-				controller.InstallFunction(ctx, &msg)
+				m, ok := msg.Data.(models.MsgInstallFunction)
+				if ok {
+					controller.InstallFunction(ctx, m)
+				} else {
+					fmt.Println("The assertion failed.")
+				}
 			case "execute":
 				msg := msg.Data.(models.MsgExecute)
 				requestExecute := models.RequestExecute{
@@ -59,7 +64,7 @@ func listenToChannels(ctx context.Context) {
 					Result:    executorResponse.Result,
 				})
 				messaging.SendMessage(ctx, msg.From, jsonBytes)
-			case "rollCall":
+			case enums.MsgRollCall:
 				controller.RollCallResponse(ctx, msg.Data.(models.MsgRollCall))
 			}
 		}

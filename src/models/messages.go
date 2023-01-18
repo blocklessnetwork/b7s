@@ -91,6 +91,7 @@ type MsgInstallFunction struct {
 	Type        string  `json:"type,omitempty"`
 	From        peer.ID `json:"from,omitempty"`
 	ManifestUrl string  `json:"manifestUrl,omitempty"`
+	Cid         string  `json:"cid,omitempty"`
 }
 
 func NewMsgInstallFunction(manifestUrl string) *MsgInstallFunction {

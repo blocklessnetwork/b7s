@@ -21,29 +21,43 @@ type JSONRepository struct{}
 
 // get the manifest from the repository
 // downloads the binary
-func (r JSONRepository) Get(ctx context.Context, manifestPath string) (models.FunctionManifest, error) {
+func (r JSONRepository) Get(ctx context.Context, installMsg models.MsgInstallFunction) (models.FunctionManifest, error) {
 	WorkSpaceRoot := ctx.Value("config").(models.Config).Node.WorkspaceRoot
 
 	functionManifest := models.FunctionManifest{}
-	err := http.GetJson(manifestPath, &functionManifest)
+	err := http.GetJson(installMsg.ManifestUrl, &functionManifest)
 
 	if err != nil {
 		log.Warn(err)
 	}
 
 	if functionManifest.Runtime.Url != "" {
-		DeploymentUrl, _ := url.Parse(functionManifest.Runtime.Url)
+		DeploymentUrl, err := url.Parse(functionManifest.Runtime.Url)
 		if err != nil {
 			log.Warn(err)
 		}
+
+		ManifestUrl, err := url.Parse(installMsg.ManifestUrl)
+		if err != nil {
+			log.Warn(err)
+		}
+
+		if DeploymentUrl.Host == "" {
+			DeploymentUrl.Host = ManifestUrl.Host
+		}
+
+		if DeploymentUrl.Scheme == "" {
+			DeploymentUrl.Scheme = ManifestUrl.Scheme
+		}
+
 		functionManifest.Deployment = models.Deployment{
 			Uri:      DeploymentUrl.String(),
 			Checksum: functionManifest.Runtime.Checksum,
 		}
 	}
 
-	cachedFunction, err := db.GetString(ctx, functionManifest.Function.ID)
-	WorkSpaceDirectory := WorkSpaceRoot + "/" + functionManifest.Function.ID
+	cachedFunction, err := db.GetString(ctx, installMsg.Cid)
+	WorkSpaceDirectory := WorkSpaceRoot + "/" + installMsg.Cid
 
 	if err != nil {
 		if err.Error() == "pebble: not found" {
@@ -72,7 +86,7 @@ func (r JSONRepository) Get(ctx context.Context, manifestPath string) (models.Fu
 			return functionManifest, error
 		}
 
-		db.Set(ctx, functionManifest.Function.ID, string(functionManifestJson))
+		db.Set(ctx, installMsg.Cid, string(functionManifestJson))
 
 		log.WithFields(log.Fields{
 			"uri": functionManifest.Deployment.Uri,

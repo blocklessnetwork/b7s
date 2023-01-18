@@ -31,7 +31,7 @@ func HandleMsgInstall(ctx context.Context, message []byte) {
 
 	localMsg := models.Message{
 		Type: enums.MsgInstallFunction,
-		Data: msgInstall,
+		Data: *msgInstall,
 	}
 
 	channel <- localMsg

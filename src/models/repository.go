@@ -1,10 +1,18 @@
 package models
 
 type FunctionManifest struct {
-	Function   Function   `json:"function,omitempty"`
-	Deployment Deployment `json:"deployment,omitempty"`
-	Runtime    Runtime    `json:"runtime,omitempty"`
-	Cached     bool       `json:"cached,omitempty"`
+	Function    Function      `json:"function,omitempty"`
+	Deployment  Deployment    `json:"deployment,omitempty"`
+	Runtime     Runtime       `json:"runtime,omitempty"`
+	Cached      bool          `json:"cached,omitempty"`
+	ID          string        `json:"id,omitempty"`
+	Name        string        `json:"name,omitempty"`
+	Hooks       []interface{} `json:"hooks,omitempty"`
+	Description string        `json:"description,omitempty"`
+	FsRootPath  string        `json:"fs_root_path,omitempty"`
+	Entry       string        `json:"entry,omitempty"`
+	ContentType string        `json:"contentType,omitempty"`
+	Permissions []string      `json:"permissions,omitempty"`
 }
 
 // legacy manifest support
@@ -29,10 +37,11 @@ type Envvars struct {
 	Value string `json:"value,omitempty"`
 }
 type Methods struct {
-	Name      string      `json:"name,omitempty"`
-	Entry     string      `json:"entry,omitempty"`
-	Arguments []Arguments `json:"arguments,omitempty"`
-	Envvars   []Envvars   `json:"envvars,omitempty"`
+	Name       string      `json:"name,omitempty"`
+	Entry      string      `json:"entry,omitempty"`
+	Arguments  []Arguments `json:"arguments,omitempty"`
+	Envvars    []Envvars   `json:"envvars,omitempty"`
+	ResultType string      `json:"result_type,omitempty"`
 }
 type Deployment struct {
 	Cid         string    `json:"cid,omitempty"`
