@@ -7,7 +7,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/src",
-      "args": ["--config", "../configs/head-config.yaml"],
+      "args": ["--config", "./configs/head-config.yaml"],
       "cwd": "${workspaceFolder}"
     },
     {
@@ -16,7 +16,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/src",
-      "args": ["--config", "../configs/worker-config.yaml"],
+      "args": ["--config", "./configs/worker-config.yaml"],
       "cwd": "${workspaceFolder}"
     }
   ]

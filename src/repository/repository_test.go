@@ -71,9 +71,16 @@ func TestJSONRepository_Get(t *testing.T) {
 
 	// insert mock manifest into the database
 	db.Set(ctx, "test_key", string(mockManifestBytes))
+	installMsg := &models.MsgInstallFunction{
+		ManifestUrl: ts.URL + "/manifest.json",
+	}
 
 	// call the Get method with the test server URL
-	manifest := repo.Get(ctx, ts.URL+"/manifest.json")
+	manifest, err := repo.Get(ctx, *installMsg)
+
+	if err != nil {
+		t.Errorf("Expected no error, got %s", err)
+	}
 
 	// check that the function ID is correct
 	if manifest.Function.ID != "testFunction" {

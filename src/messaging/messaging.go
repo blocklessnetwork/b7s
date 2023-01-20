@@ -77,16 +77,19 @@ func ListenMessages(ctx context.Context, host host.Host) {
 }
 
 // sends a message directly to a peer
-func SendMessage(ctx context.Context, peer peer.ID, message []byte) {
+func SendMessage(ctx context.Context, peer peer.ID, message []byte) error {
 	host := ctx.Value("host").(host.Host)
 	s, err := host.NewStream(context.Background(), peer, enums.WorkProtocolId)
 	if err != nil {
 		log.Warn(err)
+		return err
 	}
 	_, err = s.Write(message)
 	if err != nil {
 		s.Reset()
 		log.Warn(err)
+		return err
 	}
 	defer s.Close()
+	return nil
 }

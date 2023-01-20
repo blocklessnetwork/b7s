@@ -18,8 +18,14 @@ func HandleMsgExecute(ctx context.Context, message []byte) {
 		"message": string(message),
 	}).Debug("message from peer")
 
-	channel := ctx.Value(enums.ChannelMsgExecute).(chan models.MsgExecute)
-	channel <- *msgExecute
+	channel := ctx.Value(enums.ChannelMsgLocal).(chan models.Message)
+
+	localMsg := models.Message{
+		Type: enums.MsgExecuteResponse,
+		Data: msgExecute,
+	}
+
+	channel <- localMsg
 }
 
 func HandleMsgExecuteResponse(ctx context.Context, message []byte) {

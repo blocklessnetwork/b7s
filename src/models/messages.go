@@ -6,6 +6,11 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
+type Message struct {
+	Type string
+	Data interface{}
+}
+
 type MsgBase struct {
 	Type string  `json:"type,omitempty"`
 	From peer.ID `json:"from,omitempty"`
@@ -86,11 +91,27 @@ type MsgInstallFunction struct {
 	Type        string  `json:"type,omitempty"`
 	From        peer.ID `json:"from,omitempty"`
 	ManifestUrl string  `json:"manifestUrl,omitempty"`
+	Cid         string  `json:"cid,omitempty"`
 }
 
 func NewMsgInstallFunction(manifestUrl string) *MsgInstallFunction {
 	return &MsgInstallFunction{
 		Type:        enums.MsgInstallFunction,
 		ManifestUrl: manifestUrl,
+	}
+}
+
+type MsgInstallFunctionResponse struct {
+	Type    string  `json:"type,omitempty"`
+	From    peer.ID `json:"from,omitempty"`
+	Code    string  `json:"code,omitempty"`
+	Message string  `json:"message,omitempty"`
+}
+
+func NewMsgInstallFunctionResponse(code string, message string) *MsgInstallFunctionResponse {
+	return &MsgInstallFunctionResponse{
+		Type:    enums.MsgInstallFunctionResponse,
+		Code:    code,
+		Message: message,
 	}
 }

@@ -21,7 +21,7 @@ import (
 func prepExecutionManifest(ctx context.Context, requestId string, request models.RequestExecute, manifest models.FunctionManifest) (string, error) {
 	config := ctx.Value("config").(models.Config)
 
-	functionPath := filepath.Join(config.Node.WorkspaceRoot, manifest.Function.ID, request.Method)
+	functionPath := filepath.Join(config.Node.WorkspaceRoot, request.FunctionId, request.Method)
 	manifestPath := filepath.Join(config.Node.WorkspaceRoot, "t", requestId, "runtime-manifest.json")
 	tempFS := filepath.Join(config.Node.WorkspaceRoot, "t", requestId, "fs")
 
@@ -82,6 +82,7 @@ func Execute(ctx context.Context, request models.RequestExecute, functionManifes
 			return models.ExecutorResponse{
 				Code:      enums.ResponseCodeError,
 				RequestId: requestID.String(),
+				Result:    "Runtime not available",
 			}, err
 		}
 		execCommand = exec.Command

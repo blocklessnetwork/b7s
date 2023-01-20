@@ -3,39 +3,32 @@ package messaging
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/blocklessnetworking/b7s/src/enums"
-	handlers "github.com/blocklessnetworking/b7s/src/messaging/handlers"
+	"github.com/blocklessnetworking/b7s/src/messaging/handlers"
 	"github.com/blocklessnetworking/b7s/src/models"
-	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 func HandleMessage(ctx context.Context, message []byte, peerID peer.ID) {
 	var msg models.MsgBase
 	ctx = context.WithValue(ctx, "peerID", peerID)
-	err := json.Unmarshal([]byte(message), &msg)
-	if err != nil {
-		panic(err)
+	if err := json.Unmarshal(message, &msg); err != nil {
+		fmt.Errorf("error unmarshalling message: %v", err)
 	}
 
-	var response interface{}
-	switch msg.Type {
-	case enums.MsgHealthCheck:
-		handlers.HandleMsgHealthCheck(ctx, message)
-	case enums.MsgExecute:
-		handlers.HandleMsgExecute(ctx, message)
-	case enums.MsgExecuteResponse:
-		handlers.HandleMsgExecuteResponse(ctx, message)
-	case enums.MsgRollCall:
-		handlers.HandleMsgRollCall(ctx, message)
-	case enums.MsgRollCallResponse:
-		handlers.HandleMsgRollCallResponse(ctx, message)
-	case enums.MsgInstallFunction:
-		handlers.HandleMsgInstall(ctx, message)
+	handlers := map[string]func(context.Context, []byte){
+		enums.MsgHealthCheck:             handlers.HandleMsgHealthCheck,
+		enums.MsgExecute:                 handlers.HandleMsgExecute,
+		enums.MsgExecuteResponse:         handlers.HandleMsgExecuteResponse,
+		enums.MsgRollCall:                handlers.HandleMsgRollCall,
+		enums.MsgRollCallResponse:        handlers.HandleMsgRollCallResponse,
+		enums.MsgInstallFunction:         handlers.HandleMsgInstall,
+		enums.MsgInstallFunctionResponse: handlers.HandleMsgInstallResponse,
 	}
 
-	if response != nil {
-		PublishMessage(ctx, ctx.Value("topic").(*pubsub.Topic), response)
+	if handler, ok := handlers[msg.Type]; ok {
+		handler(ctx, message)
 	}
 }
