@@ -45,8 +45,8 @@ func listenToChannels(ctx context.Context) {
 				} else {
 					fmt.Println("The assertion failed.")
 				}
-			case "execute":
-				msg := msg.Data.(models.MsgExecute)
+			case enums.MsgExecuteResponse:
+				msg := msg.Data.(*models.MsgExecute)
 				requestExecute := models.RequestExecute{
 					FunctionId: msg.FunctionId,
 					Method:     msg.Method,
