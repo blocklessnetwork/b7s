@@ -46,6 +46,7 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 	}
 }
 
+// sub and pub the install
 func MsgInstallFunction(ctx context.Context, installRequest models.RequestFunctionInstall) {
 	var manifestURL string
 
@@ -108,7 +109,15 @@ func RollCallResponse(ctx context.Context, msg models.MsgRollCall) {
 	}
 
 	if err != nil {
-		response.Code = enums.ResponseCodeNotFound
+		err := InstallFunction(ctx, models.MsgInstallFunction{
+			Type: enums.MsgInstallFunction,
+			From: msg.From,
+			Cid:  msg.FunctionId,
+		})
+
+		if err != nil {
+			response.Code = enums.ResponseCodeNotFound
+		}
 	}
 
 	responseJSON, err := json.Marshal(response)
