@@ -51,12 +51,10 @@ func MsgInstallFunction(ctx context.Context, req models.RequestFunctionInstall) 
 // CID is calculated as a SHA-256 hash of the URI.
 func createInstallMessageFromURI(uri string) (models.MsgInstallFunction, error) {
 
-	h := sha256.New()
-	_, err := h.Write([]byte(uri))
+	cid, err := deriveCIDFromURI(uri)
 	if err != nil {
-		return models.MsgInstallFunction{}, fmt.Errorf("could not calculate hash: %w", err)
+		return models.MsgInstallFunction{}, fmt.Errorf("could not determine cid: %w", err)
 	}
-	cid := fmt.Sprintf("%x", h.Sum(nil))
 
 	msg := models.MsgInstallFunction{
 		Type:        enums.MsgInstallFunction,
@@ -65,6 +63,18 @@ func createInstallMessageFromURI(uri string) (models.MsgInstallFunction, error) 
 	}
 
 	return msg, nil
+}
+
+func deriveCIDFromURI(uri string) (string, error) {
+
+	h := sha256.New()
+	_, err := h.Write([]byte(uri))
+	if err != nil {
+		return "", fmt.Errorf("could not calculate hash: %w", err)
+	}
+	cid := fmt.Sprintf("%x", h.Sum(nil))
+
+	return cid, nil
 }
 
 // createInstallMessageFromCID creates the MsgInstallFunction from the given CID.
