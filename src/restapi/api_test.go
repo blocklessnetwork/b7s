@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/blocklessnetworking/b7s/src/db"
@@ -125,43 +128,133 @@ func TestHandleGetExecuteResponse(t *testing.T) {
 	}
 }
 func TestHandleInstallFunction(t *testing.T) {
-	mockInstallFunction := func(ctx context.Context, request models.RequestFunctionInstall) {
-		// Perform any necessary checks or assertions here
+
+	const (
+		contentTypeJSON = "application/json"
+		requestPayload  = `{ "uri": "https://example.com/manifest.json" }`
+	)
+
+	var installFn MsgInstallFunctionFunc = func(ctx context.Context, req models.RequestFunctionInstall) error {
+		return nil
 	}
 
-	ctx := context.WithValue(context.Background(), "msgInstallFunc", mockInstallFunction)
+	ctx := context.WithValue(context.Background(), "msgInstallFunc", installFn)
 
-	// Create a new function that wraps the handleInstallFunction
-	// and calls it with the desired context
-	testHandler := func(w http.ResponseWriter, r *http.Request) {
+	// Function that processes the HTTP request.
+	handler := func(w http.ResponseWriter, r *http.Request) {
 		handleInstallFunction(w, r.WithContext(ctx))
 	}
 
-	// Create a test server to handle the request
-	testServer := httptest.NewServer(http.HandlerFunc(testHandler))
-	defer testServer.Close()
+	// Create a test server to handle the request.
+	srv := httptest.NewServer(http.HandlerFunc(handler))
+	defer srv.Close()
 
-	// Prepare the request body
-	request := models.RequestFunctionInstall{
-		Uri: "https://example.com/manifest.json",
-	}
-	requestBytes, _ := json.Marshal(request)
-
-	// Send the request to the test server
-	resp, err := http.Post(testServer.URL, "application/json", bytes.NewBuffer(requestBytes))
+	// Send the request to the test server.
+	res, err := http.Post(srv.URL, contentTypeJSON, strings.NewReader(requestPayload))
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("could not execute POST request: %s", err)
 	}
 
-	// Check the response status code
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	// Check the response status code.
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("unexpected status code (want: %v, got %v)", http.StatusOK, res.StatusCode)
 	}
 
-	// Check the response body
+	// Unpack the response body.
 	var response models.ResponseInstall
-	json.NewDecoder(resp.Body).Decode(&response)
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		t.Fatalf("could not decode server response: %s", err)
+	}
+
+	// Verify the response
 	if response.Code != enums.ResponseCodeOk {
-		t.Errorf("Expected response code %v, got %v", enums.ResponseCodeOk, response.Code)
+		t.Errorf("unexpected response code (want: %v, got %v)", enums.ResponseCodeOk, response.Code)
+	}
+}
+
+func TestHandleInstallFunction_HandlesErrors(t *testing.T) {
+
+	const (
+		contentTypeJSON = "application/json"
+
+		malformedJSON = `{ "uri": "https://example.com/manifest.json" ` // JSON with missing closing brace.
+		emptyRequest  = `{ "uri": "", "cid": ""} `                      // Both URI and CID are empty.
+		validJSON     = `{ "uri": "https://example.com/manifest.json" }`
+	)
+
+	var (
+		installFn MsgInstallFunctionFunc = func(context.Context, models.RequestFunctionInstall) error {
+			return nil
+		}
+		failingInstallFn MsgInstallFunctionFunc = func(context.Context, models.RequestFunctionInstall) error {
+			return errors.New("stop")
+		}
+	)
+
+	tests := []struct {
+		name string
+
+		payload   io.Reader
+		installFn MsgInstallFunctionFunc
+
+		expectedCode int
+	}{
+		{
+			name:         "missing response body",
+			payload:      nil,
+			installFn:    installFn,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "malformed JSON payload",
+			payload:      strings.NewReader(malformedJSON),
+			installFn:    installFn,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "missing URI and CID",
+			payload:      strings.NewReader(emptyRequest),
+			installFn:    installFn,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "install function failed",
+			payload:      strings.NewReader(validJSON),
+			installFn:    failingInstallFn,
+			expectedCode: http.StatusInternalServerError,
+		},
+	}
+
+	for _, test := range tests {
+
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+
+			t.Parallel()
+
+			ctx := context.WithValue(context.Background(), "msgInstallFunc", test.installFn)
+
+			// Function that processes the HTTP request.
+			handler := func(w http.ResponseWriter, r *http.Request) {
+				handleInstallFunction(w, r.WithContext(ctx))
+			}
+
+			// Create a test server to handle the request.
+			srv := httptest.NewServer(http.HandlerFunc(handler))
+			defer srv.Close()
+
+			// Send the request to the test server.
+			res, err := http.Post(srv.URL, contentTypeJSON, test.payload)
+			if err != nil {
+				t.Fatalf("could not execute POST request: %s", err)
+			}
+
+			// Check the response status code.
+			if res.StatusCode != test.expectedCode {
+				t.Fatalf("unexpected status code (want: %v, got %v)", test.expectedCode, res.StatusCode)
+			}
+		})
 	}
 }
