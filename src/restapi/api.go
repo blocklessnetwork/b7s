@@ -3,6 +3,7 @@ package restapi
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -66,7 +67,7 @@ func handleInstallFunction(w http.ResponseWriter, r *http.Request) {
 	// else use the default one.
 	var msgInstallFunc MsgInstallFunctionFunc = controller.MsgInstallFunction
 
-	// NOTE: At the moment, this function is no longer set on the context.
+	// NOTE: At the moment, this function is no longer set on the context (for tests only).
 	val := r.Context().Value("msgInstallFunc")
 	if val != nil {
 		// Assert that the context value is of the expected type.
@@ -80,7 +81,37 @@ func handleInstallFunction(w http.ResponseWriter, r *http.Request) {
 		msgInstallFunc = fn
 	}
 
-	err = msgInstallFunc(r.Context(), request)
+	// Add a deadline to the context.
+	ctx, cancel := context.WithTimeout(r.Context(), functionInstallTimeout)
+	defer cancel()
+
+	// Start function install in a separate goroutine and signal when it's done.
+	fnErr := make(chan error)
+	go func() {
+		err = msgInstallFunc(ctx, request)
+		fnErr <- err
+	}()
+
+	// Wait until either function install finishes, or request times out.
+	select {
+
+	// Context timed out.
+	case <-ctx.Done():
+
+		status := http.StatusRequestTimeout
+		if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			status = http.StatusInternalServerError
+		}
+
+		w.WriteHeader(status)
+		return
+
+	// Work done.
+	case err = <-fnErr:
+		break
+	}
+
+	// Check if function install succeeded and handle error or return response.
 	if err != nil {
 
 		log.WithError(err).
