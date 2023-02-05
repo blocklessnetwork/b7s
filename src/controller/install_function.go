@@ -38,7 +38,7 @@ func MsgInstallFunction(ctx context.Context, req models.RequestFunctionInstall) 
 	// Get the pubsub topic from the context.
 	topic, ok := ctx.Value("topic").(*pubsub.Topic)
 	if !ok {
-		return fmt.Errorf("unexpected value for pubsub topic (got: %T)", topic)
+		return errors.New("could not get pubsub topic from context")
 	}
 
 	// Write the message to pubsub topic.
