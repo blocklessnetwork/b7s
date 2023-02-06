@@ -3,7 +3,10 @@ package restapi
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/blocklessnetworking/b7s/src/controller"
 	"github.com/blocklessnetworking/b7s/src/enums"
@@ -36,50 +39,100 @@ func handleRequestExecute(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-type MsgInstallFunctionFunc func(context.Context, models.RequestFunctionInstall)
+type MsgInstallFunctionFunc func(context.Context, models.RequestFunctionInstall) error
 
 func handleInstallFunction(w http.ResponseWriter, r *http.Request) {
-	// body decode
-	request := models.RequestFunctionInstall{}
 
+	// Make sure that the request body is there.
 	if r.Body == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	json.NewDecoder(r.Body).Decode(&request)
+	// Unmarshal request.
+	var request models.RequestFunctionInstall
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
+	// TODO: Could be done using validators.
 	if request.Uri == "" && request.Cid == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	// get the MsgInstallFunction function from the context
-	var msgInstallFunc MsgInstallFunctionFunc
-	if r.Context().Value("msgInstallFunc") == nil {
-		msgInstallFunc = controller.MsgInstallFunction
-	} else {
-		msgInstallFunc = r.Context().Value("msgInstallFunc").(func(context.Context, models.RequestFunctionInstall))
+	// Initialize the msgInstallFunction function - get the value from the context if set,
+	// else use the default one.
+	var msgInstallFunc MsgInstallFunctionFunc = controller.MsgInstallFunction
+
+	// NOTE: At the moment, this function is no longer set on the context (for tests only).
+	val := r.Context().Value("msgInstallFunc")
+	if val != nil {
+		// Assert that the context value is of the expected type.
+		fn, ok := val.(MsgInstallFunctionFunc)
+		if !ok {
+			// Should never happen.
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		msgInstallFunc = fn
 	}
 
-	// create a channel to wait for the response
-	responseCh := make(chan models.ResponseInstall)
+	// Add a deadline to the context.
+	ctx, cancel := context.WithTimeout(r.Context(), functionInstallTimeout)
+	defer cancel()
+
+	// Start function install in a separate goroutine and signal when it's done.
+	fnErr := make(chan error)
 	go func() {
-		// call the function
-		ctx := context.WithValue(r.Context(), "installResponseChannel", responseCh)
-		if msgInstallFunc != nil {
-			msgInstallFunc(ctx, request)
-		}
-		response := models.ResponseInstall{
-			Code: enums.ResponseCodeOk,
-		}
-		// send the response to the channel
-		responseCh <- response
+		err = msgInstallFunc(ctx, request)
+		fnErr <- err
 	}()
 
-	// wait for the response from the channel
-	response := <-responseCh
-	json.NewEncoder(w).Encode(response)
+	// Wait until either function install finishes, or request times out.
+	select {
+
+	// Context timed out.
+	case <-ctx.Done():
+
+		status := http.StatusRequestTimeout
+		if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			status = http.StatusInternalServerError
+		}
+
+		w.WriteHeader(status)
+		return
+
+	// Work done.
+	case err = <-fnErr:
+		break
+	}
+
+	// Check if function install succeeded and handle error or return response.
+	if err != nil {
+
+		log.WithError(err).
+			WithField("uri", request.Uri).
+			WithField("cid", request.Cid).
+			Error("failed to install function")
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	response := models.ResponseInstall{
+		Code: enums.ResponseCodeOk,
+	}
+
+	// Write response.
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func handleRootRequest(w http.ResponseWriter, r *http.Request) {

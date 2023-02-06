@@ -2,10 +2,8 @@ package controller
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/blocklessnetworking/b7s/src/db"
 	"github.com/blocklessnetworking/b7s/src/enums"
@@ -44,33 +42,6 @@ func ExecuteFunction(ctx context.Context, request models.RequestExecute) (models
 	} else {
 		return HeadExecuteFunction(ctx, request)
 	}
-}
-
-// sub and pub the install
-func MsgInstallFunction(ctx context.Context, installRequest models.RequestFunctionInstall) {
-	var manifestURL string
-
-	switch {
-	case installRequest.Uri != "":
-		manifestURL = installRequest.Uri
-		h := sha256.New()
-		h.Write([]byte(installRequest.Uri))
-		installRequest.Cid = fmt.Sprintf("%x", h.Sum(nil))
-	case installRequest.Cid != "":
-		manifestURL = fmt.Sprintf("https://%s.ipfs.w3s.link/manifest.json", installRequest.Cid)
-	default:
-		log.Error("Neither URI nor CID provided in install request")
-		return
-	}
-
-	msg := models.MsgInstallFunction{
-		Type:        enums.MsgInstallFunction,
-		ManifestUrl: manifestURL,
-		Cid:         installRequest.Cid,
-	}
-
-	log.Info("Requesting to message peer for function installation", msg.ManifestUrl)
-	messaging.PublishMessage(ctx, ctx.Value("topic").(*pubsub.Topic), msg)
 }
 
 func InstallFunction(ctx context.Context, installMessage models.MsgInstallFunction) error {
