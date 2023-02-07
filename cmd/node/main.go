@@ -3,12 +3,13 @@ package main
 import (
 	"os"
 
+	"github.com/cockroachdb/pebble"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
 	"github.com/blocklessnetworking/b7s/config"
-	"github.com/blocklessnetworking/b7s/database"
 	"github.com/blocklessnetworking/b7s/host"
+	"github.com/blocklessnetworking/b7s/store"
 )
 
 const (
@@ -88,14 +89,24 @@ func run() int {
 	// But also - do we even need some kind of easily switchable databases? I assume we'll typically keep one. If someone wants to switch,
 	// they can point the executable to a different DB.
 
-	db, err := database.Connect(flagDB)
+	// Open the pebble database.
+	opts := pebble.Options{}
+	pdb, err := pebble.Open(flagDB, &opts)
+	if err != nil {
+		log.Error().Err(err).Str("db", flagDB).Msg("could not open pebble database")
+		return failure
+	}
+	defer pdb.Close()
+
+	// Create a new store.
+	store, err := store.New(pdb)
 	if err != nil {
 		log.Error().Err(err).Str("db", flagDB).Msg("could not connect to the database")
 		return failure
 	}
 
 	// TODO: Remove.
-	_ = db
+	_ = store
 
 	return failure
 }
