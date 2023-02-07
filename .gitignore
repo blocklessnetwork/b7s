@@ -1,3 +1,5 @@
+cmd/node/node
+
 dist/
 runtime/
 *.env
