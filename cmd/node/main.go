@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/blocklessnetworking/b7s/config"
+	"github.com/blocklessnetworking/b7s/database"
 	"github.com/blocklessnetworking/b7s/host"
 )
 
@@ -19,6 +20,7 @@ const (
 	// TODO: Default port for head node is 9527? Move to config if so.
 	defaultPort    = 0
 	defaultAddress = "0.0.0.0"
+	defaultDB      = "db"
 )
 
 func main() {
@@ -32,6 +34,7 @@ func run() int {
 
 	var (
 		flagAddress  string
+		flagDB       string
 		flagConfig   string
 		flagLogLevel string
 		flagPort     uint
@@ -40,6 +43,7 @@ func run() int {
 	)
 
 	pflag.StringVarP(&flagAddress, "address", "a", defaultAddress, "address to use")
+	pflag.StringVarP(&flagDB, "db-path", "d", defaultDB, "path to the node database")
 	pflag.StringVarP(&flagConfig, "config", "c", "config.yaml", "path to config file")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level to use")
 	pflag.UintVarP(&flagPort, "port", "p", defaultPort, "port number to use - random port if 0")
@@ -63,6 +67,7 @@ func run() int {
 		log.Error().Err(err).Str("config", flagConfig).Msg("could not load configuration")
 		return failure
 	}
+
 	// TODO: Remove
 	_ = cfg
 
@@ -75,6 +80,22 @@ func run() int {
 
 	hostIDs := host.IDs()
 	log.Info().Strs("ids", hostIDs).Msg("created host")
+
+	// TODO: Implement messaging.ListenMessages functionality from old host package.
+
+	// TODO: If we're listening on 0.0.0.0 we'll have multiple IDs - one for each network interface.
+	// It may still make sense to use the /ip4/0.0.0.0/tcp/<port>/p2p/<host-id>_appDB for the DB - instead of using multiple ones.
+	// But also - do we even need some kind of easily switchable databases? I assume we'll typically keep one. If someone wants to switch,
+	// they can point the executable to a different DB.
+
+	db, err := database.Connect(flagDB)
+	if err != nil {
+		log.Error().Err(err).Str("db", flagDB).Msg("could not connect to the database")
+		return failure
+	}
+
+	// TODO: Remove.
+	_ = db
 
 	return failure
 }

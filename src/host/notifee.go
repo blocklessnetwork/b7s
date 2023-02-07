@@ -13,6 +13,7 @@ import (
 
 // ConnectedNotifee is a struct that implements the Notifee interface
 type ConnectedNotifee struct {
+	// TODO: Fix - context in a struct.
 	Ctx context.Context
 }
 

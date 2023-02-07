@@ -57,6 +57,8 @@ func New(address string, port uint, options ...func(*Config)) (*Host, error) {
 // IDs returns the list of p2p IDs of the host.
 func (h *Host) IDs() []string {
 
+	// TODO: Perhaps skip local ID..?
+
 	addrs := h.host.Addrs()
 	ids := make([]string, 0, len(addrs))
 
