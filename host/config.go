@@ -1,9 +1,6 @@
 package host
 
-// TODO: Check for the 'random identity' part - is this really the case.
-
-// defaultConfig will not use a private key path and will start
-// with a random identity.
+// defaultConfig used to create Host.
 var defaultConfig = Config{
 	PrivateKey: "",
 }

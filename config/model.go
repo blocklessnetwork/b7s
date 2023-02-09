@@ -1,7 +1,5 @@
 package config
 
-// TODO: Validation tags.
-
 // Config represents the configuration parameters for the node.
 type Config struct {
 	Node       Node       `yaml:"node"`

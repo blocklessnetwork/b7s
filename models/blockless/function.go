@@ -1,8 +1,6 @@
 package blockless
 
-// TODO: Consider using a separate package - e.g. `function`.
-
-// TODO: doc comment.
+// FunctionManifest describes some important configuration options for a Blockless function.
 type FunctionManifest struct {
 	ID          string        `json:"id,omitempty"`
 	Name        string        `json:"name,omitempty"`
@@ -33,8 +31,6 @@ type Function struct {
 	Extensions []string `json:"extensions,omitempty"`
 }
 
-// Deployment represents.. what?
-// TODO: Check
 type Deployment struct {
 	CID         string    `json:"cid,omitempty"`
 	Checksum    string    `json:"checksum,omitempty"`
@@ -45,7 +41,6 @@ type Deployment struct {
 	File        string    `json:"file,omitempty"`
 }
 
-// TODO: Comment.
 type Methods struct {
 	Name       string      `json:"name,omitempty"`
 	Entry      string      `json:"entry,omitempty"`

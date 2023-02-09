@@ -9,8 +9,6 @@ import (
 
 // Set sets the value for a key.
 func (s *Store) Set(key string, value string) error {
-	s.Lock()
-	defer s.Unlock()
 
 	err := s.db.Set([]byte(key), []byte(value), pebble.Sync)
 	if err != nil {
@@ -22,8 +20,6 @@ func (s *Store) Set(key string, value string) error {
 
 // SetRecord will JSON-encode the provided record and store it in the DB.
 func (s *Store) SetRecord(key string, value interface{}) error {
-	s.Lock()
-	defer s.Unlock()
 
 	encoded, err := json.Marshal(value)
 	if err != nil {

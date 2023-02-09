@@ -6,11 +6,7 @@ import (
 )
 
 // Get retrieves the value for a key.
-// TODO: Check - do we need both byte and string variants?
-// Investigate which ones are more often needed and keep that one.
 func (s *Store) Get(key string) (string, error) {
-	s.RLock()
-	defer s.RUnlock()
 
 	value, closer, err := s.db.Get([]byte(key))
 	if err != nil {
@@ -28,8 +24,6 @@ func (s *Store) Get(key string) (string, error) {
 
 // GetRecord will read and JSON-decode the record associated with the provided key.
 func (s *Store) GetRecord(key string, out interface{}) error {
-	s.RLock()
-	defer s.RUnlock()
 
 	value, closer, err := s.db.Get([]byte(key))
 	if err != nil {

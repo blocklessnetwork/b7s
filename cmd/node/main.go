@@ -31,11 +31,9 @@ func main() {
 	os.Exit(run())
 }
 
-// TODO: Logging format - JSON vs text.
-// TODO: Two variants for config loading - look for config file in CWD or explicitely from the flag value.
-// TODO: Consider - have two distinct databases for peer store and function store?
-// 		 Alternatively, consider just prefixing the keys differently?
-// TODO: Workspace and runtime directories might be better suited for config.
+// TODO: Have flags set as part of a struct; then load them from config and override via CLI!
+// TODO: Workspace and runtime directories are overkill for the CLI flags.
+// TODO: RestAPI za node i execution memstore
 
 func run() int {
 
@@ -93,13 +91,6 @@ func run() int {
 
 	hostIDs := host.IDs()
 	log.Info().Strs("ids", hostIDs).Msg("created host")
-
-	// TODO: Implement messaging.ListenMessages functionality from old host package.
-
-	// TODO: If we're listening on 0.0.0.0 we'll have multiple IDs - one for each network interface.
-	// It may still make sense to use the /ip4/0.0.0.0/tcp/<port>/p2p/<host-id>_appDB for the DB - instead of using multiple ones.
-	// But also - do we even need some kind of easily switchable databases? I assume we'll typically keep one. If someone wants to switch,
-	// they can point the executable to a different DB.
 
 	// Open the pebble database.
 	opts := pebble.Options{}
