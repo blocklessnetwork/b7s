@@ -3,21 +3,20 @@ package node
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/request"
+	"github.com/blocklessnetworking/b7s/models/response"
 )
 
 func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte) error {
 
-	// Only workers should respond to roll-calls.
-	// NOTE: Potentially other nodes should be able to respond to roll calls too.
+	// Only workers respond to roll calls at the moment.
 	if n.role != blockless.WorkerNode {
-		n.log.Debug().Msg("skipping roll-call as a non-worker node")
+		n.log.Debug().Msg("skipping roll call as a non-worker node")
 		return nil
 	}
 
@@ -29,7 +28,40 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	}
 	req.From = from
 
-	// TODO: Complete this flow.
+	// Check if we have this manifest.
+	_, err = n.getFunctionManifest(req.FunctionID)
+	if err != nil {
 
-	return errors.New("TBD: Not implemented")
+		// TODO: Install this function now.
+
+		// Notify the caller that we don't have this manifest.
+
+		res := response.RollCall{
+			Type:       blockless.MessageRollCallResponse,
+			FunctionID: req.FunctionID,
+			RequestID:  req.RequestID,
+			Code:       response.CodeNotFound,
+		}
+
+		err = n.send(ctx, req.From, res)
+		if err != nil {
+			return fmt.Errorf("could not send response: %w", err)
+		}
+	}
+
+	// Create response.
+	res := response.RollCall{
+		Type:       blockless.MessageRollCallResponse,
+		FunctionID: req.FunctionID,
+		RequestID:  req.RequestID,
+		Code:       response.CodeAccepted,
+	}
+
+	// Send message.
+	err = n.send(ctx, req.From, res)
+	if err != nil {
+		return fmt.Errorf("could not send response: %w", err)
+	}
+
+	return nil
 }

@@ -32,6 +32,8 @@ func main() {
 
 // TODO: Logging format - JSON vs text.
 // TODO: Two variants for config loading - look for config file in CWD or explicitely from the flag value.
+// TODO: Consider - have two distinct databases for peer store and function store?
+// Alternatively, consider just prefixing them differently?
 
 func run() int {
 
@@ -121,7 +123,7 @@ func run() int {
 	peerstore := peerstore.New(store)
 
 	// Instantiate node.
-	node, err := node.New(log, host, peerstore, node.WithRole(role))
+	node, err := node.New(log, host, store, peerstore, node.WithRole(role))
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure

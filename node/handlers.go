@@ -26,5 +26,6 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, payload
 }
 
 func (n *Node) processInstallFunctionResponse(ctx context.Context, from peer.ID, payload []byte) error {
-	return errors.New("TBD: Not implemented")
+	n.log.Debug().Msg("function install response received")
+	return nil
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
-// TODO: Check - interface for libp2p host instead of a type?
+// TODO: Consider - interface for libp2p host instead of a type?
 
 // TODO: Add doc comment.
 type Node struct {
@@ -15,12 +15,13 @@ type Node struct {
 	topic    string
 	handlers map[string]HandlerFunc
 
-	log  zerolog.Logger
-	host *host.Host
+	log   zerolog.Logger
+	host  *host.Host
+	store Store
 }
 
 // New creates a new Node.
-func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, options ...func(*Config)) (*Node, error) {
+func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, options ...func(*Config)) (*Node, error) {
 
 	// Initialize config.
 	cfg := DefaultConfig
@@ -32,8 +33,9 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, options ...fu
 		role:  cfg.Role,
 		topic: cfg.Topic,
 
-		log:  log,
-		host: host,
+		log:   log,
+		host:  host,
+		store: store,
 	}
 
 	// TODO: Perhaps create a processor type and move all handlers to a separate package.
