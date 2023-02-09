@@ -11,7 +11,7 @@ import (
 
 // Host represents a new libp2p host.
 type Host struct {
-	host host.Host
+	host.Host // TODO: Once the use cases cristalize - reconsider embedding vs private field
 }
 
 // New creates a new Host.
@@ -47,9 +47,8 @@ func New(address string, port uint, options ...func(*Config)) (*Host, error) {
 		return nil, fmt.Errorf("could not create libp2p host: %w", err)
 	}
 
-	host := Host{
-		host: h,
-	}
+	host := Host{}
+	host.Host = h
 
 	return &host, nil
 }
@@ -59,10 +58,10 @@ func (h *Host) IDs() []string {
 
 	// TODO: Perhaps skip local ID..?
 
-	addrs := h.host.Addrs()
+	addrs := h.Addrs()
 	ids := make([]string, 0, len(addrs))
 
-	hostID := h.host.ID()
+	hostID := h.ID()
 
 	for _, addr := range addrs {
 		id := fmt.Sprintf("%s/p2p/%s", addr.String(), hostID)
