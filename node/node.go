@@ -4,27 +4,56 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/blocklessnetworking/b7s/host"
+	"github.com/blocklessnetworking/b7s/models/blockless"
 )
+
+// TODO: Check - interface for libp2p host instead of a type?
 
 // TODO: Add doc comment.
 type Node struct {
-	log zerolog.Logger
+	role     blockless.NodeRole
+	topic    string
+	handlers map[string]HandlerFunc
 
-	// TODO: Check - interface for this instead of a type?
+	log  zerolog.Logger
 	host *host.Host
 }
 
 // New creates a new Node.
-func New(log zerolog.Logger, host *host.Host, peerStore PeerStore) (*Node, error) {
+func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, options ...func(*Config)) (*Node, error) {
 
-	node := Node{
+	// Initialize config.
+	cfg := DefaultConfig
+	for _, option := range options {
+		option(&cfg)
+	}
+
+	n := Node{
+		role:  cfg.Role,
+		topic: cfg.Topic,
+
 		log:  log,
 		host: host,
 	}
 
+	// TODO: Perhaps create a processor type and move all handlers to a separate package.
+	// TODO: Introduce executor.
+
+	// Initialize a list of handlers.
+	handlers := map[string]HandlerFunc{
+		blockless.MessageHealthCheck:             n.processHealthCheck,
+		blockless.MessageExecute:                 n.processExecute,
+		blockless.MessageExecuteResponse:         n.processExecuteResponse,
+		blockless.MessageRollCall:                n.processRollCall,
+		blockless.MessageRollCallResponse:        n.processRollCallResponse,
+		blockless.MessageInstallFunction:         n.processInstallFunction,
+		blockless.MessageInstallFunctionResponse: n.processInstallFunctionResponse,
+	}
+	n.handlers = handlers
+
 	// Create a notifiee with a backing peerstore.
 	cn := newConnectionNotifee(log, peerStore)
-	host.Notify(cn)
+	host.Network().Notify(cn)
 
-	return &node, nil
+	return &n, nil
 }
