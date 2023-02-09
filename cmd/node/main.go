@@ -9,6 +9,8 @@ import (
 
 	"github.com/blocklessnetworking/b7s/config"
 	"github.com/blocklessnetworking/b7s/host"
+	"github.com/blocklessnetworking/b7s/node"
+	"github.com/blocklessnetworking/b7s/peerstore"
 	"github.com/blocklessnetworking/b7s/store"
 )
 
@@ -40,6 +42,7 @@ func run() int {
 		flagLogLevel string
 		flagPort     uint
 
+		flagNodeRole   string
 		flagPrivateKey string
 	)
 
@@ -49,6 +52,7 @@ func run() int {
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level to use")
 	pflag.UintVarP(&flagPort, "port", "p", defaultPort, "port number to use - random port if 0")
 
+	pflag.StringVar(&flagNodeRole, "node-role", "", "node role (head or worker)")
 	pflag.StringVar(&flagPrivateKey, "private-key", "", "private key to use")
 
 	pflag.Parse()
@@ -105,8 +109,26 @@ func run() int {
 		return failure
 	}
 
-	// TODO: Remove.
-	_ = store
+	// Determine node role.
+	role, err := parseNodeRole(flagNodeRole)
+	if err != nil {
+		log.Error().Err(err).Str("role", flagNodeRole).Msg("invalid node role specified")
+		return failure
+	}
+
+	log.Info().Str("role", role.String()).Msg("starting node")
+
+	peerstore := peerstore.New(store)
+
+	// Instantiate node.
+	node, err := node.New(log, host, peerstore, node.WithRole(role))
+	if err != nil {
+		log.Error().Err(err).Msg("could not create node")
+		return failure
+	}
+
+	// TODO: Remove
+	_ = node
 
 	return failure
 }
