@@ -15,13 +15,14 @@ type Node struct {
 	topic    string
 	handlers map[string]HandlerFunc
 
-	log   zerolog.Logger
-	host  *host.Host
-	store Store
+	log     zerolog.Logger
+	host    *host.Host
+	store   Store
+	execute Execute
 }
 
 // New creates a new Node.
-func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, options ...func(*Config)) (*Node, error) {
+func New(log zerolog.Logger, host *host.Host, store Store, execute Execute, peerStore PeerStore, options ...func(*Config)) (*Node, error) {
 
 	// Initialize config.
 	cfg := DefaultConfig
@@ -33,13 +34,11 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 		role:  cfg.Role,
 		topic: cfg.Topic,
 
-		log:   log,
-		host:  host,
-		store: store,
+		log:     log,
+		host:    host,
+		store:   store,
+		execute: execute,
 	}
-
-	// TODO: Perhaps create a processor type and move all handlers to a separate package.
-	// TODO: Introduce executor.
 
 	// Initialize a list of handlers.
 	handlers := map[string]HandlerFunc{

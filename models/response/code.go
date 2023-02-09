@@ -2,7 +2,7 @@ package response
 
 // Response codes.
 const (
-	CodeOk             = "200"
+	CodeOK             = "200"
 	CodeAccepted       = "202"
 	CodeError          = "500"
 	CodeTimeout        = "408"

@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/blocklessnetworking/b7s/config"
+	"github.com/blocklessnetworking/b7s/executor"
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/node"
 	"github.com/blocklessnetworking/b7s/peerstore"
@@ -33,16 +34,19 @@ func main() {
 // TODO: Logging format - JSON vs text.
 // TODO: Two variants for config loading - look for config file in CWD or explicitely from the flag value.
 // TODO: Consider - have two distinct databases for peer store and function store?
-// Alternatively, consider just prefixing them differently?
+// 		 Alternatively, consider just prefixing the keys differently?
+// TODO: Workspace and runtime directories might be better suited for config.
 
 func run() int {
 
 	var (
-		flagAddress  string
-		flagDB       string
-		flagConfig   string
-		flagLogLevel string
-		flagPort     uint
+		flagAddress   string
+		flagDB        string
+		flagConfig    string
+		flagLogLevel  string
+		flagPort      uint
+		flagRuntime   string
+		flagWorkspace string
 
 		flagNodeRole   string
 		flagPrivateKey string
@@ -53,6 +57,8 @@ func run() int {
 	pflag.StringVarP(&flagConfig, "config", "c", "config.yaml", "path to config file")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level to use")
 	pflag.UintVarP(&flagPort, "port", "p", defaultPort, "port number to use - random port if 0")
+	pflag.StringVarP(&flagRuntime, "runtime-dir", "w", ".", "runtime directory where blockless-cli can be found")
+	pflag.StringVarP(&flagWorkspace, "workspace-dir", "w", ".", "workspace directory")
 
 	pflag.StringVar(&flagNodeRole, "node-role", "", "node role (head or worker)")
 	pflag.StringVar(&flagPrivateKey, "private-key", "", "private key to use")
@@ -122,8 +128,19 @@ func run() int {
 
 	peerstore := peerstore.New(store)
 
+	// Crete an executor.
+	executor, err := executor.New(log, flagWorkspace, flagRuntime)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("workspace", flagWorkspace).
+			Str("runtime", flagRuntime).
+			Msg("could not create an executor")
+		return failure
+	}
+
 	// Instantiate node.
-	node, err := node.New(log, host, store, peerstore, node.WithRole(role))
+	node, err := node.New(log, host, store, executor, peerstore, node.WithRole(role))
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure
