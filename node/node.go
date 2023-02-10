@@ -5,6 +5,7 @@ import (
 
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/node/internal/cache"
 )
 
 // TODO: Consider - interface for libp2p host instead of a type?
@@ -14,6 +15,7 @@ type Node struct {
 	role     blockless.NodeRole
 	topic    string
 	handlers map[string]HandlerFunc
+	excache  *cache.Cache
 
 	log     zerolog.Logger
 	host    *host.Host
@@ -31,8 +33,9 @@ func New(log zerolog.Logger, host *host.Host, store Store, execute Execute, peer
 	}
 
 	n := Node{
-		role:  cfg.Role,
-		topic: cfg.Topic,
+		role:    cfg.Role,
+		topic:   cfg.Topic,
+		excache: cache.New(),
 
 		log:     log,
 		host:    host,

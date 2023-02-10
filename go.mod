@@ -13,7 +13,7 @@ require (
 	github.com/rs/zerolog v1.27.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -24,9 +24,13 @@ require (
 	github.com/go-playground/validator/v10 v10.11.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/labstack/echo/v4 v4.10.0 // indirect
+	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/text v0.6.0 // indirect
 	gonum.org/v1/gonum v0.12.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

@@ -42,6 +42,9 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 			n.log.Error().Err(err).Msg("execution failed")
 		}
 
+		// Cache the execution result.
+		n.excache.Set(res.RequestID, &res)
+
 		// Send the response, whatever it may be (success or failure).
 		err = n.send(ctx, req.From, res)
 		if err != nil {
