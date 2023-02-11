@@ -1,11 +1,11 @@
-package request
+package response
 
 import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-// ExecuteResponse describes the `MessageExecuteResponse` request payload.
-type ExecuteResponse struct {
+// Execute describes the `MessageExecuteResponse` message payload.
+type Execute struct {
 	Type      string  `json:"type,omitempty"`
 	RequestID string  `json:"requestId,omitempty"`
 	From      peer.ID `json:"from,omitempty"`

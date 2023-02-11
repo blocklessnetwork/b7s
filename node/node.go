@@ -1,10 +1,12 @@
 package node
 
 import (
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/rs/zerolog"
 
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/response"
 	"github.com/blocklessnetworking/b7s/node/internal/cache"
 )
 
@@ -12,15 +14,20 @@ import (
 
 // TODO: Add doc comment.
 type Node struct {
-	role     blockless.NodeRole
-	topic    string
-	handlers map[string]HandlerFunc
-	excache  *cache.Cache
+	role      blockless.NodeRole
+	topicName string
 
-	log     zerolog.Logger
-	host    *host.Host
-	store   Store
-	execute Execute
+	log      zerolog.Logger
+	host     *host.Host
+	store    Store
+	execute  Execute
+	excache  *cache.Cache
+	handlers map[string]HandlerFunc
+
+	topic *pubsub.Topic
+
+	rollCallResponses map[string](chan response.RollCall)
+	executeResponses  map[string](chan response.Execute)
 }
 
 // New creates a new Node.
@@ -33,14 +40,17 @@ func New(log zerolog.Logger, host *host.Host, store Store, execute Execute, peer
 	}
 
 	n := Node{
-		role:    cfg.Role,
-		topic:   cfg.Topic,
-		excache: cache.New(),
+		role:      cfg.Role,
+		topicName: cfg.Topic,
+		excache:   cache.New(),
 
 		log:     log,
 		host:    host,
 		store:   store,
 		execute: execute,
+
+		rollCallResponses: make(map[string](chan response.RollCall)),
+		executeResponses:  make(map[string](chan response.Execute)),
 	}
 
 	// Initialize a list of handlers.

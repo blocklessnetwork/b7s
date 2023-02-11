@@ -11,10 +11,13 @@ import (
 func (n Node) Run(ctx context.Context) error {
 
 	// Subscribe to the specified topic.
-	subscription, err := n.host.Subscribe(ctx, n.topic)
+	topic, subscription, err := n.host.Subscribe(ctx, n.topicName)
 	if err != nil {
 		return fmt.Errorf("could not subscribe to topic: %w", err)
 	}
+
+	// TODO: Perhaps have Host handle this, and just use topic by name?
+	n.topic = topic
 
 	// TODO: Stop condition.
 
