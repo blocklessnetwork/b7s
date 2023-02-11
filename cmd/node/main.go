@@ -83,7 +83,7 @@ func run() int {
 	_ = cfg
 
 	// Create host.
-	host, err := host.New(flagAddress, flagPort, host.WithPrivateKey(flagPrivateKey))
+	host, err := host.New(log, flagAddress, flagPort, host.WithPrivateKey(flagPrivateKey))
 	if err != nil {
 		log.Error().Err(err).Str("key", flagPrivateKey).Msg("could not create host")
 		return failure

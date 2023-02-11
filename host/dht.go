@@ -11,15 +11,13 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	"github.com/libp2p/go-libp2p/p2p/discovery/util"
 	"github.com/multiformats/go-multiaddr"
-
-	"github.com/blocklessnetworking/b7s/src/models"
 )
 
 // TODO: bootNodes and peers.
-func (h *Host) DiscoverPeers(ctx context.Context, topic string, bootNodes []string, peers []models.Peer) error {
+func (h *Host) DiscoverPeers(ctx context.Context, topic string) error {
 
 	// Initialize DHT.
-	dht, err := h.initDHT(ctx, bootNodes, peers)
+	dht, err := h.initDHT(ctx)
 	if err != nil {
 		return fmt.Errorf("could not initalize DHT: %w", err)
 	}
@@ -29,7 +27,7 @@ func (h *Host) DiscoverPeers(ctx context.Context, topic string, bootNodes []stri
 
 	h.log.Debug().Msg("host started peer discovery")
 
-	connected := 0
+	connected := uint(0)
 findPeers:
 	for {
 		peers, err := discovery.FindPeers(ctx, topic)
@@ -57,7 +55,7 @@ findPeers:
 			connected++
 
 			// Stop when we have reached connection threshold.
-			if connected >= connectionThreshold {
+			if connected >= h.cfg.ConnectionThreshold {
 				break findPeers
 			}
 		}
@@ -67,10 +65,10 @@ findPeers:
 	return nil
 }
 
-func (h *Host) initDHT(ctx context.Context, bootNodes []string, peers []models.Peer) (*dht.IpfsDHT, error) {
+func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 
 	// Start a DHT for use in peer discovery.
-	kademlieDHT, err := dht.New(ctx, h.Host)
+	kademliaDHT, err := dht.New(ctx, h.Host)
 	if err != nil {
 		return nil, fmt.Errorf("could not create DHT: %w", err)
 	}
@@ -79,15 +77,30 @@ func (h *Host) initDHT(ctx context.Context, bootNodes []string, peers []models.P
 	dht.Mode(dht.ModeServer)
 
 	// Bootstrap the DHT.
-	err = kademlieDHT.Bootstrap(ctx)
+	err = kademliaDHT.Bootstrap(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not bootstrap the DHT: %w", err)
 	}
 
-	// Add the dial-back peers to the list of bootrstrap nodes if they do not already exist.
-	// TODO: Limit the number of dial-back peers.
+	bootNodes := h.cfg.BootNodes
+	peers := h.cfg.DialBackPeers
+
+	// Add the dial-back peers to the list of bootstrap nodes if they do not already exist.
 	// TODO: Limit to workers.
+
+	// We may want to limit the number of dial back peers we use.
+	added := uint(0)
+	addLimit := h.cfg.DialBackPeersLimit
+
 	for _, peer := range peers {
+
+		// If the limit of dial-back peers is set and we've reached it - stop now.
+		if addLimit != 0 && added >= addLimit {
+			h.log.Info().
+				Uint("limit", addLimit).
+				Msg("reached limit for number of dial-back peers")
+			break
+		}
 
 		addr := fmt.Sprintf("%s/p2p/%s", peer.MultiAddr, peer.Id.String())
 		addr = strings.Replace(addr, "127.0.0.1", "0.0.0.0", 1)
@@ -101,9 +114,10 @@ func (h *Host) initDHT(ctx context.Context, bootNodes []string, peers []models.P
 			}
 		}
 
-		// If it's not - add it now.
+		// If the peer is not among the boot nodes - add it now.
 		if !exists {
 			bootNodes = append(bootNodes, addr)
+			added++
 		}
 	}
 
@@ -151,5 +165,5 @@ func (h *Host) initDHT(ctx context.Context, bootNodes []string, peers []models.P
 	// Wait until we know the outcome of all connection attempts.
 	wg.Wait()
 
-	return kademlieDHT, nil
+	return kademliaDHT, nil
 }

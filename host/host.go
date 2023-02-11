@@ -13,9 +13,10 @@ import (
 
 // Host represents a new libp2p host.
 type Host struct {
+	log       zerolog.Logger
 	host.Host // TODO: Once the use cases cristalize - reconsider embedding vs private field
 
-	log zerolog.Logger
+	cfg Config
 }
 
 // New creates a new Host.
@@ -53,6 +54,7 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 
 	host := Host{
 		log: log,
+		cfg: cfg,
 	}
 	host.Host = h
 
