@@ -10,10 +10,8 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	"github.com/libp2p/go-libp2p/p2p/discovery/util"
-	"github.com/multiformats/go-multiaddr"
 )
 
-// TODO: bootNodes and peers.
 func (h *Host) DiscoverPeers(ctx context.Context, topic string) error {
 
 	// Initialize DHT.
@@ -93,22 +91,21 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 	addLimit := h.cfg.DialBackPeersLimit
 
 	for _, peer := range peers {
+		peer := peer
 
 		// If the limit of dial-back peers is set and we've reached it - stop now.
 		if addLimit != 0 && added >= addLimit {
-			h.log.Info().
-				Uint("limit", addLimit).
-				Msg("reached limit for number of dial-back peers")
+			h.log.Info().Uint("limit", addLimit).Msg("reached limit for dial-back peers")
 			break
 		}
 
-		addr := fmt.Sprintf("%s/p2p/%s", peer.MultiAddr, peer.Id.String())
+		addr := peer.String()
 		addr = strings.Replace(addr, "127.0.0.1", "0.0.0.0", 1)
 
 		// Check if the peer is already among the boot nodes.
 		exists := false
 		for _, bootNode := range bootNodes {
-			if bootNode == addr {
+			if bootNode.String() == addr {
 				exists = true
 				break
 			}
@@ -116,7 +113,7 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 
 		// If the peer is not among the boot nodes - add it now.
 		if !exists {
-			bootNodes = append(bootNodes, addr)
+			bootNodes = append(bootNodes, peer)
 			added++
 		}
 	}
@@ -125,20 +122,11 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 	var wg sync.WaitGroup
 	for _, bootNode := range bootNodes {
 
-		maddr, err := multiaddr.NewMultiaddr(bootNode)
+		addrInfo, err := peer.AddrInfoFromP2pAddr(bootNode)
 		if err != nil {
 			h.log.Warn().
 				Err(err).
-				Str("address", bootNode).
-				Msg("could not parse multiaddress for boot node - skipping")
-			continue
-		}
-
-		addrInfo, err := peer.AddrInfoFromP2pAddr(maddr)
-		if err != nil {
-			h.log.Warn().
-				Err(err).
-				Str("address", bootNode).
+				Str("address", bootNode.String()).
 				Msg("could not get addrinfo for boot node - skipping")
 			continue
 		}
