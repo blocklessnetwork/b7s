@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/rs/zerolog"
+
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
@@ -12,10 +14,12 @@ import (
 // Host represents a new libp2p host.
 type Host struct {
 	host.Host // TODO: Once the use cases cristalize - reconsider embedding vs private field
+
+	log zerolog.Logger
 }
 
 // New creates a new Host.
-func New(address string, port uint, options ...func(*Config)) (*Host, error) {
+func New(log zerolog.Logger, address string, port uint, options ...func(*Config)) (*Host, error) {
 
 	cfg := defaultConfig
 	for _, option := range options {
@@ -47,7 +51,9 @@ func New(address string, port uint, options ...func(*Config)) (*Host, error) {
 		return nil, fmt.Errorf("could not create libp2p host: %w", err)
 	}
 
-	host := Host{}
+	host := Host{
+		log: log,
+	}
 	host.Host = h
 
 	return &host, nil
