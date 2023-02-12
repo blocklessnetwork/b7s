@@ -16,5 +16,6 @@ Since the head node never executes stuff directly, we can remove the `executor` 
 
 - Only the head node has a REST API.
 
-- Add validation tags to config structures.
+- Validation tags for config are present but can be too cryptic perhaps.
+Look into more user-friendly validation.
 

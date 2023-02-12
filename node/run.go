@@ -5,8 +5,6 @@ import (
 	"fmt"
 )
 
-// TODO: Check import - is it `go-libp2p-pubsub` (analogous to `go-libp2p-core`)?
-
 // Run will start the main loop for the node.
 func (n Node) Run(ctx context.Context) error {
 
@@ -15,26 +13,21 @@ func (n Node) Run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("could not subscribe to topic: %w", err)
 	}
-
-	// TODO: Perhaps have Host handle this, and just use topic by name?
 	n.topic = topic
 
-	// TODO: Stop condition.
-
-	// Process messages.
+	// Message processing loop.
 	for {
-		// Receive message.
+
+		// Retrieve next message.
 		msg, err := subscription.Next(ctx)
 		if err != nil {
-			n.log.Error().
-				Err(err).
-				Msg("could not receive message")
-			continue
+			// NOTE: Cancelling the context will lead us here.
+			n.log.Error().Err(err).Msg("could not receive message")
+			break
 		}
 
 		// Skip messages we published.
 		if msg.ReceivedFrom == n.host.ID() {
-			// TODO: Check there's a field msg.Local - is that the same as ID comparison?
 			continue
 		}
 
