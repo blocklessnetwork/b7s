@@ -12,7 +12,7 @@ type Execute struct {
 	Type       string              `json:"type,omitempty"`
 	From       peer.ID             `json:"from,omitempty"`
 	Code       string              `json:"code,omitempty"`
-	FunctionID string              `json:"functionId,omitempty"`
+	FunctionID string              `json:"function_id,omitempty"`
 	Method     string              `json:"method,omitempty"`
 	Parameters []execute.Parameter `json:"parameters,omitempty"`
 	Config     execute.Config      `json:"config,omitempty"`

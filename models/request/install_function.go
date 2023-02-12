@@ -8,6 +8,6 @@ import (
 type InstallFunction struct {
 	Type        string  `json:"type,omitempty"`
 	From        peer.ID `json:"from,omitempty"`
-	ManifestURL string  `json:"manifestUrl,omitempty"`
+	ManifestURL string  `json:"manifest_url,omitempty"`
 	CID         string  `json:"cid,omitempty"`
 }
