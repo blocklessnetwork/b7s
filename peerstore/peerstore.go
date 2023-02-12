@@ -30,7 +30,6 @@ func New(store Store) *PeerStore {
 func (p *PeerStore) Store(peerID peer.ID, addr multiaddr.Multiaddr, info peer.AddrInfo) error {
 
 	// Check if we already have this peer stored.
-	// TODO: Handle "record not found" errors.
 	var peer blockless.Peer
 	err := p.store.GetRecord(peerID.String(), &peer)
 	// If we don't have an error it means that the peer is already stored in the DB. We're done.
@@ -40,8 +39,7 @@ func (p *PeerStore) Store(peerID peer.ID, addr multiaddr.Multiaddr, info peer.Ad
 
 	// Check if we failed to retrieve the record. If the error is `not found` - that's okay,
 	// and we want to store the peer info now. If it's any other error - halt.
-	// TODO: Cleanup - should not use `pebble.ErrNotFound` directly here.
-	if err != nil && !errors.Is(err, pebble.ErrNotFound) {
+	if err != nil && !errors.Is(err, blockless.ErrNotFound) {
 		return fmt.Errorf("could not retrieve peer: %w", err)
 	}
 
@@ -65,7 +63,7 @@ func (p *PeerStore) Store(peerID peer.ID, addr multiaddr.Multiaddr, info peer.Ad
 }
 
 // UpdatePeerList will check if the specified peer is found in the peer list. If not - it will be added.
-// TODO: Check - we're basically just duplicating knowledge here - if we have peer stored under its ID,
+// NOTE: We're basically duplicating knowledge here - if we have peer stored under its ID,
 // we will have it in the `peers` list; do we need to duplicate it?
 func (p *PeerStore) UpdatePeerList(peerID peer.ID, addr multiaddr.Multiaddr, info peer.AddrInfo) error {
 

@@ -17,6 +17,8 @@ import (
 // executeFunc is a function that handles an execution request. In case of a worker node,
 // the function is executed locally. In case of a head node, a roll call request is issued,
 // and the execution request is relayed to, and retrieved from, a worker node that volunteers.
+// NOTE: By using `execute.Result` here as the type, if this is executed on the head node we are
+// losing the information about `who` is the peer that sent us the result - the `from` field.
 type executeFunc func(context.Context, peer.ID, execute.Request) (execute.Result, error)
 
 // getProcessHandlerFunc will return an appropriate handler function for execution request,

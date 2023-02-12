@@ -2,7 +2,12 @@ package store
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+
+	"github.com/cockroachdb/pebble"
+
+	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
 // Get retrieves the value for a key.
@@ -10,6 +15,10 @@ func (s *Store) Get(key string) (string, error) {
 
 	value, closer, err := s.db.Get([]byte(key))
 	if err != nil {
+		if errors.Is(err, pebble.ErrNotFound) {
+			return "", blockless.ErrNotFound
+		}
+
 		return "", fmt.Errorf("could not retrieve value: %w", err)
 	}
 	// Closer must be called else a memory leak occurs.
@@ -27,6 +36,9 @@ func (s *Store) GetRecord(key string, out interface{}) error {
 
 	value, closer, err := s.db.Get([]byte(key))
 	if err != nil {
+		if errors.Is(err, pebble.ErrNotFound) {
+			return blockless.ErrNotFound
+		}
 		return fmt.Errorf("could not retrieve value: %w", err)
 	}
 	// Closer must be called else a memory leak occurs.
