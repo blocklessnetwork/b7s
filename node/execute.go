@@ -58,7 +58,7 @@ func (n *Node) getProcessExecuteFunc(execFunc executeFunc) HandlerFunc {
 		// Call the function that executes the request in the appropriate way.
 		// NOTE: In case of an error, we do not return from this function.
 		// Instead, we send the response back to the caller, whatever it may be.
-		res, err := execFunc(ctx, from, execReq)
+		result, err := execFunc(ctx, from, execReq)
 		if err != nil {
 			n.log.Error().
 				Err(err).
@@ -68,7 +68,15 @@ func (n *Node) getProcessExecuteFunc(execFunc executeFunc) HandlerFunc {
 		}
 
 		// Cache the execution result.
-		n.excache.Set(res.RequestID, &res)
+		n.excache.Set(result.RequestID, &result)
+
+		// Create the execution response from the execution result.
+		res := response.Execute{
+			Type:      blockless.MessageExecuteResponse,
+			RequestID: result.RequestID,
+			Code:      result.Code,
+			Result:    result.Result,
+		}
 
 		// Send the response, whatever it may be (success or failure).
 		err = n.send(ctx, req.From, res)
@@ -193,6 +201,7 @@ rollCallResponseLoop:
 			err)
 	}
 
+	// TODO: Verify that the response came from the peer that reported for the roll call.
 	resExecute := <-n.executeResponses[requestID]
 
 	n.log.Info().
@@ -201,14 +210,14 @@ rollCallResponseLoop:
 		Str("code", resExecute.Code).
 		Msg("received execution response")
 
-	// Return the execution response.
-	out := execute.Result{
+	// Return the execution result.
+	result := execute.Result{
 		Code:      resExecute.Code,
 		Result:    resExecute.Result,
 		RequestID: resExecute.RequestID,
 	}
 
-	return out, nil
+	return result, nil
 }
 
 func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload []byte) error {
