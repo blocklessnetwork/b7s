@@ -1,35 +1,36 @@
 package config
 
+import (
+	"github.com/go-playground/validator/v10"
+)
+
 // Config describes the Blockless configuration options.
 type Config struct {
-	Log          Log     `yaml:"log"`
-	DatabasePath string  `yaml:"db-path"`
-	Node         Node    `yaml:"node"`
-	Workspace    string  `yaml:"workspace"`
-	Execute      Execute `yaml:"execute"`
-}
+	Log          Log    `validate:"required"`
+	DatabasePath string `validate:"required"`
+	Role         string `validate:"oneof=head worker"`
+	BootNodes    []string
 
-// Node describes the configuration options for the Blockless node.
-type Node struct {
-	Role      string   `yaml:"role"`
-	Host      Host     `yaml:"host"`
-	API       string   `yaml:"rest-api"`
-	BootNodes []string `yaml:"boot-nodes"`
+	Host    Host   `validate:"required"`
+	API     string `validate:"required_if=role head,excluded_if=role worker"`
+	Runtime string `validate:"dir,required_if=role worker,excluded_if=role head"`
+
+	Workspace string `validate:"required"`
 }
 
 // Host describes the libp2p host that the node will use.
 type Host struct {
-	Address    string `yaml:"address"`
-	Port       uint   `yaml:"port"`
-	PrivateKey string `yaml:"private-key"`
+	Port       uint
+	Address    string `validate:"required"`
+	PrivateKey string `validate:"omitempty,file"`
 }
 
 // Log describes the logging configuration.
 type Log struct {
-	Level string `yaml:"level"`
+	Level string `validate:"required"`
 }
 
-// Execute describes the configuration options for the Blockless worker node.
-type Execute struct {
-	Runtime string `yaml:"runtime"`
+// Valid will check if the provided configuration is valid, and return an error if not.
+func (c Config) Valid() error {
+	return validator.New().Struct(c)
 }

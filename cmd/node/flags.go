@@ -23,15 +23,15 @@ func parseFlags() *config.Config {
 	pflag.StringVarP(&cfg.DatabasePath, "db-path", "d", defaultDB, "path to the database used for persisting node data")
 
 	// Node configuration.
-	pflag.StringVarP(&cfg.Node.Role, "role", "r", defaultRole, "role this note will have in the Blockless protocol (head or worker)")
-	pflag.StringVarP(&cfg.Node.Host.Address, "address", "a", defaultAddress, "address that the libp2p host will use")
-	pflag.UintVarP(&cfg.Node.Host.Port, "port", "p", defaultPort, "port that the libp2p host will use")
-	pflag.StringVar(&cfg.Node.Host.PrivateKey, "private-key", "", "private key that the libp2p host will use")
-	pflag.StringVar(&cfg.Node.API, "rest-api", "", "address where the head node REST API will listen on")
-	pflag.StringSliceVar(&cfg.Node.BootNodes, "boot-nodes", nil, "list of addresses that this node will connect to on startup, in multiaddr format")
+	pflag.StringVarP(&cfg.Role, "role", "r", defaultRole, "role this note will have in the Blockless protocol (head or worker)")
+	pflag.StringVarP(&cfg.Host.Address, "address", "a", defaultAddress, "address that the libp2p host will use")
+	pflag.UintVarP(&cfg.Host.Port, "port", "p", defaultPort, "port that the libp2p host will use")
+	pflag.StringVar(&cfg.Host.PrivateKey, "private-key", "", "private key that the libp2p host will use")
+	pflag.StringVar(&cfg.API, "rest-api", "", "address where the head node REST API will listen on")
+	pflag.StringSliceVar(&cfg.BootNodes, "boot-nodes", nil, "list of addresses that this node will connect to on startup, in multiaddr format")
 
 	pflag.StringVar(&cfg.Workspace, "workspace", "./workspace", "directory that the node can use for file storage")
-	pflag.StringVar(&cfg.Execute.Runtime, "runtime", "", "runtime address (used by the worker node)")
+	pflag.StringVar(&cfg.Runtime, "runtime", "", "runtime address (used by the worker node)")
 
 	pflag.Parse()
 

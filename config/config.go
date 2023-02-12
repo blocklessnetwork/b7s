@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v2"
 )
 
@@ -22,13 +21,6 @@ func Load(file string) (*Config, error) {
 	err = yaml.Unmarshal(payload, &config)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal file: %w", err)
-	}
-
-	// Validate configuration.
-	validate := validator.New()
-	err = validate.Struct(config)
-	if err != nil {
-		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	return &config, nil

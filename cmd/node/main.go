@@ -33,6 +33,12 @@ func run() int {
 	// Parse CLI flags.
 	cfg := parseFlags()
 
+	err := cfg.Valid()
+	if err != nil {
+		log.Error().Err(err).Msg("invalid configuration")
+		return failure
+	}
+
 	level, err := zerolog.ParseLevel(cfg.Log.Level)
 	if err != nil {
 		log.Error().Err(err).Str("level", cfg.Log.Level).Msg("could not parse log level")
@@ -41,9 +47,9 @@ func run() int {
 	log = log.Level(level)
 
 	// Create host.
-	host, err := host.New(log, cfg.Node.Host.Address, cfg.Node.Host.Port, host.WithPrivateKey(cfg.Node.Host.PrivateKey))
+	host, err := host.New(log, cfg.Host.Address, cfg.Host.Port, host.WithPrivateKey(cfg.Host.PrivateKey))
 	if err != nil {
-		log.Error().Err(err).Str("key", cfg.Node.Host.PrivateKey).Msg("could not create host")
+		log.Error().Err(err).Str("key", cfg.Host.PrivateKey).Msg("could not create host")
 		return failure
 	}
 
@@ -63,9 +69,9 @@ func run() int {
 	store := store.New(pdb)
 
 	// Determine node role.
-	role, err := parseNodeRole(cfg.Node.Role)
+	role, err := parseNodeRole(cfg.Role)
 	if err != nil {
-		log.Error().Err(err).Str("role", cfg.Node.Role).Msg("invalid node role specified")
+		log.Error().Err(err).Str("role", cfg.Role).Msg("invalid node role specified")
 		return failure
 	}
 
@@ -74,12 +80,12 @@ func run() int {
 	peerstore := peerstore.New(store)
 
 	// Crete an executor.
-	executor, err := executor.New(log, cfg.Workspace, cfg.Execute.Runtime)
+	executor, err := executor.New(log, cfg.Workspace, cfg.Runtime)
 	if err != nil {
 		log.Error().
 			Err(err).
 			Str("workspace", cfg.Workspace).
-			Str("runtime", cfg.Execute.Runtime).
+			Str("runtime", cfg.Runtime).
 			Msg("could not create an executor")
 		return failure
 	}
