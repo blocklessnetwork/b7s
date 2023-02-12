@@ -3,11 +3,13 @@ package node
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
-	"github.com/blocklessnetworking/b7s/models/response"
 	"github.com/libp2p/go-libp2p/core/peer"
+
+	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/request"
+	"github.com/blocklessnetworking/b7s/models/response"
 )
 
 // TODO: Check - what do these functions use contexts for?
@@ -41,7 +43,42 @@ func (n *Node) recordRollCallResponse(res response.RollCall) {
 }
 
 func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, payload []byte) error {
-	return errors.New("TBD: Not implemented")
+
+	// Only workers should respond to function install requests.
+	if n.role != blockless.WorkerNode {
+		n.log.Debug().
+			Msg("received function install request, ignoring")
+		return nil
+	}
+
+	// Unpack the request.
+	var req request.InstallFunction
+	err := json.Unmarshal(payload, &req)
+	if err != nil {
+		return fmt.Errorf("could not unpack request: %w", err)
+	}
+	req.From = from
+
+	// Get the function manifest.
+	_, err = n.function.Get(req.ManifestURL, req.CID, true)
+	if err != nil {
+		return fmt.Errorf("could not retrieve function (manifest_url: %s, cid: %s): %w", req.ManifestURL, req.CID, err)
+	}
+
+	// Create the response.
+	res := response.InstallFunction{
+		Type:    blockless.MessageInstallFunctionResponse,
+		Code:    response.CodeAccepted,
+		Message: "installed",
+	}
+
+	// Reply to the caller.
+	err = n.send(ctx, from, res)
+	if err != nil {
+		return fmt.Errorf("could not send the response (peer: %s): %w", from, err)
+	}
+
+	return nil
 }
 
 func (n *Node) processInstallFunctionResponse(ctx context.Context, from peer.ID, payload []byte) error {

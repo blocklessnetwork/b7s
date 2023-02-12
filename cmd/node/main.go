@@ -9,6 +9,7 @@ import (
 
 	"github.com/blocklessnetworking/b7s/config"
 	"github.com/blocklessnetworking/b7s/executor"
+	"github.com/blocklessnetworking/b7s/function"
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/node"
 	"github.com/blocklessnetworking/b7s/peerstore"
@@ -130,8 +131,11 @@ func run() int {
 		return failure
 	}
 
+	// Create function handler.
+	functionHandler := function.New(log, store, flagWorkspace)
+
 	// Instantiate node.
-	node, err := node.New(log, host, store, executor, peerstore, node.WithRole(role))
+	node, err := node.New(log, host, store, executor, peerstore, functionHandler, node.WithRole(role))
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure

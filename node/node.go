@@ -21,6 +21,7 @@ type Node struct {
 	host     *host.Host
 	store    Store
 	execute  Execute
+	function Function
 	excache  *cache.Cache
 	handlers map[string]HandlerFunc
 
@@ -31,7 +32,7 @@ type Node struct {
 }
 
 // New creates a new Node.
-func New(log zerolog.Logger, host *host.Host, store Store, execute Execute, peerStore PeerStore, options ...func(*Config)) (*Node, error) {
+func New(log zerolog.Logger, host *host.Host, store Store, execute Execute, peerStore PeerStore, function Function, options ...func(*Config)) (*Node, error) {
 
 	// Initialize config.
 	cfg := DefaultConfig
@@ -44,10 +45,11 @@ func New(log zerolog.Logger, host *host.Host, store Store, execute Execute, peer
 		topicName: cfg.Topic,
 		excache:   cache.New(),
 
-		log:     log,
-		host:    host,
-		store:   store,
-		execute: execute,
+		log:      log,
+		host:     host,
+		store:    store,
+		function: function,
+		execute:  execute,
 
 		rollCallResponses: make(map[string](chan response.RollCall)),
 		executeResponses:  make(map[string](chan response.Execute)),
