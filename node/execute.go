@@ -17,7 +17,7 @@ import (
 // executeFunc is a function that handles an execution request. In case of a worker node,
 // the function is executed locally. In case of a head node, a roll call request is issued,
 // and the execution request is relayed to, and retrieved from, a worker node that volunteers.
-type executeFunc func(context.Context, peer.ID, execute.Request) (execute.Response, error)
+type executeFunc func(context.Context, peer.ID, execute.Request) (execute.Result, error)
 
 // getProcessHandlerFunc will return an appropriate handler function for execution request,
 // depending on the node role.
@@ -80,7 +80,7 @@ func (n *Node) getProcessExecuteFunc(execFunc executeFunc) HandlerFunc {
 	}
 }
 
-func (n *Node) workerExecute(ctx context.Context, from peer.ID, req execute.Request) (execute.Response, error) {
+func (n *Node) workerExecute(ctx context.Context, from peer.ID, req execute.Request) (execute.Result, error) {
 
 	// TODO: Check if function is installed.
 
@@ -93,12 +93,12 @@ func (n *Node) workerExecute(ctx context.Context, from peer.ID, req execute.Requ
 	return res, nil
 }
 
-func (n *Node) headExecute(ctx context.Context, from peer.ID, req execute.Request) (execute.Response, error) {
+func (n *Node) headExecute(ctx context.Context, from peer.ID, req execute.Request) (execute.Result, error) {
 
 	requestID, err := n.issueRollCall(ctx, req.FunctionID)
 	if err != nil {
 
-		res := execute.Response{
+		res := execute.Result{
 			Code: response.CodeError,
 		}
 
@@ -128,7 +128,7 @@ rollCallResponseLoop:
 				Str("request_id", requestID).
 				Msg("roll call timed out")
 
-			res := execute.Response{
+			res := execute.Result{
 				Code: response.CodeTimeout,
 			}
 
@@ -182,7 +182,7 @@ rollCallResponseLoop:
 	err = n.send(ctx, reportingPeer, reqExecute)
 	if err != nil {
 
-		res := execute.Response{
+		res := execute.Result{
 			Code: response.CodeError,
 		}
 
@@ -202,7 +202,7 @@ rollCallResponseLoop:
 		Msg("received execution response")
 
 	// Return the execution response.
-	out := execute.Response{
+	out := execute.Result{
 		Code:      resExecute.Code,
 		Result:    resExecute.Result,
 		RequestID: resExecute.RequestID,

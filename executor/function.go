@@ -10,13 +10,13 @@ import (
 )
 
 // execute will execute the Blockless function defined by the execution request.
-func (e *Executor) Function(req execute.Request) (execute.Response, error) {
+func (e *Executor) Function(req execute.Request) (execute.Result, error) {
 
 	// Get a new execution ID.
 	uuid, err := uuid.NewRandom()
 	if err != nil {
 		// Should NEVER really happen.
-		res := execute.Response{
+		res := execute.Result{
 			Code:      response.CodeError,
 			RequestID: "",
 			Result:    "Could not generate execution ID",
@@ -30,7 +30,7 @@ func (e *Executor) Function(req execute.Request) (execute.Response, error) {
 	out, err := e.execute(executionID, req)
 	if err != nil {
 
-		res := execute.Response{
+		res := execute.Result{
 			Code:      response.CodeError,
 			RequestID: executionID,
 		}
@@ -40,7 +40,7 @@ func (e *Executor) Function(req execute.Request) (execute.Response, error) {
 
 	// TODO: Execution response memory store.
 
-	res := execute.Response{
+	res := execute.Result{
 		Code:      response.CodeOK,
 		RequestID: executionID,
 		Result:    out,

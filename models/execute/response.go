@@ -1,7 +1,7 @@
 package execute
 
-// Response describes an execution response.
-type Response struct {
+// Result describes an execution result.
+type Result struct {
 	Code      string `json:"code"`
 	Result    string `json:"result"`
 	RequestID string `json:"request_id"`
