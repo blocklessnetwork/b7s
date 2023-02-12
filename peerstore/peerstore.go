@@ -8,7 +8,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
-	"github.com/blocklessnetworking/b7s/src/models"
+	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
 // PeerStore takes care of storing and reading peer information to and from persistent storage.
@@ -31,7 +31,7 @@ func (p *PeerStore) Store(peerID peer.ID, addr multiaddr.Multiaddr, info peer.Ad
 
 	// Check if we already have this peer stored.
 	// TODO: Handle "record not found" errors.
-	var peer models.Peer
+	var peer blockless.Peer
 	err := p.store.GetRecord(peerID.String(), &peer)
 	// If we don't have an error it means that the peer is already stored in the DB. We're done.
 	if err == nil {
@@ -46,9 +46,9 @@ func (p *PeerStore) Store(peerID peer.ID, addr multiaddr.Multiaddr, info peer.Ad
 	}
 
 	// New peer - create peer info record and store it.
-	peerInfo := models.Peer{
+	peerInfo := blockless.Peer{
 		Type:      "peer",
-		Id:        peerID,
+		ID:        peerID,
 		MultiAddr: addr.String(),
 		AddrInfo:  info,
 	}
@@ -70,7 +70,7 @@ func (p *PeerStore) Store(peerID peer.ID, addr multiaddr.Multiaddr, info peer.Ad
 func (p *PeerStore) UpdatePeerList(peerID peer.ID, addr multiaddr.Multiaddr, info peer.AddrInfo) error {
 
 	// Get list of peers from the store.
-	var peers []models.Peer
+	var peers []blockless.Peer
 	err := p.store.GetRecord(peersKey, &peers)
 	if err != nil && !errors.Is(err, pebble.ErrNotFound) {
 		return fmt.Errorf("could not retrieve peer list: %w", err)
@@ -81,15 +81,15 @@ func (p *PeerStore) UpdatePeerList(peerID peer.ID, addr multiaddr.Multiaddr, inf
 	for _, peer := range peers {
 
 		// If the peer is already known, we're done.
-		if peer.Id == peerID {
+		if peer.ID == peerID {
 			return nil
 		}
 	}
 
 	// New peer - add it to the list of peers.
-	peerInfo := models.Peer{
+	peerInfo := blockless.Peer{
 		Type:      "peer",
-		Id:        peerID,
+		ID:        peerID,
 		MultiAddr: addr.String(),
 		AddrInfo:  info,
 	}
