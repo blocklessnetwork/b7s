@@ -35,6 +35,9 @@ func (n *Node) HandleRequestExecute(ctx echo.Context) error {
 		Config:     req.Config,
 	}
 
+	// TODO: Broken - if we have REST, we're a head node and we're not executing stuff directly.
+	// Fix this.
+
 	response, err := n.execute.Function(execReq)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("execution failed: %w", err))

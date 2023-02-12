@@ -10,11 +10,11 @@ type Store struct {
 }
 
 // New creates a new Store backed by the database at the given path.
-func New(db *pebble.DB) (*Store, error) {
+func New(db *pebble.DB) *Store {
 
 	store := Store{
 		db: db,
 	}
 
-	return &store, nil
+	return &store
 }

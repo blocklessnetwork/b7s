@@ -1,42 +1,35 @@
 package config
 
-// Config represents the configuration parameters for the node.
+// Config describes the Blockless configuration options.
 type Config struct {
-	Node       Node       `yaml:"node"`
-	Rest       REST       `yaml:"rest"`
-	Protocol   Protocol   `yaml:"protocol"`
-	Logging    Logging    `yaml:"logging"`
-	Repository Repository `yaml:"repository"`
-	Chain      Chain      `yaml:"chain"`
+	Log          Log     `yaml:"log"`
+	DatabasePath string  `yaml:"db-path"`
+	Node         Node    `yaml:"node"`
+	Workspace    string  `yaml:"workspace"`
+	Execute      Execute `yaml:"execute"`
 }
 
+// Node describes the configuration options for the Blockless node.
 type Node struct {
-	Name          string   `yaml:"name"`
-	BootNodes     []string `yaml:"boot_nodes"`
-	WorkspaceRoot string   `yaml:"workspace_root"`
-	RuntimePath   string   `yaml:"runtime_path"`
+	Role      string   `yaml:"role"`
+	Host      Host     `yaml:"host"`
+	API       string   `yaml:"rest-api"`
+	BootNodes []string `yaml:"boot-nodes"`
 }
 
-type REST struct {
-	IP   string `yaml:"ip"`
-	Port string `yaml:"port"`
+// Host describes the libp2p host that the node will use.
+type Host struct {
+	Address    string `yaml:"address"`
+	Port       uint   `yaml:"port"`
+	PrivateKey string `yaml:"private-key"`
 }
 
-type Protocol struct {
-	Role string `yaml:"role"`
+// Log describes the logging configuration.
+type Log struct {
+	Level string `yaml:"level"`
 }
 
-type Logging struct {
-	FilePath string `yaml:"file_path"`
-	Level    string `yaml:"level"`
-}
-
-type Repository struct {
-	URL string `yaml:"url"`
-}
-
-type Chain struct {
-	AddressKey string `yaml:"address_key"`
-	RPC        string `yaml:"rpc"`
-	Home       string `yaml:"home"`
+// Execute describes the configuration options for the Blockless worker node.
+type Execute struct {
+	Runtime string `yaml:"runtime"`
 }
