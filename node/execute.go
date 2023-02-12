@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -13,33 +14,57 @@ import (
 	"github.com/blocklessnetworking/b7s/models/response"
 )
 
-func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte) error {
+// executeFunc is a function that handles an execution request. In case of a worker node,
+// the function is executed locally. In case of a head node, a roll call request is issued,
+// and the execution request is relayed to, and retrieved from, a worker node that volunteers.
+type executeFunc func(context.Context, peer.ID, execute.Request) (execute.Response, error)
 
-	// Unpack the request.
-	var req request.Execute
-	err := json.Unmarshal(payload, &req)
-	if err != nil {
-		return fmt.Errorf("could not unpack the request: %w", err)
+// getProcessHandlerFunc will return an appropriate handler function for execution request,
+// depending on the node role.
+func (n *Node) getProcessHandlerFunc(role blockless.NodeRole) HandlerFunc {
+
+	switch role {
+	case blockless.HeadNode:
+		return n.getProcessExecuteFunc(n.workerExecute)
+	case blockless.WorkerNode:
+		return n.getProcessExecuteFunc(n.headExecute)
+
+	default:
+		panic(fmt.Errorf("invalid node role specified: %s", role.String()))
 	}
-	req.From = from
+}
 
-	// Create execute request.
-	execReq := execute.Request{
-		FunctionID: req.FunctionID,
-		Method:     req.Method,
-		Parameters: req.Parameters,
-		Config:     req.Config,
-	}
+// getProcessExecuteFunc will take care of the request unmarshalling, caching and sending of the response to the caller.
+// Actual request execution is done in the provided `executeFunc` function.
+func (n *Node) getProcessExecuteFunc(execFunc executeFunc) HandlerFunc {
+	return func(ctx context.Context, from peer.ID, payload []byte) error {
 
-	// If we're a worker node - execute the function locally.
-	if n.role == blockless.WorkerNode {
-
-		// TODO: Check if function is installed.
-
-		// Execute the function.
-		res, err := n.execute.Function(execReq)
+		// Unpack the request.
+		var req request.Execute
+		err := json.Unmarshal(payload, &req)
 		if err != nil {
-			n.log.Error().Err(err).Msg("execution failed")
+			return fmt.Errorf("could not unpack the request: %w", err)
+		}
+		req.From = from
+
+		// Create execute request.
+		execReq := execute.Request{
+			FunctionID: req.FunctionID,
+			Method:     req.Method,
+			Parameters: req.Parameters,
+			Config:     req.Config,
+		}
+
+		// Call the function that executes the request in the appropriate way.
+		// NOTE: In case of an error, we do not return from this function.
+		// Instead, we send the response back to the caller, whatever it may be.
+		res, err := execFunc(ctx, from, execReq)
+		if err != nil {
+			n.log.Error().
+				Err(err).
+				Str("peer", from.String()).
+				Str("function_id", req.FunctionID).
+				Msg("execution failed")
 		}
 
 		// Cache the execution result.
@@ -50,16 +75,34 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 		if err != nil {
 			return fmt.Errorf("could not send response: %w", err)
 		}
-	}
 
-	return n.headNodeExecute(ctx, from, execReq)
+		return nil
+	}
 }
 
-func (n *Node) headNodeExecute(ctx context.Context, from peer.ID, req execute.Request) error {
+func (n *Node) workerExecute(ctx context.Context, from peer.ID, req execute.Request) (execute.Response, error) {
+
+	// TODO: Check if function is installed.
+
+	// Execute the function.
+	res, err := n.execute.Function(req)
+	if err != nil {
+		return res, fmt.Errorf("execution failed: %w", err)
+	}
+
+	return res, nil
+}
+
+func (n *Node) headExecute(ctx context.Context, from peer.ID, req execute.Request) (execute.Response, error) {
 
 	requestID, err := n.issueRollCall(ctx, req.FunctionID)
 	if err != nil {
-		return fmt.Errorf("could not issue roll call: %w", err)
+
+		res := execute.Response{
+			Code: response.CodeError,
+		}
+
+		return res, fmt.Errorf("could not issue roll call: %w", err)
 	}
 
 	n.log.Info().
@@ -88,9 +131,8 @@ rollCallResponseLoop:
 			res := execute.Response{
 				Code: response.CodeTimeout,
 			}
-			_ = res
 
-			// TODO: Who do we send to?
+			return res, errors.New("roll call timed out")
 
 		case reply := <-n.rollCallResponses[requestID]:
 
@@ -139,8 +181,12 @@ rollCallResponseLoop:
 	// Send message to reporting peer to execute the function.
 	err = n.send(ctx, reportingPeer, reqExecute)
 	if err != nil {
-		// TODO: Send response to caller.
-		return fmt.Errorf("could not send execution request to peer (peer: %s, function: %s, request: %s): %w",
+
+		res := execute.Response{
+			Code: response.CodeError,
+		}
+
+		return res, fmt.Errorf("could not send execution request to peer (peer: %s, function: %s, request: %s): %w",
 			reportingPeer.String(),
 			req.FunctionID,
 			requestID,
@@ -156,22 +202,13 @@ rollCallResponseLoop:
 		Msg("received execution response")
 
 	// Return the execution response.
-	// TODO: Use interfaces for worker and head node - for execution handlers.
-
 	out := execute.Response{
 		Code:      resExecute.Code,
 		Result:    resExecute.Result,
 		RequestID: resExecute.RequestID,
 	}
 
-	// TODO: Execution cache.
-
-	err = n.send(ctx, from, out)
-	if err != nil {
-		return fmt.Errorf("could not send response: %w", err)
-	}
-
-	return nil
+	return out, nil
 }
 
 func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload []byte) error {

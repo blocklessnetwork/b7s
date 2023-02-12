@@ -56,7 +56,7 @@ func New(log zerolog.Logger, host *host.Host, store Store, execute Execute, peer
 	// Initialize a list of handlers.
 	handlers := map[string]HandlerFunc{
 		blockless.MessageHealthCheck:             n.processHealthCheck,
-		blockless.MessageExecute:                 n.processExecute,
+		blockless.MessageExecute:                 n.getProcessHandlerFunc(n.role),
 		blockless.MessageExecuteResponse:         n.processExecuteResponse,
 		blockless.MessageRollCall:                n.processRollCall,
 		blockless.MessageRollCallResponse:        n.processRollCallResponse,
