@@ -12,8 +12,8 @@ var DefaultConfig = Config{
 
 // Config represents the Node configuration.
 type Config struct {
-	Role  blockless.NodeRole
-	Topic string
+	Role  blockless.NodeRole // Node role.
+	Topic string             // Topic to subscribe to.
 }
 
 // WithRole specifies the role for the node.

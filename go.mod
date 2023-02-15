@@ -12,13 +12,15 @@ require (
 	github.com/libp2p/go-libp2p-kad-dht v0.18.0
 	github.com/libp2p/go-libp2p-pubsub v0.8.1
 	github.com/multiformats/go-multiaddr v0.7.0
-	github.com/rs/zerolog v1.27.0
+	github.com/rs/zerolog v1.28.0
+	github.com/ziflex/lecho/v3 v3.3.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
@@ -27,6 +29,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/time v0.2.0 // indirect
 	gonum.org/v1/gonum v0.12.0 // indirect
 )
 

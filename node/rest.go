@@ -3,136 +3,26 @@ package node
 import (
 	"context"
 	"crypto/sha256"
-	"errors"
 	"fmt"
-	"net/http"
 
-	"github.com/labstack/echo/v4"
-
-	"github.com/blocklessnetworking/b7s/models/api"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/models/request"
-	"github.com/blocklessnetworking/b7s/models/response"
 )
 
-// TODO: Unify style on all JSON models - use snake_case.
-
-func (n *Node) HandleRequestExecute(ctx echo.Context) error {
-
-	// TODO: Uses different models from before. Do we need specific model for
-	// REST for this?
-	var req request.Execute
-	err := ctx.Bind(&req)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("could not unpack request: %w", err))
-	}
-
-	execReq := execute.Request{
-		FunctionID: req.FunctionID,
-		Method:     req.Method,
-		Parameters: req.Parameters,
-		Config:     req.Config,
-	}
-
-	// TODO: Broken - if we have REST, we're a head node and we're not executing stuff directly.
-	// Fix this.
-
-	response, err := n.execute.Function(execReq)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("execution failed: %w", err))
-	}
-
-	// Determine which status code to send.
-	code := http.StatusOK
-	if err != nil {
-		code = http.StatusInternalServerError
-	}
-
-	return ctx.JSON(code, response)
+// TODO: Functions needed for the API.
+func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (execute.Result, error) {
+	return execute.Result{}, fmt.Errorf("TBD: Not implemented")
 }
 
-func (n *Node) HandleFunctionInstall(ctx echo.Context) error {
-
-	// Unpack the request.
-	var req api.RequestFunctionInstall
-	err := ctx.Bind(&req)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("could not unpack request: %w", err))
-	}
-
-	if req.URI == "" && req.CID == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, errors.New("URI or CID are required"))
-	}
-
-	// Add a deadline to the context.
-	reqCtx, cancel := context.WithTimeout(ctx.Request().Context(), functionInstallTimeout)
-	defer cancel()
-
-	// Start function install in a separate goroutine and signal when it's done.
-	fnErr := make(chan error)
-	go func() {
-		err = n.functionInstall(reqCtx, req.URI, req.CID)
-		fnErr <- err
-	}()
-
-	// Wait until either function install finishes, or request times out.
-	select {
-
-	// Context timed out.
-	case <-reqCtx.Done():
-
-		status := http.StatusRequestTimeout
-		if !errors.Is(reqCtx.Err(), context.DeadlineExceeded) {
-			status = http.StatusInternalServerError
-		}
-		return ctx.NoContent(status)
-
-	// Work done.
-	case err = <-fnErr:
-		break
-	}
-
-	// Check if function install succeeded and handle error or return response.
-	if err != nil {
-		n.log.Error().
-			Err(err).
-			Str("uri", req.URI).
-			Str("cid", req.CID).
-			Msg("failed to install function")
-
-		return ctx.NoContent(http.StatusInternalServerError)
-	}
-
-	// Create response.
-	res := api.ResponseFunctionInstall{
-		Code: response.CodeOK,
-	}
-
-	return ctx.JSON(http.StatusOK, res)
+// ExecutionResult fetches the execution result from the node cache.
+func (n *Node) ExecutionResult(id string) (execute.Result, bool) {
+	res, ok := n.excache.Get(id)
+	return *res, ok
 }
 
-func (n *Node) HandleGetExecuteResponse(ctx echo.Context) error {
-
-	// Unpack the request.
-	var req api.RequestExecuteResponse
-	err := ctx.Bind(&req)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("could not unpack request: %w", err))
-	}
-
-	// Lookup this execution response.
-	res, ok := n.excache.Get(req.ID)
-	if !ok {
-		return ctx.NoContent(http.StatusNotFound)
-	}
-
-	return ctx.JSON(http.StatusOK, res)
-}
-
-// TODO: Move these functions.
-
-func (n *Node) functionInstall(ctx context.Context, uri string, cid string) error {
+// FunctionInstall initiates function install process.
+func (n *Node) FunctionInstall(ctx context.Context, uri string, cid string) error {
 
 	var req request.InstallFunction
 	if uri != "" {
@@ -145,9 +35,15 @@ func (n *Node) functionInstall(ctx context.Context, uri string, cid string) erro
 		req = createInstallMessageFromCID(cid)
 	}
 
-	n.log.Info().
+	n.log.Debug().
 		Str("url", req.ManifestURL).
-		Msg("Requesting to message peer for function installation")
+		Str("cid", req.CID).
+		Msg("publishing function install message")
+
+	err := n.publish(ctx, req)
+	if err != nil {
+		return fmt.Errorf("could not publish message: %w", err)
+	}
 
 	return nil
 }
