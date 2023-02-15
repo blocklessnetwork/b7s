@@ -7,7 +7,6 @@ import (
 )
 
 // Execute describes the `MessageExecute` request payload.
-// TODO: Check - do we need the duplication between this and `execute.Request`?
 type Execute struct {
 	Type       string              `json:"type,omitempty"`
 	From       peer.ID             `json:"from,omitempty"`

@@ -7,6 +7,7 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 )
 
+// Subscribe will have the host start listening to a specified gossipsub topic.
 func (h *Host) Subscribe(ctx context.Context, topic string) (*pubsub.Topic, *pubsub.Subscription, error) {
 
 	// Get a new PubSub object with the default router.

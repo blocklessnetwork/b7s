@@ -65,14 +65,11 @@ findPeers:
 
 func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 
-	// Start a DHT for use in peer discovery.
-	kademliaDHT, err := dht.New(ctx, h.Host)
+	// Start a DHT for use in peer discovery. Set the DHT to server mode.
+	kademliaDHT, err := dht.New(ctx, h.Host, dht.Mode(dht.ModeServer))
 	if err != nil {
 		return nil, fmt.Errorf("could not create DHT: %w", err)
 	}
-
-	// Set the DHT to server mode.
-	dht.Mode(dht.ModeServer)
 
 	// Bootstrap the DHT.
 	err = kademliaDHT.Bootstrap(ctx)

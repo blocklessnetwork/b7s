@@ -51,6 +51,7 @@ func run() int {
 	log = log.Level(level)
 
 	// Create libp2p host.
+	// TODO: Parse and use the boot nodes and dial-back peers.
 	host, err := host.New(log, cfg.Host.Address, cfg.Host.Port, host.WithPrivateKey(cfg.Host.PrivateKey))
 	if err != nil {
 		log.Error().Err(err).Str("key", cfg.Host.PrivateKey).Msg("could not create host")
