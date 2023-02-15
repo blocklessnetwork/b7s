@@ -10,9 +10,22 @@ import (
 	"github.com/blocklessnetworking/b7s/models/request"
 )
 
-// TODO: Functions needed for the API.
+// TODO: Consider introducing an entity - a `delegator`. This could be like an Executor, only
+// instead of local execution, it would issue a roll call and delegate work to the worker nodes.
+// Problem is that delegator would need to be notified when an execution result has arrived.
+// Doing this way would make the execution flow more streamlined and would not differentiate as much between
+// worker and head node.
 func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (execute.Result, error) {
-	return execute.Result{}, fmt.Errorf("TBD: Not implemented")
+
+	switch n.role {
+	case blockless.WorkerNode:
+		return n.workerExecute(ctx, n.host.ID(), req)
+
+	case blockless.HeadNode:
+		return n.headExecute(ctx, n.host.ID(), req)
+	}
+
+	panic(fmt.Errorf("invalid node role: %s", n.role))
 }
 
 // ExecutionResult fetches the execution result from the node cache.

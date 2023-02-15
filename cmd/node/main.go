@@ -61,8 +61,7 @@ func run() int {
 	log.Info().Strs("ids", hostIDs).Msg("created host")
 
 	// Open the pebble database.
-	opts := pebble.Options{}
-	pdb, err := pebble.Open(cfg.DatabasePath, &opts)
+	pdb, err := pebble.Open(cfg.DatabasePath, &pebble.Options{})
 	if err != nil {
 		log.Error().Err(err).Str("db", cfg.DatabasePath).Msg("could not open pebble database")
 		return failure
@@ -83,22 +82,33 @@ func run() int {
 
 	peerstore := peerstore.New(store)
 
-	// Crete an executor.
-	executor, err := executor.New(log, cfg.Workspace, cfg.Runtime)
-	if err != nil {
-		log.Error().
-			Err(err).
-			Str("workspace", cfg.Workspace).
-			Str("runtime", cfg.Runtime).
-			Msg("could not create an executor")
-		return failure
+	// Set node options.
+	opts := []node.Option{
+		node.WithRole(role),
+	}
+
+	// If this is a worker node, initialize an executor.
+	if role == blockless.WorkerNode {
+
+		// Crete an executor.
+		executor, err := executor.New(log, cfg.Workspace, cfg.Runtime)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("workspace", cfg.Workspace).
+				Str("runtime", cfg.Runtime).
+				Msg("could not create an executor")
+			return failure
+		}
+
+		opts = append(opts, node.WithExecute(executor))
 	}
 
 	// Create function handler.
 	functionHandler := function.New(log, store, cfg.Workspace)
 
 	// Instantiate node.
-	node, err := node.New(log, host, store, executor, peerstore, functionHandler, node.WithRole(role))
+	node, err := node.New(log, host, store, peerstore, functionHandler, opts...)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure

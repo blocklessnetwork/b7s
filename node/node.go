@@ -1,6 +1,8 @@
 package node
 
 import (
+	"errors"
+
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/rs/zerolog"
 
@@ -32,12 +34,17 @@ type Node struct {
 }
 
 // New creates a new Node.
-func New(log zerolog.Logger, host *host.Host, store Store, execute Execute, peerStore PeerStore, function Function, options ...func(*Config)) (*Node, error) {
+func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, function Function, options ...Option) (*Node, error) {
 
 	// Initialize config.
 	cfg := DefaultConfig
 	for _, option := range options {
 		option(&cfg)
+	}
+
+	// If we're a head node, we don't have an executor.
+	if cfg.Role == blockless.HeadNode && cfg.Execute != nil {
+		return nil, errors.New("head node does not support execution")
 	}
 
 	n := Node{
@@ -49,7 +56,7 @@ func New(log zerolog.Logger, host *host.Host, store Store, execute Execute, peer
 		host:     host,
 		store:    store,
 		function: function,
-		execute:  execute,
+		execute:  cfg.Execute,
 
 		rollCallResponses: make(map[string](chan response.RollCall)),
 		executeResponses:  make(map[string](chan response.Execute)),
