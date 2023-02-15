@@ -20,7 +20,7 @@ func New() *Cache {
 	return &c
 }
 
-// Get retrieves an execution response from the cache, given its executionID.
+// Get retrieves an execution response from the cache, given its requestID.
 func (c *Cache) Get(id string) (*execute.Result, bool) {
 	c.Lock()
 	defer c.Unlock()

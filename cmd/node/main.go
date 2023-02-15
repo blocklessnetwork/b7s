@@ -127,7 +127,7 @@ func run() int {
 		server.Use(lecho.Middleware(lecho.Config{Logger: elog}))
 
 		// Create an API handler.
-		api := api.New(node)
+		api := api.New(log, node)
 
 		// Set endpoint handlers.
 		server.POST("/api/v1/functions/execute", api.Execute)

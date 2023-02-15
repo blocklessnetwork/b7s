@@ -58,9 +58,8 @@ func (a *API) Install(ctx echo.Context) error {
 	}
 
 	// Check if function install succeeded and handle error or return response.
-	// TODO: Check - log here or?
 	if err != nil {
-		return ctx.NoContent(http.StatusInternalServerError)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("function installation failed: %w", err))
 	}
 
 	return ctx.NoContent(http.StatusOK)
