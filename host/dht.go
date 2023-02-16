@@ -17,7 +17,7 @@ func (h *Host) DiscoverPeers(ctx context.Context, topic string) error {
 	// Initialize DHT.
 	dht, err := h.initDHT(ctx)
 	if err != nil {
-		return fmt.Errorf("could not initalize DHT: %w", err)
+		return fmt.Errorf("could not initialize DHT: %w", err)
 	}
 
 	discovery := routing.NewRoutingDiscovery(dht)

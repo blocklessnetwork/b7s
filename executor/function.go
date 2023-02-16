@@ -9,7 +9,7 @@ import (
 	"github.com/blocklessnetworking/b7s/models/response"
 )
 
-// execute will execute the Blockless function defined by the execution request.
+// Function will execute the Blockless function defined by the execution request.
 func (e *Executor) Function(req execute.Request) (execute.Result, error) {
 
 	// Get a new execution ID.
@@ -37,8 +37,6 @@ func (e *Executor) Function(req execute.Request) (execute.Result, error) {
 
 		return res, fmt.Errorf("function execution failed: %w", err)
 	}
-
-	// TODO: Execution response memory store.
 
 	res := execute.Result{
 		Code:      response.CodeOK,

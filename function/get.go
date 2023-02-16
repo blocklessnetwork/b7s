@@ -1,12 +1,14 @@
 package function
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
-// Get retrieves the function manifest from the given address.
+// Get retrieves the function manifest from the given address. `useCached` indicates whether,
+// if the function is found in the store/db, it should be used, or if we should re-download it.
 func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.FunctionManifest, error) {
 
 	h.log.Debug().
@@ -17,15 +19,16 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 
 	var cachedManifest blockless.FunctionManifest
 	err := h.store.GetRecord(cid, &cachedManifest)
-	if err != nil {
-		// TODO: err not found is not an error.
+	// Return cached version if so requested.
+	if err == nil && useCached {
+		return &cachedManifest, nil
+	}
+	if err != nil && !errors.Is(err, blockless.ErrNotFound) {
 		return nil, fmt.Errorf("could not get function manifest from store: %w", err)
 	}
 
-	// Return cached version if so requested.
-	if useCached {
-		return &cachedManifest, nil
-	}
+	// Being here means that we either did not find the manifest, or we don't
+	// want to use the cached one.
 
 	// Retrieve function manifest from the given address.
 	var manifest blockless.FunctionManifest
@@ -35,8 +38,8 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 	}
 
 	// If the runtime URL is specified,
-	if cachedManifest.Runtime.URL != "" {
-		err = updateDeploymentInfo(&cachedManifest, address)
+	if manifest.Runtime.URL != "" {
+		err = updateDeploymentInfo(&manifest, address)
 		if err != nil {
 			return nil, fmt.Errorf("could not update deployment info: %w", err)
 		}
@@ -50,7 +53,7 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 
 	// Unpack the .tar.gz archive.
 	// TODO: Would be good to know the content of the .tar.gz archive.
-	// We're unpacking the archive to the file, and storing the path to the .tar.gz in the DB.
+	// We're unpacking the archive here and storing the path to the .tar.gz in the DB.
 	err = h.unpackArchive(path, h.workdir)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack gzip archive (file: %s): %w", path, err)

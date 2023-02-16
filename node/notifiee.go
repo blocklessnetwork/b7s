@@ -47,7 +47,7 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 	}
 }
 
-func (n *connectionNotifiee) Disconnected(network network.Network, conn network.Conn) {
+func (n *connectionNotifiee) Disconnected(_ network.Network, _ network.Conn) {
 	// TBD: Not implemented
 }
 

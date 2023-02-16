@@ -7,9 +7,11 @@ import (
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
+// updateDeployment info will add some missing information to the deployment info,
+// based on the info found in the manifest URL.
 func updateDeploymentInfo(manifest *blockless.FunctionManifest, manifestAddress string) error {
 
-	// Parse the deployment address
+	// Parse the deployment address.
 	deploymentURL, err := url.Parse(manifest.Runtime.URL)
 	if err != nil {
 		return fmt.Errorf("could not parse manifest runtime URL: %w", err)

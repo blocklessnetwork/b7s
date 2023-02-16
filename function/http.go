@@ -32,7 +32,7 @@ func (h *Handler) getJSON(address string, out interface{}) error {
 
 // download will retrieve the function with the given manifest. It returns the full path
 // of the file where the function is saved on the local storage or any error that might have
-// ocurred in the process. The function blocks until the download is complete.
+// occurred in the process. The function blocks until the download is complete.
 func (h *Handler) download(manifest blockless.FunctionManifest) (string, error) {
 
 	// Determine directory where files should be stored.

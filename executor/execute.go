@@ -41,7 +41,7 @@ func (e *Executor) execute(executionID string, req execute.Request) (string, err
 		Str("execution_id", executionID).
 		Msg("working directory for the request")
 
-	// TODO: Super hackish, but ported. See what needs to be done here.
+	// TODO: Super hackish, but ported. See why this is actually needed.
 	manifestPath, err := e.writeFunctionManifest(executionID, req, wdir)
 	if err != nil {
 		return "", fmt.Errorf("could not write function manifest: %w", err)

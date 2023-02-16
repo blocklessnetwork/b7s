@@ -10,7 +10,7 @@ import (
 )
 
 // TODO: Check - this functionality was ported but looks pretty special cased. Is this a temporary workaround for something?
-// Investigate then make proper.
+// Investigate, then make proper.
 func (e *Executor) writeFunctionManifest(executionID string, req execute.Request, workdir string) (string, error) {
 
 	fnpath := filepath.Join(e.workdir, req.FunctionID, req.Method)
@@ -32,7 +32,7 @@ func (e *Executor) writeFunctionManifest(executionID string, req execute.Request
 	}{
 		FSRootPath:    workdir,
 		Entry:         fnpath,
-		LimitedFuel:   100000000,
+		LimitedFuel:   100_000_000,
 		LimitedMemory: 200,
 		Permissions:   req.Config.Permissions,
 	}

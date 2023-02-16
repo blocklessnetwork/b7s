@@ -79,7 +79,6 @@ func (h *Host) IDs() []string {
 	return ids
 }
 
-// readPrivateKey from a file.
 func readPrivateKey(filepath string) (crypto.PrivKey, error) {
 
 	payload, err := os.ReadFile(filepath)
