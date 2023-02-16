@@ -19,6 +19,12 @@ const (
 	identityName = "identity"
 )
 
+const (
+	// Permissions used for created files.
+	privKeyPermissions = 0600
+	pubKeyPermissions  = 0644
+)
+
 func main() {
 
 	var (
@@ -60,19 +66,19 @@ func main() {
 	// Write keys and identity to files.
 
 	pubKeyFile := filepath.Join(flagOutputDir, pubKeyName)
-	err = os.WriteFile(pubKeyFile, pubPayload, os.ModePerm)
+	err = os.WriteFile(pubKeyFile, pubPayload, pubKeyPermissions)
 	if err != nil {
 		log.Fatalf("could not write private key to file: %s", err)
 	}
 
 	idFile := filepath.Join(flagOutputDir, identityName)
-	err = os.WriteFile(idFile, []byte(identity), os.ModePerm)
+	err = os.WriteFile(idFile, []byte(identity), pubKeyPermissions)
 	if err != nil {
 		log.Fatalf("could not write private key to file: %s", err)
 	}
 
 	privKeyFile := filepath.Join(flagOutputDir, privKeyName)
-	err = os.WriteFile(privKeyFile, privPayload, os.ModePerm)
+	err = os.WriteFile(privKeyFile, privPayload, privKeyPermissions)
 	if err != nil {
 		log.Fatalf("could not write private key to file: %s", err)
 	}
