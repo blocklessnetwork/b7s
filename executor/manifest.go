@@ -10,7 +10,7 @@ import (
 
 // TODO: Check - this functionality was ported but looks pretty special cased. Is this a temporary workaround for something?
 // Investigate, then make proper.
-func (e *Executor) writeFunctionManifest(executionID string, req execute.Request, paths requestPaths) error {
+func (e *Executor) writeFunctionManifest(req execute.Request, paths requestPaths) error {
 
 	manifest := struct {
 		FSRootPath    string   `json:"fs_root_path,omitempty"`

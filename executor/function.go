@@ -12,27 +12,27 @@ import (
 // Function will execute the Blockless function defined by the execution request.
 func (e *Executor) Function(req execute.Request) (execute.Result, error) {
 
-	// Get a new execution ID.
+	// Get a new request ID.
 	uuid, err := uuid.NewRandom()
 	if err != nil {
 		// Should NEVER really happen.
 		res := execute.Result{
 			Code:      response.CodeError,
 			RequestID: "",
-			Result:    "Could not generate execution ID",
+			Result:    "Could not generate request ID",
 		}
 
-		return res, fmt.Errorf("could not generate execution ID: %w", err)
+		return res, fmt.Errorf("could not generate request ID: %w", err)
 	}
-	executionID := uuid.String()
+	requestID := uuid.String()
 
 	// Execute the function.
-	out, err := e.execute(executionID, req)
+	out, err := e.execute(requestID, req)
 	if err != nil {
 
 		res := execute.Result{
 			Code:      response.CodeError,
-			RequestID: executionID,
+			RequestID: requestID,
 		}
 
 		return res, fmt.Errorf("function execution failed: %w", err)
@@ -40,7 +40,7 @@ func (e *Executor) Function(req execute.Request) (execute.Result, error) {
 
 	res := execute.Result{
 		Code:      response.CodeOK,
-		RequestID: executionID,
+		RequestID: requestID,
 		Result:    out,
 	}
 

@@ -14,15 +14,15 @@ import (
 // execute handles the actual execution of the Blockless function. It returns the
 // standard output of the blockless-cli that handled the execution. `Function`
 // typically takes this output and uses it to create the appropriate execution response.
-func (e *Executor) execute(executionID string, req execute.Request) (string, error) {
+func (e *Executor) execute(requestID string, req execute.Request) (string, error) {
 
 	e.log.Info().
 		Str("id", req.FunctionID).
-		Str("execution_id", executionID).
+		Str("request_id", requestID).
 		Msg("processing execution request")
 
 	// Generate paths for execution request.
-	paths := e.generateRequestPaths(executionID, req.FunctionID, req.Method)
+	paths := e.generateRequestPaths(requestID, req.FunctionID, req.Method)
 
 	err := os.MkdirAll(paths.workdir, defaultPermissions)
 	if err != nil {
@@ -39,11 +39,11 @@ func (e *Executor) execute(executionID string, req execute.Request) (string, err
 
 	e.log.Debug().
 		Str("dir", paths.workdir).
-		Str("execution_id", executionID).
+		Str("request_id", requestID).
 		Msg("working directory for the request")
 
 	// TODO: Super hackish, but ported. See why this is actually needed.
-	err = e.writeFunctionManifest(executionID, req, paths)
+	err = e.writeFunctionManifest(req, paths)
 	if err != nil {
 		return "", fmt.Errorf("could not write function manifest: %w", err)
 	}
@@ -52,7 +52,7 @@ func (e *Executor) execute(executionID string, req execute.Request) (string, err
 	cmd := e.createCmd(paths, req)
 
 	e.log.Debug().
-		Str("execution_id", executionID).
+		Str("request_id", requestID).
 		Int("env_vars_set", len(cmd.Env)).
 		Str("cmd", cmd.String()).
 		Msg("command ready for execution")
@@ -62,6 +62,10 @@ func (e *Executor) execute(executionID string, req execute.Request) (string, err
 	if err != nil {
 		return "", fmt.Errorf("command execution failed: %w", err)
 	}
+
+	e.log.Info().
+		Str("request_id", requestID).
+		Msg("command executed successfully")
 
 	return string(out), nil
 }
