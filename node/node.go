@@ -12,9 +12,13 @@ import (
 	"github.com/blocklessnetworking/b7s/node/internal/cache"
 )
 
-// TODO: Consider - interface for libp2p host instead of a type?
-
-// TODO: Add doc comment.
+// Node is the entity that actually provides the main Blockless node functionality.
+// It listens for messages coming from the wire and processes them. Depending on the
+// node role, which is determined on construction, it may process messages in different ways.
+// For example, upon receiving a message requesting execution of a Blockless function,
+// a Worker Node will use the `Execute` component to fullfill the execution request.
+// On the other hand, a Head Node will issue a roll call and eventually
+// delegate the execution to the chosend Worker Node.
 type Node struct {
 	role      blockless.NodeRole
 	topicName string

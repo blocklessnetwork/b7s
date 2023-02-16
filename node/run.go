@@ -15,6 +15,13 @@ func (n Node) Run(ctx context.Context) error {
 	}
 	n.topic = topic
 
+	// Discover peers.
+	// TODO: Think about doing this asynchronously.
+	err = n.host.DiscoverPeers(ctx, n.topicName)
+	if err != nil {
+		return fmt.Errorf("could not discover peers: %w", err)
+	}
+
 	// Message processing loop.
 	for {
 
