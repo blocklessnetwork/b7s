@@ -21,34 +21,35 @@ func (e *Executor) execute(executionID string, req execute.Request) (string, err
 		Str("execution_id", executionID).
 		Msg("processing execution request")
 
-	// Create temporary directory for the execution request.
-	wdir := e.generateDirName(executionID)
-	err := os.MkdirAll(wdir, defaultPermissions)
+	// Generate paths for execution request.
+	paths := e.generateRequestPaths(executionID, req.FunctionID, req.Method)
+
+	err := os.MkdirAll(paths.workdir, defaultPermissions)
 	if err != nil {
-		return "", fmt.Errorf("could not setup working directory for execution (dir: %s): %w", wdir, err)
+		return "", fmt.Errorf("could not setup working directory for execution (dir: %s): %w", paths.workdir, err)
 	}
 	// Remove all temporary files after we're done.
 	defer func() {
-		err := os.RemoveAll(wdir)
+		err := os.RemoveAll(paths.workdir)
 		if err != nil {
-			e.log.Error().Err(err).Str("dir", wdir).
+			e.log.Error().Err(err).Str("dir", paths.workdir).
 				Msg("could not remove request working directory")
 		}
 	}()
 
 	e.log.Debug().
-		Str("dir", wdir).
+		Str("dir", paths.workdir).
 		Str("execution_id", executionID).
 		Msg("working directory for the request")
 
 	// TODO: Super hackish, but ported. See why this is actually needed.
-	manifestPath, err := e.writeFunctionManifest(executionID, req, wdir)
+	err = e.writeFunctionManifest(executionID, req, paths)
 	if err != nil {
 		return "", fmt.Errorf("could not write function manifest: %w", err)
 	}
 
 	// Create command that will be executed.
-	cmd := e.createCmd(wdir, manifestPath, req)
+	cmd := e.createCmd(paths, req)
 
 	e.log.Debug().
 		Str("execution_id", executionID).
@@ -66,12 +67,12 @@ func (e *Executor) execute(executionID string, req execute.Request) (string, err
 }
 
 // createCmd will create the command to be executed, prepare working directory, environment, standard input and all else.
-func (e *Executor) createCmd(workdir string, manifestPath string, req execute.Request) *exec.Cmd {
+func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd {
 
 	// Prepare command to be executed.
 	exePath := filepath.Join(e.runtimedir, blocklessCli)
-	cmd := exec.Command(exePath, manifestPath)
-	cmd.Dir = workdir
+	cmd := exec.Command(exePath, paths.manifest)
+	cmd.Dir = paths.workdir
 
 	// Setup stdin of the command.
 	var stdin io.Reader
