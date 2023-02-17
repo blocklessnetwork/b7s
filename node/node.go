@@ -1,9 +1,12 @@
 package node
 
 import (
+	"context"
 	"errors"
+	"fmt"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 
 	"github.com/blocklessnetworking/b7s/host"
@@ -29,7 +32,6 @@ type Node struct {
 	execute  Executor
 	function FunctionStore
 	excache  *cache.Cache
-	handlers map[string]HandlerFunc
 
 	topic *pubsub.Topic
 
@@ -66,21 +68,35 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 		executeResponses:  make(map[string](chan response.Execute)),
 	}
 
-	// Initialize a list of handlers.
-	handlers := map[string]HandlerFunc{
-		blockless.MessageHealthCheck:             n.processHealthCheck,
-		blockless.MessageExecute:                 n.getProcessHandlerFunc(n.role),
-		blockless.MessageExecuteResponse:         n.processExecuteResponse,
-		blockless.MessageRollCall:                n.processRollCall,
-		blockless.MessageRollCallResponse:        n.processRollCallResponse,
-		blockless.MessageInstallFunction:         n.processInstallFunction,
-		blockless.MessageInstallFunctionResponse: n.processInstallFunctionResponse,
-	}
-	n.handlers = handlers
-
 	// Create a notifiee with a backing peerstore.
 	cn := newConnectionNotifee(log, peerStore)
 	host.Network().Notify(cn)
 
 	return &n, nil
+}
+
+// getHandler returns the appropriate handler function for the given message.
+func (n Node) getHandler(msgType string) HandlerFunc {
+
+	switch msgType {
+	case blockless.MessageHealthCheck:
+		return n.processHealthCheck
+	case blockless.MessageExecute:
+		return n.processExecute
+	case blockless.MessageExecuteResponse:
+		return n.processExecuteResponse
+	case blockless.MessageRollCall:
+		return n.processRollCall
+	case blockless.MessageRollCallResponse:
+		return n.processRollCallResponse
+	case blockless.MessageInstallFunction:
+		return n.processInstallFunction
+	case blockless.MessageInstallFunctionResponse:
+		return n.processInstallFunctionResponse
+
+	default:
+		return func(_ context.Context, from peer.ID, _ []byte) error {
+			return fmt.Errorf("received an unsupported message (type: %s, from: %s)", msgType, from.String())
+		}
+	}
 }

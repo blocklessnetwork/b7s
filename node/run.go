@@ -13,7 +13,7 @@ import (
 )
 
 // Run will start the main loop for the node.
-func (n Node) Run(ctx context.Context) error {
+func (n *Node) Run(ctx context.Context) error {
 
 	// Subscribe to the specified topic.
 	topic, subscription, err := n.host.Subscribe(ctx, n.topicName)
@@ -22,7 +22,7 @@ func (n Node) Run(ctx context.Context) error {
 	}
 	n.topic = topic
 
-	// Set the handler for driect messages.
+	// Set the handler for direct messages.
 	n.listenDirectMessages(ctx)
 
 	// Discover peers.

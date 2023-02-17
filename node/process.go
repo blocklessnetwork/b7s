@@ -23,11 +23,7 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte)
 		Msg("received message from peer")
 
 	// Get the registered handler for the message.
-	handler, ok := n.handlers[msgType]
-	if !ok {
-		n.log.Info().Str("message", msgType).Msg("no handler registered for received message, skipping")
-		return nil
-	}
+	handler := n.getHandler(msgType)
 
 	// Invoke the aprropriate handler to process the message.
 	return handler(ctx, from, payload)

@@ -21,73 +21,61 @@ import (
 // losing the information about `who` is the peer that sent us the result - the `from` field.
 type executeFunc func(context.Context, peer.ID, execute.Request) (execute.Result, error)
 
-// getProcessHandlerFunc will return an appropriate handler function for execution request,
-// depending on the node role.
-func (n *Node) getProcessHandlerFunc(role blockless.NodeRole) HandlerFunc {
+func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte) error {
 
-	switch role {
-	case blockless.HeadNode:
-		return n.getProcessExecuteFunc(n.headExecute)
-	case blockless.WorkerNode:
-		return n.getProcessExecuteFunc(n.workerExecute)
-
-	default:
-		panic(fmt.Errorf("invalid node role specified: %s", role.String()))
+	// Unpack the request.
+	var req request.Execute
+	err := json.Unmarshal(payload, &req)
+	if err != nil {
+		return fmt.Errorf("could not unpack the request: %w", err)
 	}
-}
+	req.From = from
 
-// getProcessExecuteFunc will take care of the request unmarshalling, caching and sending of the response to the caller.
-// Actual request execution is done in the provided `executeFunc` function.
-func (n *Node) getProcessExecuteFunc(execFunc executeFunc) HandlerFunc {
-	return func(ctx context.Context, from peer.ID, payload []byte) error {
-
-		// Unpack the request.
-		var req request.Execute
-		err := json.Unmarshal(payload, &req)
-		if err != nil {
-			return fmt.Errorf("could not unpack the request: %w", err)
-		}
-		req.From = from
-
-		// Create execute request.
-		execReq := execute.Request{
-			FunctionID: req.FunctionID,
-			Method:     req.Method,
-			Parameters: req.Parameters,
-			Config:     req.Config,
-		}
-
-		// Call the function that executes the request in the appropriate way.
-		// NOTE: In case of an error, we do not return from this function.
-		// Instead, we send the response back to the caller, whatever it may be.
-		result, err := execFunc(ctx, from, execReq)
-		if err != nil {
-			n.log.Error().
-				Err(err).
-				Str("peer", from.String()).
-				Str("function_id", req.FunctionID).
-				Msg("execution failed")
-		}
-
-		// Cache the execution result.
-		n.excache.Set(result.RequestID, result)
-
-		// Create the execution response from the execution result.
-		res := response.Execute{
-			Type:      blockless.MessageExecuteResponse,
-			RequestID: result.RequestID,
-			Code:      result.Code,
-			Result:    result.Result,
-		}
-
-		// Send the response, whatever it may be (success or failure).
-		err = n.send(ctx, req.From, res)
-		if err != nil {
-			return fmt.Errorf("could not send response: %w", err)
-		}
-
-		return nil
+	// Create execute request.
+	execReq := execute.Request{
+		FunctionID: req.FunctionID,
+		Method:     req.Method,
+		Parameters: req.Parameters,
+		Config:     req.Config,
 	}
+
+	// Call the appropriate function that executes the request in the appropriate way.
+	// NOTE: In case of an error, we do not return from this function.
+	// Instead, we send the response back to the caller, whatever it may be.
+	var execFunc executeFunc
+	if n.role == blockless.WorkerNode {
+		execFunc = n.workerExecute
+	} else {
+		execFunc = n.headExecute
+	}
+
+	result, err := execFunc(ctx, from, execReq)
+	if err != nil {
+		n.log.Error().
+			Err(err).
+			Str("peer", from.String()).
+			Str("function_id", req.FunctionID).
+			Msg("execution failed")
+	}
+
+	// Cache the execution result.
+	n.excache.Set(result.RequestID, result)
+
+	// Create the execution response from the execution result.
+	res := response.Execute{
+		Type:      blockless.MessageExecuteResponse,
+		RequestID: result.RequestID,
+		Code:      result.Code,
+		Result:    result.Result,
+	}
+
+	// Send the response, whatever it may be (success or failure).
+	err = n.send(ctx, req.From, res)
+	if err != nil {
+		return fmt.Errorf("could not send response: %w", err)
+	}
+
+	return nil
 }
 
 func (n *Node) workerExecute(ctx context.Context, from peer.ID, req execute.Request) (execute.Result, error) {
