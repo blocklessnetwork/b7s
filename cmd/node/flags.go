@@ -20,7 +20,7 @@ func parseFlags() *config.Config {
 	var cfg config.Config
 
 	pflag.StringVarP(&cfg.Log.Level, "log-level", "l", "info", "log level to use")
-	pflag.StringVarP(&cfg.DatabasePath, "db-path", "d", defaultDB, "path to the database used for persisting node data")
+	pflag.StringVarP(&cfg.DatabasePath, "db", "d", defaultDB, "path to the database used for persisting node data")
 
 	// Node configuration.
 	pflag.StringVarP(&cfg.Role, "role", "r", defaultRole, "role this note will have in the Blockless protocol (head or worker)")
