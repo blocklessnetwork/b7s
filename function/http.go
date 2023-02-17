@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/cavaliergopher/grab/v3"
@@ -43,6 +44,12 @@ func (h *Handler) download(manifest blockless.FunctionManifest) (string, error) 
 		Str("function_id", manifest.Function.ID).
 		Str("function_uri", manifest.Deployment.URI).
 		Msg("downloading function")
+
+	// Create destination directory.
+	err := os.MkdirAll(fdir, os.ModePerm)
+	if err != nil {
+		return "", fmt.Errorf("could not create destination directory (dir: %s): %w", fdir, err)
+	}
 
 	// Get expected checksum of the function.
 	sum, err := hex.DecodeString(manifest.Deployment.Checksum)

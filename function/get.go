@@ -3,6 +3,7 @@ package function
 import (
 	"errors"
 	"fmt"
+	"path"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
@@ -46,20 +47,22 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 	}
 
 	// Download the function identified by the manifest.
-	path, err := h.download(manifest)
+	manifestPath, err := h.download(manifest)
 	if err != nil {
 		return nil, fmt.Errorf("could not download function: %w", err)
 	}
 
+	out := path.Join(h.workdir, cid)
+
 	// Unpack the .tar.gz archive.
 	// TODO: Would be good to know the content of the .tar.gz archive.
 	// We're unpacking the archive here and storing the path to the .tar.gz in the DB.
-	err = h.unpackArchive(path, h.workdir)
+	err = h.unpackArchive(manifestPath, out)
 	if err != nil {
-		return nil, fmt.Errorf("could not unpack gzip archive (file: %s): %w", path, err)
+		return nil, fmt.Errorf("could not unpack gzip archive (file: %s): %w", manifestPath, err)
 	}
 
-	manifest.Deployment.File = path
+	manifest.Deployment.File = manifestPath
 	manifest.Cached = true
 
 	// Store the retrieved manifest.
