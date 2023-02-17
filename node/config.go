@@ -17,7 +17,7 @@ var DefaultConfig = Config{
 type Config struct {
 	Role    blockless.NodeRole // Node role.
 	Topic   string             // Topic to subscribe to.
-	Execute Execute            // Executor to use for running functions.
+	Execute Executor           // Executor to use for running functions.
 }
 
 // WithRole specifies the role for the node.
@@ -35,7 +35,7 @@ func WithTopic(topic string) Option {
 }
 
 // WithExecutor specifies the executor to be used for running Blockless functions
-func WithExecute(execute Execute) Option {
+func WithExecutor(execute Executor) Option {
 	return func(cfg *Config) {
 		cfg.Execute = execute
 	}

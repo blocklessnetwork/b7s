@@ -131,7 +131,7 @@ func run() int {
 			return failure
 		}
 
-		opts = append(opts, node.WithExecute(executor))
+		opts = append(opts, node.WithExecutor(executor))
 	}
 
 	// Create function handler.

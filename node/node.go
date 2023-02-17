@@ -26,8 +26,8 @@ type Node struct {
 	log      zerolog.Logger
 	host     *host.Host
 	store    Store
-	execute  Execute
-	function Function
+	execute  Executor
+	function FunctionStore
 	excache  *cache.Cache
 	handlers map[string]HandlerFunc
 
@@ -38,7 +38,7 @@ type Node struct {
 }
 
 // New creates a new Node.
-func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, function Function, options ...Option) (*Node, error) {
+func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, function FunctionStore, options ...Option) (*Node, error) {
 
 	// Initialize config.
 	cfg := DefaultConfig
