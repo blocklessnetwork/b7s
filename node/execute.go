@@ -92,7 +92,22 @@ func (n *Node) getProcessExecuteFunc(execFunc executeFunc) HandlerFunc {
 
 func (n *Node) workerExecute(ctx context.Context, from peer.ID, req execute.Request) (execute.Result, error) {
 
-	// TODO: Check if function is installed.
+	// Check if we have function in store.
+	functionInstalled, err := n.isFunctionInstalled(req.FunctionID)
+	if err != nil {
+		res := execute.Result{
+			Code: response.CodeError,
+		}
+		return res, fmt.Errorf("could not lookup function in store: %w", err)
+	}
+
+	if !functionInstalled {
+		res := execute.Result{
+			Code: response.CodeNotFound,
+		}
+
+		return res, nil
+	}
 
 	// Execute the function.
 	res, err := n.execute.Function(req)
@@ -240,4 +255,20 @@ func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload
 
 func (n *Node) recordExecuteResponse(res response.Execute) {
 	n.executeResponses[res.RequestID] <- res
+}
+
+// isFuncitonInstalled looks up the function in the store by using the functionID/CID as key.
+func (n *Node) isFunctionInstalled(functionID string) (bool, error) {
+
+	_, err := n.function.Get("", functionID, true)
+	if err != nil {
+
+		if errors.Is(err, blockless.ErrNotFound) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("could not lookup function in store: %w", err)
+	}
+
+	return true, nil
 }

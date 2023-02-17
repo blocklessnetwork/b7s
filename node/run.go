@@ -23,7 +23,7 @@ func (n Node) Run(ctx context.Context) error {
 	n.topic = topic
 
 	// Set the handler for driect messages.
-	go n.listenDirectMessages(ctx)
+	n.listenDirectMessages(ctx)
 
 	// Discover peers.
 	// TODO: Think about doing this asynchronously.
@@ -91,7 +91,6 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 				Err(err).
 				Str("peer_id", from.String()).
 				Msg("could not process direct message")
-
 		}
 	})
 }
