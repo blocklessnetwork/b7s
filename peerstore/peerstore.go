@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cockroachdb/pebble"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
@@ -70,7 +69,7 @@ func (p *PeerStore) UpdatePeerList(peerID peer.ID, addr multiaddr.Multiaddr, inf
 	// Get list of peers from the store.
 	var peers []blockless.Peer
 	err := p.store.GetRecord(peersKey, &peers)
-	if err != nil && !errors.Is(err, pebble.ErrNotFound) {
+	if err != nil && !errors.Is(err, blockless.ErrNotFound) {
 		return fmt.Errorf("could not retrieve peer list: %w", err)
 	}
 
@@ -94,7 +93,7 @@ func (p *PeerStore) UpdatePeerList(peerID peer.ID, addr multiaddr.Multiaddr, inf
 	peers = append(peers, peerInfo)
 
 	// Store the updated peer list.
-	err = p.store.SetRecord("peers", peers)
+	err = p.store.SetRecord(peersKey, peers)
 	if err != nil {
 		return fmt.Errorf("could not update peer list: %w", err)
 	}
