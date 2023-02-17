@@ -22,6 +22,9 @@ func (n Node) Run(ctx context.Context) error {
 		return fmt.Errorf("could not discover peers: %w", err)
 	}
 
+	// Start the health signal emitter in a separate goroutine.
+	go n.HealthPing(ctx)
+
 	// Message processing loop.
 	for {
 

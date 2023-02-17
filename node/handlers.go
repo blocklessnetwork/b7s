@@ -12,13 +12,14 @@ import (
 	"github.com/blocklessnetworking/b7s/models/response"
 )
 
-// TODO: Check - what do these functions use contexts for?
 // TODO: peerID of the sender is a good candidate to move on to the context
 
 type HandlerFunc func(context.Context, peer.ID, []byte) error
 
 func (n *Node) processHealthCheck(ctx context.Context, from peer.ID, payload []byte) error {
-	n.log.Debug().Msg("peer health check received")
+	n.log.Debug().
+		Str("from", from.String()).
+		Msg("peer health check received")
 	return nil
 }
 
