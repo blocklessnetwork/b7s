@@ -30,12 +30,26 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	req.From = from
 
 	// Check if we have this manifest.
-	_, err = n.getFunctionManifest(req.FunctionID)
+	functionInstalled, err := n.isFunctionInstalled(req.FunctionID)
 	if err != nil {
+		// We could not lookup the manifest.
+		res := response.RollCall{
+			Type:       blockless.MessageRollCallResponse,
+			FunctionID: req.FunctionID,
+			RequestID:  req.RequestID,
+			Code:       response.CodeError,
+		}
 
-		// TODO: Install this function now.
+		err = n.send(ctx, req.From, res)
+		if err != nil {
+			return fmt.Errorf("could not send response: %w", err)
+		}
 
-		// Notify the caller that we don't have this manifest.
+		return fmt.Errorf("could not check if function is installed: %w", err)
+	}
+
+	// We don't have this function.
+	if !functionInstalled {
 
 		res := response.RollCall{
 			Type:       blockless.MessageRollCallResponse,
@@ -48,6 +62,13 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 		if err != nil {
 			return fmt.Errorf("could not send response: %w", err)
 		}
+
+		// TODO: In the original code we create a function install call here.
+		// However, we do it with the CID only, but the function install code
+		// requires manifestURL + CID. So at the moment this code path is not
+		// present here.
+
+		return nil
 	}
 
 	// Create response.
