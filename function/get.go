@@ -22,6 +22,12 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 	err := h.store.GetRecord(cid, &cachedManifest)
 	// Return cached version if so requested.
 	if err == nil && useCached {
+
+		h.log.Debug().
+			Str("cid", cid).
+			Str("address", address).
+			Msg("function manifest was already cached, done")
+
 		return &cachedManifest, nil
 	}
 	if err != nil && !errors.Is(err, blockless.ErrNotFound) {
