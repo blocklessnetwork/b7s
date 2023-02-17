@@ -9,4 +9,6 @@ const (
 
 	functionInstallTimeout = 10 * time.Second
 	rollCallTimeout        = 5 * time.Second
+
+	resultBufferSize = 10
 )

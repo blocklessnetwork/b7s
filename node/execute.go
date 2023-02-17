@@ -180,7 +180,8 @@ rollCallResponseLoop:
 		Msg("peer reported for roll call")
 
 	// Create a channel where execution response will be received.
-	n.executeResponses[requestID] = make(chan response.Execute)
+	// We create a bufferred channel so sending of execution result does not block.
+	n.executeResponses[requestID] = make(chan response.Execute, resultBufferSize)
 
 	// Request execution from the peer who reported back first.
 	reqExecute := request.Execute{
