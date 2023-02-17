@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"net/http"
 	"os"
+	"os/signal"
 
 	"github.com/cockroachdb/pebble"
 	"github.com/labstack/echo/v4"
@@ -27,9 +31,11 @@ func main() {
 	os.Exit(run())
 }
 
-// TODO: RestAPI za node i execution memstore
-
 func run() int {
+
+	// Signal catching for clean shutdown.
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
 
 	// Initialize logging.
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
@@ -138,6 +144,28 @@ func run() int {
 		return failure
 	}
 
+	// Create the main context.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan struct{})
+	failed := make(chan struct{})
+
+	// Start node main loop in a separate goroutine.
+	go func() {
+
+		log.Info().Msg("Blockless Node starting")
+		err := node.Run(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("Blockless Node failed")
+			close(failed)
+		} else {
+			close(done)
+		}
+
+		log.Info().Msg("Blockless Node stopped")
+	}()
+
 	// If we're a head node - start the REST API.
 	if role == blockless.HeadNode {
 
@@ -157,7 +185,39 @@ func run() int {
 		server.POST("/api/v1/functions/execute", api.Execute)
 		server.GET("/api/v1/functions/:id/install", api.Install)
 		server.GET("/api/v1/functions/requests/:id/result", api.ExecutionResult)
+
+		// Start API in a separate goroutine.
+		go func() {
+
+			log.Info().Msg("Node API starting")
+			err := server.Start(cfg.API)
+			if err != nil && !errors.Is(err, http.ErrServerClosed) {
+				log.Warn().Err(err).Msg("Node API failed")
+				close(failed)
+			} else {
+				close(done)
+			}
+
+			log.Info().Msg("Node API stopped")
+		}()
 	}
 
-	return failure
+	select {
+	case <-sig:
+		log.Info().Msg("Blockless Node stopping")
+	case <-done:
+		log.Info().Msg("Blockless Node done")
+	case <-failed:
+		log.Info().Msg("Blockless Node aborted")
+		return failure
+	}
+
+	// If we receive a second interrupt signal, exit immediately.
+	go func() {
+		<-sig
+		log.Warn().Msg("forcing exit")
+		os.Exit(1)
+	}()
+
+	return success
 }
