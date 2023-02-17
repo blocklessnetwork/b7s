@@ -26,11 +26,16 @@ func (n Node) Run(ctx context.Context) error {
 	n.listenDirectMessages(ctx)
 
 	// Discover peers.
-	// TODO: Think about doing this asynchronously.
-	err = n.host.DiscoverPeers(ctx, n.topicName)
-	if err != nil {
-		return fmt.Errorf("could not discover peers: %w", err)
-	}
+	// NOTE: Potentially signal any error here so that we abort the node
+	// run loop if anything failed.
+	go func() {
+		err = n.host.DiscoverPeers(ctx, n.topicName)
+		if err != nil {
+			n.log.Error().
+				Err(err).
+				Msg("could not discover peers")
+		}
+	}()
 
 	// Start the health signal emitter in a separate goroutine.
 	go n.HealthPing(ctx)
