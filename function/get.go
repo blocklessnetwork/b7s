@@ -53,7 +53,7 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 	}
 
 	// Download the function identified by the manifest.
-	manifestPath, err := h.download(manifest)
+	functionPath, err := h.download(manifest)
 	if err != nil {
 		return nil, fmt.Errorf("could not download function: %w", err)
 	}
@@ -63,12 +63,12 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 	// Unpack the .tar.gz archive.
 	// TODO: Would be good to know the content of the .tar.gz archive.
 	// We're unpacking the archive here and storing the path to the .tar.gz in the DB.
-	err = h.unpackArchive(manifestPath, out)
+	err = h.unpackArchive(functionPath, out)
 	if err != nil {
-		return nil, fmt.Errorf("could not unpack gzip archive (file: %s): %w", manifestPath, err)
+		return nil, fmt.Errorf("could not unpack gzip archive (file: %s): %w", functionPath, err)
 	}
 
-	manifest.Deployment.File = manifestPath
+	manifest.Deployment.File = functionPath
 	manifest.Cached = true
 
 	// Store the retrieved manifest.
