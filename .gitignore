@@ -1,3 +1,6 @@
+cmd/node/node
+cmd/keygen/keygen
+
 dist/
 runtime/
 *.env
