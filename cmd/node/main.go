@@ -50,16 +50,12 @@ func run() int {
 	}
 	log = log.Level(level)
 
-	// Create libp2p host.
-	// TODO: Parse and use the boot nodes and dial-back peers.
-	host, err := host.New(log, cfg.Host.Address, cfg.Host.Port, host.WithPrivateKey(cfg.Host.PrivateKey))
+	// Determine node role.
+	role, err := parseNodeRole(cfg.Role)
 	if err != nil {
-		log.Error().Err(err).Str("key", cfg.Host.PrivateKey).Msg("could not create host")
+		log.Error().Err(err).Str("role", cfg.Role).Msg("invalid node role specified")
 		return failure
 	}
-
-	hostIDs := host.IDs()
-	log.Info().Strs("ids", hostIDs).Msg("created host")
 
 	// Open the pebble database.
 	pdb, err := pebble.Open(cfg.DatabasePath, &pebble.Options{})
@@ -72,16 +68,43 @@ func run() int {
 	// Create a new store.
 	store := store.New(pdb)
 
-	// Determine node role.
-	role, err := parseNodeRole(cfg.Role)
+	peerstore := peerstore.New(store)
+
+	// Get the list of dial back peers.
+	peers, err := peerstore.Peers()
 	if err != nil {
-		log.Error().Err(err).Str("role", cfg.Role).Msg("invalid node role specified")
+		log.Error().Err(err).Msg("could not get list of dial-back peers")
+		return failure
+	}
+	peerAddrs, err := getPeerAddresses(peers)
+	if err != nil {
+		log.Error().Err(err).Msg("could not get peer addresses")
 		return failure
 	}
 
-	log.Info().Str("role", role.String()).Msg("starting node")
+	// Get the list of boot nodes addresses.
+	bootNodeAddrs, err := getBootNodeAddresses(cfg.BootNodes)
+	if err != nil {
+		log.Error().Err(err).Msg("could not get boot node addresses")
+		return failure
+	}
 
-	peerstore := peerstore.New(store)
+	// Create libp2p host.
+	host, err := host.New(log, cfg.Host.Address, cfg.Host.Port,
+		host.WithPrivateKey(cfg.Host.PrivateKey),
+		host.WithBootNodes(bootNodeAddrs),
+		host.WithDialBackPeers(peerAddrs),
+	)
+	if err != nil {
+		log.Error().Err(err).Str("key", cfg.Host.PrivateKey).Msg("could not create host")
+		return failure
+	}
+
+	log.Info().
+		Strs("ids", host.IDs()).
+		Int("boot_nodes", len(bootNodeAddrs)).
+		Int("dial_back_peers", len(peerAddrs)).
+		Msg("created host")
 
 	// Set node options.
 	opts := []node.Option{
