@@ -100,3 +100,16 @@ func (p *PeerStore) UpdatePeerList(peerID peer.ID, addr multiaddr.Multiaddr, inf
 
 	return nil
 }
+
+// Peers returns the list of peers from the peer store.
+func (p *PeerStore) Peers() ([]blockless.Peer, error) {
+
+	// Get list of peers from the store.
+	var peers []blockless.Peer
+	err := p.store.GetRecord(peersKey, &peers)
+	if err != nil && !errors.Is(err, blockless.ErrNotFound) {
+		return nil, fmt.Errorf("could not retrieve peer list: %w", err)
+	}
+
+	return peers, nil
+}
