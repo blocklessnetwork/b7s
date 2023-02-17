@@ -42,11 +42,6 @@ func run() int {
 
 	// Parse CLI flags and validate that the configuration is valid.
 	cfg := parseFlags()
-	err := cfg.Valid()
-	if err != nil {
-		log.Error().Err(err).Msg("invalid configuration")
-		return failure
-	}
 
 	// Set log level.
 	level, err := zerolog.ParseLevel(cfg.Log.Level)
@@ -107,7 +102,8 @@ func run() int {
 	}
 
 	log.Info().
-		Strs("ids", host.IDs()).
+		Str("id", host.ID().String()).
+		Strs("addresses", host.Addresses()).
 		Int("boot_nodes", len(bootNodeAddrs)).
 		Int("dial_back_peers", len(peerAddrs)).
 		Msg("created host")
@@ -154,7 +150,10 @@ func run() int {
 	// Start node main loop in a separate goroutine.
 	go func() {
 
-		log.Info().Msg("Blockless Node starting")
+		log.Info().
+			Str("role", role.String()).
+			Msg("Blockless Node starting")
+
 		err := node.Run(ctx)
 		if err != nil {
 			log.Error().Err(err).Msg("Blockless Node failed")
@@ -168,6 +167,11 @@ func run() int {
 
 	// If we're a head node - start the REST API.
 	if role == blockless.HeadNode {
+
+		if cfg.API == "" {
+			log.Error().Err(err).Msg("REST API address is required")
+			return failure
+		}
 
 		// Create echo server and iniialize logging.
 		server := echo.New()

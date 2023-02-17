@@ -40,6 +40,8 @@ func (n Node) Run(ctx context.Context) error {
 	// Start the health signal emitter in a separate goroutine.
 	go n.HealthPing(ctx)
 
+	n.log.Info().Msg("starting node main loop")
+
 	// Message processing loop.
 	for {
 
@@ -88,6 +90,7 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 		if err != nil && !errors.Is(err, io.EOF) {
 			stream.Reset()
 			n.log.Error().Err(err).Msg("error receiving direct message")
+			return
 		}
 
 		err = n.processMessage(ctx, from, msg)

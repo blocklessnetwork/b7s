@@ -27,9 +27,9 @@ func (n *Node) getProcessHandlerFunc(role blockless.NodeRole) HandlerFunc {
 
 	switch role {
 	case blockless.HeadNode:
-		return n.getProcessExecuteFunc(n.workerExecute)
-	case blockless.WorkerNode:
 		return n.getProcessExecuteFunc(n.headExecute)
+	case blockless.WorkerNode:
+		return n.getProcessExecuteFunc(n.workerExecute)
 
 	default:
 		panic(fmt.Errorf("invalid node role specified: %s", role.String()))
@@ -70,7 +70,7 @@ func (n *Node) getProcessExecuteFunc(execFunc executeFunc) HandlerFunc {
 		}
 
 		// Cache the execution result.
-		n.excache.Set(result.RequestID, &result)
+		n.excache.Set(result.RequestID, result)
 
 		// Create the execution response from the execution result.
 		res := response.Execute{

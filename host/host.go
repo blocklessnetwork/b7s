@@ -61,22 +61,20 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	return &host, nil
 }
 
-// IDs returns the list of p2p IDs of the host.
-func (h *Host) IDs() []string {
-
-	// TODO: Perhaps skip local ID..?
+// Addresses returns the list of p2p addresses of the host.
+func (h *Host) Addresses() []string {
 
 	addrs := h.Addrs()
-	ids := make([]string, 0, len(addrs))
+	out := make([]string, 0, len(addrs))
 
 	hostID := h.ID()
 
 	for _, addr := range addrs {
-		id := fmt.Sprintf("%s/p2p/%s", addr.String(), hostID)
-		ids = append(ids, id)
+		addr := fmt.Sprintf("%s/p2p/%s", addr.String(), hostID.String())
+		out = append(out, addr)
 	}
 
-	return ids
+	return out
 }
 
 func readPrivateKey(filepath string) (crypto.PrivKey, error) {
