@@ -3,8 +3,9 @@ package executor
 import (
 	"testing"
 
-	"github.com/blocklessnetworking/b7s/testing/mocks"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
 
 func TestExecutor_RequestPaths(t *testing.T) {
