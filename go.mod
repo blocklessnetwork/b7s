@@ -143,7 +143,4 @@ require (
 	lukechampine.com/blake3 v1.1.7 // indirect
 )
 
-replace (
-	github.com/blocklessnetworking/b7s => ./src
-	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-)
+replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
