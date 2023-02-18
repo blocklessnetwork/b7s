@@ -117,7 +117,10 @@ func run() int {
 	if role == blockless.WorkerNode {
 
 		// Crete an executor.
-		executor, err := executor.New(log, cfg.Workspace, cfg.Runtime)
+		executor, err := executor.New(log,
+			executor.WithWorkDir(cfg.Workspace),
+			executor.WithRuntimeDir(cfg.Runtime),
+		)
 		if err != nil {
 			log.Error().
 				Err(err).
