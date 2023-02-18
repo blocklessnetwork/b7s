@@ -3,7 +3,6 @@ package executor
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
@@ -33,9 +32,26 @@ func (e *Executor) writeFunctionManifest(req execute.Request, paths requestPaths
 	}
 
 	// Write manifest to disk.
-	err = os.WriteFile(paths.manifest, encoded, os.ModePerm)
+	err = e.writeFile(paths.manifest, encoded)
 	if err != nil {
 		return fmt.Errorf("could not write manifest to disk: %w", err)
+	}
+
+	return nil
+}
+
+// writeFile is a helper function wrapping the three OS-level calls - os.Create, file Write() and file Close().
+func (e *Executor) writeFile(name string, data []byte) error {
+
+	f, err := e.cfg.FS.Create(name)
+	if err != nil {
+		return fmt.Errorf("could not create file: %w", err)
+	}
+	defer f.Close()
+
+	_, err = f.Write(data)
+	if err != nil {
+		return fmt.Errorf("could not write to file: %w", err)
 	}
 
 	return nil

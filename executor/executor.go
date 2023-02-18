@@ -2,7 +2,6 @@ package executor
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/rs/zerolog"
@@ -11,7 +10,6 @@ import (
 // Executor provides the capabilities to run external applications.
 type Executor struct {
 	log zerolog.Logger
-
 	cfg Config
 }
 
@@ -23,6 +21,11 @@ func New(log zerolog.Logger, options ...Option) (*Executor, error) {
 		option(&cfg)
 	}
 
+	e := Executor{
+		log: log,
+		cfg: cfg,
+	}
+
 	// We need the absolute path for the runtime, since we'll be changing
 	// the working directory on execution.
 	runtime, err := filepath.Abs(cfg.RuntimeDir)
@@ -32,14 +35,9 @@ func New(log zerolog.Logger, options ...Option) (*Executor, error) {
 
 	// Verify the runtime path is valid.
 	cliPath := filepath.Join(runtime, blocklessCli)
-	_, err = os.Stat(cliPath)
+	_, err = e.cfg.FS.Stat(cliPath)
 	if err != nil {
 		return nil, fmt.Errorf("invalid runtime path, cli not found (path: %s): %w", cliPath, err)
-	}
-
-	e := Executor{
-		log: log,
-		cfg: cfg,
 	}
 
 	return &e, nil

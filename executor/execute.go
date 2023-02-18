@@ -24,13 +24,13 @@ func (e *Executor) execute(requestID string, req execute.Request) (string, error
 	// Generate paths for execution request.
 	paths := e.generateRequestPaths(requestID, req.FunctionID, req.Method)
 
-	err := os.MkdirAll(paths.workdir, defaultPermissions)
+	err := e.cfg.FS.MkdirAll(paths.workdir, defaultPermissions)
 	if err != nil {
 		return "", fmt.Errorf("could not setup working directory for execution (dir: %s): %w", paths.workdir, err)
 	}
 	// Remove all temporary files after we're done.
 	defer func() {
-		err := os.RemoveAll(paths.workdir)
+		err := e.cfg.FS.RemoveAll(paths.workdir)
 		if err != nil {
 			e.log.Error().Err(err).Str("dir", paths.workdir).
 				Msg("could not remove request working directory")
