@@ -3,19 +3,18 @@ package store_test
 import (
 	"testing"
 
-	"github.com/cockroachdb/pebble"
-	"github.com/cockroachdb/pebble/vfs"
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/store"
+	"github.com/blocklessnetworking/b7s/testing/helpers"
 )
 
 func Test_Store(t *testing.T) {
 	t.Run("setting value", func(t *testing.T) {
 		t.Parallel()
 
-		db := setupDB(t)
+		db := helpers.InMemoryDB(t)
 		defer db.Close()
 		store := store.New(db)
 
@@ -35,7 +34,7 @@ func Test_Store(t *testing.T) {
 	t.Run("missing value correctly reported", func(t *testing.T) {
 		t.Parallel()
 
-		db := setupDB(t)
+		db := helpers.InMemoryDB(t)
 		defer db.Close()
 		store := store.New(db)
 
@@ -46,7 +45,7 @@ func Test_Store(t *testing.T) {
 	t.Run("overwriting value", func(t *testing.T) {
 		t.Parallel()
 
-		db := setupDB(t)
+		db := helpers.InMemoryDB(t)
 		defer db.Close()
 		store := store.New(db)
 
@@ -77,7 +76,7 @@ func Test_Store(t *testing.T) {
 	t.Run("setting record", func(t *testing.T) {
 		t.Parallel()
 
-		db := setupDB(t)
+		db := helpers.InMemoryDB(t)
 		defer db.Close()
 		store := store.New(db)
 
@@ -107,7 +106,7 @@ func Test_Store(t *testing.T) {
 	t.Run("handling missing record", func(t *testing.T) {
 		t.Parallel()
 
-		db := setupDB(t)
+		db := helpers.InMemoryDB(t)
 		defer db.Close()
 		store := store.New(db)
 
@@ -128,7 +127,7 @@ func Test_Store(t *testing.T) {
 	t.Run("overwriting record", func(t *testing.T) {
 		t.Parallel()
 
-		db := setupDB(t)
+		db := helpers.InMemoryDB(t)
 		defer db.Close()
 		store := store.New(db)
 
@@ -171,7 +170,7 @@ func Test_Store(t *testing.T) {
 	t.Run("handle invalid output type", func(t *testing.T) {
 		t.Parallel()
 
-		db := setupDB(t)
+		db := helpers.InMemoryDB(t)
 		defer db.Close()
 		store := store.New(db)
 
@@ -202,17 +201,4 @@ func Test_Store(t *testing.T) {
 		require.Error(t, err)
 	})
 
-}
-
-// Setup a new in-memory pebble database.
-func setupDB(t *testing.T) *pebble.DB {
-	t.Helper()
-
-	opts := pebble.Options{
-		FS: vfs.NewMem(),
-	}
-	db, err := pebble.Open("", &opts)
-	require.NoError(t, err)
-
-	return db
 }
