@@ -12,18 +12,22 @@ import (
 type Executor struct {
 	log zerolog.Logger
 
-	workdir    string
-	runtimedir string
+	cfg Config
 }
 
 // New creates a new Executor with the specified working directory.
-func New(log zerolog.Logger, workdir string, runtimedir string) (*Executor, error) {
+func New(log zerolog.Logger, options ...Option) (*Executor, error) {
+
+	cfg := defaultConfig
+	for _, option := range options {
+		option(&cfg)
+	}
 
 	// We need the absolute path for the runtime, since we'll be changing
 	// the working directory on execution.
-	runtime, err := filepath.Abs(runtimedir)
+	runtime, err := filepath.Abs(cfg.RuntimeDir)
 	if err != nil {
-		return nil, fmt.Errorf("could not get absolute path for runtime (path: %s): %w", runtimedir, err)
+		return nil, fmt.Errorf("could not get absolute path for runtime (path: %s): %w", cfg.RuntimeDir, err)
 	}
 
 	// Verify the runtime path is valid.
@@ -34,9 +38,8 @@ func New(log zerolog.Logger, workdir string, runtimedir string) (*Executor, erro
 	}
 
 	e := Executor{
-		log:        log,
-		workdir:    workdir,
-		runtimedir: runtime,
+		log: log,
+		cfg: cfg,
 	}
 
 	return &e, nil

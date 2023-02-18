@@ -15,12 +15,12 @@ type requestPaths struct {
 func (e *Executor) generateRequestPaths(requestID string, functionID string, method string) requestPaths {
 
 	// Workdir Should be the root for all other paths.
-	workdir := path.Join(e.workdir, "t", requestID)
+	workdir := path.Join(e.cfg.WorkDir, "t", requestID)
 	paths := requestPaths{
 		workdir:  workdir,
 		fsRoot:   path.Join(workdir, "fs"),
 		manifest: path.Join(workdir, "runtime-manifest.json"),
-		entry:    path.Join(e.workdir, functionID, method),
+		entry:    path.Join(e.cfg.WorkDir, functionID, method),
 	}
 
 	return paths

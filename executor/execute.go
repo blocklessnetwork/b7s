@@ -74,7 +74,7 @@ func (e *Executor) execute(requestID string, req execute.Request) (string, error
 func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd {
 
 	// Prepare command to be executed.
-	exePath := filepath.Join(e.runtimedir, blocklessCli)
+	exePath := filepath.Join(e.cfg.RuntimeDir, blocklessCli)
 	cmd := exec.Command(exePath, paths.manifest)
 	cmd.Dir = paths.workdir
 
