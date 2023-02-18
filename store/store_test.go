@@ -11,7 +11,7 @@ import (
 	"github.com/blocklessnetworking/b7s/store"
 )
 
-func Test_Get(t *testing.T) {
+func Test_Store(t *testing.T) {
 	t.Run("setting value", func(t *testing.T) {
 		t.Parallel()
 
