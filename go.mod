@@ -11,6 +11,7 @@ require (
 	github.com/libp2p/go-libp2p-pubsub v0.8.1
 	github.com/multiformats/go-multiaddr v0.7.0
 	github.com/rs/zerolog v1.29.0
+	github.com/spf13/afero v1.9.3
 	github.com/stretchr/testify v1.8.1
 	github.com/ziflex/lecho/v3 v3.5.0
 	gopkg.in/yaml.v2 v2.4.0
