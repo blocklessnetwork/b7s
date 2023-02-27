@@ -133,11 +133,11 @@ func run() int {
 		opts = append(opts, node.WithExecutor(executor))
 	}
 
-	// Create function handler.
-	functionHandler := function.NewHandler(log, store, cfg.Workspace)
+	// Create function store.
+	functionStore := function.NewHandler(log, store, cfg.Workspace)
 
 	// Instantiate node.
-	node, err := node.New(log, host, store, peerstore, functionHandler, opts...)
+	node, err := node.New(log, host, store, peerstore, functionStore, opts...)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure

@@ -1,6 +1,7 @@
 package node
 
 import (
+	"errors"
 	"time"
 )
 
@@ -11,4 +12,8 @@ const (
 	rollCallTimeout        = 5 * time.Second
 
 	resultBufferSize = 10
+)
+
+var (
+	ErrUnsupportedMessage = errors.New("unsupported message")
 )

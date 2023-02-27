@@ -3,7 +3,6 @@ package node
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -52,6 +51,10 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 	if cfg.Role == blockless.HeadNode && cfg.Execute != nil {
 		return nil, errors.New("head node does not support execution")
 	}
+	// If we're a worker node, we require an executor.
+	if cfg.Role == blockless.WorkerNode && cfg.Execute == nil {
+		return nil, errors.New("worker node requires an executor component")
+	}
 
 	n := Node{
 		role:      cfg.Role,
@@ -96,7 +99,7 @@ func (n Node) getHandler(msgType string) HandlerFunc {
 
 	default:
 		return func(_ context.Context, from peer.ID, _ []byte) error {
-			return fmt.Errorf("received an unsupported message (type: %s, from: %s)", msgType, from.String())
+			return ErrUnsupportedMessage
 		}
 	}
 }
