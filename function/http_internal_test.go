@@ -1,10 +1,16 @@
 package function
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -142,4 +148,151 @@ func TestFunction_GetJSONHandlesErrors(t *testing.T) {
 			require.Error(t, err)
 		})
 	}
+}
+
+func TestFunction_Download(t *testing.T) {
+
+	const (
+		size = 10_000
+	)
+
+	payload := getRandomPayload(t, size)
+
+	srv := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Write(payload)
+		}))
+	defer srv.Close()
+
+	workdir, err := os.MkdirTemp("", "b7s-function-download-")
+	require.NoError(t, err)
+
+	defer os.RemoveAll(workdir)
+
+	store := store.New(helpers.InMemoryDB(t))
+	fh := NewHandler(mocks.NoopLogger, store, workdir)
+
+	address := fmt.Sprintf("%s/test-file", srv.URL)
+	hash := sha256.Sum256(payload)
+
+	manifest := blockless.FunctionManifest{
+		Deployment: blockless.Deployment{
+			URI:      address,
+			Checksum: fmt.Sprintf("%x", hash),
+		},
+	}
+
+	path, err := fh.download(manifest)
+	require.NoError(t, err)
+
+	// Check if the file created is within the specified workdir.
+	// Not the perfect way to check this, but it will do.
+	require.True(t, strings.HasPrefix(path, workdir))
+
+	downloaded, err := os.ReadFile(path)
+	require.NoError(t, err)
+
+	require.Equal(t, payload, downloaded)
+}
+
+func TestFunction_DownloadHandlesErrors(t *testing.T) {
+
+	const (
+		size = 10_000
+	)
+
+	payload := getRandomPayload(t, size)
+
+	srv := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Write(payload)
+		}))
+	// NOTE: Server handled in a test case below.
+	// Also the reason tests are not executed in parallel.
+
+	t.Run("handles invalid checksum", func(t *testing.T) {
+
+		workdir, err := os.MkdirTemp("", "b7s-function-download-")
+		require.NoError(t, err)
+
+		defer os.RemoveAll(workdir)
+
+		store := store.New(helpers.InMemoryDB(t))
+		fh := NewHandler(mocks.NoopLogger, store, workdir)
+
+		address := fmt.Sprintf("%s/test-file", srv.URL)
+		hash := sha256.Sum256(payload)
+
+		invalidChecksum := fmt.Sprintf("%x", hash) + "Z"
+
+		manifest := blockless.FunctionManifest{
+			Deployment: blockless.Deployment{
+				URI:      address,
+				Checksum: invalidChecksum,
+			},
+		}
+
+		_, err = fh.download(manifest)
+		require.Error(t, err)
+	})
+	t.Run("handles invalid URI", func(t *testing.T) {
+
+		workdir, err := os.MkdirTemp("", "b7s-function-download-")
+		require.NoError(t, err)
+
+		defer os.RemoveAll(workdir)
+
+		store := store.New(helpers.InMemoryDB(t))
+		fh := NewHandler(mocks.NoopLogger, store, workdir)
+
+		address := fmt.Sprintf("%s/test-file", srv.URL) + "\n"
+		hash := sha256.Sum256(payload)
+
+		manifest := blockless.FunctionManifest{
+			Deployment: blockless.Deployment{
+				URI:      address,
+				Checksum: fmt.Sprintf("%x", hash),
+			},
+		}
+
+		_, err = fh.download(manifest)
+		require.Error(t, err)
+	})
+	t.Run("handles download failure", func(t *testing.T) {
+
+		srv.Close()
+
+		workdir, err := os.MkdirTemp("", "b7s-function-download-")
+		require.NoError(t, err)
+
+		defer os.RemoveAll(workdir)
+
+		store := store.New(helpers.InMemoryDB(t))
+		fh := NewHandler(mocks.NoopLogger, store, workdir)
+
+		address := fmt.Sprintf("%s/test-file", srv.URL)
+		hash := sha256.Sum256(payload)
+
+		manifest := blockless.FunctionManifest{
+			Deployment: blockless.Deployment{
+				URI:      address,
+				Checksum: fmt.Sprintf("%x", hash),
+			},
+		}
+
+		_, err = fh.download(manifest)
+		require.Error(t, err)
+	})
+}
+
+func getRandomPayload(t *testing.T, len int) []byte {
+	t.Helper()
+
+	rand.Seed(time.Now().UnixNano())
+
+	buf := make([]byte, len)
+	_, err := rand.Read(buf)
+	require.NoError(t, err)
+
+	return buf
 }
