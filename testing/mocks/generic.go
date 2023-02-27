@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io"
 
+	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetworking/b7s/models/response"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
@@ -23,4 +25,10 @@ var (
 	GenericString = "test"
 
 	GenericUUID = uuid.UUID{0xd1, 0xc2, 0x44, 0xaf, 0xa3, 0x1d, 0x48, 0x87, 0x93, 0x9d, 0xd6, 0xc7, 0xf, 0xe, 0x4f, 0xd0}
+
+	GenericExecutionResult = execute.Result{
+		Code:      response.CodeUnknown,
+		Result:    "generic-execution-result",
+		RequestID: "dummy-request-id",
+	}
 )
