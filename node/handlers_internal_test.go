@@ -126,7 +126,6 @@ func TestNode_InstallFunction(t *testing.T) {
 		wg.Add(1)
 		receiver.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
 			defer wg.Done()
-
 			defer stream.Close()
 
 			from := stream.Conn().RemotePeer()
@@ -218,30 +217,12 @@ func TestNode_InstallFunction(t *testing.T) {
 			port    = 0
 		)
 
+		// Receiver exists but not added to peer store - the node doesn't know
+		// the receivers addresses so `send` will fail.
 		receiver, err := host.New(mocks.NoopLogger, address, port)
 		require.NoError(t, err)
 
-		addr := getHostAddr(t, receiver)
-
 		node := createNode(t, blockless.WorkerNode)
-		addPeerToPeerStore(t, node.host, addr)
-
-		// Setup one successful test run first.
-		var wg sync.WaitGroup
-
-		wg.Add(1)
-		receiver.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
-			defer wg.Done()
-			defer stream.Close()
-		})
-
-		err = node.processInstallFunction(context.Background(), receiver.ID(), payload)
-		require.NoError(t, err)
-
-		wg.Wait()
-
-		// Shut down the receiver and verify the same request fails.
-		receiver.Close()
 
 		err = node.processInstallFunction(context.Background(), receiver.ID(), payload)
 		require.Error(t, err)
