@@ -63,7 +63,8 @@ func TestWaitMap(t *testing.T) {
 			retrieved = waited.(string)
 		}()
 
-		time.Sleep(200 * time.Millisecond)
+		// Delay so that the goroutine actually has to wait.
+		time.Sleep(50 * time.Millisecond)
 
 		// Confirm that there is no value set yet.
 		_, ok := wm.Get(key)
@@ -119,5 +120,61 @@ func TestWaitMap(t *testing.T) {
 		wm.Set(key, value)
 
 		wg.Wait()
+	})
+	t.Run("limited wait receives a value", func(t *testing.T) {
+		t.Parallel()
+
+		const (
+			key   = "dummy-key"
+			value = "dummy-value"
+		)
+
+		wm := New()
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			retrieved, ok := wm.WaitFor(key, 100*time.Millisecond)
+			require.True(t, ok)
+			require.Equal(t, value, retrieved.(string))
+		}()
+
+		// Delay so that the goroutine actually has to wait.
+		time.Sleep(50 * time.Millisecond)
+
+		wm.Set(key, value)
+
+		wg.Wait()
+	})
+	t.Run("limited wait times out", func(t *testing.T) {
+		t.Parallel()
+		const (
+			key   = "dummy-key"
+			value = "dummy-value"
+		)
+
+		wm := New()
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			_, ok := wm.WaitFor(key, 20*time.Millisecond)
+			require.False(t, ok)
+		}()
+
+		// Wait for 50 miliseconds so the initial `WaitFor` times out.
+		time.Sleep(50 * time.Millisecond)
+		wm.Set(key, value)
+
+		wg.Wait()
+
+		// Confirm that a second `WaitFor` will succeed.
+		retrieved, ok := wm.WaitFor(key, 10*time.Millisecond)
+		require.True(t, ok)
+		require.Equal(t, value, retrieved.(string))
 	})
 }

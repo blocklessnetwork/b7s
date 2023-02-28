@@ -2,6 +2,7 @@ package waitmap
 
 import (
 	"sync"
+	"time"
 )
 
 // NOTE: Perhaps enable an option to say how long to wait for?
@@ -65,6 +66,32 @@ func (w *WaitMap) Wait(key string) any {
 	w.Unlock()
 
 	return <-ch
+}
+
+// WaitFor will wait for the value for a key to become available, but no longer than the specified duration.
+func (w *WaitMap) WaitFor(key string, d time.Duration) (any, bool) {
+	w.Lock()
+	// Unlock cannot be deferred so we can ublock Set() while waiting.
+
+	values, ok := w.m[key]
+	if ok {
+		w.Unlock()
+		return values[0], true
+	}
+
+	// If there's no value yet, subscribe to any new values for this key.
+	// Use a bufferred channel since we might bail before collecting our value.
+	ch := make(chan any, 1)
+	w.subs[key] = append(w.subs[key], ch)
+	w.Unlock()
+
+	ticker := time.NewTicker(d)
+	select {
+	case <-ticker.C:
+		return nil, false
+	case value := <-ch:
+		return value, true
+	}
 }
 
 // Get will return the current value for the key, if any.
