@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
 
@@ -64,18 +63,4 @@ func TestNode_Notifiee(t *testing.T) {
 	// Verify that peer store was updated.
 	require.True(t, storedPeer)
 	require.True(t, updatedPeerList)
-}
-
-func addPeerToPeerStore(t *testing.T, host *host.Host, addr string) *peer.AddrInfo {
-	t.Helper()
-
-	maddr, err := multiaddr.NewMultiaddr(addr)
-	require.NoError(t, err)
-
-	info, err := peer.AddrInfoFromP2pAddr(maddr)
-	require.NoError(t, err)
-
-	host.Peerstore().AddAddrs(info.ID, info.Addrs, peerstore.PermanentAddrTTL)
-
-	return info
 }
