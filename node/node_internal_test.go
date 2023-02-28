@@ -58,29 +58,49 @@ func TestNode_MessageHandler(t *testing.T) {
 		t.Parallel()
 
 		const (
-			address = "127.0.0.1"
-			port    = 9000
 			msgType = "jibberish"
 		)
 
-		var (
-			logger          = mocks.NoopLogger
-			store           = mocks.BaselineStore(t)
-			peerstore       = mocks.BaselinePeerStore(t)
-			functionHandler = mocks.BaselineFunctionHandler(t)
-		)
-
-		host, err := host.New(logger, address, port)
-		require.NoError(t, err)
-
-		node, err := New(logger, host, store, peerstore, functionHandler, WithRole(blockless.HeadNode))
-		require.NoError(t, err)
+		node := createNode(t, blockless.HeadNode)
 
 		handlerFunc := node.getHandler(msgType)
 
-		err = handlerFunc(context.Background(), mocks.GenericPeerID, []byte{})
+		err := handlerFunc(context.Background(), mocks.GenericPeerID, []byte{})
 		require.Error(t, err)
 
 		require.ErrorIs(t, err, ErrUnsupportedMessage)
 	})
+}
+
+func createNode(t *testing.T, role blockless.NodeRole) *Node {
+	t.Helper()
+
+	const (
+		address = "127.0.0.1"
+		port    = 9000
+	)
+
+	var (
+		logger          = mocks.NoopLogger
+		store           = mocks.BaselineStore(t)
+		peerstore       = mocks.BaselinePeerStore(t)
+		functionHandler = mocks.BaselineFunctionHandler(t)
+	)
+
+	host, err := host.New(logger, address, port)
+	require.NoError(t, err)
+
+	opts := []Option{
+		WithRole(role),
+	}
+
+	if role == blockless.WorkerNode {
+		executor := mocks.BaselineExecutor(t)
+		opts = append(opts, WithExecutor(executor))
+	}
+
+	node, err := New(logger, host, store, peerstore, functionHandler, opts...)
+	require.NoError(t, err)
+
+	return node
 }

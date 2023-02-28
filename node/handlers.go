@@ -40,6 +40,10 @@ func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, payloa
 }
 
 func (n *Node) recordRollCallResponse(res response.RollCall) {
+	_, ok := n.rollCallResponses[res.RequestID]
+	if !ok {
+		n.rollCallResponses[res.RequestID] = make(chan response.RollCall, resultBufferSize)
+	}
 	n.rollCallResponses[res.RequestID] <- res
 }
 
