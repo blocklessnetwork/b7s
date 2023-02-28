@@ -85,9 +85,8 @@ func (w *WaitMap) WaitFor(key string, d time.Duration) (any, bool) {
 	w.subs[key] = append(w.subs[key], ch)
 	w.Unlock()
 
-	ticker := time.NewTicker(d)
 	select {
-	case <-ticker.C:
+	case <-time.After(d):
 		return nil, false
 	case value := <-ch:
 		return value, true
