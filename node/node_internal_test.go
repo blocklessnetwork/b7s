@@ -1,9 +1,13 @@
 package node
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
+	"io"
 	"testing"
 
+	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/multiformats/go-multiaddr"
@@ -127,4 +131,25 @@ func addPeerToPeerStore(t *testing.T, host *host.Host, addr string) *peer.AddrIn
 	host.Peerstore().AddAddrs(info.ID, info.Addrs, peerstore.PermanentAddrTTL)
 
 	return info
+}
+
+// TODO: Find applicable places and use this there.
+func getHostAddr(t *testing.T, host *host.Host) string {
+	t.Helper()
+
+	addresses := host.Addresses()
+	require.NotEmpty(t, addresses)
+
+	return addresses[0]
+}
+
+func getStreamPayload(t *testing.T, stream network.Stream, output any) {
+	t.Helper()
+
+	buf := bufio.NewReader(stream)
+	payload, err := buf.ReadBytes('\n')
+	require.ErrorIs(t, err, io.EOF)
+
+	err = json.Unmarshal(payload, output)
+	require.NoError(t, err)
 }

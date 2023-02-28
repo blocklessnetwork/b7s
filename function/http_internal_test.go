@@ -24,23 +24,7 @@ func TestFunction_GetJSON(t *testing.T) {
 
 	var (
 		workdir  = "/"
-		manifest = blockless.FunctionManifest{
-			ID:          "generic-id",
-			Name:        "generic-name",
-			Description: "generic-description",
-			Function: blockless.Function{
-				ID:      "function-id",
-				Name:    "function-name",
-				Runtime: "generic-runtime",
-			},
-			Deployment: blockless.Deployment{
-				CID:      "generic-cid",
-				Checksum: "1234567890",
-				URI:      "generic-uri",
-			},
-			FSRootPath: "/var/tmp/blockless/",
-			Entry:      "/var/tmp/blockless/app.wasm",
-		}
+		manifest = mocks.GenericManifest
 	)
 
 	srv := httptest.NewServer(

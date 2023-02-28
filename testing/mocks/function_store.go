@@ -15,8 +15,7 @@ func BaselineFunctionHandler(t *testing.T) *FunctionHandler {
 
 	fh := FunctionHandler{
 		GetFunc: func(string, string, bool) (*blockless.FunctionManifest, error) {
-			// TODO: Create a generic manifest to return here.
-			return nil, GenericError
+			return &GenericManifest, nil
 		},
 	}
 

@@ -1,10 +1,8 @@
 package node
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
-	"io"
 	"sync"
 	"testing"
 	"time"
@@ -38,10 +36,7 @@ func TestNode_Messaging(t *testing.T) {
 	client, err := host.New(mocks.NoopLogger, clientAddress, clientPort)
 	require.NoError(t, err)
 
-	clientAddresses := client.Addresses()
-	require.NotEmpty(t, clientAddresses)
-
-	addr := clientAddresses[0]
+	addr := getHostAddr(t, client)
 
 	node := createNode(t, blockless.HeadNode)
 	addPeerToPeerStore(t, node.host, addr)
@@ -59,13 +54,8 @@ func TestNode_Messaging(t *testing.T) {
 			from := stream.Conn().RemotePeer()
 			require.Equal(t, node.host.ID(), from)
 
-			buf := bufio.NewReader(stream)
-			payload, err := buf.ReadBytes('\n')
-			require.ErrorIs(t, err, io.EOF)
-
 			var received dummyRecord
-			err = json.Unmarshal(payload, &received)
-			require.NoError(t, err)
+			getStreamPayload(t, stream, &received)
 
 			require.Equal(t, rec, received)
 		})
