@@ -134,7 +134,7 @@ func run() int {
 	}
 
 	// Create function handler.
-	functionHandler := function.New(log, store, cfg.Workspace)
+	functionHandler := function.NewHandler(log, store, cfg.Workspace)
 
 	// Instantiate node.
 	node, err := node.New(log, host, store, peerstore, functionHandler, opts...)

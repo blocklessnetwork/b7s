@@ -18,8 +18,8 @@ type Handler struct {
 	workdir string
 }
 
-// New creates a new function handler.
-func New(log zerolog.Logger, store Store, workdir string) *Handler {
+// NewHandler creates a new function handler.
+func NewHandler(log zerolog.Logger, store Store, workdir string) *Handler {
 
 	// Create an HTTP client.
 	cli := http.Client{
