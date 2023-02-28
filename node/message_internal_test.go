@@ -18,9 +18,6 @@ import (
 func TestNode_Messaging(t *testing.T) {
 
 	const (
-		clientAddress = "127.0.0.1"
-		clientPort    = 0
-
 		// TODO: Use a different topic.
 		topic = DefaultTopic
 	)
@@ -33,7 +30,7 @@ func TestNode_Messaging(t *testing.T) {
 		}
 	)
 
-	client, err := host.New(mocks.NoopLogger, clientAddress, clientPort)
+	client, err := host.New(mocks.NoopLogger, loopback, 0)
 	require.NoError(t, err)
 
 	addr := getHostAddr(t, client)

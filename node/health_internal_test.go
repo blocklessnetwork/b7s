@@ -17,9 +17,6 @@ import (
 func TestNode_Health(t *testing.T) {
 
 	const (
-		address = "127.0.0.1"
-		port    = 0
-
 		healthInterval = 20 * time.Millisecond
 		topic          = DefaultTopic
 
@@ -36,14 +33,14 @@ func TestNode_Health(t *testing.T) {
 	// Create a node with a short health interval that will issue quick pings.
 	// Then we'll create a host to subscribe to the same topic and verify a few pings before cancelling.
 
-	nhost, err := host.New(logger, address, port)
+	nhost, err := host.New(logger, loopback, 0)
 	require.NoError(t, err)
 
 	node, err := New(logger, nhost, store, peerstore, functionHandler, WithRole(blockless.HeadNode), WithHealthInterval(healthInterval), WithTopic(topic))
 	require.NoError(t, err)
 
 	// Create a host that will listen on the the topic to verify health pings
-	receiver, err := host.New(mocks.NoopLogger, address, port)
+	receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())

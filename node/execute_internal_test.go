@@ -21,9 +21,6 @@ import (
 func TestNode_WorkerExecute(t *testing.T) {
 
 	const (
-		address = "127.0.0.1"
-		port    = 0
-
 		functionID     = "dummy-function-id"
 		functionMethod = "dummy-function-method"
 	)
@@ -56,7 +53,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		node.execute = executor
 
 		// Create a host that will serve as a receiver of the execution response.
-		receiver, err := host.New(mocks.NoopLogger, address, port)
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
 		recvAddr := getHostAddr(t, receiver)
@@ -110,7 +107,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		node.execute = executor
 
 		// Create a host that will serve as a receiver of the execution response.
-		receiver, err := host.New(mocks.NoopLogger, address, port)
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
 		recvAddr := getHostAddr(t, receiver)
@@ -154,7 +151,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		node.function = fstore
 
 		// Create a host that will serve as a receiver of the execution response.
-		receiver, err := host.New(mocks.NoopLogger, address, port)
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
 		recvAddr := getHostAddr(t, receiver)
@@ -211,5 +208,4 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 		wg.Wait()
 	})
-
 }

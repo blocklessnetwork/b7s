@@ -15,17 +15,13 @@ import (
 
 func TestNode_Notifiee(t *testing.T) {
 
-	const (
-		address = "127.0.0.1"
-	)
-
 	var (
 		logger          = mocks.NoopLogger
 		store           = mocks.BaselineStore(t)
 		functionHandler = mocks.BaselineFunctionHandler(t)
 	)
 
-	server, err := host.New(mocks.NoopLogger, address, 0)
+	server, err := host.New(mocks.NoopLogger, loopback, 0)
 	require.NoError(t, err)
 
 	var (
@@ -52,7 +48,7 @@ func TestNode_Notifiee(t *testing.T) {
 
 	serverAddress := serverAddresses[0]
 
-	client, err := host.New(mocks.NoopLogger, address, 0)
+	client, err := host.New(mocks.NoopLogger, loopback, 0)
 	require.NoError(t, err)
 
 	serverInfo := addPeerToPeerStore(t, client, serverAddress)

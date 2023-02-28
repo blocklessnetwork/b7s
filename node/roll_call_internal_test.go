@@ -21,12 +21,6 @@ import (
 
 func TestNode_RollCall(t *testing.T) {
 
-	const (
-		// TODO: Create a package level const for address and use it in all host creations.
-		address = "127.0.0.1"
-		port    = 0
-	)
-
 	var (
 		rollCallReq = request.RollCall{
 			Type:       blockless.MessageRollCall,
@@ -50,7 +44,7 @@ func TestNode_RollCall(t *testing.T) {
 
 		node := createNode(t, blockless.WorkerNode)
 
-		receiver, err := host.New(mocks.NoopLogger, address, port)
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
 		addr := getHostAddr(t, receiver)
@@ -86,7 +80,7 @@ func TestNode_RollCall(t *testing.T) {
 
 		node := createNode(t, blockless.WorkerNode)
 
-		receiver, err := host.New(mocks.NoopLogger, address, port)
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
 		addr := getHostAddr(t, receiver)
@@ -129,7 +123,7 @@ func TestNode_RollCall(t *testing.T) {
 
 		node := createNode(t, blockless.WorkerNode)
 
-		receiver, err := host.New(mocks.NoopLogger, address, port)
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
 		addr := getHostAddr(t, receiver)
@@ -181,7 +175,7 @@ func TestNode_RollCall(t *testing.T) {
 
 		node := createNode(t, blockless.WorkerNode)
 
-		receiver, err := host.New(mocks.NoopLogger, address, port)
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
 		addr := getHostAddr(t, receiver)

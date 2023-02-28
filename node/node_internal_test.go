@@ -20,6 +20,8 @@ import (
 )
 
 const (
+	loopback = "127.0.0.1"
+
 	// How long can the client wait for a published message before giving up.
 	publishTimeout = 10 * time.Second
 
@@ -34,11 +36,6 @@ const (
 
 func TestNode_New(t *testing.T) {
 
-	const (
-		address = "127.0.0.1"
-		port    = 0
-	)
-
 	var (
 		logger          = mocks.NoopLogger
 		store           = mocks.BaselineStore(t)
@@ -47,7 +44,7 @@ func TestNode_New(t *testing.T) {
 		executor        = mocks.BaselineExecutor(t)
 	)
 
-	host, err := host.New(logger, address, port)
+	host, err := host.New(logger, loopback, 0)
 	require.NoError(t, err)
 
 	t.Run("create a head node", func(t *testing.T) {
@@ -96,11 +93,6 @@ func TestNode_MessageHandler(t *testing.T) {
 func createNode(t *testing.T, role blockless.NodeRole) *Node {
 	t.Helper()
 
-	const (
-		address = "127.0.0.1"
-		port    = 0
-	)
-
 	var (
 		logger          = mocks.NoopLogger
 		store           = mocks.BaselineStore(t)
@@ -108,7 +100,7 @@ func createNode(t *testing.T, role blockless.NodeRole) *Node {
 		functionHandler = mocks.BaselineFunctionHandler(t)
 	)
 
-	host, err := host.New(logger, address, port)
+	host, err := host.New(logger, loopback, 0)
 	require.NoError(t, err)
 
 	opts := []Option{

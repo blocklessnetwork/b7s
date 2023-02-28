@@ -107,13 +107,10 @@ func TestNode_InstallFunction(t *testing.T) {
 		t.Parallel()
 
 		const (
-			address = "127.0.0.1"
-			port    = 0
-
 			expectedMessage = "installed"
 		)
 
-		receiver, err := host.New(mocks.NoopLogger, address, port)
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
 		addr := getHostAddr(t, receiver)
@@ -147,12 +144,7 @@ func TestNode_InstallFunction(t *testing.T) {
 	t.Run("worker node handles function install error", func(t *testing.T) {
 		t.Parallel()
 
-		const (
-			address = "127.0.0.1"
-			port    = 0
-		)
-
-		receiver, err := host.New(mocks.NoopLogger, address, port)
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
 		addr := getHostAddr(t, receiver)
@@ -182,11 +174,6 @@ func TestNode_InstallFunction(t *testing.T) {
 		t.Parallel()
 
 		const (
-			address = "127.0.0.1"
-			port    = 0
-		)
-
-		const (
 			// JSON without closing brace.
 			brokenPayload = `{
 				"type": "MsgInstallFunction",
@@ -194,7 +181,7 @@ func TestNode_InstallFunction(t *testing.T) {
 				"cid": "dummy-cid"`
 		)
 
-		receiver, err := host.New(mocks.NoopLogger, address, port)
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
 		addr := getHostAddr(t, receiver)
@@ -212,14 +199,9 @@ func TestNode_InstallFunction(t *testing.T) {
 	t.Run("worker node handles failure to send response", func(t *testing.T) {
 		t.Parallel()
 
-		const (
-			address = "127.0.0.1"
-			port    = 0
-		)
-
 		// Receiver exists but not added to peer store - the node doesn't know
 		// the receivers addresses so `send` will fail.
-		receiver, err := host.New(mocks.NoopLogger, address, port)
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
 		node := createNode(t, blockless.WorkerNode)
