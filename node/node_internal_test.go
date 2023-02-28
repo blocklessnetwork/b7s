@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -16,6 +17,19 @@ import (
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
+)
+
+const (
+	// How long can the client wait for a published message before giving up.
+	publishTimeout = 10 * time.Second
+
+	// It seems like a delay is needed so that the hosts exchange information about the fact
+	// that they are subscribed to the same topic. If that does not happen, node might publish
+	// a message too soon and the client might miss it. It will then wait for a published message in vain.
+	// This is the pause we make after subscribing to the topic and before publishing a message.
+	// In reality as little as 250ms is enough, but lets allow a longer time for when
+	// tests are executed in parallel or on weaker machines.
+	subscriptionDiseminationPause = 1 * time.Second
 )
 
 func TestNode_New(t *testing.T) {

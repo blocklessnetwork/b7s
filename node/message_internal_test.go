@@ -68,19 +68,6 @@ func TestNode_Messaging(t *testing.T) {
 	t.Run("publishing to a topic", func(t *testing.T) {
 		t.Parallel()
 
-		const (
-			// How long can the client wait for a published message before giving up.
-			clientTimeout = 3 * time.Second
-
-			// It seems like a delay is needed so that the hosts exchange information about the fact
-			// that they are subscribed to the same topic. If that does not happen, node might publish
-			// a message too soon and the client might miss it. It will then wait for a published message in vain.
-			// This is the pause we make after subscribing to the topic and before publishing a message.
-			// In reality as little as 250ms is enough, but lets allow a longer time for when
-			// tests are executed in parallel or on weaker machines.
-			subscriptionrDiseminationPause = 1 * time.Second
-		)
-
 		ctx := context.Background()
 
 		// Establish a connection between peers.
@@ -96,12 +83,12 @@ func TestNode_Messaging(t *testing.T) {
 		require.NoError(t, err)
 
 		// TODO: Think about how to best handle this.
-		time.Sleep(subscriptionrDiseminationPause)
+		time.Sleep(subscriptionDiseminationPause)
 
 		err = node.publish(ctx, rec)
 		require.NoError(t, err)
 
-		deadlineCtx, cancel := context.WithTimeout(ctx, clientTimeout)
+		deadlineCtx, cancel := context.WithTimeout(ctx, publishTimeout)
 		defer cancel()
 		msg, err := subscription.Next(deadlineCtx)
 		require.NoError(t, err)

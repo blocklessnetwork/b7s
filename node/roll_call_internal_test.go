@@ -2,8 +2,10 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/stretchr/testify/require"
@@ -164,5 +166,61 @@ func TestNode_RollCall(t *testing.T) {
 		require.NoError(t, err)
 
 		wg.Wait()
+	})
+	t.Run("node issues roll call ok", func(t *testing.T) {
+		t.Parallel()
+
+		// TODO: Make publishing tests disabled by default and make timeouts longer.
+
+		const (
+			topic      = DefaultTopic
+			functionID = "super-secret-function-id"
+		)
+
+		ctx := context.Background()
+
+		node := createNode(t, blockless.WorkerNode)
+
+		receiver, err := host.New(mocks.NoopLogger, address, port)
+		require.NoError(t, err)
+
+		addr := getHostAddr(t, receiver)
+		info := getAddrInfo(t, addr)
+		addPeerToPeerStore(t, node.host, addr)
+
+		err = node.host.Connect(ctx, *info)
+		require.NoError(t, err)
+
+		// Have both client and node subscribe to the same topic.
+		_, subscription, err := receiver.Subscribe(ctx, topic)
+		require.NoError(t, err)
+
+		_, err = node.subscribe(ctx)
+		require.NoError(t, err)
+
+		// TODO: Think about how to best handle this.
+		time.Sleep(subscriptionDiseminationPause)
+
+		requestID, err := node.issueRollCall(ctx, functionID)
+		require.NoError(t, err)
+
+		deadlineCtx, cancel := context.WithTimeout(ctx, publishTimeout)
+		defer cancel()
+
+		msg, err := subscription.Next(deadlineCtx)
+		require.NoError(t, err)
+
+		from := msg.ReceivedFrom
+		require.Equal(t, node.host.ID(), from)
+		require.NotNil(t, msg.Topic)
+		require.Equal(t, topic, *msg.Topic)
+
+		var received request.RollCall
+		err = json.Unmarshal(msg.Data, &received)
+		require.NoError(t, err)
+
+		require.Equal(t, blockless.MessageRollCall, received.Type)
+		require.Equal(t, functionID, received.FunctionID)
+		require.Equal(t, requestID, received.RequestID)
 	})
 }
