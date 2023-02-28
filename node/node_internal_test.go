@@ -15,7 +15,7 @@ func TestNode_New(t *testing.T) {
 
 	const (
 		address = "127.0.0.1"
-		port    = 9000
+		port    = 0
 	)
 
 	var (
@@ -77,7 +77,7 @@ func createNode(t *testing.T, role blockless.NodeRole) *Node {
 
 	const (
 		address = "127.0.0.1"
-		port    = 9000
+		port    = 0
 	)
 
 	var (

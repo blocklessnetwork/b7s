@@ -34,17 +34,9 @@ func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, payloa
 	res.From = from
 
 	// Record the response.
-	n.recordRollCallResponse(res)
+	n.rollCall.add(res.RequestID, res)
 
 	return nil
-}
-
-func (n *Node) recordRollCallResponse(res response.RollCall) {
-	_, ok := n.rollCallResponses[res.RequestID]
-	if !ok {
-		n.rollCallResponses[res.RequestID] = make(chan response.RollCall, resultBufferSize)
-	}
-	n.rollCallResponses[res.RequestID] <- res
 }
 
 func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, payload []byte) error {

@@ -10,8 +10,8 @@ import (
 
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/models/response"
 	"github.com/blocklessnetworking/b7s/node/internal/cache"
+	"github.com/blocklessnetworking/b7s/node/internal/waitmap"
 )
 
 // Node is the entity that actually provides the main Blockless node functionality.
@@ -34,8 +34,8 @@ type Node struct {
 
 	topic *pubsub.Topic
 
-	rollCallResponses map[string](chan response.RollCall)
-	executeResponses  map[string](chan response.Execute)
+	rollCall         *rollCallQueue
+	executeResponses *waitmap.WaitMap
 }
 
 // New creates a new Node.
@@ -67,8 +67,8 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 		function: function,
 		execute:  cfg.Execute,
 
-		rollCallResponses: make(map[string](chan response.RollCall)),
-		executeResponses:  make(map[string](chan response.Execute)),
+		rollCall:         newQueue(rollCallQueueBufferSize),
+		executeResponses: waitmap.New(),
 	}
 
 	// Create a notifiee with a backing peerstore.

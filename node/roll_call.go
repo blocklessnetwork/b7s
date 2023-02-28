@@ -99,10 +99,6 @@ func (n *Node) issueRollCall(ctx context.Context, functionID string) (string, er
 	}
 	requestID := uuid.String()
 
-	// Create a channel for receiving roll call replies.
-	// We create a bufferred channel so issuing a roll call response does not block the sender.
-	n.rollCallResponses[requestID] = make(chan response.RollCall, resultBufferSize)
-
 	// Create a roll call request.
 	rollCall := request.RollCall{
 		Type:       blockless.MessageRollCall,

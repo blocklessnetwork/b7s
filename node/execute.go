@@ -147,7 +147,7 @@ rollCallResponseLoop:
 
 			return res, errors.New("roll call timed out")
 
-		case reply := <-n.rollCallResponses[requestID]:
+		case reply := <-n.rollCall.responses(requestID):
 
 			n.log.Debug().
 				Str("peer", reply.From.String()).
@@ -179,10 +179,6 @@ rollCallResponseLoop:
 		Str("request_id", requestID).
 		Msg("peer reported for roll call")
 
-	// Create a channel where execution response will be received.
-	// We create a bufferred channel so sending of execution result does not block.
-	n.executeResponses[requestID] = make(chan response.Execute, resultBufferSize)
-
 	// Request execution from the peer who reported back first.
 	reqExecute := request.Execute{
 		Type:       blockless.MessageExecute,
@@ -208,7 +204,7 @@ rollCallResponseLoop:
 	}
 
 	// TODO: Verify that the response came from the peer that reported for the roll call.
-	resExecute := <-n.executeResponses[requestID]
+	resExecute := n.executeResponses.Wait(requestID).(response.Execute)
 
 	n.log.Info().
 		Str("request_id", requestID).
@@ -237,13 +233,9 @@ func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload
 	res.From = from
 
 	// Record execution response.
-	n.recordExecuteResponse(res)
+	n.executeResponses.Set(res.RequestID, res)
 
 	return nil
-}
-
-func (n *Node) recordExecuteResponse(res response.Execute) {
-	n.executeResponses[res.RequestID] <- res
 }
 
 // isFuncitonInstalled looks up the function in the store by using the functionID/CID as key.

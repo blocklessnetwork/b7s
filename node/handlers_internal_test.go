@@ -48,7 +48,7 @@ func TestNode_Handlers(t *testing.T) {
 		var recordedResponse response.RollCall
 		go func() {
 			defer wg.Done()
-			recordedResponse = <-node.rollCallResponses[requestID]
+			recordedResponse = <-node.rollCall.responses(requestID)
 		}()
 
 		wg.Add(1)

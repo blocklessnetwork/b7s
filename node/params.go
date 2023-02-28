@@ -11,7 +11,7 @@ const (
 	functionInstallTimeout = 10 * time.Second
 	rollCallTimeout        = 5 * time.Second
 
-	resultBufferSize = 10
+	rollCallQueueBufferSize = 1000
 )
 
 var (
