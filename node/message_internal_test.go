@@ -101,10 +101,8 @@ func TestNode_Messaging(t *testing.T) {
 		_, subscription, err := client.Subscribe(ctx, topic)
 		require.NoError(t, err)
 
-		// TODO: Have subscription handled in a single place - create a method.
-		ntopic, _, err := node.host.Subscribe(ctx, topic)
+		_, err = node.subscribe(ctx)
 		require.NoError(t, err)
-		node.topic = ntopic
 
 		// TODO: Think about how to best handle this.
 		time.Sleep(subscriptionrDiseminationPause)
