@@ -153,3 +153,10 @@ func getStreamPayload(t *testing.T, stream network.Stream, output any) {
 	err = json.Unmarshal(payload, output)
 	require.NoError(t, err)
 }
+
+func serialize(t *testing.T, message any) []byte {
+	payload, err := json.Marshal(message)
+	require.NoError(t, err)
+
+	return payload
+}

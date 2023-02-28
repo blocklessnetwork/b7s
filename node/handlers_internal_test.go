@@ -2,14 +2,17 @@ package node
 
 import (
 	"context"
-	"encoding/json"
 	"sync"
 	"testing"
 
+	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/stretchr/testify/require"
+
+	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/request"
 	"github.com/blocklessnetworking/b7s/models/response"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNode_Handlers(t *testing.T) {
@@ -78,9 +81,169 @@ func TestNode_Handlers(t *testing.T) {
 	})
 }
 
-func serialize(t *testing.T, message any) []byte {
-	payload, err := json.Marshal(message)
-	require.NoError(t, err)
+func TestNode_InstallFunction(t *testing.T) {
 
-	return payload
+	const (
+		manifestURL = "https://example.com/manifest-url"
+		cid         = "dummy-cid"
+	)
+
+	installReq := request.InstallFunction{
+		ManifestURL: manifestURL,
+		CID:         cid,
+	}
+
+	payload := serialize(t, installReq)
+
+	t.Run("head node handles install", func(t *testing.T) {
+		t.Parallel()
+
+		node := createNode(t, blockless.HeadNode)
+
+		err := node.processInstallFunction(context.Background(), mocks.GenericPeerID, payload)
+		require.NoError(t, err)
+	})
+	t.Run("worker node handles install", func(t *testing.T) {
+		t.Parallel()
+
+		const (
+			address = "127.0.0.1"
+			port    = 0
+
+			expectedMessage = "installed"
+		)
+
+		receiver, err := host.New(mocks.NoopLogger, address, port)
+		require.NoError(t, err)
+
+		addr := getHostAddr(t, receiver)
+
+		node := createNode(t, blockless.WorkerNode)
+		addPeerToPeerStore(t, node.host, addr)
+
+		var wg sync.WaitGroup
+
+		wg.Add(1)
+		receiver.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+			defer wg.Done()
+
+			defer stream.Close()
+
+			from := stream.Conn().RemotePeer()
+			require.Equal(t, node.host.ID(), from)
+
+			var received response.InstallFunction
+			getStreamPayload(t, stream, &received)
+
+			require.Equal(t, blockless.MessageInstallFunctionResponse, received.Type)
+			require.Equal(t, response.CodeAccepted, received.Code)
+			require.Equal(t, expectedMessage, received.Message)
+		})
+
+		err = node.processInstallFunction(context.Background(), receiver.ID(), payload)
+		require.NoError(t, err)
+
+		wg.Wait()
+	})
+	t.Run("worker node handles function install error", func(t *testing.T) {
+		t.Parallel()
+
+		const (
+			address = "127.0.0.1"
+			port    = 0
+		)
+
+		receiver, err := host.New(mocks.NoopLogger, address, port)
+		require.NoError(t, err)
+
+		addr := getHostAddr(t, receiver)
+
+		node := createNode(t, blockless.WorkerNode)
+		addPeerToPeerStore(t, node.host, addr)
+
+		fstore := mocks.BaselineFunctionHandler(t)
+		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
+			return nil, mocks.GenericError
+		}
+		node.function = fstore
+
+		// NOTE: In reality, this is more "documenting" current behavior.
+		// In reality it sounds more correct that we *should* get a response back.
+		receiver.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+			require.Fail(t, "unexpected response")
+		})
+
+		// TODO: Check old code and investigate - it's potentially better to notify the
+		// caller that we failed.
+
+		err = node.processInstallFunction(context.Background(), receiver.ID(), payload)
+		require.Error(t, err)
+	})
+	t.Run("worker node handles invalid function install requeset", func(t *testing.T) {
+		t.Parallel()
+
+		const (
+			address = "127.0.0.1"
+			port    = 0
+		)
+
+		const (
+			// JSON without closing brace.
+			brokenPayload = `{
+				"type": "MsgInstallFunction",
+				"manifest_url": "https://example.com/manifest-url",
+				"cid": "dummy-cid"`
+		)
+
+		receiver, err := host.New(mocks.NoopLogger, address, port)
+		require.NoError(t, err)
+
+		addr := getHostAddr(t, receiver)
+
+		node := createNode(t, blockless.WorkerNode)
+		addPeerToPeerStore(t, node.host, addr)
+
+		receiver.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+			require.Fail(t, "unexpected response")
+		})
+
+		err = node.processInstallFunction(context.Background(), receiver.ID(), []byte(brokenPayload))
+		require.Error(t, err)
+	})
+	t.Run("worker node handles failure to send response", func(t *testing.T) {
+		t.Parallel()
+
+		const (
+			address = "127.0.0.1"
+			port    = 0
+		)
+
+		receiver, err := host.New(mocks.NoopLogger, address, port)
+		require.NoError(t, err)
+
+		addr := getHostAddr(t, receiver)
+
+		node := createNode(t, blockless.WorkerNode)
+		addPeerToPeerStore(t, node.host, addr)
+
+		// Setup one successful test run first.
+		var wg sync.WaitGroup
+
+		wg.Add(1)
+		receiver.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+			defer wg.Done()
+			defer stream.Close()
+		})
+
+		err = node.processInstallFunction(context.Background(), receiver.ID(), payload)
+		require.NoError(t, err)
+
+		wg.Wait()
+
+		// Shut down the receiver and verify the same request fails.
+		receiver.Close()
+
+		err = node.processInstallFunction(context.Background(), receiver.ID(), payload)
+		require.Error(t, err)
+	})
 }

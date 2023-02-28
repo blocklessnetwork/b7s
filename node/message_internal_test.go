@@ -74,10 +74,11 @@ func TestNode_Messaging(t *testing.T) {
 
 			// It seems like a delay is needed so that the hosts exchange information about the fact
 			// that they are subscribed to the same topic. If that does not happen, node might publish
-			// a message too soon and the client might miss it.
-			// It will then wait for a published message in vain.
+			// a message too soon and the client might miss it. It will then wait for a published message in vain.
 			// This is the pause we make after subscribing to the topic and before publishing a message.
-			subscriptionrDiseminationPause = 250 * time.Millisecond
+			// In reality as little as 250ms is enough, but lets allow a longer time for when
+			// tests are executed in parallel or on weaker machines.
+			subscriptionrDiseminationPause = 1 * time.Second
 		)
 
 		ctx := context.Background()

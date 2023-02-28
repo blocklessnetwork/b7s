@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"encoding/json"
 	"sync"
 	"testing"
 
@@ -37,8 +36,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		Config:     execute.Config{},
 	}
 
-	payload, err := json.Marshal(executionRequest)
-	require.NoError(t, err)
+	payload := serialize(t, executionRequest)
 
 	t.Run("handles correct execution", func(t *testing.T) {
 		t.Parallel()
