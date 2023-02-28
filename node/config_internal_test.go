@@ -2,6 +2,7 @@ package node
 
 import (
 	"testing"
+	"time"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
@@ -44,4 +45,17 @@ func TestConfig_Executor(t *testing.T) {
 	WithExecutor(executor)(&cfg)
 
 	require.Equal(t, executor, cfg.Execute)
+}
+
+func TestConfig_HealthInterval(t *testing.T) {
+
+	const interval = 30 * time.Second
+
+	cfg := Config{
+		HealthInterval: 0,
+	}
+
+	WithHealthInterval(interval)(&cfg)
+
+	require.Equal(t, interval, cfg.HealthInterval)
 }

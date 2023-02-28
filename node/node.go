@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"errors"
+	"time"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -22,8 +23,9 @@ import (
 // On the other hand, a Head Node will issue a roll call and eventually
 // delegate the execution to the chosend Worker Node.
 type Node struct {
-	role      blockless.NodeRole
-	topicName string
+	role           blockless.NodeRole
+	topicName      string
+	healthInterval time.Duration
 
 	log      zerolog.Logger
 	host     *host.Host
@@ -57,9 +59,10 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 	}
 
 	n := Node{
-		role:      cfg.Role,
-		topicName: cfg.Topic,
-		excache:   cache.New(),
+		role:           cfg.Role,
+		topicName:      cfg.Topic,
+		healthInterval: cfg.HealthInterval,
+		excache:        cache.New(),
 
 		log:      log,
 		host:     host,
