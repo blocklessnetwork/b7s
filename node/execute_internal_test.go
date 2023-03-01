@@ -17,6 +17,7 @@ import (
 )
 
 // TODO: Responses should not have a "from" field
+// TODO: Add a util function to add host to nodes peerstore.
 
 func TestNode_WorkerExecute(t *testing.T) {
 
@@ -205,6 +206,66 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
 		require.NoError(t, err)
+
+		wg.Wait()
+	})
+}
+
+func TestNode_HeadExecute(t *testing.T) {
+
+	const (
+		functionID     = "dummy-function-id"
+		functionMethod = "dummy-function-method"
+	)
+
+	executionRequest := request.Execute{
+		Type:       blockless.MessageExecute,
+		FunctionID: functionID,
+		Method:     functionMethod,
+		Parameters: []execute.Parameter{},
+		Config:     execute.Config{},
+	}
+
+	payload := serialize(t, executionRequest)
+
+	t.Run("handles roll call timeout", func(t *testing.T) {
+		t.Parallel()
+
+		node := createNode(t, blockless.HeadNode)
+
+		ctx := context.Background()
+		_, err := node.subscribe(ctx)
+		require.NoError(t, err)
+
+		// Create a host that will receive the execution response.
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
+		require.NoError(t, err)
+
+		addr := getHostAddr(t, receiver)
+		addPeerToPeerStore(t, node.host, addr)
+
+		var wg sync.WaitGroup
+
+		wg.Add(1)
+		receiver.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+			defer wg.Done()
+			defer stream.Close()
+
+			from := stream.Conn().RemotePeer()
+			require.Equal(t, node.host.ID(), from)
+
+			var received response.Execute
+			getStreamPayload(t, stream, &received)
+
+			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
+			require.Equal(t, response.CodeTimeout, received.Code)
+		})
+
+		// Since no one will respond to a roll call, this is bound to time out.
+		err = node.processExecute(ctx, receiver.ID(), payload)
+		require.NoError(t, err)
+
+		// TODO: Have roll call timeout configurable.
 
 		wg.Wait()
 	})

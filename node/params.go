@@ -17,4 +17,5 @@ const (
 
 var (
 	ErrUnsupportedMessage = errors.New("unsupported message")
+	errRollCallTimeout    = errors.New("roll call timed out")
 )

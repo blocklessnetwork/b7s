@@ -145,7 +145,7 @@ rollCallResponseLoop:
 				Code: response.CodeTimeout,
 			}
 
-			return res, errors.New("roll call timed out")
+			return res, errRollCallTimeout
 
 		case reply := <-n.rollCall.responses(requestID):
 
