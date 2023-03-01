@@ -124,7 +124,7 @@ func (n *Node) headExecute(ctx context.Context, from peer.ID, req execute.Reques
 		Msg("roll call published")
 
 	// Limit for how long we wait for responses.
-	tctx, cancel := context.WithTimeout(ctx, rollCallTimeout)
+	tctx, cancel := context.WithTimeout(ctx, n.rollCallTimeout)
 	defer cancel()
 
 	// Peer that reports to roll call first.

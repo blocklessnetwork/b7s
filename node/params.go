@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	DefaultTopic          = "blockless/b7s/general"
-	DefaultHealthInterval = 1 * time.Minute
+	DefaultTopic           = "blockless/b7s/general"
+	DefaultHealthInterval  = 1 * time.Minute
+	DefaultRollCallTimeout = 5 * time.Second
 
 	functionInstallTimeout = 10 * time.Second
-	rollCallTimeout        = 5 * time.Second
 
 	rollCallQueueBufferSize = 1000
 )

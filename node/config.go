@@ -11,17 +11,19 @@ type Option func(*Config)
 
 // DefaultConfig represents the default settings for the node.
 var DefaultConfig = Config{
-	Role:           blockless.WorkerNode,
-	Topic:          DefaultTopic,
-	HealthInterval: DefaultHealthInterval,
+	Role:            blockless.WorkerNode,
+	Topic:           DefaultTopic,
+	HealthInterval:  DefaultHealthInterval,
+	RollCallTimeout: DefaultRollCallTimeout,
 }
 
 // Config represents the Node configuration.
 type Config struct {
-	Role           blockless.NodeRole // Node role.
-	Topic          string             // Topic to subscribe to.
-	Execute        Executor           // Executor to use for running functions.
-	HealthInterval time.Duration      // How often should we emit the health ping.
+	Role            blockless.NodeRole // Node role.
+	Topic           string             // Topic to subscribe to.
+	Execute         Executor           // Executor to use for running functions.
+	HealthInterval  time.Duration      // How often should we emit the health ping.
+	RollCallTimeout time.Duration      // How long do we wait for roll call responses.
 }
 
 // WithRole specifies the role for the node.
@@ -49,5 +51,12 @@ func WithExecutor(execute Executor) Option {
 func WithHealthInterval(d time.Duration) Option {
 	return func(cfg *Config) {
 		cfg.HealthInterval = d
+	}
+}
+
+// WithRollCallTimeout specifies how long do we wait for roll call responses.
+func WithRollCallTimeout(d time.Duration) Option {
+	return func(cfg *Config) {
+		cfg.RollCallTimeout = d
 	}
 }

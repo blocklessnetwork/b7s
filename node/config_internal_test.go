@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestConfig_NodeRole(t *testing.T) {
@@ -58,4 +58,17 @@ func TestConfig_HealthInterval(t *testing.T) {
 	WithHealthInterval(interval)(&cfg)
 
 	require.Equal(t, interval, cfg.HealthInterval)
+}
+
+func TestConfig_RollCallTimeout(t *testing.T) {
+
+	const timeout = 10 * time.Second
+
+	cfg := Config{
+		RollCallTimeout: 0,
+	}
+
+	WithRollCallTimeout(timeout)(&cfg)
+
+	require.Equal(t, timeout, cfg.RollCallTimeout)
 }
