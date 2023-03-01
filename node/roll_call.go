@@ -16,7 +16,7 @@ import (
 func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte) error {
 
 	// Only workers respond to roll calls at the moment.
-	if n.role != blockless.WorkerNode {
+	if n.cfg.Role != blockless.WorkerNode {
 		n.log.Debug().Msg("skipping roll call as a non-worker node")
 		return nil
 	}

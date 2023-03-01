@@ -11,7 +11,7 @@ import (
 // HealthPing will run a long running loop, publishing health signal until cancelled.
 func (n *Node) HealthPing(ctx context.Context) {
 
-	ticker := time.NewTicker(n.healthInterval)
+	ticker := time.NewTicker(n.cfg.HealthInterval)
 
 	for {
 		select {

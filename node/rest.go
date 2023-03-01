@@ -17,7 +17,7 @@ import (
 // worker and head node.
 func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (execute.Result, error) {
 
-	switch n.role {
+	switch n.cfg.Role {
 	case blockless.WorkerNode:
 		return n.workerExecute(ctx, n.host.ID(), req)
 
@@ -25,7 +25,7 @@ func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (execut
 		return n.headExecute(ctx, n.host.ID(), req)
 	}
 
-	panic(fmt.Errorf("invalid node role: %s", n.role))
+	panic(fmt.Errorf("invalid node role: %s", n.cfg.Role))
 }
 
 // ExecutionResult fetches the execution result from the node cache.

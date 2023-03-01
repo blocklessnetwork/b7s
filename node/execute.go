@@ -43,7 +43,7 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 	// NOTE: In case of an error, we do not return from this function.
 	// Instead, we send the response back to the caller, whatever it may be.
 	var execFunc executeFunc
-	if n.role == blockless.WorkerNode {
+	if n.cfg.Role == blockless.WorkerNode {
 		execFunc = n.workerExecute
 	} else {
 		execFunc = n.headExecute
@@ -124,7 +124,7 @@ func (n *Node) headExecute(ctx context.Context, from peer.ID, req execute.Reques
 		Msg("roll call published")
 
 	// Limit for how long we wait for responses.
-	tctx, cancel := context.WithTimeout(ctx, n.rollCallTimeout)
+	tctx, cancel := context.WithTimeout(ctx, n.cfg.RollCallTimeout)
 	defer cancel()
 
 	// Peer that reports to roll call first.

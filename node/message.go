@@ -11,7 +11,7 @@ import (
 
 func (n *Node) subscribe(ctx context.Context) (*pubsub.Subscription, error) {
 
-	topic, subscription, err := n.host.Subscribe(ctx, n.topicName)
+	topic, subscription, err := n.host.Subscribe(ctx, n.cfg.Topic)
 	if err != nil {
 		return nil, fmt.Errorf("could not subscribe to topic: %w", err)
 	}

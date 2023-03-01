@@ -28,7 +28,7 @@ func (n *Node) Run(ctx context.Context) error {
 	// NOTE: Potentially signal any error here so that we abort the node
 	// run loop if anything failed.
 	go func() {
-		err = n.host.DiscoverPeers(ctx, n.topicName)
+		err = n.host.DiscoverPeers(ctx, n.cfg.Topic)
 		if err != nil {
 			n.log.Error().
 				Err(err).

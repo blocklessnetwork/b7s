@@ -265,8 +265,6 @@ func TestNode_HeadExecute(t *testing.T) {
 		err = node.processExecute(ctx, receiver.ID(), payload)
 		require.NoError(t, err)
 
-		// TODO: Have roll call timeout configurable.
-
 		wg.Wait()
 	})
 }
