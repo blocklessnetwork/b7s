@@ -47,8 +47,7 @@ func TestNode_RollCall(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		addr := getHostAddr(t, receiver)
-		addPeerToPeerStore(t, node.host, addr)
+		hostAddNewPeer(t, node.host, receiver)
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -83,8 +82,7 @@ func TestNode_RollCall(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		addr := getHostAddr(t, receiver)
-		addPeerToPeerStore(t, node.host, addr)
+		hostAddNewPeer(t, node.host, receiver)
 
 		// Function store fails to check function presence.
 		fstore := mocks.BaselineFunctionHandler(t)
@@ -126,8 +124,7 @@ func TestNode_RollCall(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		addr := getHostAddr(t, receiver)
-		addPeerToPeerStore(t, node.host, addr)
+		hostAddNewPeer(t, node.host, receiver)
 
 		// Function store works okay but function is not found.
 		fstore := mocks.BaselineFunctionHandler(t)
@@ -178,10 +175,9 @@ func TestNode_RollCall(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		addr := getHostAddr(t, receiver)
-		info := getAddrInfo(t, addr)
-		addPeerToPeerStore(t, node.host, addr)
+		hostAddNewPeer(t, node.host, receiver)
 
+		info := hostGetAddrInfo(t, receiver)
 		err = node.host.Connect(ctx, *info)
 		require.NoError(t, err)
 

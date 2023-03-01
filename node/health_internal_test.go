@@ -47,9 +47,10 @@ func TestNode_Health(t *testing.T) {
 	defer cancel()
 
 	// Establish a connection between node and receiver.
-	addr := getHostAddr(t, receiver)
-	clientInfo := getAddrInfo(t, addr)
-	err = node.host.Connect(ctx, *clientInfo)
+	hostAddNewPeer(t, nhost, receiver)
+	info := hostGetAddrInfo(t, receiver)
+
+	err = node.host.Connect(ctx, *info)
 	require.NoError(t, err)
 
 	// Have both client and node subscribe to the same topic.

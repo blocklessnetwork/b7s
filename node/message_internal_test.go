@@ -33,10 +33,8 @@ func TestNode_Messaging(t *testing.T) {
 	client, err := host.New(mocks.NoopLogger, loopback, 0)
 	require.NoError(t, err)
 
-	addr := getHostAddr(t, client)
-
 	node := createNode(t, blockless.HeadNode)
-	addPeerToPeerStore(t, node.host, addr)
+	hostAddNewPeer(t, node.host, client)
 
 	t.Run("sending single message", func(t *testing.T) {
 		t.Parallel()
@@ -68,7 +66,7 @@ func TestNode_Messaging(t *testing.T) {
 		ctx := context.Background()
 
 		// Establish a connection between peers.
-		clientInfo := getAddrInfo(t, addr)
+		clientInfo := hostGetAddrInfo(t, client)
 		err = node.host.Connect(ctx, *clientInfo)
 		require.NoError(t, err)
 

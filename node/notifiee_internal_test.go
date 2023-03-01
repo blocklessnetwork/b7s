@@ -40,19 +40,15 @@ func TestNode_Notifiee(t *testing.T) {
 		return nil
 	}
 
-	_, err = New(logger, server, store, peerstore, functionHandler, WithRole(blockless.HeadNode))
+	node, err := New(logger, server, store, peerstore, functionHandler, WithRole(blockless.HeadNode))
 	require.NoError(t, err)
-
-	serverAddresses := server.Addresses()
-	require.NotEmpty(t, serverAddresses)
-
-	serverAddress := serverAddresses[0]
 
 	client, err := host.New(mocks.NoopLogger, loopback, 0)
 	require.NoError(t, err)
 
-	serverInfo := addPeerToPeerStore(t, client, serverAddress)
+	hostAddNewPeer(t, client, node.host)
 
+	serverInfo := hostGetAddrInfo(t, server)
 	err = client.Connect(context.Background(), *serverInfo)
 	require.NoError(t, err)
 

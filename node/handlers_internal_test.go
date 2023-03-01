@@ -113,10 +113,8 @@ func TestNode_InstallFunction(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		addr := getHostAddr(t, receiver)
-
 		node := createNode(t, blockless.WorkerNode)
-		addPeerToPeerStore(t, node.host, addr)
+		hostAddNewPeer(t, node.host, receiver)
 
 		var wg sync.WaitGroup
 
@@ -147,10 +145,8 @@ func TestNode_InstallFunction(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		addr := getHostAddr(t, receiver)
-
 		node := createNode(t, blockless.WorkerNode)
-		addPeerToPeerStore(t, node.host, addr)
+		hostAddNewPeer(t, node.host, receiver)
 
 		fstore := mocks.BaselineFunctionHandler(t)
 		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
@@ -184,10 +180,8 @@ func TestNode_InstallFunction(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		addr := getHostAddr(t, receiver)
-
 		node := createNode(t, blockless.WorkerNode)
-		addPeerToPeerStore(t, node.host, addr)
+		hostAddNewPeer(t, node.host, receiver)
 
 		receiver.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
 			require.Fail(t, "unexpected response")

@@ -17,7 +17,6 @@ import (
 )
 
 // TODO: Responses should not have a "from" field
-// TODO: Add a util function to add host to nodes peerstore.
 
 func TestNode_WorkerExecute(t *testing.T) {
 
@@ -57,8 +56,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		recvAddr := getHostAddr(t, receiver)
-		addPeerToPeerStore(t, node.host, recvAddr)
+		hostAddNewPeer(t, node.host, receiver)
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -111,8 +109,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		recvAddr := getHostAddr(t, receiver)
-		addPeerToPeerStore(t, node.host, recvAddr)
+		hostAddNewPeer(t, node.host, receiver)
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -155,8 +152,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		recvAddr := getHostAddr(t, receiver)
-		addPeerToPeerStore(t, node.host, recvAddr)
+		hostAddNewPeer(t, node.host, receiver)
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -241,8 +237,7 @@ func TestNode_HeadExecute(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		addr := getHostAddr(t, receiver)
-		addPeerToPeerStore(t, node.host, addr)
+		hostAddNewPeer(t, node.host, receiver)
 
 		var wg sync.WaitGroup
 

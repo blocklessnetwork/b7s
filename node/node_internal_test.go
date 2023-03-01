@@ -118,8 +118,19 @@ func createNode(t *testing.T, role blockless.NodeRole) *Node {
 	return node
 }
 
-func getAddrInfo(t *testing.T, addr string) *peer.AddrInfo {
+func hostAddNewPeer(t *testing.T, host *host.Host, newPeer *host.Host) {
 	t.Helper()
+
+	info := hostGetAddrInfo(t, newPeer)
+	host.Peerstore().AddAddrs(info.ID, info.Addrs, peerstore.PermanentAddrTTL)
+}
+
+func hostGetAddrInfo(t *testing.T, host *host.Host) *peer.AddrInfo {
+
+	addresses := host.Addresses()
+	require.NotEmpty(t, addresses)
+
+	addr := addresses[0]
 
 	maddr, err := multiaddr.NewMultiaddr(addr)
 	require.NoError(t, err)
@@ -128,25 +139,6 @@ func getAddrInfo(t *testing.T, addr string) *peer.AddrInfo {
 	require.NoError(t, err)
 
 	return info
-}
-
-func addPeerToPeerStore(t *testing.T, host *host.Host, addr string) *peer.AddrInfo {
-	t.Helper()
-
-	info := getAddrInfo(t, addr)
-	host.Peerstore().AddAddrs(info.ID, info.Addrs, peerstore.PermanentAddrTTL)
-
-	return info
-}
-
-// TODO: Find applicable places and use this there.
-func getHostAddr(t *testing.T, host *host.Host) string {
-	t.Helper()
-
-	addresses := host.Addresses()
-	require.NotEmpty(t, addresses)
-
-	return addresses[0]
 }
 
 func getStreamPayload(t *testing.T, stream network.Stream, output any) {
