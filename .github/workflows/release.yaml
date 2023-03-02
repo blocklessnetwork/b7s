@@ -34,7 +34,7 @@ jobs:
           check-latest: true
       - run: env GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} make
       - name: Archive Release
-        uses: thedoctor0/zip-release@main
+        uses: thedoctor0/zip-release@0.7.1
         with:
           type: "tar"
           directory: dist/
