@@ -17,8 +17,6 @@ import (
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
 
-// TODO: Add an environment variable to skip tests with `publish` due to synchronization issue.
-
 func TestNode_RollCall(t *testing.T) {
 
 	var (
@@ -161,8 +159,6 @@ func TestNode_RollCall(t *testing.T) {
 	t.Run("node issues roll call ok", func(t *testing.T) {
 		t.Parallel()
 
-		// TODO: Make publishing tests disabled by default and make timeouts longer.
-
 		const (
 			topic      = DefaultTopic
 			functionID = "super-secret-function-id"
@@ -188,7 +184,6 @@ func TestNode_RollCall(t *testing.T) {
 		_, err = node.subscribe(ctx)
 		require.NoError(t, err)
 
-		// TODO: Think about how to best handle this.
 		time.Sleep(subscriptionDiseminationPause)
 
 		requestID, err := newRequestID()

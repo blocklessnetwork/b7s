@@ -18,7 +18,6 @@ import (
 func TestNode_Messaging(t *testing.T) {
 
 	const (
-		// TODO: Use a different topic.
 		topic = DefaultTopic
 	)
 
@@ -77,7 +76,6 @@ func TestNode_Messaging(t *testing.T) {
 		_, err = node.subscribe(ctx)
 		require.NoError(t, err)
 
-		// TODO: Think about how to best handle this.
 		time.Sleep(subscriptionDiseminationPause)
 
 		err = node.publish(ctx, rec)

@@ -160,9 +160,6 @@ func TestNode_InstallFunction(t *testing.T) {
 			require.Fail(t, "unexpected response")
 		})
 
-		// TODO: Check old code and investigate - it's potentially better to notify the
-		// caller that we failed.
-
 		err = node.processInstallFunction(context.Background(), receiver.ID(), payload)
 		require.Error(t, err)
 	})

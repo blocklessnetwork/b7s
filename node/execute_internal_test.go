@@ -18,8 +18,6 @@ import (
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
 
-// TODO: Responses should not have a "from" field
-
 func TestNode_WorkerExecute(t *testing.T) {
 
 	const (
