@@ -50,7 +50,11 @@ func instantiateNode(t *testing.T, dirnamePattern string, role blockless.NodeRol
 	require.NoError(t, err)
 
 	// Create logger.
-	logger := createLogger(t, role)
+	logName := path.Join(dir, fmt.Sprintf("%v-log.json", role.String()))
+	logFile, err := os.Create(logName)
+	require.NoError(t, err)
+
+	logger := zerolog.New(logFile)
 
 	// Create head node libp2p host.
 	host, err := host.New(logger, loopback, 0)
@@ -68,18 +72,6 @@ func instantiateNode(t *testing.T, dirnamePattern string, role blockless.NodeRol
 	}
 
 	return &ns
-}
-
-func createLogger(t *testing.T, role blockless.NodeRole) zerolog.Logger {
-
-	// TODO: Change where log files go.
-	logName := fmt.Sprintf("%v-log.json", role.String())
-	logFile, err := os.Create(logName)
-	require.NoError(t, err)
-
-	logger := zerolog.New(logFile)
-
-	return logger
 }
 
 func createNode(t *testing.T, dir string, logger zerolog.Logger, host *host.Host, role blockless.NodeRole) (*pebble.DB, *node.Node) {
