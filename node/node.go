@@ -3,7 +3,9 @@ package node
 import (
 	"context"
 	"errors"
+	"fmt"
 
+	"github.com/google/uuid"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
@@ -100,4 +102,15 @@ func (n Node) getHandler(msgType string) HandlerFunc {
 			return ErrUnsupportedMessage
 		}
 	}
+}
+
+func newRequestID() (string, error) {
+
+	// Generate a new request/executionID.
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		return "", fmt.Errorf("could not generate new request ID: %w", err)
+	}
+
+	return uuid.String(), nil
 }

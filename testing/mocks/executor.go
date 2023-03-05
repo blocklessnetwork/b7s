@@ -7,14 +7,14 @@ import (
 )
 
 type Executor struct {
-	ExecFunctionFunc func(execute.Request) (execute.Result, error)
+	ExecFunctionFunc func(string, execute.Request) (execute.Result, error)
 }
 
 func BaselineExecutor(t *testing.T) *Executor {
 	t.Helper()
 
 	executor := Executor{
-		ExecFunctionFunc: func(execute.Request) (execute.Result, error) {
+		ExecFunctionFunc: func(string, execute.Request) (execute.Result, error) {
 			return GenericExecutionResult, nil
 		},
 	}
@@ -22,6 +22,6 @@ func BaselineExecutor(t *testing.T) *Executor {
 	return &executor
 }
 
-func (e *Executor) Function(req execute.Request) (execute.Result, error) {
-	return e.ExecFunctionFunc(req)
+func (e *Executor) Function(requestID string, req execute.Request) (execute.Result, error) {
+	return e.ExecFunctionFunc(requestID, req)
 }

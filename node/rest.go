@@ -17,12 +17,17 @@ import (
 // worker and head node.
 func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (execute.Result, error) {
 
+	requestID, err := newRequestID()
+	if err != nil {
+		return execute.Result{}, fmt.Errorf("could not generate request ID: %w", err)
+	}
+
 	switch n.cfg.Role {
 	case blockless.WorkerNode:
-		return n.workerExecute(ctx, n.host.ID(), req)
+		return n.workerExecute(ctx, n.host.ID(), requestID, req)
 
 	case blockless.HeadNode:
-		return n.headExecute(ctx, n.host.ID(), req)
+		return n.headExecute(ctx, n.host.ID(), requestID, req)
 	}
 
 	panic(fmt.Errorf("invalid node role: %s", n.cfg.Role))
