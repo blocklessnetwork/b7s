@@ -58,7 +58,7 @@ func (n *Node) Run(ctx context.Context) error {
 		}
 
 		n.log.Debug().
-			Str("id", msg.ID).
+			Str("message_id", msg.ID).
 			Str("peer_id", msg.ReceivedFrom.String()).
 			Msg("received message")
 

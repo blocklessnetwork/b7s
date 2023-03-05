@@ -161,12 +161,20 @@ rollCallResponseLoop:
 				Str("peer", reply.From.String()).
 				Str("function_id", req.FunctionID).
 				Str("request_id", requestID).
+				Str("code", reply.Code).
 				Msg("peer reported for roll call")
 
 			// Check if this is the reply we want.
 			if reply.Code != response.CodeAccepted ||
 				reply.FunctionID != req.FunctionID ||
 				reply.RequestID != requestID {
+
+				n.log.Debug().
+					Str("peer", reply.From.String()).
+					Str("request_id", requestID).
+					Str("code", reply.Code).
+					Msg("skipping inadequate roll call response")
+
 				continue
 			}
 
@@ -212,6 +220,10 @@ rollCallResponseLoop:
 			err)
 	}
 
+	n.log.Debug().
+		Str("request_id", requestID).
+		Msg("waiting for execution response")
+
 	// TODO: Verify that the response came from the peer that reported for the roll call.
 	resExecute := n.executeResponses.Wait(requestID).(response.Execute)
 
@@ -240,6 +252,11 @@ func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload
 		return fmt.Errorf("could not not unpack execute response: %w", err)
 	}
 	res.From = from
+
+	n.log.Debug().
+		Str("request_id", res.RequestID).
+		Str("from", from.String()).
+		Msg("received execution response")
 
 	// Record execution response.
 	n.executeResponses.Set(res.RequestID, res)

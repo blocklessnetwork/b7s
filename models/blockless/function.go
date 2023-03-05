@@ -14,6 +14,10 @@ type FunctionManifest struct {
 	Entry       string        `json:"entry,omitempty"`
 	ContentType string        `json:"contentType,omitempty"`
 	Permissions []string      `json:"permissions,omitempty"`
+
+	DriversRootPath string `json:"drivers_root_path,omitempty"`
+	LimitedFuel     uint   `json:"limited_fuel,omitempty"`
+	LimitedMemory   uint   `json:"limited_memory,omitempty"`
 }
 
 // Runtime is here to support legacy manifests.
