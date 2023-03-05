@@ -32,8 +32,8 @@ func TestNode_ExecuteComplete(t *testing.T) {
 		cid = "whatever-cid"
 
 		// Paths where files will be hosted on the test server.
-		manifestPath        = "/hello-manifest.json"
-		archivePath         = "/hello-deployment.tar.gz"
+		manifestEndpoint    = "/hello-manifest.json"
+		archiveEndpoint     = "/hello-deployment.tar.gz"
 		testFunctionToServe = "testdata/hello.tar.gz"
 		functionMethod      = "hello.wasm"
 
@@ -125,8 +125,8 @@ This is the end of my program
 
 	// Phase 3: Create the server hosting the manifest and the function.
 
-	srv := createFunctionServer(t, manifestPath, archivePath, testFunctionToServe)
-	defer srv.srv.Close()
+	srv := createFunctionServer(t, manifestEndpoint, archiveEndpoint, testFunctionToServe, cid)
+	defer srv.Close()
 
 	// Phase 4: Have the worker install the function.
 	// That way, when he receives the execution request - he will have the function needed to execute it.
@@ -151,7 +151,7 @@ This is the end of my program
 		t.Log("client received function install response")
 	})
 
-	manifestURL := fmt.Sprintf("%v%v", srv.srv.URL, manifestPath)
+	manifestURL := fmt.Sprintf("%v%v", srv.URL, manifestEndpoint)
 	err = client.sendInstallMessage(ctx, worker.host.ID(), manifestURL, cid)
 	require.NoError(t, err)
 

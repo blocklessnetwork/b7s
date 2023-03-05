@@ -2,12 +2,8 @@ package node_test
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"os"
 	"path"
 	"testing"
@@ -26,6 +22,7 @@ import (
 	"github.com/blocklessnetworking/b7s/node"
 	"github.com/blocklessnetworking/b7s/peerstore"
 	"github.com/blocklessnetworking/b7s/store"
+	"github.com/blocklessnetworking/b7s/testing/helpers"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
 
@@ -188,64 +185,19 @@ func (c *client) sendExecutionMessage(ctx context.Context, to peer.ID, cid strin
 	return nil
 }
 
-type functionServer struct {
-	srv *httptest.Server
-}
+func createFunctionServer(t *testing.T, manifestPath string, deploymentPath string, archivePath string, cid string) *helpers.FunctionServer {
 
-// TODO: This can all be moved to a helper package as a separate thing!
-func createFunctionServer(t *testing.T, manifestPath string, deploymentPath string, archivePath string) *functionServer {
-
-	// Archive to serve.
-	archive, err := os.ReadFile(archivePath)
-	require.NoError(t, err)
-
-	// Checksum of the archive we serve.
-	checksum := sha256.Sum256(archive)
-
-	srv := httptest.NewServer(
-		http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
-			path := req.URL.Path
-			switch path {
-			// Manifest request.
-			case manifestPath:
-
-				deploymentURL := url.URL{
-					Scheme: "http",
-					Host:   req.Host,
-					Path:   deploymentPath,
-				}
-
-				// TODO: Not a real manifest. Lookup an existing one.
-				manifest := blockless.FunctionManifest{
-					FSRootPath:      "",
-					DriversRootPath: "",
-					LimitedFuel:     200_000_000,
-					LimitedMemory:   120,
-					Entry:           "",
-					Deployment: blockless.Deployment{
-						CID:      "dummy-cid",
-						Checksum: fmt.Sprintf("%x", checksum),
-						URI:      deploymentURL.String(),
-					},
-				}
-
-				payload, err := json.Marshal(manifest)
-				require.NoError(t, err)
-				w.Write(payload)
-
-			// Archive download request.
-			case deploymentPath:
-				w.Write(archive)
-
-			default:
-				w.WriteHeader(http.StatusNotFound)
-			}
-		}))
-
-	fs := functionServer{
-		srv: srv,
+	// TODO: Since the executor currently writes the manifest by itself, this is somewhat irrelevant.
+	// Still, have this a correct function manifest.
+	manifest := blockless.FunctionManifest{
+		FSRootPath:      "",
+		DriversRootPath: "",
+		LimitedFuel:     200_000_000,
+		LimitedMemory:   120,
+		Entry:           "",
 	}
 
-	return &fs
+	fs := helpers.CreateFunctionServer(t, manifestPath, manifest, deploymentPath, archivePath, cid)
+
+	return fs
 }
