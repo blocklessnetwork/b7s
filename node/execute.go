@@ -67,7 +67,7 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 	}
 
 	// Cache the execution result.
-	n.excache.Set(result.RequestID, result)
+	n.executeResponses.Set(result.RequestID, result)
 
 	// Create the execution response from the execution result.
 	res := response.Execute{

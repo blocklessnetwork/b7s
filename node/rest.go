@@ -35,8 +35,8 @@ func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (execut
 
 // ExecutionResult fetches the execution result from the node cache.
 func (n *Node) ExecutionResult(id string) (execute.Result, bool) {
-	res, ok := n.excache.Get(id)
-	return res, ok
+	res, ok := n.executeResponses.Get(id)
+	return res.(execute.Result), ok
 }
 
 // FunctionInstall initiates function install process.

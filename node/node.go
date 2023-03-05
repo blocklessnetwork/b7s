@@ -12,7 +12,6 @@ import (
 
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/node/internal/cache"
 	"github.com/blocklessnetworking/b7s/node/internal/waitmap"
 )
 
@@ -31,7 +30,6 @@ type Node struct {
 	store    Store
 	execute  Executor
 	function FunctionStore
-	excache  *cache.Cache
 
 	topic *pubsub.Topic
 
@@ -58,8 +56,7 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 	}
 
 	n := Node{
-		cfg:     cfg,
-		excache: cache.New(),
+		cfg: cfg,
 
 		log:      log,
 		host:     host,
