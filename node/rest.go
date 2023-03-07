@@ -17,21 +17,26 @@ import (
 // worker and head node.
 func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (execute.Result, error) {
 
-	switch n.role {
-	case blockless.WorkerNode:
-		return n.workerExecute(ctx, n.host.ID(), req)
-
-	case blockless.HeadNode:
-		return n.headExecute(ctx, n.host.ID(), req)
+	requestID, err := newRequestID()
+	if err != nil {
+		return execute.Result{}, fmt.Errorf("could not generate request ID: %w", err)
 	}
 
-	panic(fmt.Errorf("invalid node role: %s", n.role))
+	switch n.cfg.Role {
+	case blockless.WorkerNode:
+		return n.workerExecute(ctx, n.host.ID(), requestID, req)
+
+	case blockless.HeadNode:
+		return n.headExecute(ctx, n.host.ID(), requestID, req)
+	}
+
+	panic(fmt.Errorf("invalid node role: %s", n.cfg.Role))
 }
 
 // ExecutionResult fetches the execution result from the node cache.
 func (n *Node) ExecutionResult(id string) (execute.Result, bool) {
-	res, ok := n.excache.Get(id)
-	return res, ok
+	res, ok := n.executeResponses.Get(id)
+	return res.(execute.Result), ok
 }
 
 // FunctionInstall initiates function install process.

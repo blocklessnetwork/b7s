@@ -34,19 +34,15 @@ func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, payloa
 	res.From = from
 
 	// Record the response.
-	n.recordRollCallResponse(res)
+	n.rollCall.add(res.RequestID, res)
 
 	return nil
-}
-
-func (n *Node) recordRollCallResponse(res response.RollCall) {
-	n.rollCallResponses[res.RequestID] <- res
 }
 
 func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, payload []byte) error {
 
 	// Only workers should respond to function install requests.
-	if n.role != blockless.WorkerNode {
+	if n.cfg.Role != blockless.WorkerNode {
 		n.log.Debug().
 			Msg("received function install request, ignoring")
 		return nil

@@ -1,14 +1,21 @@
 package node
 
 import (
+	"errors"
 	"time"
 )
 
 const (
-	DefaultTopic = "blockless/b7s/general"
+	DefaultTopic           = "blockless/b7s/general"
+	DefaultHealthInterval  = 1 * time.Minute
+	DefaultRollCallTimeout = 5 * time.Second
 
 	functionInstallTimeout = 10 * time.Second
-	rollCallTimeout        = 5 * time.Second
 
-	resultBufferSize = 10
+	rollCallQueueBufferSize = 1000
+)
+
+var (
+	ErrUnsupportedMessage = errors.New("unsupported message")
+	errRollCallTimeout    = errors.New("roll call timed out")
 )

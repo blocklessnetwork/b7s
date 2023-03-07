@@ -5,9 +5,12 @@ import (
 	"io"
 
 	"github.com/google/uuid"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 
-	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetworking/b7s/models/response"
 )
 
 // Global variables that can be used for testing. They are valid non-nil values for commonly needed types.
@@ -23,4 +26,28 @@ var (
 	GenericString = "test"
 
 	GenericUUID = uuid.UUID{0xd1, 0xc2, 0x44, 0xaf, 0xa3, 0x1d, 0x48, 0x87, 0x93, 0x9d, 0xd6, 0xc7, 0xf, 0xe, 0x4f, 0xd0}
+
+	GenericExecutionResult = execute.Result{
+		Code:      response.CodeUnknown,
+		Result:    "generic-execution-result",
+		RequestID: GenericUUID.String(),
+	}
+
+	GenericManifest = blockless.FunctionManifest{
+		ID:          "generic-id",
+		Name:        "generic-name",
+		Description: "generic-description",
+		Function: blockless.Function{
+			ID:      "function-id",
+			Name:    "function-name",
+			Runtime: "generic-runtime",
+		},
+		Deployment: blockless.Deployment{
+			CID:      "generic-cid",
+			Checksum: "1234567890",
+			URI:      "generic-uri",
+		},
+		FSRootPath: "/var/tmp/blockless/",
+		Entry:      "/var/tmp/blockless/app.wasm",
+	}
 )

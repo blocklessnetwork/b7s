@@ -15,4 +15,7 @@ type Execute struct {
 	Method     string              `json:"method,omitempty"`
 	Parameters []execute.Parameter `json:"parameters,omitempty"`
 	Config     execute.Config      `json:"config,omitempty"`
+
+	// RequestID may be set initially, if the execution request is relayed via roll-call.
+	RequestID string `json:"request_id,omitempty"`
 }

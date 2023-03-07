@@ -16,11 +16,10 @@ import (
 func (n *Node) Run(ctx context.Context) error {
 
 	// Subscribe to the specified topic.
-	topic, subscription, err := n.host.Subscribe(ctx, n.topicName)
+	subscription, err := n.subscribe(ctx)
 	if err != nil {
 		return fmt.Errorf("could not subscribe to topic: %w", err)
 	}
-	n.topic = topic
 
 	// Set the handler for direct messages.
 	n.listenDirectMessages(ctx)
@@ -29,7 +28,7 @@ func (n *Node) Run(ctx context.Context) error {
 	// NOTE: Potentially signal any error here so that we abort the node
 	// run loop if anything failed.
 	go func() {
-		err = n.host.DiscoverPeers(ctx, n.topicName)
+		err = n.host.DiscoverPeers(ctx, n.cfg.Topic)
 		if err != nil {
 			n.log.Error().
 				Err(err).

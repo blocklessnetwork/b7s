@@ -19,7 +19,7 @@ import (
 // and the execution request is relayed to, and retrieved from, a worker node that volunteers.
 // NOTE: By using `execute.Result` here as the type, if this is executed on the head node we are
 // losing the information about `who` is the peer that sent us the result - the `from` field.
-type executeFunc func(context.Context, peer.ID, execute.Request) (execute.Result, error)
+type executeFunc func(context.Context, peer.ID, string, execute.Request) (execute.Result, error)
 
 func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte) error {
 
@@ -30,6 +30,14 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 		return fmt.Errorf("could not unpack the request: %w", err)
 	}
 	req.From = from
+
+	requestID := req.RequestID
+	if requestID == "" {
+		requestID, err = newRequestID()
+		if err != nil {
+			return fmt.Errorf("could not generate new request ID: %w", err)
+		}
+	}
 
 	// Create execute request.
 	execReq := execute.Request{
@@ -43,13 +51,13 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 	// NOTE: In case of an error, we do not return from this function.
 	// Instead, we send the response back to the caller, whatever it may be.
 	var execFunc executeFunc
-	if n.role == blockless.WorkerNode {
+	if n.cfg.Role == blockless.WorkerNode {
 		execFunc = n.workerExecute
 	} else {
 		execFunc = n.headExecute
 	}
 
-	result, err := execFunc(ctx, from, execReq)
+	result, err := execFunc(ctx, from, requestID, execReq)
 	if err != nil {
 		n.log.Error().
 			Err(err).
@@ -59,7 +67,7 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 	}
 
 	// Cache the execution result.
-	n.excache.Set(result.RequestID, result)
+	n.executeResponses.Set(result.RequestID, result)
 
 	// Create the execution response from the execution result.
 	res := response.Execute{
@@ -78,7 +86,7 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 	return nil
 }
 
-func (n *Node) workerExecute(ctx context.Context, from peer.ID, req execute.Request) (execute.Result, error) {
+func (n *Node) workerExecute(ctx context.Context, from peer.ID, requestID string, req execute.Request) (execute.Result, error) {
 
 	// Check if we have function in store.
 	functionInstalled, err := n.isFunctionInstalled(req.FunctionID)
@@ -98,7 +106,7 @@ func (n *Node) workerExecute(ctx context.Context, from peer.ID, req execute.Requ
 	}
 
 	// Execute the function.
-	res, err := n.execute.Function(req)
+	res, err := n.execute.Function(requestID, req)
 	if err != nil {
 		return res, fmt.Errorf("execution failed: %w", err)
 	}
@@ -106,9 +114,9 @@ func (n *Node) workerExecute(ctx context.Context, from peer.ID, req execute.Requ
 	return res, nil
 }
 
-func (n *Node) headExecute(ctx context.Context, from peer.ID, req execute.Request) (execute.Result, error) {
+func (n *Node) headExecute(ctx context.Context, from peer.ID, requestID string, req execute.Request) (execute.Result, error) {
 
-	requestID, err := n.issueRollCall(ctx, req.FunctionID)
+	err := n.issueRollCall(ctx, requestID, req.FunctionID)
 	if err != nil {
 
 		res := execute.Result{
@@ -124,7 +132,7 @@ func (n *Node) headExecute(ctx context.Context, from peer.ID, req execute.Reques
 		Msg("roll call published")
 
 	// Limit for how long we wait for responses.
-	tctx, cancel := context.WithTimeout(ctx, rollCallTimeout)
+	tctx, cancel := context.WithTimeout(ctx, n.cfg.RollCallTimeout)
 	defer cancel()
 
 	// Peer that reports to roll call first.
@@ -145,9 +153,9 @@ rollCallResponseLoop:
 				Code: response.CodeTimeout,
 			}
 
-			return res, errors.New("roll call timed out")
+			return res, errRollCallTimeout
 
-		case reply := <-n.rollCallResponses[requestID]:
+		case reply := <-n.rollCall.responses(requestID):
 
 			n.log.Debug().
 				Str("peer", reply.From.String()).
@@ -179,10 +187,6 @@ rollCallResponseLoop:
 		Str("request_id", requestID).
 		Msg("peer reported for roll call")
 
-	// Create a channel where execution response will be received.
-	// We create a bufferred channel so sending of execution result does not block.
-	n.executeResponses[requestID] = make(chan response.Execute, resultBufferSize)
-
 	// Request execution from the peer who reported back first.
 	reqExecute := request.Execute{
 		Type:       blockless.MessageExecute,
@@ -190,6 +194,7 @@ rollCallResponseLoop:
 		Method:     req.Method,
 		Parameters: req.Parameters,
 		Config:     req.Config,
+		RequestID:  requestID,
 	}
 
 	// Send message to reporting peer to execute the function.
@@ -208,7 +213,7 @@ rollCallResponseLoop:
 	}
 
 	// TODO: Verify that the response came from the peer that reported for the roll call.
-	resExecute := <-n.executeResponses[requestID]
+	resExecute := n.executeResponses.Wait(requestID).(response.Execute)
 
 	n.log.Info().
 		Str("request_id", requestID).
@@ -237,13 +242,9 @@ func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload
 	res.From = from
 
 	// Record execution response.
-	n.recordExecuteResponse(res)
+	n.executeResponses.Set(res.RequestID, res)
 
 	return nil
-}
-
-func (n *Node) recordExecuteResponse(res response.Execute) {
-	n.executeResponses[res.RequestID] <- res
 }
 
 // isFuncitonInstalled looks up the function in the store by using the functionID/CID as key.

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
@@ -16,7 +15,7 @@ import (
 func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte) error {
 
 	// Only workers respond to roll calls at the moment.
-	if n.role != blockless.WorkerNode {
+	if n.cfg.Role != blockless.WorkerNode {
 		n.log.Debug().Msg("skipping roll call as a non-worker node")
 		return nil
 	}
@@ -90,18 +89,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 
 // issueRollCall will create a roll call request for executing the given function.
 // On successful issuance of the roll call request, we return the ID of the issued request.
-func (n *Node) issueRollCall(ctx context.Context, functionID string) (string, error) {
-
-	// Generate a new request/executionID.
-	uuid, err := uuid.NewRandom()
-	if err != nil {
-		return "", fmt.Errorf("could not generate new requestID: %w", err)
-	}
-	requestID := uuid.String()
-
-	// Create a channel for receiving roll call replies.
-	// We create a bufferred channel so issuing a roll call response does not block the sender.
-	n.rollCallResponses[requestID] = make(chan response.RollCall, resultBufferSize)
+func (n *Node) issueRollCall(ctx context.Context, requestID string, functionID string) error {
 
 	// Create a roll call request.
 	rollCall := request.RollCall{
@@ -111,10 +99,10 @@ func (n *Node) issueRollCall(ctx context.Context, functionID string) (string, er
 	}
 
 	// Publish the mssage.
-	err = n.publish(ctx, rollCall)
+	err := n.publish(ctx, rollCall)
 	if err != nil {
-		return "", fmt.Errorf("could not publish to topic: %w", err)
+		return fmt.Errorf("could not publish to topic: %w", err)
 	}
 
-	return requestID, nil
+	return nil
 }

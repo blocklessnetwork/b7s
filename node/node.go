@@ -5,14 +5,14 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/models/response"
-	"github.com/blocklessnetworking/b7s/node/internal/cache"
+	"github.com/blocklessnetworking/b7s/node/internal/waitmap"
 )
 
 // Node is the entity that actually provides the main Blockless node functionality.
@@ -23,20 +23,18 @@ import (
 // On the other hand, a Head Node will issue a roll call and eventually
 // delegate the execution to the chosend Worker Node.
 type Node struct {
-	role      blockless.NodeRole
-	topicName string
+	cfg Config
 
 	log      zerolog.Logger
 	host     *host.Host
 	store    Store
 	execute  Executor
 	function FunctionStore
-	excache  *cache.Cache
 
 	topic *pubsub.Topic
 
-	rollCallResponses map[string](chan response.RollCall)
-	executeResponses  map[string](chan response.Execute)
+	rollCall         *rollCallQueue
+	executeResponses *waitmap.WaitMap
 }
 
 // New creates a new Node.
@@ -52,11 +50,13 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 	if cfg.Role == blockless.HeadNode && cfg.Execute != nil {
 		return nil, errors.New("head node does not support execution")
 	}
+	// If we're a worker node, we require an executor.
+	if cfg.Role == blockless.WorkerNode && cfg.Execute == nil {
+		return nil, errors.New("worker node requires an executor component")
+	}
 
 	n := Node{
-		role:      cfg.Role,
-		topicName: cfg.Topic,
-		excache:   cache.New(),
+		cfg: cfg,
 
 		log:      log,
 		host:     host,
@@ -64,8 +64,8 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 		function: function,
 		execute:  cfg.Execute,
 
-		rollCallResponses: make(map[string](chan response.RollCall)),
-		executeResponses:  make(map[string](chan response.Execute)),
+		rollCall:         newQueue(rollCallQueueBufferSize),
+		executeResponses: waitmap.New(),
 	}
 
 	// Create a notifiee with a backing peerstore.
@@ -96,7 +96,18 @@ func (n Node) getHandler(msgType string) HandlerFunc {
 
 	default:
 		return func(_ context.Context, from peer.ID, _ []byte) error {
-			return fmt.Errorf("received an unsupported message (type: %s, from: %s)", msgType, from.String())
+			return ErrUnsupportedMessage
 		}
 	}
+}
+
+func newRequestID() (string, error) {
+
+	// Generate a new request/executionID.
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		return "", fmt.Errorf("could not generate new request ID: %w", err)
+	}
+
+	return uuid.String(), nil
 }
