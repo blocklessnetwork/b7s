@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -39,6 +40,15 @@ findPeers:
 				continue
 			}
 
+			// Skip peers we're already connected to.
+			connections := h.Network().ConnsToPeer(peer.ID)
+			if len(connections) > 0 {
+				h.log.Debug().
+					Str("peer", peer.String()).
+					Msg("skipping connected peer")
+				continue
+			}
+
 			err = h.Connect(ctx, peer)
 			if err != nil {
 				h.log.Debug().
@@ -57,6 +67,8 @@ findPeers:
 				break findPeers
 			}
 		}
+
+		time.Sleep(h.cfg.DiscoveryInterval)
 	}
 
 	h.log.Info().Msg("peer discovery complete")
