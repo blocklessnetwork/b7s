@@ -15,7 +15,7 @@ type connectionNotifiee struct {
 func newConnectionNotifee(log zerolog.Logger, peerStore PeerStore) *connectionNotifiee {
 
 	cn := connectionNotifiee{
-		log:   log,
+		log:   log.With().Str("component", "notifiee").Logger(),
 		peers: peerStore,
 	}
 

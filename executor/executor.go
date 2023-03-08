@@ -22,7 +22,7 @@ func New(log zerolog.Logger, options ...Option) (*Executor, error) {
 	}
 
 	e := Executor{
-		log: log,
+		log: log.With().Str("component", "executor").Logger(),
 		cfg: cfg,
 	}
 

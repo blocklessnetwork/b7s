@@ -53,7 +53,7 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	}
 
 	host := Host{
-		log: log,
+		log: log.With().Str("component", "host").Logger(),
 		cfg: cfg,
 	}
 	host.Host = h
