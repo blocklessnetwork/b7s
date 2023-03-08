@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 package node_test
 
 import (
@@ -15,8 +18,6 @@ import (
 	"github.com/blocklessnetworking/b7s/models/response"
 )
 
-// TODO: Integration flag.
-
 func TestNode_ExecuteComplete(t *testing.T) {
 
 	const (
@@ -32,7 +33,6 @@ func TestNode_ExecuteComplete(t *testing.T) {
 		testFunctionToServe = "testdata/hello.tar.gz"
 		functionMethod      = "hello.wasm"
 
-		// TODO: Change the program output.
 		expectedExecutionResult = `This is the start of my program
 The answer is  42
 This is the end of my program

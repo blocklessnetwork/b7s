@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 package node_test
 
 import (
@@ -184,14 +187,13 @@ func (c *client) sendExecutionMessage(ctx context.Context, to peer.ID, cid strin
 
 func createFunctionServer(t *testing.T, manifestPath string, deploymentPath string, archivePath string, cid string) *helpers.FunctionServer {
 
-	// TODO: Since the executor currently writes the manifest by itself, this is somewhat irrelevant.
-	// Still, have this a correct function manifest.
 	manifest := blockless.FunctionManifest{
-		FSRootPath:      "",
+		Name:            "hello",
+		FSRootPath:      "./",
 		DriversRootPath: "",
 		LimitedFuel:     200_000_000,
 		LimitedMemory:   120,
-		Entry:           "",
+		Entry:           "hello.wasm",
 	}
 
 	fs := helpers.CreateFunctionServer(t, manifestPath, manifest, deploymentPath, archivePath, cid)
