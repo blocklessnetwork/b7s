@@ -39,10 +39,12 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 			Code:       response.CodeError,
 		}
 
-		err = n.send(ctx, req.From, res)
-		if err != nil {
-			return fmt.Errorf("could not send response: %w", err)
-		}
+		sendErr := n.send(ctx, req.From, res)
+		// Log send error but choose to return the original error.
+		n.log.Error().
+			Err(sendErr).
+			Str("to", req.From.String()).
+			Msg("could not send response")
 
 		return fmt.Errorf("could not check if function is installed: %w", err)
 	}
