@@ -1,16 +1,21 @@
 package node_test
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"testing"
 	"time"
 
 	"github.com/cockroachdb/pebble"
+	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
+	ps "github.com/libp2p/go-libp2p/core/peerstore"
+	"github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
@@ -30,14 +35,17 @@ const (
 	loopback = "127.0.0.1"
 
 	startupDelay = 5 * time.Second
+
+	cleanupDisableEnv = "B7S_INTEG_CLEANUP_DISABLE"
+	runtimeDirEnv     = "B7S_INTEG_RUNTIME_DIR"
 )
 
 type nodeScaffolding struct {
-	dir    string
-	db     *pebble.DB
-	host   *host.Host
-	logger zerolog.Logger
-	node   *node.Node
+	dir     string
+	db      *pebble.DB
+	host    *host.Host
+	logFile *os.File
+	node    *node.Node
 }
 
 func instantiateNode(t *testing.T, dirnamePattern string, role blockless.NodeRole) *nodeScaffolding {
@@ -64,11 +72,11 @@ func instantiateNode(t *testing.T, dirnamePattern string, role blockless.NodeRol
 	db, node := createNode(t, dir, logger, host, role)
 
 	ns := nodeScaffolding{
-		dir:    dir,
-		db:     db,
-		host:   host,
-		logger: logger,
-		node:   node,
+		dir:     dir,
+		db:      db,
+		logFile: logFile,
+		host:    host,
+		node:    node,
 	}
 
 	return &ns
@@ -97,10 +105,7 @@ func createNode(t *testing.T, dir string, logger zerolog.Logger, host *host.Host
 
 	if role == blockless.WorkerNode {
 
-		var (
-			// TODO: Hardcoded right now, fix.
-			runtimeDir = "/home/aco/.local/bin"
-		)
+		runtimeDir := os.Getenv(runtimeDirEnv)
 
 		executor, err := executor.New(logger,
 			executor.WithRuntimeDir(runtimeDir),
@@ -192,4 +197,43 @@ func createFunctionServer(t *testing.T, manifestPath string, deploymentPath stri
 	fs := helpers.CreateFunctionServer(t, manifestPath, manifest, deploymentPath, archivePath, cid)
 
 	return fs
+}
+
+func hostAddNewPeer(t *testing.T, host *host.Host, newPeer *host.Host) {
+	t.Helper()
+
+	info := hostGetAddrInfo(t, newPeer)
+	host.Peerstore().AddAddrs(info.ID, info.Addrs, ps.PermanentAddrTTL)
+}
+
+func hostGetAddrInfo(t *testing.T, host *host.Host) *peer.AddrInfo {
+	t.Helper()
+
+	addresses := host.Addresses()
+	require.NotEmpty(t, addresses)
+
+	addr := addresses[0]
+
+	maddr, err := multiaddr.NewMultiaddr(addr)
+	require.NoError(t, err)
+
+	info, err := peer.AddrInfoFromP2pAddr(maddr)
+	require.NoError(t, err)
+
+	return info
+}
+
+func getStreamPayload(t *testing.T, stream network.Stream, output any) {
+	t.Helper()
+
+	buf := bufio.NewReader(stream)
+	payload, err := buf.ReadBytes('\n')
+	require.ErrorIs(t, err, io.EOF)
+
+	err = json.Unmarshal(payload, output)
+	require.NoError(t, err)
+}
+
+func cleanupDisabled() bool {
+	return os.Getenv(cleanupDisableEnv) == "yes"
 }

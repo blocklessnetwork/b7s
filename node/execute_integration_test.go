@@ -1,26 +1,21 @@
 package node_test
 
 import (
-	"bufio"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/network"
-	"github.com/libp2p/go-libp2p/core/peer"
-	ps "github.com/libp2p/go-libp2p/core/peerstore"
-	"github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/response"
 )
+
+// TODO: Integration flag.
 
 func TestNode_ExecuteComplete(t *testing.T) {
 
@@ -44,7 +39,7 @@ This is the end of my program
 `
 	)
 
-	// TODO: Enable an option to not delete files after test.
+	cleanupDisabled := cleanupDisabled()
 
 	var verifiedExecution bool
 
@@ -67,11 +62,17 @@ This is the end of my program
 
 	head := instantiateNode(t, dirPattern, blockless.HeadNode)
 	defer head.db.Close()
-	defer os.RemoveAll(head.dir)
+	defer head.logFile.Close()
+	if !cleanupDisabled {
+		defer os.RemoveAll(head.dir)
+	}
 
 	worker := instantiateNode(t, dirPattern, blockless.WorkerNode)
 	defer worker.db.Close()
-	defer os.RemoveAll(worker.dir)
+	defer worker.logFile.Close()
+	if !cleanupDisabled {
+		defer os.RemoveAll(worker.dir)
+	}
 
 	t.Log("created nodes")
 
@@ -204,41 +205,4 @@ This is the end of my program
 	t.Log("test complete")
 
 	require.True(t, verifiedExecution)
-}
-
-func hostAddNewPeer(t *testing.T, host *host.Host, newPeer *host.Host) {
-	t.Helper()
-
-	info := hostGetAddrInfo(t, newPeer)
-	host.Peerstore().AddAddrs(info.ID, info.Addrs, ps.PermanentAddrTTL)
-}
-
-func hostGetAddrInfo(t *testing.T, host *host.Host) *peer.AddrInfo {
-
-	addresses := host.Addresses()
-	require.NotEmpty(t, addresses)
-
-	addr := addresses[0]
-
-	maddr, err := multiaddr.NewMultiaddr(addr)
-	require.NoError(t, err)
-
-	info, err := peer.AddrInfoFromP2pAddr(maddr)
-	require.NoError(t, err)
-
-	return info
-}
-
-// TODO: Think what to do about the duplication of code between this and the internal test package.
-// Maybe make these as helpers in an external package.
-
-func getStreamPayload(t *testing.T, stream network.Stream, output any) {
-	t.Helper()
-
-	buf := bufio.NewReader(stream)
-	payload, err := buf.ReadBytes('\n')
-	require.ErrorIs(t, err, io.EOF)
-
-	err = json.Unmarshal(payload, output)
-	require.NoError(t, err)
 }
