@@ -58,7 +58,7 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 	n := Node{
 		cfg: cfg,
 
-		log:      log,
+		log:      log.With().Str("component", "node").Logger(),
 		host:     host,
 		store:    store,
 		function: function,

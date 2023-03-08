@@ -31,7 +31,7 @@ func NewHandler(log zerolog.Logger, store Store, workdir string) *Handler {
 	downloader.UserAgent = defaultUserAgent
 
 	h := Handler{
-		log:        log,
+		log:        log.With().Str("component", "function_store").Logger(),
 		store:      store,
 		http:       &cli,
 		downloader: downloader,
