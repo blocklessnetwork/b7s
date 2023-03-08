@@ -1,6 +1,8 @@
 package host
 
 import (
+	"time"
+
 	"github.com/multiformats/go-multiaddr"
 )
 
@@ -9,6 +11,7 @@ var defaultConfig = Config{
 	PrivateKey:          "",
 	ConnectionThreshold: 20,
 	DialBackPeersLimit:  100,
+	DiscoveryInterval:   10 * time.Second,
 }
 
 // Config represents the Host configuration.
@@ -18,6 +21,7 @@ type Config struct {
 	BootNodes           []multiaddr.Multiaddr
 	DialBackPeers       []multiaddr.Multiaddr
 	DialBackPeersLimit  uint
+	DiscoveryInterval   time.Duration
 }
 
 // WithPrivateKey specifies the private key for the Host.
@@ -52,5 +56,12 @@ func WithDialBackPeers(peers []multiaddr.Multiaddr) func(*Config) {
 func WithDialBackPeersLimit(n uint) func(*Config) {
 	return func(cfg *Config) {
 		cfg.DialBackPeersLimit = n
+	}
+}
+
+// WithDiscoveryInterval specifies how often we should try to discover new peers during the discovery phase.
+func WithDiscoveryInterval(d time.Duration) func(*Config) {
+	return func(cfg *Config) {
+		cfg.DiscoveryInterval = d
 	}
 }
