@@ -15,6 +15,7 @@ var DefaultConfig = Config{
 	Topic:           DefaultTopic,
 	HealthInterval:  DefaultHealthInterval,
 	RollCallTimeout: DefaultRollCallTimeout,
+	Concurrency:     DefaultConcurrency,
 }
 
 // Config represents the Node configuration.
@@ -24,6 +25,7 @@ type Config struct {
 	Execute         Executor           // Executor to use for running functions.
 	HealthInterval  time.Duration      // How often should we emit the health ping.
 	RollCallTimeout time.Duration      // How long do we wait for roll call responses.
+	Concurrency     uint               // How many requests should the node process in parallel.
 }
 
 // WithRole specifies the role for the node.
@@ -58,5 +60,12 @@ func WithHealthInterval(d time.Duration) Option {
 func WithRollCallTimeout(d time.Duration) Option {
 	return func(cfg *Config) {
 		cfg.RollCallTimeout = d
+	}
+}
+
+// WithConcurrency specifies how many requests the node should process in parallel.
+func WithConcurrency(n uint) Option {
+	return func(cfg *Config) {
+		cfg.Concurrency = n
 	}
 }

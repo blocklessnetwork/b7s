@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/google/uuid"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -32,6 +33,8 @@ type Node struct {
 	function FunctionStore
 
 	topic *pubsub.Topic
+	sema  chan struct{}
+	wg    *sync.WaitGroup
 
 	rollCall         *rollCallQueue
 	executeResponses *waitmap.WaitMap
@@ -63,6 +66,9 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 		store:    store,
 		function: function,
 		execute:  cfg.Execute,
+
+		wg:   &sync.WaitGroup{},
+		sema: make(chan struct{}, cfg.Concurrency),
 
 		rollCall:         newQueue(rollCallQueueBufferSize),
 		executeResponses: waitmap.New(),
