@@ -62,16 +62,29 @@ func (n *Node) Run(ctx context.Context) error {
 			Str("peer_id", msg.ReceivedFrom.String()).
 			Msg("received message")
 
-		err = n.processMessage(ctx, msg.ReceivedFrom, msg.Data)
-		if err != nil {
-			n.log.Error().
-				Err(err).
-				Str("id", msg.ID).
-				Str("peer_id", msg.ReceivedFrom.String()).
-				Msg("could not process message")
-			continue
-		}
+		// Try to get a slot for processing the request.
+		n.sema <- struct{}{}
+		n.wg.Add(1)
+
+		go func() {
+			// Free up slot after we're done.
+			defer n.wg.Done()
+			defer func() { <-n.sema }()
+
+			err = n.processMessage(ctx, msg.ReceivedFrom, msg.Data)
+			if err != nil {
+				n.log.Error().
+					Err(err).
+					Str("id", msg.ID).
+					Str("peer_id", msg.ReceivedFrom.String()).
+					Msg("could not process message")
+			}
+		}()
 	}
+
+	n.log.Debug().Msg("waiting for messages being processed")
+
+	n.wg.Wait()
 
 	return nil
 }
