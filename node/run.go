@@ -39,7 +39,9 @@ func (n *Node) Run(ctx context.Context) error {
 	// Start the health signal emitter in a separate goroutine.
 	go n.HealthPing(ctx)
 
-	n.log.Info().Msg("starting node main loop")
+	n.log.Info().
+		Uint("concurrency", n.cfg.Concurrency).
+		Msg("starting node main loop")
 
 	// Message processing loop.
 	for {

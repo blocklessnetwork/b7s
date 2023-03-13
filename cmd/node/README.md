@@ -23,6 +23,7 @@ Head Nodes also serve a REST API that can be used to query or trigger certain ac
 Usage of node:
   -a, --address string       address that the libp2p host will use (default "0.0.0.0")
       --boot-nodes strings   list of addresses that this node will connect to on startup, in multiaddr format
+  -c, --concurrency uint     maximum number of requests node will process in parallel (default 10)
   -d, --db string            path to the database used for persisting node data (default "db")
   -l, --log-level string     log level to use (default "info")
   -p, --port uint            port that the libp2p host will use
