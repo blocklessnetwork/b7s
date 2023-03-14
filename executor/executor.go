@@ -34,7 +34,7 @@ func New(log zerolog.Logger, options ...Option) (*Executor, error) {
 	}
 
 	// Verify the runtime path is valid.
-	cliPath := filepath.Join(runtime, blocklessCli)
+	cliPath := filepath.Join(runtime, cfg.ExecutableName)
 	_, err = e.cfg.FS.Stat(cliPath)
 	if err != nil {
 		return nil, fmt.Errorf("invalid runtime path, cli not found (path: %s): %w", cliPath, err)
