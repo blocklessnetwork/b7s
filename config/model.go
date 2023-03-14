@@ -6,6 +6,7 @@ type Config struct {
 	DatabasePath string
 	Role         string
 	BootNodes    []string
+	Concurrency  uint
 
 	Host    Host
 	API     string

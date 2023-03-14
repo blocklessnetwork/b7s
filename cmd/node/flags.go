@@ -4,13 +4,15 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/blocklessnetworking/b7s/config"
+	"github.com/blocklessnetworking/b7s/node"
 )
 
 // Default values.
 const (
-	defaultPort    = 0
-	defaultAddress = "0.0.0.0"
-	defaultDB      = "db"
+	defaultPort        = 0
+	defaultAddress     = "0.0.0.0"
+	defaultDB          = "db"
+	defaultConcurrency = uint(node.DefaultConcurrency)
 
 	defaultRole = "worker"
 )
@@ -27,6 +29,7 @@ func parseFlags() *config.Config {
 	pflag.StringVarP(&cfg.Host.Address, "address", "a", defaultAddress, "address that the libp2p host will use")
 	pflag.UintVarP(&cfg.Host.Port, "port", "p", defaultPort, "port that the libp2p host will use")
 	pflag.StringVar(&cfg.Host.PrivateKey, "private-key", "", "private key that the libp2p host will use")
+	pflag.UintVarP(&cfg.Concurrency, "concurrency", "c", defaultConcurrency, "maximum number of requests node will process in parallel")
 	pflag.StringVar(&cfg.API, "rest-api", "", "address where the head node REST API will listen on")
 	pflag.StringSliceVar(&cfg.BootNodes, "boot-nodes", nil, "list of addresses that this node will connect to on startup, in multiaddr format")
 
