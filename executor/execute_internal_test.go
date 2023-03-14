@@ -40,8 +40,9 @@ func TestExecute_CreateCMD(t *testing.T) {
 	executor := Executor{
 		log: mocks.NoopLogger,
 		cfg: Config{
-			RuntimeDir: runtimeDir,
-			WorkDir:    workdir,
+			RuntimeDir:     runtimeDir,
+			WorkDir:        workdir,
+			ExecutableName: blocklessCli,
 		},
 	}
 	paths := executor.generateRequestPaths(requestID, functionID, functionMethod)
@@ -114,7 +115,7 @@ func TestExecute_WriteManifest(t *testing.T) {
 		},
 	}
 
-	err := executor.writeFunctionManifest(request, paths)
+	err := executor.writeExecutionManifest(request, paths)
 	require.NoError(t, err)
 
 	read, err := afero.ReadFile(fs, manifestPath)
