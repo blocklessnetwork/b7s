@@ -82,7 +82,17 @@ func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd 
 
 	// Prepare command to be executed.
 	exePath := filepath.Join(e.cfg.RuntimeDir, e.cfg.ExecutableName)
-	cmd := exec.Command(exePath, paths.manifest)
+
+	// Prepare CLI arguments.
+	var args []string
+	args = append(args, paths.manifest)
+	for _, param := range req.Parameters {
+		if param.Value != "" {
+			args = append(args, param.Value)
+		}
+	}
+
+	cmd := exec.Command(exePath, args...)
 	cmd.Dir = paths.workdir
 
 	// Setup stdin of the command.
