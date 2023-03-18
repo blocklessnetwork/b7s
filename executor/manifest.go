@@ -7,9 +7,8 @@ import (
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
-// TODO: Check - this functionality was ported but looks pretty special cased. Is this a temporary workaround for something?
-// Investigate, then make proper.
-func (e *Executor) writeFunctionManifest(req execute.Request, paths requestPaths) error {
+// writeExecutionManifest will write a predefined execution manifest to disk.
+func (e *Executor) writeExecutionManifest(req execute.Request, paths requestPaths) error {
 
 	manifest := struct {
 		FSRootPath    string   `json:"fs_root_path,omitempty"`

@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
@@ -14,7 +15,7 @@ import (
 // execute handles the actual execution of the Blockless function. It returns the
 // standard output of the blockless-cli that handled the execution. `Function`
 // typically takes this output and uses it to create the appropriate execution response.
-func (e *Executor) execute(requestID string, req execute.Request) (string, error) {
+func (e *Executor) execute(requestID string, req execute.Request) (string, execute.Usage, error) {
 
 	e.log.Info().
 		Str("id", req.FunctionID).
@@ -26,7 +27,7 @@ func (e *Executor) execute(requestID string, req execute.Request) (string, error
 
 	err := e.cfg.FS.MkdirAll(paths.workdir, defaultPermissions)
 	if err != nil {
-		return "", fmt.Errorf("could not setup working directory for execution (dir: %s): %w", paths.workdir, err)
+		return "", execute.Usage{}, fmt.Errorf("could not setup working directory for execution (dir: %s): %w", paths.workdir, err)
 	}
 	// Remove all temporary files after we're done.
 	defer func() {
@@ -42,10 +43,9 @@ func (e *Executor) execute(requestID string, req execute.Request) (string, error
 		Str("request_id", requestID).
 		Msg("working directory for the request")
 
-	// TODO: Super hackish, but ported. See why this is actually needed.
-	err = e.writeFunctionManifest(req, paths)
+	err = e.writeExecutionManifest(req, paths)
 	if err != nil {
-		return "", fmt.Errorf("could not write function manifest: %w", err)
+		return "", execute.Usage{}, fmt.Errorf("could not write execution manifest: %w", err)
 	}
 
 	// Create command that will be executed.
@@ -58,24 +58,41 @@ func (e *Executor) execute(requestID string, req execute.Request) (string, error
 		Msg("command ready for execution")
 
 	// Execute the command and collect output.
+	start := time.Now()
 	out, err := cmd.Output()
+	end := time.Now()
 	if err != nil {
-		return "", fmt.Errorf("command execution failed: %w", err)
+		return "", execute.Usage{}, fmt.Errorf("command execution failed: %w", err)
 	}
 
 	e.log.Info().
 		Str("request_id", requestID).
 		Msg("command executed successfully")
 
-	return string(out), nil
+	// Create usage information.
+	duration := end.Sub(start)
+	usage := procStateToUsage(cmd.ProcessState)
+	usage.WallClockTime = duration
+
+	return string(out), usage, nil
 }
 
 // createCmd will create the command to be executed, prepare working directory, environment, standard input and all else.
 func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd {
 
 	// Prepare command to be executed.
-	exePath := filepath.Join(e.cfg.RuntimeDir, blocklessCli)
-	cmd := exec.Command(exePath, paths.manifest)
+	exePath := filepath.Join(e.cfg.RuntimeDir, e.cfg.ExecutableName)
+
+	// Prepare CLI arguments.
+	var args []string
+	args = append(args, paths.manifest)
+	for _, param := range req.Parameters {
+		if param.Value != "" {
+			args = append(args, param.Value)
+		}
+	}
+
+	cmd := exec.Command(exePath, args...)
 	cmd.Dir = paths.workdir
 
 	// Setup stdin of the command.

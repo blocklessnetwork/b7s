@@ -11,12 +11,13 @@ import (
 func (e *Executor) Function(requestID string, req execute.Request) (execute.Result, error) {
 
 	// Execute the function.
-	out, err := e.execute(requestID, req)
+	out, usage, err := e.execute(requestID, req)
 	if err != nil {
 
 		res := execute.Result{
 			Code:      response.CodeError,
 			RequestID: requestID,
+			Usage:     usage,
 		}
 
 		return res, fmt.Errorf("function execution failed: %w", err)
@@ -26,6 +27,7 @@ func (e *Executor) Function(requestID string, req execute.Request) (execute.Resu
 		Code:      response.CodeOK,
 		RequestID: requestID,
 		Result:    out,
+		Usage:     usage,
 	}
 
 	return res, nil

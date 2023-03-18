@@ -42,3 +42,15 @@ func TestWithFS(t *testing.T) {
 	WithFS(fs)(&cfg)
 	require.Equal(t, fs, cfg.FS)
 }
+
+func TestWithExecutableName(t *testing.T) {
+
+	var name = "super-special-executable"
+
+	cfg := Config{
+		ExecutableName: "",
+	}
+
+	WithExecutableName(name)(&cfg)
+	require.Equal(t, name, cfg.ExecutableName)
+}
