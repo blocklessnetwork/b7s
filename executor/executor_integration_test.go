@@ -82,7 +82,7 @@ func TestExecutor_Execute(t *testing.T) {
 		},
 	}
 
-	res, err := executor.Function(requestID, req)
+	res, err := executor.ExecuteFunction(requestID, req)
 	require.NoError(t, err)
 
 	// Verify the execution result.

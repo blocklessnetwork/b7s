@@ -29,7 +29,7 @@ type Node struct {
 	log      zerolog.Logger
 	host     *host.Host
 	store    Store
-	execute  Executor
+	executor Executor
 	function FunctionStore
 
 	topic *pubsub.Topic
@@ -65,7 +65,7 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 		host:     host,
 		store:    store,
 		function: function,
-		execute:  cfg.Execute,
+		executor: cfg.Execute,
 
 		wg:   &sync.WaitGroup{},
 		sema: make(chan struct{}, cfg.Concurrency),
