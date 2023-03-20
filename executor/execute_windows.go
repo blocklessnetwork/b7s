@@ -49,7 +49,7 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (string, execute.Usage, error) 
 		return "", execute.Usage{}, fmt.Errorf("could not duplicate process handle: %w", err)
 	}
 	defer func() {
-		err := windows.CloseHandle(childHandle)
+		err := windows.CloseHandle(handle)
 		if err != nil {
 			e.log.Error().Err(err).Int("pid", cmd.Process.Pid).Msg("could not close handle")
 		}

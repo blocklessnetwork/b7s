@@ -14,6 +14,7 @@ import (
 func TestExecutor_Create(t *testing.T) {
 	t.Run("nominal case", func(t *testing.T) {
 
+		// TODO: Fix this test as it assumes CLI is installed.
 		var (
 			runtimeDir = "/usr/local/bin"
 			cliPath    = path.Join(runtimeDir, "blockless-cli")
