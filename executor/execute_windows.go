@@ -3,6 +3,18 @@
 
 package executor
 
+import (
+	"bytes"
+	"fmt"
+	"os/exec"
+	"time"
+
+	"golang.org/x/sys/windows"
+
+	"github.com/blocklessnetworking/b7s/executor/internal/process"
+	"github.com/blocklessnetworking/b7s/models/execute"
+)
+
 // executeCommand on Windows contains some dark sorcery. On Windows, the `rusage` equivalent does not include
 // memory information. In order to get this info, we need the process `handle`, not just its PID. Process
 // handle can be obtained by using `OpenProcess` syscall, but that is a data race, as the process might have
@@ -30,7 +42,7 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (string, execute.Usage, error) 
 	}
 
 	// Create a duplicate handle - only for me (current process), not inheritable.
-	var handle windows.handle
+	var handle windows.Handle
 	me := windows.CurrentProcess()
 	err = windows.DuplicateHandle(me, childHandle, me, &handle, windows.PROCESS_QUERY_INFORMATION, false, 0)
 	if err != nil {
@@ -58,8 +70,13 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (string, execute.Usage, error) 
 		return "", execute.Usage{}, fmt.Errorf("could not retrieve usage data: %w", err)
 	}
 
-	// Returned memor usage is in bytes, so convert it to kilobytes.
-	usage.MemoryMaxKB = usage / 1000
+	// Returned memory usage is in bytes, so convert it to kilobytes.
+	mem, err := process.GetMemUsageForHandle(handle)
+	if err != nil {
+		return "", execute.Usage{}, fmt.Errorf("could not retrieve memory data: %w", err)
+	}
+
+	usage.MemoryMaxKB = int64(mem) / 1000
 	usage.WallClockTime = duration
 
 	return stdout.String(), usage, nil

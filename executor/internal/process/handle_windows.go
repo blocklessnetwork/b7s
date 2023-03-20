@@ -3,11 +3,19 @@
 
 package process
 
+import (
+	"fmt"
+	"os/exec"
+	"reflect"
+
+	"golang.org/x/sys/windows"
+)
+
 // ReadHandle returns the windows handle for the process executing the command.
 // WARNING: This uses reflection to read the private field of the `*os.Process`
 // type. This function should never be used other than the extremely narrow
 // use-case for which it was designed.
-func ReadHandle(cmd *exec.Cmd) (window.Handle, error) {
+func ReadHandle(cmd *exec.Cmd) (windows.Handle, error) {
 
 	proc := cmd.Process
 	if proc == nil {
