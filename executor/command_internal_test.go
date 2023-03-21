@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
@@ -19,7 +20,7 @@ func TestExecute_CreateCMD(t *testing.T) {
 		functionID     = "function-id"
 		functionMethod = "function-method"
 
-		executablePath = filepath.Join(runtimeDir, blocklessCli)
+		executablePath = filepath.Join(runtimeDir, blockless.RuntimeCLI)
 
 		requestID   = mocks.GenericUUID.String()
 		stdin       = "dummy stdin payload"
@@ -38,7 +39,7 @@ func TestExecute_CreateCMD(t *testing.T) {
 		cfg: Config{
 			RuntimeDir:     runtimeDir,
 			WorkDir:        workdir,
-			ExecutableName: blocklessCli,
+			ExecutableName: blockless.RuntimeCLI,
 		},
 	}
 	paths := executor.generateRequestPaths(requestID, functionID, functionMethod)

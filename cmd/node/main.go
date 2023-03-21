@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 
 	"github.com/cockroachdb/pebble"
 	"github.com/labstack/echo/v4"
@@ -119,10 +120,16 @@ func run() int {
 	// If this is a worker node, initialize an executor.
 	if role == blockless.WorkerNode {
 
+		executable := blockless.RuntimeCLI
+		if runtime.GOOS == "windows" {
+			executable += ".exe"
+		}
+
 		// Crete an executor.
 		executor, err := executor.New(log,
 			executor.WithWorkDir(cfg.Workspace),
 			executor.WithRuntimeDir(cfg.Runtime),
+			executor.WithExecutableName(executable),
 		)
 		if err != nil {
 			log.Error().
