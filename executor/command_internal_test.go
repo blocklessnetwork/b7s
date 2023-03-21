@@ -20,7 +20,7 @@ func TestExecute_CreateCMD(t *testing.T) {
 		functionID     = "function-id"
 		functionMethod = "function-method"
 
-		executablePath = filepath.Join(runtimeDir, blockless.RuntimeCLI)
+		executablePath = filepath.Join(runtimeDir, blockless.RuntimeCLI())
 
 		requestID   = mocks.GenericUUID.String()
 		stdin       = "dummy stdin payload"
@@ -39,7 +39,7 @@ func TestExecute_CreateCMD(t *testing.T) {
 		cfg: Config{
 			RuntimeDir:     runtimeDir,
 			WorkDir:        workdir,
-			ExecutableName: blockless.RuntimeCLI,
+			ExecutableName: blockless.RuntimeCLI(),
 		},
 	}
 	paths := executor.generateRequestPaths(requestID, functionID, functionMethod)
