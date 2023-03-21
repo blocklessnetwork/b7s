@@ -10,7 +10,7 @@ import (
 var defaultConfig = Config{
 	WorkDir:        "workspace",
 	RuntimeDir:     "",
-	ExecutableName: blockless.RuntimeCLI,
+	ExecutableName: blockless.RuntimeCLI(),
 	FS:             afero.NewOsFs(),
 }
 

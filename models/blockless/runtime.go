@@ -1,6 +1,20 @@
 package blockless
 
-const (
-	// RuntimeCLI is the name of the Blockless Runtime executable.
-	RuntimeCLI = "blockless-cli"
+import (
+	"runtime"
 )
+
+const (
+	runtimeCLI = "blockless-cli"
+)
+
+// RuntimeCLI returns the name of the Blockless Runtime executable.
+func RuntimeCLI() string {
+
+	cli := runtimeCLI
+	if runtime.GOOS == "windows" {
+		cli += ".exe"
+	}
+
+	return cli
+}
