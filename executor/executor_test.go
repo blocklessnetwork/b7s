@@ -2,7 +2,7 @@ package executor_test
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -18,7 +18,7 @@ func TestExecutor_Create(t *testing.T) {
 
 		var (
 			runtimeDir = os.TempDir()
-			cliPath    = path.Join(runtimeDir, blockless.RuntimeCLI())
+			cliPath    = filepath.Join(runtimeDir, blockless.RuntimeCLI())
 			fs         = afero.NewMemMapFs()
 		)
 

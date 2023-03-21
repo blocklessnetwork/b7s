@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -48,9 +49,9 @@ func TestExecutor_Execute(t *testing.T) {
 	}
 
 	var (
-		workdir     = path.Join(workspace, "t", requestID) // request work directory
-		fsRoot      = path.Join(workdir, "fs")             // function FS root
-		functiondir = path.Join(workspace, functionID)     // function location
+		workdir     = filepath.Join(workspace, "t", requestID) // request work directory
+		fsRoot      = filepath.Join(workdir, "fs")             // function FS root
+		functiondir = filepath.Join(workspace, functionID)     // function location
 	)
 
 	t.Logf("working directory: %v", workspace)
@@ -78,7 +79,7 @@ func TestExecutor_Execute(t *testing.T) {
 			{Value: "--chunk"},
 			{Value: fmt.Sprintf("%v", chunkSize)},
 			{Value: "--file"},
-			{Value: path.Base(testfile)}, // Specify name only because the path is relative to FS root.
+			{Value: filepath.Base(testfile)}, // Specify name only because the path is relative to FS root.
 		},
 	}
 
@@ -138,14 +139,14 @@ func createDirs(t *testing.T, dirs ...string) {
 	return
 }
 
-func copyFunction(t *testing.T, filepath string, target string) {
+func copyFunction(t *testing.T, filePath string, target string) {
 	t.Helper()
 
-	payload, err := os.ReadFile(filepath)
+	payload, err := os.ReadFile(filePath)
 	require.NoError(t, err)
 
-	_, name := path.Split(filepath)
-	targetPath := path.Join(target, name)
+	_, name := path.Split(filePath)
+	targetPath := filepath.Join(target, name)
 
 	err = os.WriteFile(targetPath, payload, os.ModePerm)
 	require.NoError(t, err)

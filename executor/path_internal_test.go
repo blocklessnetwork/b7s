@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,9 +31,10 @@ func TestExecutor_RequestPaths(t *testing.T) {
 		},
 	}
 
+	// NOTE: We use filepath.Clean to have consistent separators on platforms.
 	paths := executor.generateRequestPaths(requestID, functionID, functionMethod)
-	assert.Equal(t, expectedRequestWorkdir, paths.workdir)
-	assert.Equal(t, expectedEntry, paths.entry)
-	assert.Equal(t, expectedFSRoot, paths.fsRoot)
-	assert.Equal(t, expectedManifestPath, paths.manifest)
+	assert.Equal(t, filepath.Clean(expectedRequestWorkdir), paths.workdir)
+	assert.Equal(t, filepath.Clean(expectedEntry), paths.entry)
+	assert.Equal(t, filepath.Clean(expectedFSRoot), paths.fsRoot)
+	assert.Equal(t, filepath.Clean(expectedManifestPath), paths.manifest)
 }

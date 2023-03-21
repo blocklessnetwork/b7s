@@ -3,7 +3,7 @@ package function
 import (
 	"errors"
 	"fmt"
-	"path"
+	"path/filepath"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
@@ -58,7 +58,7 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 		return nil, fmt.Errorf("could not download function: %w", err)
 	}
 
-	out := path.Join(h.workdir, cid)
+	out := filepath.Join(h.workdir, cid)
 
 	// Unpack the .tar.gz archive.
 	// TODO: Would be good to know the content of the .tar.gz archive.
