@@ -119,13 +119,10 @@ func run() int {
 	// If this is a worker node, initialize an executor.
 	if role == blockless.WorkerNode {
 
-		executable := blockless.RuntimeCLI()
-
-		// Crete an executor.
+		// Create an executor.
 		executor, err := executor.New(log,
 			executor.WithWorkDir(cfg.Workspace),
 			executor.WithRuntimeDir(cfg.Runtime),
-			executor.WithExecutableName(executable),
 		)
 		if err != nil {
 			log.Error().
