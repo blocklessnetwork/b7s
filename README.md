@@ -1,6 +1,5 @@
 ![Coverage](https://img.shields.io/badge/Coverage-48.7%25-yellow)
 
-
 # b7s daemon
 
 b7s is a peer-to-peer networking daemon for the blockless network. It is supported on Windows, Linux, and MacOS platforms for both x64 and arm64 architectures.
@@ -19,18 +18,21 @@ sudo sh -c "wget https://raw.githubusercontent.com/blocklessnetwork/b7s/main/dow
 
 You can also use Docker to install b7s. See the [Docker documentation](/docker/README.md) for more information.
 
-Usage
-b7s can be run with a number of commands and flags:
+## Usage
 
-Commands:
-
-- `help`: display the help menu
-- `keygen`: generate identity keys for the node
-  Flags:
-
-- `config`: path to the configuration file
-- `out`: style of logging used in the daemon (rich, text, or json)
-  For example:
+| Flag        | Short Form | Default Value           | Description                                                                                   |
+| ----------- | ---------- | ----------------------- | --------------------------------------------------------------------------------------------- |
+| log-level   | -l         | "info"                  | Specifies the level of logging to use.                                                        |
+| db          | -d         | "db"                    | Specifies the path to the database used for persisting node data.                             |
+| role        | -r         | "worker"                | Specifies the role this node will have in the Blockless protocol (head or worker).            |
+| address     | -a         | "0.0.0.0"               | Specifies the address that the libp2p host will use.                                          |
+| port        | -p         | 0                       | Specifies the port that the libp2p host will use.                                             |
+| private-key | N/A        | N/A                     | Specifies the private key that the libp2p host will use.                                      |
+| concurrency | -c         | node.DefaultConcurrency | Specifies the maximum number of requests the node will process in parallel.                   |
+| rest-api    | N/A        | N/A                     | Specifies the address where the head node REST API will listen on.                            |
+| boot-nodes  | N/A        | N/A                     | Specifies a list of addresses that this node will connect to on startup, in multiaddr format. |
+| workspace   | N/A        | "./workspace"           | Specifies the directory that the node can use for file storage.                               |
+| runtime     | N/A        | N/A                     | Specifies the runtime address used by the worker node.                                        |
 
 ## Dependencies
 

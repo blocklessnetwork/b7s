@@ -60,7 +60,7 @@ else
   if [ -n "$KEY_PASSWORD" ]; then
     echo $KEY_PASSWORD | blsd keys export node --keyring-backend=test --home=/app/.blockless-chain > /app/keys/wallet.key
   fi
-  ../b7s keygen
+  ../b7s-keygen
   # Backup keys
   if [ -n "$KEY_PATH" ]; then
     # backup the on chain node identity
@@ -72,8 +72,8 @@ fi
 
 # run  template against the config file
 # load env var array as a data source
-/app/gomplate -d 'boot_nodes=env:///BOOT_NODES?type=text/csv' -f /app/docker-config.yaml -o /app/docker-config-env.yaml
+# /app/gomplate -d 'boot_nodes=env:///BOOT_NODES?type=text/csv' -f /app/docker-config.yaml -o /app/docker-config-env.yaml
 
 # run the node
 cd /app
-./b7s -c docker-config-env.yaml
+./b7s

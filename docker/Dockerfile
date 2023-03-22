@@ -28,6 +28,7 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 
 ## setup 
 COPY ./dist/b7s b7s
+COPY ./dist/b7s-keygen b7s-keygen
 COPY ./configs/docker-config.yaml docker-config.yaml
 
 ## run script
