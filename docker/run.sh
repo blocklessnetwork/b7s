@@ -72,8 +72,10 @@ fi
 
 # run  template against the config file
 # load env var array as a data source
-/app/gomplate -d 'boot_nodes=env:///BOOT_NODES?type=text/csv' -f /app/docker-config.yaml -o /app/docker-config-env.yaml
+# 
+#/app/gomplate -d 'boot_nodes=env:///BOOT_NODES?type=text/csv' -f /app/docker-config.yaml -o /app/docker-config-env.yaml
 
 # run the node
 cd /app
-./b7s -c docker-config-env.yaml
+# ./b7s -c docker-config-env.yaml
+./b7s
