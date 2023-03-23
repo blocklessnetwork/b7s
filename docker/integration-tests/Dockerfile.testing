@@ -1,0 +1,26 @@
+FROM --platform=linux/amd64 ubuntu:latest 
+
+WORKDIR /app/node
+
+## copy source files
+COPY . .
+
+# curl, unzip other utilities
+RUN apt-get update && \
+  apt-get install --no-install-recommends --assume-yes curl unzip pv ca-certificates gnupg2 build-essential
+
+# install go
+RUN curl -o go1.18.3.linux-amd64.tar.gz -sSL https://go.dev/dl/go1.18.3.linux-amd64.tar.gz
+RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.18.3.linux-amd64.tar.gz
+ENV PATH=$PATH:/usr/local/go/bin
+
+# get the runtime
+RUN curl -o ./runtime.tar.gz -sSL https://github.com/blocklessnetwork/runtime/releases/download/v0.0.12/blockless-runtime.linux-latest.x86_64.tar.gz
+RUN mkdir /app/runtime && tar -xvkf ./runtime.tar.gz -C /app/runtime
+
+
+# specify where runtime is installed
+ENV B7S_INTEG_RUNTIME_DIR=/app/runtime
+
+# run the tests
+CMD [ "go", "test", "--tags=integration", "-v", "./..." ]
