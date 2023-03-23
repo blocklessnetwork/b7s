@@ -27,6 +27,7 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
   && /usr/src/aws/install --bin-dir /usr/bin
 
 ## setup 
+RUN mkdir /app/keys
 COPY ./dist/b7s b7s
 COPY ./dist/b7s-keygen b7s-keygen
 COPY ./configs/docker-config.yaml docker-config.yaml
@@ -35,13 +36,17 @@ COPY ./configs/docker-config.yaml docker-config.yaml
 COPY ./docker/run.sh ./run.sh
 RUN chmod +x ./run.sh
 
-ENV CONFIG_PATH="/app/keys"
 ENV AWS_ACCESS_KEY_ID=
 ENV AWS_SECRET_ACCESS_KEY=
 ENV S3_HOST="${S3_HOST:-https://s3.filebase.com}"
 ENV KEY_PATH=""
 ENV KEY_PASSWORD=""
 ENV CHAIN_RPC_NODE="http://0.0.0.0:26657"
+ENV NODE_KEY_PATH=/app/keys/priv.bin
+ENV WORKSPACE_ROOT=/tmp/node
+ENV RUNETIME_PATH=/app/runtime 
+ENV REST_API=8080
+ENV P2P_PORT=9527
 
 ## run script
 ENTRYPOINT ["/app/run.sh"]
