@@ -1,4 +1,5 @@
 #!/bin/bash
+CONFIG_PATH=/app/keys
 
 if [ -n "$KEY_PATH" ]; then
   s3_uri_base="s3://${KEY_PATH}"
@@ -15,7 +16,7 @@ restore_key () {
   if [[ -z $existing ]]; then
     echo "$1 backup not found"
   else
-    echo "Restoring $1"
+    echo "Restoring $1 to $CONFIG_PATH"
     aws $aws_args s3 cp "${s3_uri_base}/$1" $CONFIG_PATH/$1$file_suffix
     if [ -n "$KEY_PASSWORD" ]; then
       echo "Decrypting"
@@ -41,6 +42,7 @@ backup_key () {
 # Restore keys
 if [ -n "$KEY_PATH" ]; then
   for f in $(aws $aws_args s3 ls "${s3_uri_base}/" | awk '{print $4}'); do
+    cd /app/keys
     restore_key "$f"
   done
 
@@ -56,7 +58,7 @@ if [ -f "$CONFIG_PATH/identity" ]; then
 else 
   echo "Generating New Node Identity"
   blsd keys add node --keyring-backend=test --home=/app/.blockless-chain > /dev/null 2>&1
-  mkdir keys && cd keys
+  cd /app/keys
   if [ -n "$KEY_PASSWORD" ]; then
     echo $KEY_PASSWORD | blsd keys export node --keyring-backend=test --home=/app/.blockless-chain > /app/keys/wallet.key
   fi
@@ -76,4 +78,10 @@ fi
 
 # run the node
 cd /app
-./b7s
+
+if [ "$NODE_ROLE" = "head" ]; then
+  ./b7s --db /var/tmp/b7s/db --log-level debug --port $P2P_PORT --role head --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH --rest-api :$REST_API
+
+else
+  ./b7s --db ./database --log-level debug --port $P2P_PORT --role worker --runtime /app/runtime --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH
+fi
