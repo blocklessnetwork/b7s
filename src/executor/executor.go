@@ -29,19 +29,23 @@ func prepExecutionManifest(ctx context.Context, requestId string, request models
 	os.MkdirAll(filepath.Dir(manifestPath), os.ModePerm)
 
 	type Manifest struct {
-		FS_ROOT_PATH   string   `json:"fs_root_path,omitempty"`
-		ENTRY          string   `json:"entry,omitempty"`
-		LIMITED_FUEL   int      `json:"limited_fuel,omitempty"`
-		LIMITED_MEMORY int      `json:"limited_memory,omitempty"`
-		PERMISSIONS    []string `json:"permissions,omitempty"`
+		FS_ROOT_PATH      string   `json:"fs_root_path,omitempty"`
+		ENTRY             string   `json:"entry,omitempty"`
+		LIMITED_FUEL      int      `json:"limited_fuel,omitempty"`
+		LIMITED_MEMORY    int      `json:"limited_memory,omitempty"`
+		PERMISSIONS       []string `json:"permissions,omitempty"`
+		DRIVERS_ROOT_PATH string   `json:drivers_root_path,omitempty"`
+		RUNTIME_LOGGER    string   `json:runtime_logger,omitempty"`
 	}
 
 	data := Manifest{
-		FS_ROOT_PATH:   tempFS,
-		ENTRY:          functionPath,
-		LIMITED_FUEL:   100000000,
-		LIMITED_MEMORY: 200,
-		PERMISSIONS:    request.Config.Permissions,
+		FS_ROOT_PATH:      tempFS,
+		ENTRY:             functionPath,
+		LIMITED_FUEL:      100000000,
+		LIMITED_MEMORY:    200,
+		PERMISSIONS:       request.Config.Permissions,
+		DRIVERS_ROOT_PATH: config.Node.RuntimePath + "/drivers",
+		RUNTIME_LOGGER:    tempFS + "/runtime-logger.log",
 	}
 
 	file, jsonError := json.MarshalIndent(data, "", " ")
