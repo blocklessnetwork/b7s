@@ -22,5 +22,8 @@ RUN mkdir /app/runtime && tar -xvkf ./runtime.tar.gz -C /app/runtime
 # specify where runtime is installed
 ENV B7S_INTEG_RUNTIME_DIR=/app/runtime
 
+# download dependencies
+RUN go get ./...
+
 # run the tests
 CMD [ "go", "test", "--tags=integration", "-v", "./..." ]

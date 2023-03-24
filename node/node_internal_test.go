@@ -31,7 +31,7 @@ const (
 	// This is the pause we make after subscribing to the topic and before publishing a message.
 	// In reality as little as 250ms is enough, but lets allow a longer time for when
 	// tests are executed in parallel or on weaker machines.
-	subscriptionDiseminationPause = 1 * time.Second
+	subscriptionDiseminationPause = 2 * time.Second
 )
 
 func TestNode_New(t *testing.T) {
