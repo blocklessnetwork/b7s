@@ -6,8 +6,23 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/src",
-      "args": ["--config", "./configs/head-config.yaml"],
+      "program": "${workspaceFolder}/cmd/node",
+      "args": [
+        "--db",
+        "/tmp/b7s/db",
+        "--log-level",
+        "debug",
+        "--port",
+        "9527",
+        "--role",
+        "head",
+        "--workspace",
+        "/tmp/debug/head",
+        "--private-key",
+        "${workspaceFolder}/configs/testkeys/ident1/priv.bin",
+        "--rest-api",
+        ":8081"
+      ],
       "cwd": "${workspaceFolder}"
     },
     {
@@ -15,8 +30,25 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/src",
-      "args": ["--config", "./configs/worker-config.yaml"],
+      "program": "${workspaceFolder}/cmd/node",
+      "args": [
+        "--db",
+        "/tmp/b7s/db-worker",
+        "--log-level",
+        "debug",
+        "--port",
+        "0",
+        "--role",
+        "worker",
+        "--runtime",
+        "/tmp/runtime",
+        "--workspace",
+        "/tmp/debug/worker",
+        "--private-key",
+        "${workspaceFolder}/configs/testkeys/ident2/priv.bin",
+        "--boot-nodes",
+        "/ip4/0.0.0.0/tcp/9527/p2p/12D3KooWH9GerdSEroL2nqjpd2GuE5dwmqNi7uHX7FoywBdKcP4q"
+      ],
       "cwd": "${workspaceFolder}"
     }
   ]
