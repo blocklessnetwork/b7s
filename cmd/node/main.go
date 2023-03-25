@@ -191,8 +191,8 @@ func run() int {
 
 		// Set endpoint handlers.
 		server.POST("/api/v1/functions/execute", api.Execute)
-		server.GET("/api/v1/functions/:id/install", api.Install)
-		server.GET("/api/v1/functions/requests/:id/result", api.ExecutionResult)
+		server.POST("/api/v1/functions/install", api.Install)
+		server.POST("/api/v1/functions/requests/result", api.ExecutionResult)
 
 		// Start API in a separate goroutine.
 		go func() {
