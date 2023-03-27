@@ -1,6 +1,6 @@
 module github.com/blocklessnetworking/b7s
 
-go 1.18
+go 1.19
 
 require (
 	github.com/cavaliergopher/grab/v3 v3.0.1
