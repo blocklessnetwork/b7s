@@ -83,5 +83,5 @@ if [ "$NODE_ROLE" = "head" ]; then
   ./b7s --db /var/tmp/b7s/db --log-level debug --port $P2P_PORT --role head --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH --rest-api :$REST_API
 
 else
-  ./b7s --db ./database --log-level debug --port $P2P_PORT --role worker --runtime /app/runtime --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH
+  ./b7s --db ./database --log-level debug --port $P2P_PORT --role worker --runtime /app/runtime --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH --boot-nodes $BOOT_NODES
 fi
