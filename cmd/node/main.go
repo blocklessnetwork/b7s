@@ -95,6 +95,8 @@ func run() int {
 		host.WithPrivateKey(cfg.Host.PrivateKey),
 		host.WithBootNodes(bootNodeAddrs),
 		host.WithDialBackPeers(peerAddrs),
+		host.WithDialBackAddress(cfg.Host.DialBackAddress),
+		host.WithDialBackPort(cfg.Host.DialBackPort),
 	)
 	if err != nil {
 		log.Error().Err(err).Str("key", cfg.Host.PrivateKey).Msg("could not create host")
