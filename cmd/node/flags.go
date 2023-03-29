@@ -29,8 +29,8 @@ func parseFlags() *config.Config {
 	pflag.StringVarP(&cfg.Host.Address, "address", "a", defaultAddress, "address that the b7s host will use")
 	pflag.UintVarP(&cfg.Host.Port, "port", "p", defaultPort, "port that the b7s host will use")
 
-	pflag.StringVarP(&cfg.Host.Address, "dialback-address", "", defaultAddress, "external address that the b7s host will advertise")
-	pflag.UintVarP(&cfg.Host.Port, "dialback-port", "", defaultPort, "external port that the b7s host will advertise")
+	pflag.StringVarP(&cfg.Host.DialBackAddress, "dialback-address", "", defaultAddress, "external address that the b7s host will advertise")
+	pflag.UintVarP(&cfg.Host.DialBackPort, "dialback-port", "", defaultPort, "external port that the b7s host will advertise")
 
 	pflag.StringVar(&cfg.Host.PrivateKey, "private-key", "", "private key that the b7s host will use")
 	pflag.UintVarP(&cfg.Concurrency, "concurrency", "c", defaultConcurrency, "maximum number of requests node will process in parallel")
