@@ -9,6 +9,7 @@ import (
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
+	ma "github.com/multiformats/go-multiaddr"
 )
 
 // Host represents a new libp2p host.
@@ -44,6 +45,19 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 		}
 
 		opts = append(opts, libp2p.Identity(key))
+	}
+
+	if cfg.DialBackAddress != "" && cfg.DialBackPort != 0 {
+
+		// Create a multiaddr with the external IP and port
+		externalMultiaddr, err := ma.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%d", cfg.DialBackAddress, cfg.DialBackPort))
+		if err != nil {
+			panic(err)
+		}
+		opts = append(opts, libp2p.AddrsFactory(func(addrs []ma.Multiaddr) []ma.Multiaddr {
+			// Return only the external multiaddr
+			return []ma.Multiaddr{externalMultiaddr}
+		}))
 	}
 
 	// Create libp2p host.
