@@ -59,7 +59,7 @@ func TestAPI_ExecutionResult(t *testing.T) {
 	})
 }
 
-func TestAPI_ExecutionResultHandlesErrors(t *testing.T) {
+func TestAPI_ExecutionResult_HandlesErrors(t *testing.T) {
 
 	api := setupAPI(t)
 

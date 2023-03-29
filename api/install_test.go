@@ -35,7 +35,7 @@ func TestAPI_FunctionInstall(t *testing.T) {
 	})
 }
 
-func TestAPI_FunctionInstallHandlesErrors(t *testing.T) {
+func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 	t.Run("missing URI and CID", func(t *testing.T) {
 		t.Parallel()
 
