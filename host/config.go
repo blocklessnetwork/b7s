@@ -22,6 +22,8 @@ type Config struct {
 	DialBackPeers       []multiaddr.Multiaddr
 	DialBackPeersLimit  uint
 	DiscoveryInterval   time.Duration
+	DialBackAddress     string
+	DialBackPort        uint
 }
 
 // WithPrivateKey specifies the private key for the Host.
@@ -49,6 +51,18 @@ func WithBootNodes(nodes []multiaddr.Multiaddr) func(*Config) {
 func WithDialBackPeers(peers []multiaddr.Multiaddr) func(*Config) {
 	return func(cfg *Config) {
 		cfg.DialBackPeers = peers
+	}
+}
+
+func WithDialBackAddress(a string) func(*Config) {
+	return func(cfg *Config) {
+		cfg.DialBackAddress = a
+	}
+}
+
+func WithDialBackPort(n uint) func(*Config) {
+	return func(cfg *Config) {
+		cfg.DialBackPort = n
 	}
 }
 
