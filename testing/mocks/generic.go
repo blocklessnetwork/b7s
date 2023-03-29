@@ -33,6 +33,17 @@ var (
 		RequestID: GenericUUID.String(),
 	}
 
+	GenericExecutionRequest = execute.Request{
+		FunctionID: "generic-function-id",
+		Method:     "wasm",
+		Parameters: []execute.Parameter{
+			{
+				Name:  "generic-param-name",
+				Value: "generic-param-value",
+			},
+		},
+	}
+
 	GenericManifest = blockless.FunctionManifest{
 		ID:          "generic-id",
 		Name:        "generic-name",

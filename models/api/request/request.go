@@ -9,6 +9,11 @@ type Execute execute.Request
 
 // InstallFunction describes the payload for the REST API request for function install.
 type InstallFunction struct {
-	CID string `query:"cid"`
-	URI string `query:"uri"`
+	CID string `json:"cid"`
+	URI string `json:"uri"`
+}
+
+// ExecutionResult describes the payload for the REST API request for execution result.
+type ExecutionResult struct {
+	ID string `json:"id"`
 }
