@@ -79,9 +79,19 @@ fi
 # run the node
 cd /app
 
-if [ "$NODE_ROLE" = "head" ]; then
-  ./b7s --db /var/tmp/b7s/db --log-level debug --port $P2P_PORT --role head --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH --rest-api :$REST_API
 
+dialback_args=""
+if [ -n "$DIALBACK_ADDRESS" ] && [ -n "$DIALBACK_PORT" ]; then
+  dialback_args="--dialback-address $DIALBACK_ADDRESS --dialback-port $DIALBACK_PORT"
+fi
+
+bootnode_args=""
+if [ -n "$BOOT_NODES" ]; then
+  bootnode_args="--boot-nodes $BOOT_NODES"
+fi
+
+if [ "$NODE_ROLE" = "head" ]; then
+  ./b7s --db /var/tmp/b7s/db --log-level debug --port $P2P_PORT --role head --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH --rest-api :$REST_API $dialback_args $bootnode_args
 else
-  ./b7s --db ./database --log-level debug --port $P2P_PORT --role worker --runtime /app/runtime --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH --boot-nodes $BOOT_NODES
+  ./b7s --db ./database --log-level debug --port $P2P_PORT --role worker --runtime /app/runtime --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH $dialback_args $bootnode_args 
 fi
