@@ -10,6 +10,7 @@ var defaultConfig = Config{
 	RuntimeDir:     "",
 	ExecutableName: blocklessCli,
 	FS:             afero.NewOsFs(),
+	Limiter:        &noopLimiter{},
 }
 
 // Config represents the Executor configuration.
@@ -18,6 +19,7 @@ type Config struct {
 	RuntimeDir     string   // directory where the executable can be found
 	ExecutableName string   // name for the executable
 	FS             afero.Fs // FS accessor
+	Limiter        Limiter  // Resource limiter for executed processes
 }
 
 type Option func(*Config)
@@ -47,5 +49,12 @@ func WithFS(fs afero.Fs) Option {
 func WithExecutableName(name string) Option {
 	return func(cfg *Config) {
 		cfg.ExecutableName = name
+	}
+}
+
+// WithLimiter sets the resource limiter called for each individual execution.
+func WithLimiter(limiter Limiter) Option {
+	return func(cfg *Config) {
+		cfg.Limiter = limiter
 	}
 }
