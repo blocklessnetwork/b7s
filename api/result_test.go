@@ -33,6 +33,7 @@ func TestAPI_ExecutionResult(t *testing.T) {
 		var res execute.Result
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 
+		require.Equal(t, http.StatusOK, rec.Result().StatusCode)
 		require.Equal(t, mocks.GenericExecutionResult, res)
 	})
 	t.Run("response not found", func(t *testing.T) {
@@ -42,18 +43,19 @@ func TestAPI_ExecutionResult(t *testing.T) {
 			return execute.Result{}, false
 		}
 
+		api := api.New(mocks.NoopLogger, node)
+
 		req := request.ExecutionResult{
 			ID: "dummy-request-id",
 		}
 
-		_, ctx, err := setupRecorder(resultEndpoint, req)
+		rec, ctx, err := setupRecorder(resultEndpoint, req)
 		require.NoError(t, err)
 
-		api := api.New(mocks.NoopLogger, node)
 		err = api.ExecutionResult(ctx)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusNotFound, ctx.Response().Status)
+		require.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
 	})
 }
 
@@ -102,7 +104,7 @@ func TestAPI_ExecutionResultHandlesErrors(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:           "unclosed bracket",
+			name:           "malformed JSON",
 			payload:        []byte(unclosedBracket),
 			contentType:    echo.MIMEApplicationJSON,
 			expectedStatus: http.StatusBadRequest,

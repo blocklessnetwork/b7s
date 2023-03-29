@@ -16,7 +16,7 @@ import (
 
 const (
 	executeEndpoint = "/api/v1/functions/execute"
-	Installndpoint  = "/api/v1/functions/install"
+	installEndpoint = "/api/v1/functions/install"
 	resultEndpoint  = "/api/v1/functions/requests/result"
 )
 
