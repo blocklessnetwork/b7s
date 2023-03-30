@@ -2,7 +2,9 @@ package api_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -11,6 +13,7 @@ import (
 
 	"github.com/blocklessnetworking/b7s/api"
 	"github.com/blocklessnetworking/b7s/models/api/request"
+	"github.com/blocklessnetworking/b7s/models/response"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
 
@@ -84,8 +87,16 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 		err = api.Install(ctx)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusRequestTimeout, rec.Result().StatusCode)
+		var res response.InstallFunction;
+		err = json.Unmarshal(rec.Body.Bytes(), &res)
+		require.NoError(t, err)
+
+		code, err := strconv.Atoi(res.Code)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusRequestTimeout,code)
 	})
+	
 	t.Run("node fails to install function", func(t *testing.T) {
 		t.Parallel()
 
