@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -53,7 +54,7 @@ func (a *API) Install(ctx echo.Context) error {
 
 		// return inner code as body
 		return ctx.JSON(200, map[string]interface{}{
-			"code": status,
+			"code": strconv.Itoa(status),
 		})
 
 	// Work done.
@@ -67,7 +68,7 @@ func (a *API) Install(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]interface{}{
-		"code": http.StatusOK,
+		"code": strconv.Itoa(http.StatusOK),
 	})
 
 }
