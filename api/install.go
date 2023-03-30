@@ -53,7 +53,7 @@ func (a *API) Install(ctx echo.Context) error {
 
 		// return inner code as body
 		return ctx.JSON(200, map[string]interface{}{
-			"status": status,
+			"code": status,
 		})
 
 	// Work done.
@@ -67,7 +67,7 @@ func (a *API) Install(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]interface{}{
-		"status": http.StatusOK,
+		"code": http.StatusOK,
 	})
 
 }
