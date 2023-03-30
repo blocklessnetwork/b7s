@@ -50,7 +50,11 @@ func (a *API) Install(ctx echo.Context) error {
 		if !errors.Is(reqCtx.Err(), context.DeadlineExceeded) {
 			status = http.StatusInternalServerError
 		}
-		return ctx.NoContent(status)
+
+		// return inner code as body
+		return ctx.JSON(200, map[string]interface{}{
+			"status": status,
+		})
 
 	// Work done.
 	case err = <-fnErr:
@@ -62,5 +66,8 @@ func (a *API) Install(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("function installation failed: %w", err))
 	}
 
-	return ctx.NoContent(http.StatusOK)
+	return ctx.JSON(http.StatusOK, map[string]interface{}{
+		"status": http.StatusOK,
+	})
+
 }
