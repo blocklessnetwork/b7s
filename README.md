@@ -33,6 +33,8 @@ You can also use Docker to install b7s. See the [Docker documentation](/docker/R
 | boot-nodes  | N/A        | N/A                     | Specifies a list of addresses that this node will connect to on startup, in multiaddr format. |
 | workspace   | N/A        | "./workspace"           | Specifies the directory that the node can use for file storage.                               |
 | runtime     | N/A        | N/A                     | Specifies the runtime address used by the worker node.                                        |
+| dialback-address | N/A        | N/A                     | Specifies the advertised dialback address of the Node.                                   |
+| dialback-port | N/A | N/A | Specifies the advertised dialback port of the Node. |
 
 ## Dependencies
 
