@@ -12,7 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -93,8 +92,9 @@ func TestExecutor_Execute(t *testing.T) {
 
 	// Verify usage info - for now, only that they are non-zero.
 	cpuTimeTotal := res.Usage.CPUSysTime + res.Usage.CPUUserTime
-	require.Greater(t, cpuTimeTotal, time.Duration(0))
+	require.NotZero(t, cpuTimeTotal)
 	require.NotZero(t, res.Usage.WallClockTime)
+	require.NotZero(t, res.Usage.MemoryMaxKB)
 }
 
 func createTestFile(t *testing.T, dir string, size int) (string, string) {
