@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/containerd/cgroups"
+	"github.com/containerd/cgroups/v3/cgroup2"
 )
 
 // TODO: Perhaps we crashed and we didn't manage to clean up the cgroup from a previous run.
@@ -14,14 +15,25 @@ import (
 
 // TODO: For now Linux is fine, but try to think cross-platform when it comes to naming, comments etc.
 
+// TODO: Add support for cgroups v1 - determine on the fly which version to use
+
 type Limits struct {
 	cfg Config
 
-	cgroup cgroups.Cgroup
+	cgroup *cgroup2.Manager
 }
 
 // New creates a new process resource limit with the given configuration.
 func New(opts ...Option) (*Limits, error) {
+
+	// Check if the system supports cgroups v2.
+	haveV2 := false
+	if cgroups.Mode() == cgroups.Unified {
+		haveV2 = true
+	}
+	if !haveV2 {
+		return nil, errors.New("cgroups v2 is not supported")
+	}
 
 	cfg := DefaultConfig
 	for _, opt := range opts {
@@ -29,13 +41,13 @@ func New(opts ...Option) (*Limits, error) {
 	}
 
 	// Cgroup should not exist right now.
-	_, err := cgroups.Load(cgroups.V1, cgroups.StaticPath(cfg.Cgroup))
-	if err == nil {
-		return nil, errors.New("cgroup already exists - is there another node instance running?")
-	}
+	// _, err := cgroup2.LoadSystemd(cfg.Cgroup, cfg.Cgroup)
+	// if err == nil {
+	// 	return nil, errors.New("cgroup already exists - is there another node instance running?")
+	// }
 
-	specs := cfg.linuxResources()
-	cg, err := cgroups.New(cgroups.V1, cgroups.StaticPath(cfg.Cgroup), specs)
+	specs := cfg.cgroupV2Resources()
+	cg, err := cgroup2.NewSystemd(cfg.Cgroup, cfg.Cgroup, -1, specs)
 	if err != nil {
 		return nil, fmt.Errorf("could not create cgroup: %w", err)
 	}
@@ -49,13 +61,9 @@ func New(opts ...Option) (*Limits, error) {
 }
 
 // LimitProcess will set the resource limits for the process with the given PID.
-func (l *Limits) LimitProcess(pid int) error {
+func (l *Limits) LimitProcess(pid uint64) error {
 
-	proc := cgroups.Process{
-		Pid: pid,
-	}
-
-	err := l.cgroup.Add(proc)
+	err := l.cgroup.AddProc(pid)
 	if err != nil {
 		return fmt.Errorf("could not set resouce limit for the process: %w", err)
 	}

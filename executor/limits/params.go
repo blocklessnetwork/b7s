@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	DefaultCgroup = "/blockless"
+	DefaultCgroup = "blockless"
 
 	year = time.Hour * 24 * 365
 )

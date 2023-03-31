@@ -1,6 +1,7 @@
 package limits
 
 import (
+	"github.com/containerd/cgroups/v3/cgroup2"
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
@@ -8,7 +9,6 @@ func (cfg *Config) linuxResources() *specs.LinuxResources {
 
 	lr := specs.LinuxResources{}
 
-	// Set CPU limit, if set.
 	if cfg.CPUTime > 0 {
 
 		// We want to set total CPU time limit. We'll use one year as the period.
@@ -33,4 +33,9 @@ func (cfg *Config) linuxResources() *specs.LinuxResources {
 	}
 
 	return &lr
+}
+
+func (cfg *Config) cgroupV2Resources() *cgroup2.Resources {
+	lr := cfg.linuxResources()
+	return cgroup2.ToResources(lr)
 }
