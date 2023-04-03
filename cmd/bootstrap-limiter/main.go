@@ -12,8 +12,10 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/blocklessnetworking/b7s/executor/limits"
 	"github.com/fatih/color"
+	"github.com/spf13/pflag"
+
+	"github.com/blocklessnetworking/b7s/executor/limits"
 )
 
 const (
@@ -40,6 +42,14 @@ func main() {
 
 func run() int {
 
+	var (
+		flagForce bool
+	)
+
+	pflag.BoolVarP(&flagForce, "force", "f", false, "set resource limits without asking for confirmation")
+
+	pflag.Parse()
+
 	log.Default().SetFlags(0)
 
 	// We'll only target linux, though potentially cgroups may exist on some other systems.
@@ -48,7 +58,8 @@ func run() int {
 		return failure
 	}
 
-	if !haveConsent() {
+	// If `--force` was not set - ask for user confirmation before continuing.
+	if !flagForce && !haveConsent() {
 		return failure
 	}
 
