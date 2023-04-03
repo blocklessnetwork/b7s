@@ -1,21 +1,17 @@
 package limits
 
-import (
-	"time"
-)
-
 // DefaultConfig describes the default process resource limits.
 var DefaultConfig = Config{
-	Cgroup:   DefaultCgroup,
-	MemoryKB: -1,
-	CPUTime:  time.Duration(-1),
+	Cgroup:        DefaultCgroup,
+	MemoryKB:      -1,
+	CPUPercentage: DefaultCPUPercentage,
 }
 
 // Config represents the resource limits to set.
 type Config struct {
-	Cgroup   string        // Cgroup to use for limits.
-	MemoryKB int64         // Maximum amount of memory allowed in kilobytes.
-	CPUTime  time.Duration // Total CPU time allowed.
+	Cgroup        string  // Cgroup to use for limits.
+	MemoryKB      int64   // Maximum amount of memory allowed in kilobytes.
+	CPUPercentage float64 // Percentage of the CPU time allowed.
 }
 
 // Option can be used to set limits.
@@ -28,10 +24,10 @@ func WithCgroup(path string) Option {
 	}
 }
 
-// WithCPULimit sets the total CPU time allowed.
-func WithCPULimit(d time.Duration) Option {
+// WithCPUPercentage sets the percentage of CPU time allowed.
+func WithCPUPercentage(p float64) Option {
 	return func(cfg *Config) {
-		cfg.CPUTime = d
+		cfg.CPUPercentage = p
 	}
 }
 

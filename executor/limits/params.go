@@ -1,11 +1,9 @@
 package limits
 
-import (
-	"time"
-)
-
 const (
-	DefaultCgroup = "blockless"
+	DefaultCgroup     = "/blockless"
+	DefaultMountpoint = "/sys/fs/cgroup"
 
-	year = time.Hour * 24 * 365
+	// Default percentage of the CPU allowed. By default we run unlimited.
+	DefaultCPUPercentage = 1.0
 )
