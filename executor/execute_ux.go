@@ -29,7 +29,7 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (string, execute.Usage, error) 
 	// Set resource limits on the process.
 	e.log.Debug().Int("pid", cmd.Process.Pid).Msg("setting resource limits for process")
 
-	err = e.cfg.Limiter.LimitProcess(uint64(cmd.Process.Pid))
+	err = e.cfg.Limiter.LimitProcess(cmd.Process.Pid)
 	if err != nil {
 		return "", execute.Usage{}, fmt.Errorf("could not limit process: %w", err)
 	}

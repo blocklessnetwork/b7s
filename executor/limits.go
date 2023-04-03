@@ -1,5 +1,6 @@
 package executor
 
 type Limiter interface {
-	LimitProcess(pid uint64) error
+	LimitProcess(pid int) error
+	ListProcesses() ([]int, error)
 }

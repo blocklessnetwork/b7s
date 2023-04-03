@@ -51,12 +51,28 @@ func New(opts ...Option) (*Limits, error) {
 }
 
 // LimitProcess will set the resource limits for the process with the given PID.
-func (l *Limits) LimitProcess(pid uint64) error {
+func (l *Limits) LimitProcess(pid int) error {
 
-	err := l.cgroup.AddProc(pid)
+	err := l.cgroup.AddProc(uint64(pid))
 	if err != nil {
-		return fmt.Errorf("could not set resouce limit for the process: %w", err)
+		return fmt.Errorf("could not set resouce limit for process (pid: %v): %w", pid, err)
 	}
 
 	return nil
+}
+
+// ListProcesses will return the pids of the processes that were added to the resource limit group.
+func (l *Limits) ListProcesses() ([]int, error) {
+
+	var list []int
+	pids, err := l.cgroup.Procs(false)
+	if err != nil {
+		return nil, fmt.Errorf("could not get list of limited processes: %w", err)
+	}
+
+	for _, pid := range pids {
+		list = append(list, int(pid))
+	}
+
+	return list, nil
 }
