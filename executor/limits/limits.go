@@ -3,14 +3,15 @@ package limits
 import (
 	"errors"
 	"fmt"
+	"math"
+	"time"
 
 	"github.com/containerd/cgroups/v3"
 	"github.com/containerd/cgroups/v3/cgroup2"
 )
 
-// TODO: For now Linux is fine, but try to think cross-platform when it comes to naming, comments etc.
-
 // TODO: Add support for cgroups v1 - determine on the fly which version to use
+// TODO: Return a value saying if limiting is supported at all
 
 type Limits struct {
 	cfg Config
@@ -37,6 +38,8 @@ func New(opts ...Option) (*Limits, error) {
 
 	specs := cfg.cgroupV2Resources()
 
+	// NOTE: Library we use for handling cgroups will also remove the directory on failure.
+	// Since we need root privileges to create it, this can cause problems.
 	cg, err := cgroup2.NewManager(DefaultMountpoint, cfg.Cgroup, specs)
 	if err != nil {
 		return nil, fmt.Errorf("could not create cgroup: %w", err)
@@ -76,3 +79,51 @@ func (l *Limits) ListProcesses() ([]int, error) {
 
 	return list, nil
 }
+
+// RemoveAllLimits will remove any set resource limits.
+func (l *Limits) RemoveAllLimits() error {
+
+	// Remove all limits effectively sets them to very large values, which is different from "removing" them.
+	period := uint64(time.Second.Microseconds())
+	memLimit := int64(math.MaxInt64)
+
+	// TODO: Just write your own code to write `max` and `max 1000000` (or whatever)
+
+	resources := cgroup2.Resources{
+		CPU: &cgroup2.CPU{
+			Max: cgroup2.NewCPUMax(nil, &period),
+		},
+		Memory: &cgroup2.Memory{
+			Max: &memLimit,
+		},
+	}
+
+	err := l.cgroup.Update(&resources)
+	if err != nil {
+		return fmt.Errorf("could not update resource limits: %v", err)
+	}
+
+	return nil
+}
+
+// RemoveAllLimits will remove any set resource limits.
+// NOTE: Does not work since the library tries to also update the root `cgroup.subtree_control` - which it shouldn't
+// func (l *Limits) RemoveAllLimits() error {
+//
+// 	controllers, err := l.cgroup.Controllers()
+// 	if err != nil {
+// 		return fmt.Errorf("could not get controllers: %w", err)
+// 	}
+//
+// 	for _, c := range controllers {
+// 		fmt.Printf("%s\n", c)
+// 	}
+//
+// 	err = l.cgroup.ToggleControllers(controllers, cgroup2.Disable)
+// 	if err != nil {
+// 		return fmt.Errorf("could not disable controllers: %w", err)
+// 	}
+//
+// 	return nil
+// }
+//

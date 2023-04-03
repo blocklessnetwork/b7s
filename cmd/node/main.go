@@ -130,9 +130,16 @@ func run() int {
 		if needLimiter(cfg) {
 			limiter, err := limits.New(limits.WithCPUPercentage(cfg.CPUPercentage), limits.WithMemoryKB(cfg.MemoryMaxKB))
 			if err != nil {
-				log.Error().Err(err).Msg("could not create resurce limiter")
+				log.Error().Err(err).Msg("could not create resource limiter")
 				return failure
 			}
+
+			defer func() {
+				err = limiter.RemoveAllLimits()
+				if err != nil {
+					log.Error().Err(err).Msg("could not remove resource limtis")
+				}
+			}()
 
 			execOptions = append(execOptions, executor.WithLimiter(limiter))
 		}
