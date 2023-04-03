@@ -1,13 +1,15 @@
 package executor_test
 
 import (
-	"path"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/executor"
+	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
 
@@ -15,14 +17,15 @@ func TestExecutor_Create(t *testing.T) {
 	t.Run("nominal case", func(t *testing.T) {
 
 		var (
-			runtimeDir = "/usr/local/bin"
-			cliPath    = path.Join(runtimeDir, "blockless-cli")
+			runtimeDir = os.TempDir()
+			cliPath    = filepath.Join(runtimeDir, blockless.RuntimeCLI())
+			fs         = afero.NewMemMapFs()
 		)
 
-		fs := afero.NewMemMapFs()
-		fs.Create(cliPath)
+		_, err := fs.Create(cliPath)
+		require.NoError(t, err)
 
-		_, err := executor.New(mocks.NoopLogger,
+		_, err = executor.New(mocks.NoopLogger,
 			executor.WithRuntimeDir(runtimeDir),
 			executor.WithFS(fs),
 		)

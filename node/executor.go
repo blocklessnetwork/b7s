@@ -5,5 +5,5 @@ import (
 )
 
 type Executor interface {
-	Function(string, execute.Request) (execute.Result, error)
+	ExecuteFunction(requestID string, req execute.Request) (execute.Result, error)
 }

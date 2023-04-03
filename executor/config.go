@@ -2,13 +2,15 @@ package executor
 
 import (
 	"github.com/spf13/afero"
+
+	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
 // defaultConfig used to create Executor.
 var defaultConfig = Config{
 	WorkDir:        "workspace",
 	RuntimeDir:     "",
-	ExecutableName: blocklessCli,
+	ExecutableName: blockless.RuntimeCLI(),
 	FS:             afero.NewOsFs(),
 }
 

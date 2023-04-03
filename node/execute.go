@@ -105,8 +105,7 @@ func (n *Node) workerExecute(ctx context.Context, from peer.ID, requestID string
 		return res, nil
 	}
 
-	// Execute the function.
-	res, err := n.execute.Function(requestID, req)
+	res, err := n.executor.ExecuteFunction(requestID, req)
 	if err != nil {
 		return res, fmt.Errorf("execution failed: %w", err)
 	}

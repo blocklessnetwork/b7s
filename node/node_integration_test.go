@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -61,7 +61,7 @@ func instantiateNode(t *testing.T, dirnamePattern string, role blockless.NodeRol
 	require.NoError(t, err)
 
 	// Create logger.
-	logName := path.Join(dir, fmt.Sprintf("%v-log.json", role.String()))
+	logName := filepath.Join(dir, fmt.Sprintf("%v-log.json", role.String()))
 	logFile, err := os.Create(logName)
 	require.NoError(t, err)
 
@@ -89,8 +89,8 @@ func createNode(t *testing.T, dir string, logger zerolog.Logger, host *host.Host
 	t.Helper()
 
 	var (
-		dbDir   = path.Join(dir, "db")
-		workdir = path.Join(dir, "workdir")
+		dbDir   = filepath.Join(dir, "db")
+		workdir = filepath.Join(dir, "workdir")
 	)
 
 	db, err := pebble.Open(dbDir, &pebble.Options{})

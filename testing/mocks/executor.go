@@ -22,6 +22,6 @@ func BaselineExecutor(t *testing.T) *Executor {
 	return &executor
 }
 
-func (e *Executor) Function(requestID string, req execute.Request) (execute.Result, error) {
+func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execute.Result, error) {
 	return e.ExecFunctionFunc(requestID, req)
 }

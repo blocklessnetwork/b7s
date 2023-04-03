@@ -5,3 +5,5 @@ dist/
 runtime/
 *.env
 __debug*
+
+*.exe

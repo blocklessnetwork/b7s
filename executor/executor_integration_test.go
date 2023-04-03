@@ -10,8 +10,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -48,9 +48,9 @@ func TestExecutor_Execute(t *testing.T) {
 	}
 
 	var (
-		workdir     = path.Join(workspace, "t", requestID) // request work directory
-		fsRoot      = path.Join(workdir, "fs")             // function FS root
-		functiondir = path.Join(workspace, functionID)     // function location
+		workdir     = filepath.Join(workspace, "t", requestID) // request work directory
+		fsRoot      = filepath.Join(workdir, "fs")             // function FS root
+		functiondir = filepath.Join(workspace, functionID)     // function location
 	)
 
 	t.Logf("working directory: %v", workspace)
@@ -78,11 +78,11 @@ func TestExecutor_Execute(t *testing.T) {
 			{Value: "--chunk"},
 			{Value: fmt.Sprintf("%v", chunkSize)},
 			{Value: "--file"},
-			{Value: path.Base(testfile)}, // Specify name only because the path is relative to FS root.
+			{Value: filepath.Base(testfile)}, // Specify name only because the path is relative to FS root.
 		},
 	}
 
-	res, err := executor.Function(requestID, req)
+	res, err := executor.ExecuteFunction(requestID, req)
 	require.NoError(t, err)
 
 	// Verify the execution result.
@@ -92,8 +92,9 @@ func TestExecutor_Execute(t *testing.T) {
 
 	// Verify usage info - for now, only that they are non-zero.
 	cpuTimeTotal := res.Usage.CPUSysTime + res.Usage.CPUUserTime
-	require.Greater(t, cpuTimeTotal, time.Duration(0))
+	require.NotZero(t, cpuTimeTotal)
 	require.NotZero(t, res.Usage.WallClockTime)
+	require.NotZero(t, res.Usage.MemoryMaxKB)
 }
 
 func createTestFile(t *testing.T, dir string, size int) (string, string) {
@@ -138,14 +139,14 @@ func createDirs(t *testing.T, dirs ...string) {
 	return
 }
 
-func copyFunction(t *testing.T, filepath string, target string) {
+func copyFunction(t *testing.T, filePath string, target string) {
 	t.Helper()
 
-	payload, err := os.ReadFile(filepath)
+	payload, err := os.ReadFile(filePath)
 	require.NoError(t, err)
 
-	_, name := path.Split(filepath)
-	targetPath := path.Join(target, name)
+	_, name := path.Split(filePath)
+	targetPath := filepath.Join(target, name)
 
 	err = os.WriteFile(targetPath, payload, os.ModePerm)
 	require.NoError(t, err)

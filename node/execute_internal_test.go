@@ -59,7 +59,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			return res, nil
 		}
-		node.execute = executor
+		node.executor = executor
 
 		// Create a host that will serve as a receiver of the execution response.
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
@@ -112,7 +112,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		executor.ExecFunctionFunc = func(requestID string, req execute.Request) (execute.Result, error) {
 			return faultyExecutionResult, mocks.GenericError
 		}
-		node.execute = executor
+		node.executor = executor
 
 		// Create a host that will serve as a receiver of the execution response.
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
