@@ -128,17 +128,11 @@ func run() int {
 		}
 
 		if needLimiter(cfg) {
-			limiter, err := limits.New(limits.WithCPULimit(cfg.CPUTime), limits.WithMemoryKB(cfg.MemoryMaxKB))
+			limiter, err := limits.New(limits.WithCPUPercentage(cfg.CPUPercentage), limits.WithMemoryKB(cfg.MemoryMaxKB))
 			if err != nil {
 				log.Error().Err(err).Msg("could not create resurce limiter")
 				return failure
 			}
-			defer func() {
-				err := limiter.Remove()
-				if err != nil {
-					log.Error().Err(err).Msg("could not remove resource limiter")
-				}
-			}()
 
 			execOptions = append(execOptions, executor.WithLimiter(limiter))
 		}
@@ -255,5 +249,5 @@ func run() int {
 }
 
 func needLimiter(cfg *config.Config) bool {
-	return cfg.CPUTime > 0 || cfg.MemoryMaxKB > 0
+	return cfg.CPUPercentage != 1.0 || cfg.MemoryMaxKB > 0
 }

@@ -1,9 +1,5 @@
 package config
 
-import (
-	"time"
-)
-
 // Config describes the Blockless configuration options.
 type Config struct {
 	Log          Log
@@ -16,8 +12,8 @@ type Config struct {
 	API     string
 	Runtime string
 
-	CPUTime     time.Duration
-	MemoryMaxKB int64
+	CPUPercentage float64
+	MemoryMaxKB   int64
 
 	Workspace string
 }
