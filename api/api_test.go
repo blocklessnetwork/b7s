@@ -18,6 +18,7 @@ const (
 	executeEndpoint = "/api/v1/functions/execute"
 	installEndpoint = "/api/v1/functions/install"
 	resultEndpoint  = "/api/v1/functions/requests/result"
+	healthEndpoint = "/api/v1/health"
 )
 
 func setupAPI(t *testing.T) *api.API {

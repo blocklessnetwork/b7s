@@ -192,6 +192,7 @@ func run() int {
 		api := api.New(log, node)
 
 		// Set endpoint handlers.
+		server.GET("/api/v1/health", api.Health)
 		server.POST("/api/v1/functions/execute", api.Execute)
 		server.POST("/api/v1/functions/install", api.Install)
 		server.POST("/api/v1/functions/requests/result", api.ExecutionResult)

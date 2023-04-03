@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"testing"
 	"time"
 
@@ -74,6 +75,6 @@ func TestNode_Health(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, blockless.MessageHealthCheck, received.Type)
-		require.Equal(t, response.CodeOK, received.Code)
+		require.Equal(t, http.StatusOK, received.Code)
 	}
 }
