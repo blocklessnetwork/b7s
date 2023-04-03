@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"net/http"
 	"sync"
 	"testing"
 
@@ -24,7 +25,7 @@ func TestNode_Handlers(t *testing.T) {
 
 		msg := response.Health{
 			Type: blockless.MessageHealthCheck,
-			Code: response.CodeOK,
+			Code: http.StatusOK,
 		}
 
 		payload := serialize(t, msg)

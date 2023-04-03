@@ -8,5 +8,5 @@ import (
 type Health struct {
 	Type string  `json:"type,omitempty"`
 	From peer.ID `json:"from,omitempty"`
-	Code string  `json:"code,omitempty"`
+	Code int  `json:"code,omitempty"`
 }

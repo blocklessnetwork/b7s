@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
@@ -20,7 +21,7 @@ func (n *Node) HealthPing(ctx context.Context) {
 
 			msg := response.Health{
 				Type: blockless.MessageHealthCheck,
-				Code: response.CodeOK,
+				Code: http.StatusOK,
 			}
 
 			err := n.publish(ctx, msg)
