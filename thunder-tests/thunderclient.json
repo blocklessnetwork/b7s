@@ -1,0 +1,54 @@
+[
+  {
+    "_id": "91a3e19f-17a5-4736-9e67-5d43a9ee9365",
+    "colId": "86857b7f-ffdb-4c01-9137-8a998af14751",
+    "containerId": "",
+    "name": "API Health Check",
+    "url": "localhost:8081/api/v1/health",
+    "method": "GET",
+    "sortNum": 20000,
+    "created": "2023-04-04T19:36:36.168Z",
+    "modified": "2023-04-04T19:36:36.168Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "8a1438cd-100c-4b1e-95ed-2bd387e53d2d",
+    "colId": "86857b7f-ffdb-4c01-9137-8a998af14751",
+    "containerId": "",
+    "name": "localhost:8081/api/v1/functions/install",
+    "url": "localhost:8081/api/v1/functions/install",
+    "method": "POST",
+    "sortNum": 30000,
+    "created": "2023-04-04T19:39:57.733Z",
+    "modified": "2023-04-04T19:39:57.733Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n    \"cid\":\"bafybeicyhzgm7a4b56wvuyp5f7i3hpfktxde7xr73qorykmalz57eeykge\"\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "0206d77f-5897-4d79-b5c9-529d0b35896e",
+    "colId": "86857b7f-ffdb-4c01-9137-8a998af14751",
+    "containerId": "",
+    "name": "localhost:8081/api/v1/functions/execute",
+    "url": "localhost:8081/api/v1/functions/execute",
+    "method": "POST",
+    "sortNum": 40000,
+    "created": "2023-04-04T19:48:49.098Z",
+    "modified": "2023-04-04T19:48:49.098Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n    \"function_id\": \"bafybeicyhzgm7a4b56wvuyp5f7i3hpfktxde7xr73qorykmalz57eeykge\",\n    \"method\": \"legitimate_gold_mastodon.wasm\",\n    \"parameters\": null,\n    \"config\": {\n       \n        \"env_vars\": [\n            {\n                \"name\": \"BLS_REQUEST_PATH\",\n                \"value\": \"/api\"\n            }\n        ],\n        \"number_of_nodes\": 1,\n        \"result_aggregation\": {\n            \"enable\": false,\n            \"type\": \"none\",\n            \"parameters\": [\n                {\n                    \"name\": \"type\",\n                    \"value\": \"\"\n                }\n            ]\n        }\n    }\n}",
+      "form": []
+    },
+    "tests": []
+  }
+]
