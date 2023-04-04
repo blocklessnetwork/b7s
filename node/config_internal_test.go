@@ -15,7 +15,7 @@ func TestConfig_NodeRole(t *testing.T) {
 	const role = blockless.WorkerNode
 
 	cfg := Config{
-		Role: blockless.WorkerNode,
+		Role: blockless.HeadNode,
 	}
 
 	WithRole(role)(&cfg)

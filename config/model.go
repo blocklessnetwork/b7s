@@ -12,6 +12,9 @@ type Config struct {
 	API     string
 	Runtime string
 
+	CPUPercentage float64
+	MemoryMaxKB   int64
+
 	Workspace string
 }
 

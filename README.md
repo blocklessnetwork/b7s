@@ -35,6 +35,8 @@ You can also use Docker to install b7s. See the [Docker documentation](/docker/R
 | runtime     | N/A        | N/A                     | Specifies the runtime address used by the worker node.                                        |
 | dialback-address | N/A        | N/A                     | Specifies the advertised dialback address of the Node.                                   |
 | dialback-port | N/A | N/A | Specifies the advertised dialback port of the Node. |
+| cpu-percentage-limit | N/A | 1.0 | Specifies the amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited. |
+| memory-limit | N/A | N/A | Specifies the memory limit for Blockless Functions, in kB. |
 
 ## Dependencies
 

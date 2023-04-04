@@ -40,6 +40,11 @@ func parseFlags() *config.Config {
 	pflag.StringVar(&cfg.Workspace, "workspace", "./workspace", "directory that the node can use for file storage")
 	pflag.StringVar(&cfg.Runtime, "runtime", "", "runtime address (used by the worker node)")
 
+	pflag.Float64Var(&cfg.CPUPercentage, "cpu-percentage-limit", 1.0, "amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited")
+	pflag.Int64Var(&cfg.MemoryMaxKB, "memory-limit", 0, "memory limit (kB) for Blockless Functions")
+
+	pflag.CommandLine.SortFlags = false
+
 	pflag.Parse()
 
 	return &cfg

@@ -13,7 +13,9 @@ import (
 	"github.com/ziflex/lecho/v3"
 
 	"github.com/blocklessnetworking/b7s/api"
+	"github.com/blocklessnetworking/b7s/config"
 	"github.com/blocklessnetworking/b7s/executor"
+	"github.com/blocklessnetworking/b7s/executor/limits"
 	"github.com/blocklessnetworking/b7s/function"
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
@@ -119,11 +121,31 @@ func run() int {
 	// If this is a worker node, initialize an executor.
 	if role == blockless.WorkerNode {
 
-		// Create an executor.
-		executor, err := executor.New(log,
+		// Executor options.
+		execOptions := []executor.Option{
 			executor.WithWorkDir(cfg.Workspace),
 			executor.WithRuntimeDir(cfg.Runtime),
-		)
+		}
+
+		if needLimiter(cfg) {
+			limiter, err := limits.New(limits.WithCPUPercentage(cfg.CPUPercentage), limits.WithMemoryKB(cfg.MemoryMaxKB))
+			if err != nil {
+				log.Error().Err(err).Msg("could not create resource limiter")
+				return failure
+			}
+
+			defer func() {
+				err = limiter.RemoveAllLimits()
+				if err != nil {
+					log.Error().Err(err).Msg("could not remove resource limtis")
+				}
+			}()
+
+			execOptions = append(execOptions, executor.WithLimiter(limiter))
+		}
+
+		// Create an executor.
+		executor, err := executor.New(log, execOptions...)
 		if err != nil {
 			log.Error().
 				Err(err).
@@ -231,4 +253,8 @@ func run() int {
 	}()
 
 	return success
+}
+
+func needLimiter(cfg *config.Config) bool {
+	return cfg.CPUPercentage != 1.0 || cfg.MemoryMaxKB > 0
 }

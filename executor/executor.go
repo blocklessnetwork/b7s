@@ -7,6 +7,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// TODO: Currently we may have parallel execution of Blockless functions - e.g. we have two requests at the same time.
+// Do we want to limit this too?
+
 // Executor provides the capabilities to run external applications.
 type Executor struct {
 	log zerolog.Logger

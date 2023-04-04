@@ -26,6 +26,16 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (string, execute.Usage, error) 
 		return "", execute.Usage{}, fmt.Errorf("could not start process: %w", err)
 	}
 
+	// Set resource limits on the process.
+	e.log.Debug().Int("pid", cmd.Process.Pid).Msg("setting resource limits for process")
+
+	err = e.cfg.Limiter.LimitProcess(cmd.Process.Pid)
+	if err != nil {
+		return "", execute.Usage{}, fmt.Errorf("could not limit process: %w", err)
+	}
+
+	e.log.Debug().Int("pid", cmd.Process.Pid).Msg("resource limits set for process")
+
 	err = cmd.Wait()
 	if err != nil {
 		return "", execute.Usage{}, fmt.Errorf("could not wait on process: %w", err)
