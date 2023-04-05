@@ -1,4 +1,4 @@
-package function
+package fstore
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ type functionRecord struct {
 	LastRetrieved time.Time `json:"last_retrieved"`
 }
 
-func (h *Handler) getFunction(cid string) (*functionRecord, error) {
+func (h *FStore) getFunction(cid string) (*functionRecord, error) {
 
 	// Retrieve function.
 	var fn functionRecord
@@ -37,7 +37,7 @@ func (h *Handler) getFunction(cid string) (*functionRecord, error) {
 	return &fn, nil
 }
 
-func (h *Handler) saveFunction(fn functionRecord) error {
+func (h *FStore) saveFunction(fn functionRecord) error {
 
 	// Clean paths - make them relative to the current working directory.
 	fn.Archive = h.cleanPath(fn.Archive)

@@ -16,7 +16,7 @@ import (
 	"github.com/blocklessnetworking/b7s/config"
 	"github.com/blocklessnetworking/b7s/executor"
 	"github.com/blocklessnetworking/b7s/executor/limits"
-	"github.com/blocklessnetworking/b7s/function"
+	"github.com/blocklessnetworking/b7s/fstore"
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/node"
@@ -165,13 +165,13 @@ func run() int {
 	}
 	defer fdb.Close()
 
-	fstore := store.New(fdb)
+	functionStore := store.New(fdb)
 
 	// Create function store.
-	functionStore := function.NewHandler(log, fstore, cfg.Workspace)
+	fstore := fstore.New(log, functionStore, cfg.Workspace)
 
 	// Instantiate node.
-	node, err := node.New(log, host, fstore, peerstore, functionStore, opts...)
+	node, err := node.New(log, host, functionStore, peerstore, fstore, opts...)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure

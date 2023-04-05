@@ -1,4 +1,4 @@
-package function
+package fstore
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 
 // syncFunction will verify that the function identified by `cid` is still found on the local filesystem.
 // If the function archive of function files are missing, they will be recreated.
-func (h *Handler) syncFunction(cid string) error {
+func (h *FStore) syncFunction(cid string) error {
 
 	h.log.Debug().Str("cid", cid).Msg("checking function installation")
 
@@ -84,7 +84,7 @@ func (h *Handler) syncFunction(cid string) error {
 
 // checkFunctionFiles checks if the files required by the function are found on local storage.
 // It returns two booleans indicating presense of the archive file, the unpacked files, and a potential error.
-func (h *Handler) checkFunctionFiles(fn functionRecord) (bool, bool, error) {
+func (h *FStore) checkFunctionFiles(fn functionRecord) (bool, bool, error) {
 
 	// Check if the archive is found.
 	archiveFound := true

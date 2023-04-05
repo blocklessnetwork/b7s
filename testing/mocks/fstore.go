@@ -6,14 +6,14 @@ import (
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
-type FunctionHandler struct {
+type FStore struct {
 	GetFunc func(string, string, bool) (*blockless.FunctionManifest, error)
 }
 
-func BaselineFunctionHandler(t *testing.T) *FunctionHandler {
+func BaselineFunctionHandler(t *testing.T) *FStore {
 	t.Helper()
 
-	fh := FunctionHandler{
+	fh := FStore{
 		GetFunc: func(string, string, bool) (*blockless.FunctionManifest, error) {
 			return &GenericManifest, nil
 		},
@@ -22,6 +22,6 @@ func BaselineFunctionHandler(t *testing.T) *FunctionHandler {
 	return &fh
 }
 
-func (f *FunctionHandler) Get(address string, cid string, useCached bool) (*blockless.FunctionManifest, error) {
+func (f *FStore) Get(address string, cid string, useCached bool) (*blockless.FunctionManifest, error) {
 	return f.GetFunc(address, cid, useCached)
 }

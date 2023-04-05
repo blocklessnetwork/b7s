@@ -1,4 +1,4 @@
-package function
+package fstore
 
 import (
 	"path/filepath"
@@ -6,6 +6,6 @@ import (
 )
 
 // cleanPath will return the path relative to the workdir.
-func (h *Handler) cleanPath(path string) string {
+func (h *FStore) cleanPath(path string) string {
 	return filepath.Clean(strings.TrimPrefix(path, h.workdir))
 }

@@ -1,4 +1,4 @@
-package function
+package fstore
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 
 // Get retrieves the function manifest from the given address. `useCached` indicates whether,
 // if the function is found in the store/db, it should be used, or if we should re-download it.
-func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.FunctionManifest, error) {
+func (h *FStore) Get(address string, cid string, useCached bool) (*blockless.FunctionManifest, error) {
 
 	h.log.Debug().
 		Str("cid", cid).

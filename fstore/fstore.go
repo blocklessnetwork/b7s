@@ -1,4 +1,4 @@
-package function
+package fstore
 
 import (
 	"net/http"
@@ -7,9 +7,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Handler deals with all of the function-related actions - saving/reading them from backing storage,
+// FStore - function store - deals with all of the function-related actions - saving/reading them from backing storage,
 // downloading them, unpacking them etc.
-type Handler struct {
+type FStore struct {
 	log        zerolog.Logger
 	store      Store
 	http       *http.Client
@@ -18,8 +18,8 @@ type Handler struct {
 	workdir string
 }
 
-// NewHandler creates a new function handler.
-func NewHandler(log zerolog.Logger, store Store, workdir string) *Handler {
+// New creates a new function store.
+func New(log zerolog.Logger, store Store, workdir string) *FStore {
 
 	// Create an HTTP client.
 	cli := http.Client{
@@ -30,7 +30,7 @@ func NewHandler(log zerolog.Logger, store Store, workdir string) *Handler {
 	downloader := grab.NewClient()
 	downloader.UserAgent = defaultUserAgent
 
-	h := Handler{
+	h := FStore{
 		log:        log.With().Str("component", "function_store").Logger(),
 		store:      store,
 		http:       &cli,
@@ -43,7 +43,7 @@ func NewHandler(log zerolog.Logger, store Store, workdir string) *Handler {
 
 // Sync will go through all functions stored in the database and verify that the
 // files are still found in local storage.
-func (h *Handler) Sync() {
+func (h *FStore) Sync() {
 
 	cids := h.store.Keys()
 

@@ -1,4 +1,4 @@
-package function
+package fstore
 
 type Store interface {
 	GetRecord(string, interface{}) error
