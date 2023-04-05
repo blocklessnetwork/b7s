@@ -200,5 +200,28 @@ func Test_Store(t *testing.T) {
 		err = store.GetRecord(key, &rec)
 		require.Error(t, err)
 	})
+	t.Run("listing keys", func(t *testing.T) {
+		t.Parallel()
 
+		db := helpers.InMemoryDB(t)
+		defer db.Close()
+		store := store.New(db)
+
+		require.Empty(t, store.Keys())
+
+		keys := []string{
+			"key1",
+			"key2",
+			"key3",
+			"key4",
+		}
+
+		for _, key := range keys {
+			err := store.SetRecord(key, struct{}{})
+			require.NoError(t, err)
+		}
+
+		readKeys := store.Keys()
+		require.Equal(t, keys, readKeys)
+	})
 }
