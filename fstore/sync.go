@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 )
 
-// syncFunction will verify that the function identified by `cid` is still found on the local filesystem.
+// Sync will verify that the function identified by `cid` is still found on the local filesystem.
 // If the function archive of function files are missing, they will be recreated.
-func (h *FStore) syncFunction(cid string) error {
+func (h *FStore) Sync(cid string) error {
 
 	h.log.Debug().Str("cid", cid).Msg("checking function installation")
 
