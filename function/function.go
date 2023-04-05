@@ -40,3 +40,17 @@ func NewHandler(log zerolog.Logger, store Store, workdir string) *Handler {
 
 	return &h
 }
+
+// Sync will go through all functions stored in the database and verify that the
+// files are still found in local storage.
+func (h *Handler) Sync() {
+
+	cids := h.store.Keys()
+
+	for _, cid := range cids {
+		err := h.syncFunction(cid)
+		if err != nil {
+			h.log.Error().Err(err).Str("cid", cid).Msg("could not sync function")
+		}
+	}
+}

@@ -18,8 +18,7 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 		Bool("use_cached", useCached).
 		Msg("getting manifest")
 
-	var cachedManifest blockless.FunctionManifest
-	err := h.store.GetRecord(cid, &cachedManifest)
+	cachedFn, err := h.getFunction(cid)
 	// Return cached version if so requested.
 	if err == nil && useCached {
 
@@ -28,10 +27,10 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 			Str("address", address).
 			Msg("function manifest was already cached, done")
 
-		return &cachedManifest, nil
+		return &cachedFn.Manifest, nil
 	}
 	if err != nil && !errors.Is(err, blockless.ErrNotFound) {
-		return nil, fmt.Errorf("could not get function manifest from store: %w", err)
+		return nil, fmt.Errorf("could not get function from store: %w", err)
 	}
 
 	// Being here means that we either did not find the manifest, or we don't
@@ -44,7 +43,7 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 		return nil, fmt.Errorf("could not retrieve manifest: %w", err)
 	}
 
-	// If the runtime URL is specified,
+	// If the runtime URL is specified, use it to fill in the deployment info.
 	if manifest.Runtime.URL != "" {
 		err = updateDeploymentInfo(&manifest, address)
 		if err != nil {
@@ -69,15 +68,21 @@ func (h *Handler) Get(address string, cid string, useCached bool) (*blockless.Fu
 	}
 
 	manifest.Deployment.File = functionPath
-	manifest.Cached = true
 
-	// Store the retrieved manifest.
-	err = h.store.SetRecord(cid, manifest)
+	// Store the function record.
+	fn := functionRecord{
+		CID:      cid,
+		URL:      address,
+		Manifest: manifest,
+		Archive:  functionPath,
+		Files:    out,
+	}
+	err = h.saveFunction(fn)
 	if err != nil {
 		h.log.Error().
 			Err(err).
 			Str("cid", cid).
-			Msg("could not store manifest")
+			Msg("could not save function record")
 	}
 
 	return &manifest, nil

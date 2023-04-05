@@ -11,7 +11,8 @@ import (
 const (
 	defaultPort        = 0
 	defaultAddress     = "0.0.0.0"
-	defaultDB          = "db"
+	defaultPeerDB      = "peer-db"
+	defaultFunctionDB  = "function-db"
 	defaultConcurrency = uint(node.DefaultConcurrency)
 
 	defaultRole = "worker"
@@ -22,7 +23,8 @@ func parseFlags() *config.Config {
 	var cfg config.Config
 
 	pflag.StringVarP(&cfg.Log.Level, "log-level", "l", "info", "log level to use")
-	pflag.StringVarP(&cfg.DatabasePath, "db", "d", defaultDB, "path to the database used for persisting node data")
+	pflag.StringVarP(&cfg.PeerDatabasePath, "peer-db", "d", defaultPeerDB, "path to the database used for persisting peer data")
+	pflag.StringVarP(&cfg.FunctionDatabasePath, "function-db", "d", defaultFunctionDB, "path to the database used for persisting function data")
 
 	// Node configuration.
 	pflag.StringVarP(&cfg.Role, "role", "r", defaultRole, "role this note will have in the Blockless protocol (head or worker)")
