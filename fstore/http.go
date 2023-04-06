@@ -1,4 +1,4 @@
-package function
+package fstore
 
 import (
 	"crypto/sha256"
@@ -13,7 +13,7 @@ import (
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
-func (h *Handler) getJSON(address string, out interface{}) error {
+func (h *FStore) getJSON(address string, out interface{}) error {
 
 	h.log.Debug().Str("url", address).Msg("retrieving JSON doc")
 
@@ -34,7 +34,7 @@ func (h *Handler) getJSON(address string, out interface{}) error {
 // download will retrieve the function with the given manifest. It returns the full path
 // of the file where the function is saved on the local storage or any error that might have
 // occurred in the process. The function blocks until the download is complete.
-func (h *Handler) download(manifest blockless.FunctionManifest) (string, error) {
+func (h *FStore) download(manifest blockless.FunctionManifest) (string, error) {
 
 	// Determine directory where files should be stored.
 	fdir := filepath.Join(h.workdir, manifest.Function.ID)

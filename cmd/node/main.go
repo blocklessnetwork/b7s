@@ -16,7 +16,7 @@ import (
 	"github.com/blocklessnetworking/b7s/config"
 	"github.com/blocklessnetworking/b7s/executor"
 	"github.com/blocklessnetworking/b7s/executor/limits"
-	"github.com/blocklessnetworking/b7s/function"
+	"github.com/blocklessnetworking/b7s/fstore"
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/node"
@@ -60,18 +60,17 @@ func run() int {
 		return failure
 	}
 
-	// Open the pebble database.
-	pdb, err := pebble.Open(cfg.DatabasePath, &pebble.Options{})
+	// Open the pebble peer database.
+	pdb, err := pebble.Open(cfg.PeerDatabasePath, &pebble.Options{})
 	if err != nil {
-		log.Error().Err(err).Str("db", cfg.DatabasePath).Msg("could not open pebble database")
+		log.Error().Err(err).Str("db", cfg.PeerDatabasePath).Msg("could not open pebble peer database")
 		return failure
 	}
 	defer pdb.Close()
 
 	// Create a new store.
-	store := store.New(pdb)
-
-	peerstore := peerstore.New(store)
+	pstore := store.New(pdb)
+	peerstore := peerstore.New(pstore)
 
 	// Get the list of dial back peers.
 	peers, err := peerstore.Peers()
@@ -158,11 +157,21 @@ func run() int {
 		opts = append(opts, node.WithExecutor(executor))
 	}
 
+	// Open the pebble function database.
+	fdb, err := pebble.Open(cfg.FunctionDatabasePath, &pebble.Options{})
+	if err != nil {
+		log.Error().Err(err).Str("db", cfg.FunctionDatabasePath).Msg("could not open pebble function database")
+		return failure
+	}
+	defer fdb.Close()
+
+	functionStore := store.New(fdb)
+
 	// Create function store.
-	functionStore := function.NewHandler(log, store, cfg.Workspace)
+	fstore := fstore.New(log, functionStore, cfg.Workspace)
 
 	// Instantiate node.
-	node, err := node.New(log, host, store, peerstore, functionStore, opts...)
+	node, err := node.New(log, host, functionStore, peerstore, fstore, opts...)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure

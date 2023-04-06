@@ -21,6 +21,9 @@ func (n *Node) Run(ctx context.Context) error {
 		return fmt.Errorf("could not subscribe to topic: %w", err)
 	}
 
+	// Sync functions now in case they were removed from the storage.
+	n.syncFunctions()
+
 	// Set the handler for direct messages.
 	n.listenDirectMessages(ctx)
 
@@ -38,6 +41,9 @@ func (n *Node) Run(ctx context.Context) error {
 
 	// Start the health signal emitter in a separate goroutine.
 	go n.HealthPing(ctx)
+
+	// Start the function sync in the background to periodically check functions.
+	go n.runSyncLoop(ctx)
 
 	n.log.Info().
 		Uint("concurrency", n.cfg.Concurrency).

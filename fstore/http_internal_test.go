@@ -1,4 +1,4 @@
-package function
+package fstore
 
 import (
 	"crypto/sha256"
@@ -36,7 +36,7 @@ func TestFunction_GetJSON(t *testing.T) {
 	defer srv.Close()
 
 	store := store.New(helpers.InMemoryDB(t))
-	fh := NewHandler(mocks.NoopLogger, store, workdir)
+	fh := New(mocks.NoopLogger, store, workdir)
 
 	var downloaded blockless.FunctionManifest
 	err := fh.getJSON(srv.URL, &downloaded)
@@ -125,7 +125,7 @@ func TestFunction_GetJSONHandlesErrors(t *testing.T) {
 			defer srv.Close()
 
 			store := store.New(helpers.InMemoryDB(t))
-			fh := NewHandler(mocks.NoopLogger, store, workdir)
+			fh := New(mocks.NoopLogger, store, workdir)
 
 			var response blockless.FunctionManifest
 			err := fh.getJSON(srv.URL, &response)
@@ -154,7 +154,7 @@ func TestFunction_Download(t *testing.T) {
 	defer os.RemoveAll(workdir)
 
 	store := store.New(helpers.InMemoryDB(t))
-	fh := NewHandler(mocks.NoopLogger, store, workdir)
+	fh := New(mocks.NoopLogger, store, workdir)
 
 	address := fmt.Sprintf("%s/test-file", srv.URL)
 	hash := sha256.Sum256(payload)
@@ -202,7 +202,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := store.New(helpers.InMemoryDB(t))
-		fh := NewHandler(mocks.NoopLogger, store, workdir)
+		fh := New(mocks.NoopLogger, store, workdir)
 
 		address := fmt.Sprintf("%s/test-file", srv.URL)
 		hash := sha256.Sum256(payload)
@@ -227,7 +227,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := store.New(helpers.InMemoryDB(t))
-		fh := NewHandler(mocks.NoopLogger, store, workdir)
+		fh := New(mocks.NoopLogger, store, workdir)
 
 		address := fmt.Sprintf("%s/test-file", srv.URL) + "\n"
 		hash := sha256.Sum256(payload)
@@ -252,7 +252,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := store.New(helpers.InMemoryDB(t))
-		fh := NewHandler(mocks.NoopLogger, store, workdir)
+		fh := New(mocks.NoopLogger, store, workdir)
 
 		address := fmt.Sprintf("%s/test-file", srv.URL)
 		hash := sha256.Sum256(payload)

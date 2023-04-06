@@ -1,4 +1,4 @@
-package function
+package fstore
 
 import (
 	"archive/tar"
@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-func (h *Handler) unpackArchive(filename string, destination string) error {
+func (h *FStore) unpackArchive(filename string, destination string) error {
 
 	// Use CWD if not specified.
 	if destination == "" {

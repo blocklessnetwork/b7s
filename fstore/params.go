@@ -1,4 +1,4 @@
-package function
+package fstore
 
 import (
 	"time"

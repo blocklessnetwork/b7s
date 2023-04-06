@@ -14,6 +14,8 @@ const (
 	functionInstallTimeout = 10 * time.Second
 
 	rollCallQueueBufferSize = 1000
+
+	syncInterval = time.Hour
 )
 
 var (

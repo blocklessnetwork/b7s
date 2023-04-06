@@ -91,7 +91,7 @@ if [ -n "$BOOT_NODES" ]; then
 fi
 
 if [ "$NODE_ROLE" = "head" ]; then
-  ./b7s --db /var/tmp/b7s/db --log-level debug --port $P2P_PORT --role head --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH --rest-api :$REST_API $dialback_args $bootnode_args
+  ./b7s --peer-db /var/tmp/b7s/peerdb --function-db /var/tmp/b7s/function-db --log-level debug --port $P2P_PORT --role head --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH --rest-api :$REST_API $dialback_args $bootnode_args
 else
-  ./b7s --db ./database --log-level debug --port $P2P_PORT --role worker --runtime /app/runtime --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH $dialback_args $bootnode_args 
+  ./b7s --peer-db ./peer-database --function-db ./function-database--log-level debug --port $P2P_PORT --role worker --runtime /app/runtime --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH $dialback_args $bootnode_args 
 fi

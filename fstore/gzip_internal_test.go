@@ -1,4 +1,4 @@
-package function
+package fstore
 
 import (
 	"os"
@@ -23,7 +23,7 @@ func TestFunction_UnpackArchive(t *testing.T) {
 	defer os.RemoveAll(workdir)
 
 	store := store.New(helpers.InMemoryDB(t))
-	fh := NewHandler(mocks.NoopLogger, store, workdir)
+	fh := New(mocks.NoopLogger, store, workdir)
 
 	err = fh.unpackArchive(filename, workdir)
 	require.NoError(t, err)
@@ -42,7 +42,7 @@ func TestFunction_UnpackArchiveHandlesErrors(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := store.New(helpers.InMemoryDB(t))
-		fh := NewHandler(mocks.NoopLogger, store, workdir)
+		fh := New(mocks.NoopLogger, store, workdir)
 
 		err = fh.unpackArchive(filename, workdir)
 		require.Error(t, err)

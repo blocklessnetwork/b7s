@@ -2,11 +2,12 @@ package config
 
 // Config describes the Blockless configuration options.
 type Config struct {
-	Log          Log
-	DatabasePath string
-	Role         string
-	BootNodes    []string
-	Concurrency  uint
+	Log                  Log
+	PeerDatabasePath     string
+	FunctionDatabasePath string
+	Role                 string
+	BootNodes            []string
+	Concurrency          uint
 
 	Host    Host
 	API     string

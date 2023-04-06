@@ -9,6 +9,7 @@ type Store struct {
 	SetFunc       func(key string, value string) error
 	GetRecordFunc func(key string, value interface{}) error
 	SetRecordFunc func(key string, value interface{}) error
+	KeysFunc      func() []string
 }
 
 func BaselineStore(t *testing.T) *Store {
@@ -26,6 +27,9 @@ func BaselineStore(t *testing.T) *Store {
 		},
 		SetRecordFunc: func(string, interface{}) error {
 			return nil
+		},
+		KeysFunc: func() []string {
+			return []string{}
 		},
 	}
 
@@ -46,4 +50,8 @@ func (s *Store) GetRecord(key string, value interface{}) error {
 
 func (s *Store) SetRecord(key string, value interface{}) error {
 	return s.SetRecordFunc(key, value)
+}
+
+func (s *Store) Keys() []string {
+	return s.KeysFunc()
 }

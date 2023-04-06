@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/executor"
-	"github.com/blocklessnetworking/b7s/function"
+	"github.com/blocklessnetworking/b7s/fstore"
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/request"
@@ -99,7 +99,7 @@ func createNode(t *testing.T, dir string, logger zerolog.Logger, host *host.Host
 	var (
 		store     = store.New(db)
 		peerstore = peerstore.New(store)
-		fstore    = function.NewHandler(logger, store, workdir)
+		fstore    = fstore.New(logger, store, workdir)
 	)
 
 	opts := []node.Option{

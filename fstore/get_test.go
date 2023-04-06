@@ -1,4 +1,4 @@
-package function_test
+package fstore_test
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetworking/b7s/function"
+	"github.com/blocklessnetworking/b7s/fstore"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/store"
 	"github.com/blocklessnetworking/b7s/testing/helpers"
@@ -44,7 +44,7 @@ func TestFunction_Get(t *testing.T) {
 	msrv, fsrv := createServers(t, manifestURL, functionURL, functionPayload)
 
 	store := store.New(helpers.InMemoryDB(t))
-	fh := function.NewHandler(mocks.NoopLogger, store, workdir)
+	fh := fstore.New(mocks.NoopLogger, store, workdir)
 
 	address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
 	manifest, err := fh.Get(address, testCID, false)
@@ -94,7 +94,7 @@ func TestFunction_GetHandlesErrors(t *testing.T) {
 			return mocks.GenericError
 		}
 
-		fh := function.NewHandler(mocks.NoopLogger, store, workdir)
+		fh := fstore.New(mocks.NoopLogger, store, workdir)
 
 		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
 		_, err = fh.Get(address, testCID, false)
@@ -111,7 +111,7 @@ func TestFunction_GetHandlesErrors(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := store.New(helpers.InMemoryDB(t))
-		fh := function.NewHandler(mocks.NoopLogger, store, workdir)
+		fh := fstore.New(mocks.NoopLogger, store, workdir)
 
 		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
 		_, err = fh.Get(address, testCID, false)
@@ -128,7 +128,7 @@ func TestFunction_GetHandlesErrors(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := store.New(helpers.InMemoryDB(t))
-		fh := function.NewHandler(mocks.NoopLogger, store, workdir)
+		fh := fstore.New(mocks.NoopLogger, store, workdir)
 
 		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
 		_, err = fh.Get(address, testCID, false)
