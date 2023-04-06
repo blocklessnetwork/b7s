@@ -36,7 +36,7 @@ func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execu
 // executeFunction handles the actual execution of the Blockless function. It returns the
 // standard output of the blockless-cli that handled the execution. `Function`
 // typically takes this output and uses it to create the appropriate execution response.
-func (e *Executor) executeFunction(requestID string, req execute.Request) (string, execute.Usage, error) {
+func (e *Executor) executeFunction(requestID string, req execute.Request) (execute.RuntimeOutput, execute.Usage, error) {
 
 	e.log.Info().
 		Str("id", req.FunctionID).
@@ -48,7 +48,7 @@ func (e *Executor) executeFunction(requestID string, req execute.Request) (strin
 
 	err := e.cfg.FS.MkdirAll(paths.workdir, defaultPermissions)
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not setup working directory for execution (dir: %s): %w", paths.workdir, err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not setup working directory for execution (dir: %s): %w", paths.workdir, err)
 	}
 	// Remove all temporary files after we're done.
 	defer func() {
@@ -66,7 +66,7 @@ func (e *Executor) executeFunction(requestID string, req execute.Request) (strin
 
 	err = e.writeExecutionManifest(req, paths)
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not write execution manifest: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not write execution manifest: %w", err)
 	}
 
 	// Create command that will be executed.
@@ -80,7 +80,7 @@ func (e *Executor) executeFunction(requestID string, req execute.Request) (strin
 
 	out, usage, err := e.executeCommand(cmd)
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("command execution failed: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("command execution failed: %w", err)
 	}
 
 	e.log.Info().

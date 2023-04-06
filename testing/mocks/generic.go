@@ -28,8 +28,12 @@ var (
 	GenericUUID = uuid.UUID{0xd1, 0xc2, 0x44, 0xaf, 0xa3, 0x1d, 0x48, 0x87, 0x93, 0x9d, 0xd6, 0xc7, 0xf, 0xe, 0x4f, 0xd0}
 
 	GenericExecutionResult = execute.Result{
-		Code:      response.CodeUnknown,
-		Result:    "generic-execution-result",
+		Code: response.CodeUnknown,
+		Result: execute.RuntimeOutput{
+			Stdout:   "generic-execution-result",
+			Stderr:   "generic-execution-log",
+			ExitCode: 0,
+		},
 		RequestID: GenericUUID.String(),
 	}
 

@@ -36,7 +36,11 @@ func TestAPI_Execute(t *testing.T) {
 func TestAPI_Execute_HandlesErrors(t *testing.T) {
 
 	executionResult := execute.Result{
-		Result: "dummy-failed-execution-result",
+		Result: execute.RuntimeOutput{
+			Stdout:   "dummy-failed-execution-result",
+			Stderr:   "dummy-failed-execution-log",
+			ExitCode: 1,
+		},
 	}
 
 	node := mocks.BaselineNode(t)

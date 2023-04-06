@@ -14,16 +14,20 @@ import (
 )
 
 // executeCommand on non-windows systems is pretty straightforward and equivalent to the ordinary `cmd.Run()` or `cmd.Output`.
-func (e *Executor) executeCommand(cmd *exec.Cmd) (string, execute.Usage, error) {
+func (e *Executor) executeCommand(cmd *exec.Cmd) (execute.RuntimeOutput, execute.Usage, error) {
 
-	var stdout bytes.Buffer
+	var (
+		stdout bytes.Buffer
+		stderr bytes.Buffer
+	)
 	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
 	// Execute the command and collect output.
 	start := time.Now()
 	err := cmd.Start()
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not start process: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not start process: %w", err)
 	}
 
 	// Set resource limits on the process.
@@ -31,14 +35,14 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (string, execute.Usage, error) 
 
 	err = e.cfg.Limiter.LimitProcess(cmd.Process.Pid)
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not limit process: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not limit process: %w", err)
 	}
 
 	e.log.Debug().Int("pid", cmd.Process.Pid).Msg("resource limits set for process")
 
 	err = cmd.Wait()
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not wait on process: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not wait on process: %w", err)
 	}
 
 	end := time.Now()
@@ -47,10 +51,16 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (string, execute.Usage, error) 
 	duration := end.Sub(start)
 	usage, err := process.GetUsage(cmd)
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not retrieve usage data: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not retrieve usage data: %w", err)
 	}
 
 	usage.WallClockTime = duration
 
-	return stdout.String(), usage, nil
+	out := execute.RuntimeOutput{
+		Stdout:   stdout.String(),
+		Stderr:   stderr.String(),
+		ExitCode: cmd.ProcessState.ExitCode(),
+	}
+
+	return out, usage, nil
 }
