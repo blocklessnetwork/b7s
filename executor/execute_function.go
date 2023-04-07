@@ -17,6 +17,7 @@ func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execu
 		res := execute.Result{
 			Code:      response.CodeError,
 			RequestID: requestID,
+			Result:    out,
 			Usage:     usage,
 		}
 
@@ -80,7 +81,7 @@ func (e *Executor) executeFunction(requestID string, req execute.Request) (execu
 
 	out, usage, err := e.executeCommand(cmd)
 	if err != nil {
-		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("command execution failed: %w", err)
+		return out, execute.Usage{}, fmt.Errorf("command execution failed: %w", err)
 	}
 
 	e.log.Info().

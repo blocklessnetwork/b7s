@@ -30,22 +30,20 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (execute.RuntimeOutput, execute
 		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not start process: %w", err)
 	}
 
-	// Set resource limits on the process.
-	e.log.Debug().Int("pid", cmd.Process.Pid).Msg("setting resource limits for process")
-
 	err = e.cfg.Limiter.LimitProcess(cmd.Process.Pid)
 	if err != nil {
 		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not limit process: %w", err)
 	}
 
-	e.log.Debug().Int("pid", cmd.Process.Pid).Msg("resource limits set for process")
-
-	err = cmd.Wait()
-	if err != nil {
-		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not wait on process: %w", err)
-	}
-
+	// Return execution error with as much info below.
+	cmdErr := cmd.Wait()
 	end := time.Now()
+
+	out := execute.RuntimeOutput{
+		Stdout:   stdout.String(),
+		Stderr:   stderr.String(),
+		ExitCode: cmd.ProcessState.ExitCode(),
+	}
 
 	// Create usage information.
 	duration := end.Sub(start)
@@ -56,10 +54,8 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (execute.RuntimeOutput, execute
 
 	usage.WallClockTime = duration
 
-	out := execute.RuntimeOutput{
-		Stdout:   stdout.String(),
-		Stderr:   stderr.String(),
-		ExitCode: cmd.ProcessState.ExitCode(),
+	if cmdErr != nil {
+		return out, usage, fmt.Errorf("process execution failed: %w", cmdErr)
 	}
 
 	return out, usage, nil

@@ -24,6 +24,13 @@ func New(log zerolog.Logger, options ...Option) (*Executor, error) {
 		option(&cfg)
 	}
 
+	// Convert the working directory to an absolute path too.
+	workdir, err := filepath.Abs(cfg.WorkDir)
+	if err != nil {
+		return nil, fmt.Errorf("could not get absolute path for workspace (path: %s): %w", cfg.WorkDir, err)
+	}
+	cfg.WorkDir = workdir
+
 	// We need the absolute path for the runtime, since we'll be changing
 	// the working directory on execution.
 	runtime, err := filepath.Abs(cfg.RuntimeDir)

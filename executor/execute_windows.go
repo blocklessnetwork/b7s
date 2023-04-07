@@ -60,12 +60,14 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (execute.RuntimeOutput, execute
 	}()
 
 	// Now we can safely wait for the child process to complete.
-	err = cmd.Wait()
-	if err != nil {
-		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not wait on process: %w", err)
-	}
-
+	cmdErr := cmd.Wait()
 	end := time.Now()
+
+	out := execute.RuntimeOutput{
+		Stdout:   stdout.String(),
+		Stderr:   stderr.String(),
+		ExitCode: cmd.ProcessState.ExitCode(),
+	}
 
 	// Create usage information.
 	duration := end.Sub(start)
@@ -83,10 +85,8 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (execute.RuntimeOutput, execute
 	usage.MemoryMaxKB = int64(mem) / 1000
 	usage.WallClockTime = duration
 
-	out := execute.RuntimeOutput{
-		Stdout:   stdout.String(),
-		Stderr:   stderr.String(),
-		ExitCode: cmd.ProcessState.ExitCode(),
+	if cmdErr != nil {
+		return out, usage, fmt.Errorf("process execution failed: %w", cmdErr)
 	}
 
 	return out, usage, nil
