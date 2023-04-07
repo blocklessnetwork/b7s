@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/blocklessnetworking/b7s/models/api/request"
+	"github.com/blocklessnetworking/b7s/models/api/response"
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
@@ -31,6 +32,14 @@ func (a *API) Execute(ctx echo.Context) error {
 		code = http.StatusInternalServerError
 	}
 
+	// Create the API response.
+	res := response.Execute{
+		Code:      result.Code,
+		RequestID: result.RequestID,
+		Result:    result.Result.Stdout,
+		ResultEx:  result.Result,
+	}
+
 	// Send the response.
-	return ctx.JSON(code, result)
+	return ctx.JSON(code, res)
 }

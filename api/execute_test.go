@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/api"
+	"github.com/blocklessnetworking/b7s/models/api/response"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
@@ -26,17 +27,24 @@ func TestAPI_Execute(t *testing.T) {
 	err = api.Execute(ctx)
 	require.NoError(t, err)
 
-	var res execute.Result
+	var res response.Execute
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 
 	require.Equal(t, http.StatusOK, rec.Result().StatusCode)
-	require.Equal(t, mocks.GenericExecutionResult, res)
+	require.Equal(t, mocks.GenericExecutionResult.Code, res.Code)
+	require.Equal(t, mocks.GenericExecutionResult.RequestID, res.RequestID)
+	require.Equal(t, mocks.GenericExecutionResult.Result.Stdout, res.Result)
+	require.Equal(t, mocks.GenericExecutionResult.Result, res.ResultEx)
 }
 
 func TestAPI_Execute_HandlesErrors(t *testing.T) {
 
 	executionResult := execute.Result{
-		Result: "dummy-failed-execution-result",
+		Result: execute.RuntimeOutput{
+			Stdout:   "dummy-failed-execution-result",
+			Stderr:   "dummy-failed-execution-log",
+			ExitCode: 1,
+		},
 	}
 
 	node := mocks.BaselineNode(t)
@@ -54,12 +62,14 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 	err = api.Execute(ctx)
 	require.NoError(t, err)
 
-	var res execute.Result
+	var res response.Execute
 	err = json.Unmarshal(rec.Body.Bytes(), &res)
 	require.NoError(t, err)
 
 	require.Equal(t, http.StatusInternalServerError, rec.Result().StatusCode)
-	require.Equal(t, executionResult, res)
+	require.Equal(t, executionResult.Code, res.Code)
+	require.Equal(t, executionResult.Result.Stdout, res.Result)
+	require.Equal(t, executionResult.Result, res.ResultEx)
 }
 
 func TestAPI_Execute_HandlesMalformedRequests(t *testing.T) {

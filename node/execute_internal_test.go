@@ -86,7 +86,8 @@ func TestNode_WorkerExecute(t *testing.T) {
 			expected := mocks.GenericExecutionResult
 			require.Equal(t, requestID, received.RequestID)
 			require.Equal(t, expected.Code, received.Code)
-			require.Equal(t, expected.Result, received.Result)
+			require.Equal(t, expected.Result.Stdout, received.Result)
+			require.Equal(t, expected.Result, received.ResultEx)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -99,8 +100,12 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 		var (
 			faultyExecutionResult = execute.Result{
-				Code:      response.CodeError,
-				Result:    "something horrible has happened",
+				Code: response.CodeError,
+				Result: execute.RuntimeOutput{
+					Stdout:   "something horrible has happened",
+					Stderr:   "log of something horrible",
+					ExitCode: 1,
+				},
 				RequestID: mocks.GenericUUID.String(),
 			}
 		)
@@ -137,7 +142,8 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			require.Equal(t, faultyExecutionResult.RequestID, received.RequestID)
 			require.Equal(t, faultyExecutionResult.Code, received.Code)
-			require.Equal(t, faultyExecutionResult.Result, received.Result)
+			require.Equal(t, faultyExecutionResult.Result.Stdout, received.Result)
+			require.Equal(t, faultyExecutionResult.Result, received.ResultEx)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -292,12 +298,16 @@ func TestNode_HeadExecute(t *testing.T) {
 		t.Parallel()
 
 		const (
-			topic           = DefaultTopic
-			executionResult = "dummy-execution-result"
+			topic = DefaultTopic
 		)
 
 		var (
-			requestID string
+			requestID       string
+			executionResult = execute.RuntimeOutput{
+				Stdout:   "dummy-execution-result",
+				Stderr:   "dummy-execution-log",
+				ExitCode: 0,
+			}
 		)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -339,7 +349,8 @@ func TestNode_HeadExecute(t *testing.T) {
 			res := response.Execute{
 				Type:      blockless.MessageExecuteResponse,
 				RequestID: requestID,
-				Result:    executionResult,
+				Result:    executionResult.Stdout,
+				ResultEx:  executionResult,
 				Code:      response.CodeOK,
 			}
 			payload := serialize(t, res)
@@ -369,7 +380,8 @@ func TestNode_HeadExecute(t *testing.T) {
 
 			require.Equal(t, response.CodeOK, res.Code)
 			require.Equal(t, requestID, res.RequestID)
-			require.Equal(t, executionResult, res.Result)
+			require.Equal(t, executionResult.Stdout, res.Result)
+			require.Equal(t, executionResult, res.ResultEx)
 		})
 
 		var nodeWG sync.WaitGroup

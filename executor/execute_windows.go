@@ -24,21 +24,25 @@ import (
 // `DuplicateHandle“ syscall. With this duplicated handle, we'll be able to access all the info we need.
 // Additionally, the `DuplicateHandle` syscall will fail if we do anything wrong, so it will also act as a
 // validation layer.
-func (e *Executor) executeCommand(cmd *exec.Cmd) (string, execute.Usage, error) {
+func (e *Executor) executeCommand(cmd *exec.Cmd) (execute.RuntimeOutput, execute.Usage, error) {
 
-	var stdout bytes.Buffer
+	var (
+		stdout bytes.Buffer
+		stderr bytes.Buffer
+	)
 	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
 	// Execute the command and collect output.
 	start := time.Now()
 	err := cmd.Start()
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not start process: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not start process: %w", err)
 	}
 
 	childHandle, err := process.ReadHandle(cmd)
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not get process handle: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not get process handle: %w", err)
 	}
 
 	// Create a duplicate handle - only for me (current process), not inheritable.
@@ -46,7 +50,7 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (string, execute.Usage, error) 
 	me := windows.CurrentProcess()
 	err = windows.DuplicateHandle(me, childHandle, me, &handle, windows.PROCESS_QUERY_INFORMATION, false, 0)
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not duplicate process handle: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not duplicate process handle: %w", err)
 	}
 	defer func() {
 		err := windows.CloseHandle(handle)
@@ -56,28 +60,34 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (string, execute.Usage, error) 
 	}()
 
 	// Now we can safely wait for the child process to complete.
-	err = cmd.Wait()
-	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not wait on process: %w", err)
-	}
-
+	cmdErr := cmd.Wait()
 	end := time.Now()
+
+	out := execute.RuntimeOutput{
+		Stdout:   stdout.String(),
+		Stderr:   stderr.String(),
+		ExitCode: cmd.ProcessState.ExitCode(),
+	}
 
 	// Create usage information.
 	duration := end.Sub(start)
 	usage, err := process.GetUsage(cmd)
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not retrieve usage data: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not retrieve usage data: %w", err)
 	}
 
 	// Returned memory usage is in bytes, so convert it to kilobytes.
 	mem, err := process.GetMemUsageForHandle(handle)
 	if err != nil {
-		return "", execute.Usage{}, fmt.Errorf("could not retrieve memory data: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not retrieve memory data: %w", err)
 	}
 
 	usage.MemoryMaxKB = int64(mem) / 1000
 	usage.WallClockTime = duration
 
-	return stdout.String(), usage, nil
+	if cmdErr != nil {
+		return out, usage, fmt.Errorf("process execution failed: %w", cmdErr)
+	}
+
+	return out, usage, nil
 }

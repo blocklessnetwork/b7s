@@ -74,7 +74,8 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 		Type:      blockless.MessageExecuteResponse,
 		RequestID: result.RequestID,
 		Code:      result.Code,
-		Result:    result.Result,
+		Result:    result.Result.Stdout,
+		ResultEx:  result.Result,
 	}
 
 	// Send the response, whatever it may be (success or failure).
@@ -235,7 +236,7 @@ rollCallResponseLoop:
 	// Return the execution result.
 	result := execute.Result{
 		Code:      resExecute.Code,
-		Result:    resExecute.Result,
+		Result:    resExecute.ResultEx,
 		RequestID: resExecute.RequestID,
 	}
 
