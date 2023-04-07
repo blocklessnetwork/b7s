@@ -7,9 +7,9 @@ import (
 // Execute describes the REST API response for function execution.
 type Execute struct {
 	Code      string                `json:"code"`
+	RequestID string                `json:"request_id"`
 	Result    string                `json:"result"`
 	ResultEx  execute.RuntimeOutput `json:"result_ex"`
-	RequestID string                `json:"request_id"`
 	// NOTE: Not sending the usage information for now.
 	Usage execute.Usage `json:"-"`
 }
