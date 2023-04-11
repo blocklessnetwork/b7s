@@ -150,8 +150,11 @@ func TestNode_InstallFunction(t *testing.T) {
 		hostAddNewPeer(t, node.host, receiver)
 
 		fstore := mocks.BaselineFunctionHandler(t)
-		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
-			return nil, mocks.GenericError
+		fstore.InstalledFunc = func(string) (bool, error) {
+			return false, nil
+		}
+		fstore.InstallFunc = func(string, string) error {
+			return mocks.GenericError
 		}
 		node.fstore = fstore
 

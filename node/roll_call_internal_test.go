@@ -84,8 +84,8 @@ func TestNode_RollCall(t *testing.T) {
 
 		// Function store fails to check function presence.
 		fstore := mocks.BaselineFunctionHandler(t)
-		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
-			return nil, mocks.GenericError
+		fstore.InstalledFunc = func(string) (bool, error) {
+			return false, mocks.GenericError
 		}
 		node.fstore = fstore
 
@@ -126,8 +126,8 @@ func TestNode_RollCall(t *testing.T) {
 
 		// Function store works okay but function is not found.
 		fstore := mocks.BaselineFunctionHandler(t)
-		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
-			return nil, blockless.ErrNotFound
+		fstore.InstalledFunc = func(string) (bool, error) {
+			return false, nil
 		}
 		node.fstore = fstore
 
