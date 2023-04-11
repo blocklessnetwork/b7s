@@ -267,7 +267,7 @@ func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload
 // isFuncitonInstalled looks up the function in the store by using the functionID/CID as key.
 func (n *Node) isFunctionInstalled(functionID string) (bool, error) {
 
-	_, err := n.function.Get("", functionID, true)
+	_, err := n.fstore.Get("", functionID, true)
 	if err != nil {
 
 		if errors.Is(err, blockless.ErrNotFound) {

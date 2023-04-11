@@ -30,7 +30,7 @@ type Node struct {
 	host     *host.Host
 	store    Store
 	executor Executor
-	function FunctionStore
+	fstore   FStore
 
 	topic *pubsub.Topic
 	sema  chan struct{}
@@ -41,7 +41,7 @@ type Node struct {
 }
 
 // New creates a new Node.
-func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, function FunctionStore, options ...Option) (*Node, error) {
+func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, fstore FStore, options ...Option) (*Node, error) {
 
 	// Initialize config.
 	cfg := DefaultConfig
@@ -64,7 +64,7 @@ func New(log zerolog.Logger, host *host.Host, store Store, peerStore PeerStore, 
 		log:      log.With().Str("component", "node").Logger(),
 		host:     host,
 		store:    store,
-		function: function,
+		fstore:   fstore,
 		executor: cfg.Execute,
 
 		wg:   &sync.WaitGroup{},

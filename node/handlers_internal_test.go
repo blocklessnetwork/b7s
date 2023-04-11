@@ -153,7 +153,7 @@ func TestNode_InstallFunction(t *testing.T) {
 		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
 			return nil, mocks.GenericError
 		}
-		node.function = fstore
+		node.fstore = fstore
 
 		// NOTE: In reality, this is more "documenting" current behavior.
 		// In reality it sounds more correct that we *should* get a response back.

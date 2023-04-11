@@ -57,7 +57,7 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, payload
 	req.From = from
 
 	// Get the function manifest.
-	_, err = n.function.Get(req.ManifestURL, req.CID, true)
+	_, err = n.fstore.Get(req.ManifestURL, req.CID, true)
 	if err != nil {
 		return fmt.Errorf("could not retrieve function (manifest_url: %s, cid: %s): %w", req.ManifestURL, req.CID, err)
 	}

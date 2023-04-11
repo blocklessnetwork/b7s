@@ -161,7 +161,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
 			return nil, mocks.GenericError
 		}
-		node.function = fstore
+		node.fstore = fstore
 
 		// Create a host that will serve as a receiver of the execution response.
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
@@ -196,7 +196,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
 			return nil, blockless.ErrNotFound
 		}
-		node.function = fstore
+		node.fstore = fstore
 
 		wg.Add(1)
 

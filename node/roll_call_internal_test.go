@@ -87,7 +87,7 @@ func TestNode_RollCall(t *testing.T) {
 		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
 			return nil, mocks.GenericError
 		}
-		node.function = fstore
+		node.fstore = fstore
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -129,7 +129,7 @@ func TestNode_RollCall(t *testing.T) {
 		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
 			return nil, blockless.ErrNotFound
 		}
-		node.function = fstore
+		node.fstore = fstore
 
 		var wg sync.WaitGroup
 		wg.Add(1)
