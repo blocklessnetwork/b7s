@@ -56,10 +56,18 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, payload
 	}
 	req.From = from
 
-	// Get the function manifest.
-	_, err = n.fstore.Get(req.ManifestURL, req.CID, true)
+	// Check if the function is installed.
+	installed, err := n.fstore.Installed(req.CID)
 	if err != nil {
-		return fmt.Errorf("could not retrieve function (manifest_url: %s, cid: %s): %w", req.ManifestURL, req.CID, err)
+		return fmt.Errorf("could not check if function is installed: %w", err)
+	}
+
+	// If the function is not installed - try to install it now.
+	if !installed {
+		err := n.fstore.Install(req.ManifestURL, req.CID)
+		if err != nil {
+			return fmt.Errorf("could not install function: %w", err)
+		}
 	}
 
 	// Create the response.
