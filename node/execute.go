@@ -3,7 +3,6 @@ package node
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -90,7 +89,7 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 func (n *Node) workerExecute(ctx context.Context, from peer.ID, requestID string, req execute.Request) (execute.Result, error) {
 
 	// Check if we have function in store.
-	functionInstalled, err := n.isFunctionInstalled(req.FunctionID)
+	functionInstalled, err := n.fstore.Installed(req.FunctionID)
 	if err != nil {
 		res := execute.Result{
 			Code: response.CodeError,
@@ -262,20 +261,4 @@ func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload
 	n.executeResponses.Set(res.RequestID, res)
 
 	return nil
-}
-
-// isFuncitonInstalled looks up the function in the store by using the functionID/CID as key.
-func (n *Node) isFunctionInstalled(functionID string) (bool, error) {
-
-	_, err := n.fstore.Get("", functionID, true)
-	if err != nil {
-
-		if errors.Is(err, blockless.ErrNotFound) {
-			return false, nil
-		}
-
-		return false, fmt.Errorf("could not lookup function in store: %w", err)
-	}
-
-	return true, nil
 }

@@ -29,7 +29,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	req.From = from
 
 	// Check if we have this manifest.
-	functionInstalled, err := n.isFunctionInstalled(req.FunctionID)
+	functionInstalled, err := n.fstore.Installed(req.FunctionID)
 	if err != nil {
 		// We could not lookup the manifest.
 		res := response.RollCall{
