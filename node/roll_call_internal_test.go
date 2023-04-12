@@ -114,7 +114,7 @@ func TestNode_RollCall(t *testing.T) {
 
 		wg.Wait()
 	})
-	t.Run("worker node handles function not installed", func(t *testing.T) {
+	t.Run("worker node installs function on roll call", func(t *testing.T) {
 		t.Parallel()
 
 		node := createNode(t, blockless.WorkerNode)
@@ -124,10 +124,13 @@ func TestNode_RollCall(t *testing.T) {
 
 		hostAddNewPeer(t, node.host, receiver)
 
-		// Function store works okay but function is not found.
+		// Function store has no function but is able to install it.
 		fstore := mocks.BaselineFunctionHandler(t)
 		fstore.InstalledFunc = func(string) (bool, error) {
 			return false, nil
+		}
+		fstore.InstallFunc = func(string, string) error {
+			return nil
 		}
 		node.fstore = fstore
 
@@ -148,11 +151,56 @@ func TestNode_RollCall(t *testing.T) {
 
 			require.Equal(t, rollCallReq.FunctionID, received.FunctionID)
 			require.Equal(t, rollCallReq.RequestID, received.RequestID)
-			require.Equal(t, response.CodeNotFound, received.Code)
+			require.Equal(t, response.CodeAccepted, received.Code)
 		})
 
 		err = node.processRollCall(context.Background(), receiver.ID(), payload)
 		require.NoError(t, err)
+
+		wg.Wait()
+	})
+	t.Run("worker node handles function failure to install function on roll call", func(t *testing.T) {
+		t.Parallel()
+
+		node := createNode(t, blockless.WorkerNode)
+
+		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
+		require.NoError(t, err)
+
+		hostAddNewPeer(t, node.host, receiver)
+
+		// Function store has no function but is not able to install it.
+		fstore := mocks.BaselineFunctionHandler(t)
+		fstore.InstalledFunc = func(string) (bool, error) {
+			return false, nil
+		}
+		fstore.InstallFunc = func(string, string) error {
+			return mocks.GenericError
+		}
+		node.fstore = fstore
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+
+		receiver.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+			defer wg.Done()
+			defer stream.Close()
+
+			var received response.RollCall
+			getStreamPayload(t, stream, &received)
+
+			from := stream.Conn().RemotePeer()
+			require.Equal(t, node.host.ID(), from)
+
+			require.Equal(t, blockless.MessageRollCallResponse, received.Type)
+
+			require.Equal(t, rollCallReq.FunctionID, received.FunctionID)
+			require.Equal(t, rollCallReq.RequestID, received.RequestID)
+			require.Equal(t, response.CodeError, received.Code)
+		})
+
+		err = node.processRollCall(context.Background(), receiver.ID(), payload)
+		require.Error(t, err)
 
 		wg.Wait()
 	})

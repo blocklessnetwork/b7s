@@ -9,9 +9,9 @@ import (
 
 // Node implements the `Node` interface expected by the API.
 type Node struct {
-	ExecuteFunctionFunc func(context.Context, execute.Request) (execute.Result, error)
-	ExecutionResultFunc func(id string) (execute.Result, bool)
-	FunctionInstallFunc func(ctx context.Context, uri string, cid string) error
+	ExecuteFunctionFunc        func(context.Context, execute.Request) (execute.Result, error)
+	ExecutionResultFunc        func(id string) (execute.Result, bool)
+	PublishFunctionInstallFunc func(ctx context.Context, uri string, cid string) error
 }
 
 func BaselineNode(t *testing.T) *Node {
@@ -24,7 +24,7 @@ func BaselineNode(t *testing.T) *Node {
 		ExecutionResultFunc: func(id string) (execute.Result, bool) {
 			return GenericExecutionResult, true
 		},
-		FunctionInstallFunc: func(ctx context.Context, uri string, cid string) error {
+		PublishFunctionInstallFunc: func(ctx context.Context, uri string, cid string) error {
 			return nil
 		},
 	}
@@ -40,6 +40,6 @@ func (n *Node) ExecutionResult(id string) (execute.Result, bool) {
 	return n.ExecutionResultFunc(id)
 }
 
-func (n *Node) FunctionInstall(ctx context.Context, uri string, cid string) error {
-	return n.FunctionInstallFunc(ctx, uri, cid)
+func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid string) error {
+	return n.PublishFunctionInstallFunc(ctx, uri, cid)
 }
