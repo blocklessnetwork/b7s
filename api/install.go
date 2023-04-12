@@ -37,7 +37,7 @@ func (a *API) Install(ctx echo.Context) error {
 	// Start function install in a separate goroutine and signal when it's done.
 	fnErr := make(chan error)
 	go func() {
-		err = a.node.FunctionInstall(reqCtx, req.URI, req.CID)
+		err = a.node.PublishFunctionInstall(reqCtx, req.URI, req.CID)
 		fnErr <- err
 	}()
 
