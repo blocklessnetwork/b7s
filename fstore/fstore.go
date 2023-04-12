@@ -31,7 +31,7 @@ func New(log zerolog.Logger, store Store, workdir string) *FStore {
 	downloader.UserAgent = defaultUserAgent
 
 	h := FStore{
-		log:        log.With().Str("component", "function_store").Logger(),
+		log:        log.With().Str("component", "fstore").Logger(),
 		store:      store,
 		http:       &cli,
 		downloader: downloader,

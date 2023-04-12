@@ -43,9 +43,6 @@ findPeers:
 			// Skip peers we're already connected to.
 			connections := h.Network().ConnsToPeer(peer.ID)
 			if len(connections) > 0 {
-				h.log.Debug().
-					Str("peer", peer.String()).
-					Msg("skipping connected peer")
 				continue
 			}
 

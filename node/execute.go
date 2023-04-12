@@ -192,7 +192,7 @@ rollCallResponseLoop:
 		Str("peer", reportingPeer.String()).
 		Str("function_id", req.FunctionID).
 		Str("request_id", requestID).
-		Msg("peer reported for roll call")
+		Msg("peer reported for roll call - requesting execution")
 
 	// Request execution from the peer who reported back first.
 	reqExecute := request.Execute{
