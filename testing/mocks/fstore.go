@@ -7,7 +7,9 @@ import (
 )
 
 type FStore struct {
-	GetFunc                func(string, string, bool) (*blockless.FunctionManifest, error)
+	InstallFunc            func(string, string) error
+	GetFunc                func(string) (*blockless.FunctionManifest, error)
+	InstalledFunc          func(string) (bool, error)
 	InstalledFunctionsFunc func() []string
 	SyncFunc               func(string) error
 }
@@ -16,8 +18,14 @@ func BaselineFunctionHandler(t *testing.T) *FStore {
 	t.Helper()
 
 	fh := FStore{
-		GetFunc: func(string, string, bool) (*blockless.FunctionManifest, error) {
+		GetFunc: func(string) (*blockless.FunctionManifest, error) {
 			return &GenericManifest, nil
+		},
+		InstallFunc: func(string, string) error {
+			return nil
+		},
+		InstalledFunc: func(string) (bool, error) {
+			return true, nil
 		},
 		InstalledFunctionsFunc: func() []string {
 			return nil
@@ -30,8 +38,16 @@ func BaselineFunctionHandler(t *testing.T) *FStore {
 	return &fh
 }
 
-func (f *FStore) Get(address string, cid string, useCached bool) (*blockless.FunctionManifest, error) {
-	return f.GetFunc(address, cid, useCached)
+func (f *FStore) Install(address string, cid string) error {
+	return f.InstallFunc(address, cid)
+}
+
+func (f *FStore) Get(cid string) (*blockless.FunctionManifest, error) {
+	return f.GetFunc(cid)
+}
+
+func (f *FStore) Installed(cid string) (bool, error) {
+	return f.InstalledFunc(cid)
 }
 
 func (f *FStore) InstalledFunctions() []string {

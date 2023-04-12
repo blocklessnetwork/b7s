@@ -28,59 +28,50 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	}
 	req.From = from
 
-	// Check if we have this manifest.
-	functionInstalled, err := n.isFunctionInstalled(req.FunctionID)
-	if err != nil {
-		// We could not lookup the manifest.
-		res := response.RollCall{
-			Type:       blockless.MessageRollCallResponse,
-			FunctionID: req.FunctionID,
-			RequestID:  req.RequestID,
-			Code:       response.CodeError,
-		}
+	n.log.Debug().Str("cid", req.FunctionID).Str("request_id", req.RequestID).
+		Msg("received roll call request")
 
+	// Base response to return.
+	res := response.RollCall{
+		Type:       blockless.MessageRollCallResponse,
+		FunctionID: req.FunctionID,
+		RequestID:  req.RequestID,
+		Code:       response.CodeError, // CodeError by default, changed if everything goes well.
+	}
+
+	// Check if we have this function installed.
+	installed, err := n.fstore.Installed(req.FunctionID)
+	if err != nil {
 		sendErr := n.send(ctx, req.From, res)
 		// Log send error but choose to return the original error.
-		n.log.Error().
-			Err(sendErr).
-			Str("to", req.From.String()).
+		n.log.Error().Err(sendErr).Str("to", req.From.String()).
 			Msg("could not send response")
 
 		return fmt.Errorf("could not check if function is installed: %w", err)
 	}
 
-	// We don't have this function.
-	if !functionInstalled {
+	// We don't have this function - install it now.
+	if !installed {
 
-		res := response.RollCall{
-			Type:       blockless.MessageRollCallResponse,
-			FunctionID: req.FunctionID,
-			RequestID:  req.RequestID,
-			Code:       response.CodeNotFound,
-		}
+		n.log.Info().Str("cid", req.FunctionID).
+			Msg("roll call but function not installed, installing now")
 
-		err = n.send(ctx, req.From, res)
+		err = n.installFunction(req.FunctionID, manifestURLFromCID(req.FunctionID))
 		if err != nil {
-			return fmt.Errorf("could not send response: %w", err)
+			sendErr := n.send(ctx, req.From, res)
+			// Log send error but choose to return the original error.
+			n.log.Error().Err(sendErr).Str("to", req.From.String()).
+				Msg("could not send response")
+
+			return fmt.Errorf("could not install function: %w", err)
 		}
-
-		// TODO: In the original code we create a function install call here.
-		// However, we do it with the CID only, but the function install code
-		// requires manifestURL + CID. So at the moment this code path is not
-		// present here.
-
-		return nil
 	}
 
-	// Create response.
-	res := response.RollCall{
-		Type:       blockless.MessageRollCallResponse,
-		FunctionID: req.FunctionID,
-		RequestID:  req.RequestID,
-		Code:       response.CodeAccepted,
-	}
+	n.log.Info().Str("cid", req.FunctionID).Str("request_id", req.RequestID).
+		Msg("reporting for roll call")
 
-	// Send message.
+	// Send postive response.
+	res.Code = response.CodeAccepted
 	err = n.send(ctx, req.From, res)
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)

@@ -38,7 +38,6 @@ func TestNode_New(t *testing.T) {
 
 	var (
 		logger          = mocks.NoopLogger
-		store           = mocks.BaselineStore(t)
 		peerstore       = mocks.BaselinePeerStore(t)
 		functionHandler = mocks.BaselineFunctionHandler(t)
 		executor        = mocks.BaselineExecutor(t)
@@ -50,23 +49,23 @@ func TestNode_New(t *testing.T) {
 	t.Run("create a head node", func(t *testing.T) {
 		t.Parallel()
 
-		node, err := New(logger, host, store, peerstore, functionHandler, WithRole(blockless.HeadNode))
+		node, err := New(logger, host, peerstore, functionHandler, WithRole(blockless.HeadNode))
 		require.NoError(t, err)
 		require.NotNil(t, node)
 
 		// Creating a head node with executor fails.
-		_, err = New(logger, host, store, peerstore, functionHandler, WithRole(blockless.HeadNode), WithExecutor(executor))
+		_, err = New(logger, host, peerstore, functionHandler, WithRole(blockless.HeadNode), WithExecutor(executor))
 		require.Error(t, err)
 	})
 	t.Run("create a worker node", func(t *testing.T) {
 		t.Parallel()
 
-		node, err := New(logger, host, store, peerstore, functionHandler, WithRole(blockless.WorkerNode), WithExecutor(executor))
+		node, err := New(logger, host, peerstore, functionHandler, WithRole(blockless.WorkerNode), WithExecutor(executor))
 		require.NoError(t, err)
 		require.NotNil(t, node)
 
 		// Creating a worker node without executor fails.
-		_, err = New(logger, host, store, peerstore, functionHandler, WithRole(blockless.WorkerNode))
+		_, err = New(logger, host, peerstore, functionHandler, WithRole(blockless.WorkerNode))
 		require.Error(t, err)
 	})
 }
@@ -95,7 +94,6 @@ func createNode(t *testing.T, role blockless.NodeRole) *Node {
 
 	var (
 		logger          = mocks.NoopLogger
-		store           = mocks.BaselineStore(t)
 		peerstore       = mocks.BaselinePeerStore(t)
 		functionHandler = mocks.BaselineFunctionHandler(t)
 	)
@@ -112,7 +110,7 @@ func createNode(t *testing.T, role blockless.NodeRole) *Node {
 		opts = append(opts, WithExecutor(executor))
 	}
 
-	node, err := New(logger, host, store, peerstore, functionHandler, opts...)
+	node, err := New(logger, host, peerstore, functionHandler, opts...)
 	require.NoError(t, err)
 
 	return node

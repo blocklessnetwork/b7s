@@ -156,12 +156,12 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 		node := createNode(t, blockless.WorkerNode)
 
-		// Error retrieving function.
+		// Error retrieving function manifest.
 		fstore := mocks.BaselineFunctionHandler(t)
-		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
-			return nil, mocks.GenericError
+		fstore.InstalledFunc = func(string) (bool, error) {
+			return false, mocks.GenericError
 		}
-		node.function = fstore
+		node.fstore = fstore
 
 		// Create a host that will serve as a receiver of the execution response.
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
@@ -193,10 +193,10 @@ func TestNode_WorkerExecute(t *testing.T) {
 		wg.Wait()
 
 		// Function is not installed.
-		fstore.GetFunc = func(string, string, bool) (*blockless.FunctionManifest, error) {
-			return nil, blockless.ErrNotFound
+		fstore.InstalledFunc = func(string) (bool, error) {
+			return false, nil
 		}
-		node.function = fstore
+		node.fstore = fstore
 
 		wg.Add(1)
 
@@ -212,7 +212,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
 
-			require.Equal(t, received.Code, response.CodeNotFound)
+			require.Equal(t, response.CodeNotFound, received.Code)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)

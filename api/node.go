@@ -9,5 +9,5 @@ import (
 type Node interface {
 	ExecuteFunction(context.Context, execute.Request) (execute.Result, error)
 	ExecutionResult(id string) (execute.Result, bool)
-	FunctionInstall(ctx context.Context, uri string, cid string) error
+	PublishFunctionInstall(ctx context.Context, uri string, cid string) error
 }

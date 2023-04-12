@@ -39,8 +39,8 @@ func (n *Node) ExecutionResult(id string) (execute.Result, bool) {
 	return res.(execute.Result), ok
 }
 
-// FunctionInstall initiates function install process.
-func (n *Node) FunctionInstall(ctx context.Context, uri string, cid string) error {
+// PublishFunctionInstall publishes a function install message.
+func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid string) error {
 
 	var req request.InstallFunction
 	if uri != "" {
@@ -89,7 +89,7 @@ func createInstallMessageFromCID(cid string) request.InstallFunction {
 
 	req := request.InstallFunction{
 		Type:        blockless.MessageInstallFunction,
-		ManifestURL: fmt.Sprintf("https://%s.ipfs.w3s.link/manifest.json", cid),
+		ManifestURL: manifestURLFromCID(cid),
 		CID:         cid,
 	}
 
