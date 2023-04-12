@@ -89,7 +89,7 @@ func createInstallMessageFromCID(cid string) request.InstallFunction {
 
 	req := request.InstallFunction{
 		Type:        blockless.MessageInstallFunction,
-		ManifestURL: fmt.Sprintf("https://%s.ipfs.w3s.link/manifest.json", cid),
+		ManifestURL: manifestURLFromCID(cid),
 		CID:         cid,
 	}
 

@@ -72,3 +72,7 @@ func (n *Node) installFunction(cid string, manifestURL string) error {
 
 	return nil
 }
+
+func manifestURLFromCID(cid string) string {
+	return fmt.Sprintf("https://%s.ipfs.w3s.link/manifest.json", cid)
+}
