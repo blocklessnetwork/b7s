@@ -17,7 +17,6 @@ func TestNode_Notifiee(t *testing.T) {
 
 	var (
 		logger          = mocks.NoopLogger
-		store           = mocks.BaselineStore(t)
 		functionHandler = mocks.BaselineFunctionHandler(t)
 	)
 
@@ -40,7 +39,7 @@ func TestNode_Notifiee(t *testing.T) {
 		return nil
 	}
 
-	node, err := New(logger, server, store, peerstore, functionHandler, WithRole(blockless.HeadNode))
+	node, err := New(logger, server, peerstore, functionHandler, WithRole(blockless.HeadNode))
 	require.NoError(t, err)
 
 	client, err := host.New(mocks.NoopLogger, loopback, 0)

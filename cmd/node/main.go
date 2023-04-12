@@ -171,7 +171,7 @@ func run() int {
 	fstore := fstore.New(log, functionStore, cfg.Workspace)
 
 	// Instantiate node.
-	node, err := node.New(log, host, functionStore, peerstore, fstore, opts...)
+	node, err := node.New(log, host, peerstore, fstore, opts...)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure

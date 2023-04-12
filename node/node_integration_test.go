@@ -119,7 +119,7 @@ func createNode(t *testing.T, dir string, logger zerolog.Logger, host *host.Host
 		opts = append(opts, node.WithExecutor(executor))
 	}
 
-	node, err := node.New(logger, host, store, peerstore, fstore, opts...)
+	node, err := node.New(logger, host, peerstore, fstore, opts...)
 	require.NoError(t, err)
 
 	return db, node
