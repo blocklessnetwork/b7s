@@ -29,18 +29,10 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, payload
 	}
 	req.From = from
 
-	// Check if the function is installed.
-	installed, err := n.fstore.Installed(req.CID)
+	// Install function.
+	err = n.installFunction(req.CID, req.ManifestURL)
 	if err != nil {
-		return fmt.Errorf("could not check if function is installed: %w", err)
-	}
-
-	// If the function is not installed - try to install it now.
-	if !installed {
-		err := n.fstore.Install(req.ManifestURL, req.CID)
-		if err != nil {
-			return fmt.Errorf("could not install function: %w", err)
-		}
+		return fmt.Errorf("could not install function: %w", err)
 	}
 
 	// Create the response.
@@ -54,6 +46,28 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, payload
 	err = n.send(ctx, from, res)
 	if err != nil {
 		return fmt.Errorf("could not send the response (peer: %s): %w", from, err)
+	}
+
+	return nil
+}
+
+// installFunction will check if the function is installed first, and install it if not.
+func (n *Node) installFunction(cid string, manifestURL string) error {
+
+	// Check if the function is installed.
+	installed, err := n.fstore.Installed(cid)
+	if err != nil {
+		return fmt.Errorf("could not check if function is installed: %w", err)
+	}
+
+	if installed {
+		return nil
+	}
+
+	// If the function was not installed already, install it now.
+	err = n.fstore.Install(manifestURL, cid)
+	if err != nil {
+		return fmt.Errorf("could not install function: %w", err)
 	}
 
 	return nil
