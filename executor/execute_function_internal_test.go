@@ -24,8 +24,6 @@ func TestExecute_WriteManifest(t *testing.T) {
 	const expectedManifest = `{
 	"fs_root_path": "fs-root-path-value",
 	"entry": "entry-path-value",
-	"limited_fuel": 100000000,
-	"limited_memory": 200,
 	"permissions": [
 		"permission-string-a",
 		"permission-string-b",
