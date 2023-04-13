@@ -13,14 +13,10 @@ func (e *Executor) writeExecutionManifest(req execute.Request, paths requestPath
 	manifest := struct {
 		FSRootPath    string   `json:"fs_root_path,omitempty"`
 		Entry         string   `json:"entry,omitempty"`
-		LimitedFuel   int      `json:"limited_fuel,omitempty"`
-		LimitedMemory int      `json:"limited_memory,omitempty"`
 		Permissions   []string `json:"permissions,omitempty"`
 	}{
 		FSRootPath:    paths.fsRoot,
 		Entry:         paths.entry,
-		LimitedFuel:   100_000_000,
-		LimitedMemory: 200,
 		Permissions:   req.Config.Permissions,
 	}
 
