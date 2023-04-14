@@ -3,8 +3,8 @@ package executor
 import (
 	"fmt"
 
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
-	"github.com/blocklessnetworking/b7s/models/response"
 )
 
 // ExecuteFunction will run the Blockless function defined by the execution request.
@@ -15,7 +15,7 @@ func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execu
 	if err != nil {
 
 		res := execute.Result{
-			Code:      response.CodeError,
+			Code:      codes.Error,
 			RequestID: requestID,
 			Result:    out,
 			Usage:     usage,
@@ -25,7 +25,7 @@ func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execu
 	}
 
 	res := execute.Result{
-		Code:      response.CodeOK,
+		Code:      codes.OK,
 		RequestID: requestID,
 		Result:    out,
 		Usage:     usage,

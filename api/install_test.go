@@ -92,7 +92,7 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 		var res = response.InstallFunction{}
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 
-		num, err := strconv.Atoi(res.Code)
+		num, err := strconv.Atoi(res.Code.String())
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusRequestTimeout, num)

@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/executor"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
-	"github.com/blocklessnetworking/b7s/models/response"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
 
@@ -86,7 +86,7 @@ func TestExecutor_Execute(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify the execution result.
-	require.Equal(t, response.CodeOK, res.Code)
+	require.Equal(t, codes.OK, res.Code)
 	require.Equal(t, requestID, res.RequestID)
 	require.Equal(t, hash, res.Result.Stdout)
 

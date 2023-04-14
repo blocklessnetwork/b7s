@@ -12,6 +12,7 @@ import (
 
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/models/request"
 	"github.com/blocklessnetworking/b7s/models/response"
@@ -100,7 +101,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 		var (
 			faultyExecutionResult = execute.Result{
-				Code: response.CodeError,
+				Code: codes.Error,
 				Result: execute.RuntimeOutput{
 					Stdout:   "something horrible has happened",
 					Stderr:   "log of something horrible",
@@ -184,7 +185,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
 
-			require.Equal(t, received.Code, response.CodeError)
+			require.Equal(t, received.Code, codes.Error)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -212,7 +213,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
 
-			require.Equal(t, response.CodeNotFound, received.Code)
+			require.Equal(t, codes.NotFound, received.Code)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -285,7 +286,7 @@ func TestNode_HeadExecute(t *testing.T) {
 			getStreamPayload(t, stream, &received)
 
 			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
-			require.Equal(t, response.CodeTimeout, received.Code)
+			require.Equal(t, codes.Timeout, received.Code)
 		})
 
 		// Since no one will respond to a roll call, this is bound to time out.
@@ -351,7 +352,7 @@ func TestNode_HeadExecute(t *testing.T) {
 				RequestID: requestID,
 				Result:    executionResult.Stdout,
 				ResultEx:  executionResult,
-				Code:      response.CodeOK,
+				Code:      codes.OK,
 			}
 			payload := serialize(t, res)
 			err = mockWorker.SendMessage(ctx, node.host.ID(), payload)
@@ -378,7 +379,7 @@ func TestNode_HeadExecute(t *testing.T) {
 			getStreamPayload(t, stream, &res)
 			require.Equal(t, blockless.MessageExecuteResponse, res.Type)
 
-			require.Equal(t, response.CodeOK, res.Code)
+			require.Equal(t, codes.OK, res.Code)
 			require.Equal(t, requestID, res.RequestID)
 			require.Equal(t, executionResult.Stdout, res.Result)
 			require.Equal(t, executionResult, res.ResultEx)
@@ -421,7 +422,7 @@ func TestNode_HeadExecute(t *testing.T) {
 		// Reply to the server that we can do the work.
 		res := response.RollCall{
 			Type:       blockless.MessageRollCallResponse,
-			Code:       response.CodeAccepted,
+			Code:       codes.Accepted,
 			FunctionID: received.FunctionID,
 			RequestID:  requestID,
 		}

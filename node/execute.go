@@ -8,6 +8,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/models/request"
 	"github.com/blocklessnetworking/b7s/models/response"
@@ -92,14 +93,14 @@ func (n *Node) workerExecute(ctx context.Context, from peer.ID, requestID string
 	functionInstalled, err := n.fstore.Installed(req.FunctionID)
 	if err != nil {
 		res := execute.Result{
-			Code: response.CodeError,
+			Code: codes.Error,
 		}
 		return res, fmt.Errorf("could not lookup function in store: %w", err)
 	}
 
 	if !functionInstalled {
 		res := execute.Result{
-			Code: response.CodeNotFound,
+			Code: codes.NotFound,
 		}
 
 		return res, nil
@@ -119,7 +120,7 @@ func (n *Node) headExecute(ctx context.Context, from peer.ID, requestID string, 
 	if err != nil {
 
 		res := execute.Result{
-			Code: response.CodeError,
+			Code: codes.Error,
 		}
 
 		return res, fmt.Errorf("could not issue roll call: %w", err)
@@ -149,7 +150,7 @@ rollCallResponseLoop:
 				Msg("roll call timed out")
 
 			res := execute.Result{
-				Code: response.CodeTimeout,
+				Code: codes.Timeout,
 			}
 
 			return res, errRollCallTimeout
@@ -160,18 +161,18 @@ rollCallResponseLoop:
 				Str("peer", reply.From.String()).
 				Str("function_id", req.FunctionID).
 				Str("request_id", requestID).
-				Str("code", reply.Code).
+				Str("code", reply.Code.String()).
 				Msg("peer reported for roll call")
 
 			// Check if this is the reply we want.
-			if reply.Code != response.CodeAccepted ||
+			if reply.Code != codes.Accepted ||
 				reply.FunctionID != req.FunctionID ||
 				reply.RequestID != requestID {
 
 				n.log.Debug().
 					Str("peer", reply.From.String()).
 					Str("request_id", requestID).
-					Str("code", reply.Code).
+					Str("code", reply.Code.String()).
 					Msg("skipping inadequate roll call response")
 
 				continue
@@ -209,7 +210,7 @@ rollCallResponseLoop:
 	if err != nil {
 
 		res := execute.Result{
-			Code: response.CodeError,
+			Code: codes.Error,
 		}
 
 		return res, fmt.Errorf("could not send execution request to peer (peer: %s, function: %s, request: %s): %w",
@@ -229,7 +230,7 @@ rollCallResponseLoop:
 	n.log.Info().
 		Str("request_id", requestID).
 		Str("peer", resExecute.From.String()).
-		Str("code", resExecute.Code).
+		Str("code", resExecute.Code.String()).
 		Msg("received execution response")
 
 	// Return the execution result.

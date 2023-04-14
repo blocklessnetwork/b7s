@@ -1,12 +1,13 @@
 package response
 
 import (
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
 // Execute describes the REST API response for function execution.
 type Execute struct {
-	Code      string                `json:"code"`
+	Code      codes.Code            `json:"code"`
 	RequestID string                `json:"request_id"`
 	Result    string                `json:"result"`
 	ResultEx  execute.RuntimeOutput `json:"result_ex"`
