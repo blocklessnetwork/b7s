@@ -1,8 +1,8 @@
 package waitmap
 
 import (
+	"context"
 	"sync"
-	"time"
 )
 
 // NOTE: Perhaps enable an option to say how long to wait for?
@@ -69,7 +69,7 @@ func (w *WaitMap) Wait(key string) any {
 }
 
 // WaitFor will wait for the value for a key to become available, but no longer than the specified duration.
-func (w *WaitMap) WaitFor(key string, d time.Duration) (any, bool) {
+func (w *WaitMap) WaitFor(ctx context.Context, key string) (any, bool) {
 	w.Lock()
 	// Unlock cannot be deferred so we can ublock Set() while waiting.
 
@@ -86,7 +86,7 @@ func (w *WaitMap) WaitFor(key string, d time.Duration) (any, bool) {
 	w.Unlock()
 
 	select {
-	case <-time.After(d):
+	case <-ctx.Done():
 		return nil, false
 	case value := <-ch:
 		return value, true
