@@ -7,7 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/blocklessnetworking/b7s/models/api/request"
-	"github.com/blocklessnetworking/b7s/models/api/response"
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
@@ -24,22 +23,19 @@ func (a *API) Execute(ctx echo.Context) error {
 	// TODO: Check - We perhaps want to return the request ID and not wait for the execution, right?
 	// It's probable that it will time out anyway, right?
 
-	// Get the execution result.
-	result, err := a.node.ExecuteFunction(ctx.Request().Context(), execute.Request(req))
-	// Determine status code.
-	code := http.StatusOK
-	if err != nil {
-		code = http.StatusInternalServerError
-	}
+	// Get the execution results.
+	results, err := a.node.ExecuteFunction(ctx.Request().Context(), execute.Request(req))
+	_ = results
 
+	// TODO: Correct the API response.
 	// Create the API response.
-	res := response.Execute{
-		Code:      result.Code,
-		RequestID: result.RequestID,
-		Result:    result.Result.Stdout,
-		ResultEx:  result.Result,
-	}
+	// res := response.Execute{
+	// 	Code:      results.Code,
+	// 	RequestID: results.RequestID,
+	// 	Result:    results.Result.Stdout,
+	// 	ResultEx:  results.Result,
+	// }
 
 	// Send the response.
-	return ctx.JSON(code, res)
+	return ctx.JSON(http.StatusOK, results)
 }

@@ -15,19 +15,21 @@ import (
 // Problem is that delegator would need to be notified when an execution result has arrived.
 // Doing this way would make the execution flow more streamlined and would not differentiate as much between
 // worker and head node.
-func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (execute.Result, error) {
+func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (map[string]execute.Result, error) {
 
 	requestID, err := newRequestID()
 	if err != nil {
-		return execute.Result{}, fmt.Errorf("could not generate request ID: %w", err)
+		return nil, fmt.Errorf("could not generate request ID: %w", err)
 	}
 
 	switch n.cfg.Role {
 	case blockless.WorkerNode:
-		return n.workerExecute(ctx, n.host.ID(), requestID, req)
+		_, results, err := n.workerExecute(ctx, requestID, req)
+		return results, err
 
 	case blockless.HeadNode:
-		return n.headExecute(ctx, n.host.ID(), requestID, req)
+		_, results, err := n.headExecute(ctx, requestID, req)
+		return results, err
 	}
 
 	panic(fmt.Errorf("invalid node role: %s", n.cfg.Role))

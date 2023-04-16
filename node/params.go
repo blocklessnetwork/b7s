@@ -6,19 +6,22 @@ import (
 )
 
 const (
-	DefaultTopic           = "blockless/b7s/general"
-	DefaultHealthInterval  = 1 * time.Minute
-	DefaultRollCallTimeout = 5 * time.Second
-	DefaultConcurrency     = 10
-
-	functionInstallTimeout = 10 * time.Second
+	DefaultTopic            = "blockless/b7s/general"
+	DefaultHealthInterval   = 1 * time.Minute
+	DefaultRollCallTimeout  = 5 * time.Second
+	DefaultExecutionTimeout = 10 * time.Second
+	DefaultConcurrency      = 10
 
 	rollCallQueueBufferSize = 1000
 
 	syncInterval = time.Hour
+
+	rollCallNodeCount = 3
 )
 
 var (
-	ErrUnsupportedMessage = errors.New("unsupported message")
-	errRollCallTimeout    = errors.New("roll call timed out")
+	ErrUnsupportedMessage      = errors.New("unsupported message")
+	errRollCallTimeout         = errors.New("roll call timed out")
+	errExecutionTimeout        = errors.New("execution timed out")
+	errExecutionNotEnoughNodes = errors.New("not enough execution results")
 )

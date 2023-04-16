@@ -9,13 +9,9 @@ import (
 
 // Execute describes the `MessageExecuteResponse` message payload.
 type Execute struct {
-	Type      string     `json:"type,omitempty"`
-	RequestID string     `json:"request_id,omitempty"`
-	From      peer.ID    `json:"from,omitempty"`
-	Code      codes.Code `json:"code,omitempty"`
-
-	// Result is kept for now for backwards compatiblity. It should be
-	// equivalent to the `ResultEx.Stdout` field.
-	Result   string                `json:"result,omitempty"`
-	ResultEx execute.RuntimeOutput `json:"result_ex,omitempty"`
+	Type      string                    `json:"type,omitempty"`
+	RequestID string                    `json:"request_id,omitempty"`
+	From      peer.ID                   `json:"from,omitempty"`
+	Code      codes.Code                `json:"code,omitempty"`
+	Results   map[string]execute.Result `json:"results,omitempty"`
 }

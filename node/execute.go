@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -19,7 +20,7 @@ import (
 // and the execution request is relayed to, and retrieved from, a worker node that volunteers.
 // NOTE: By using `execute.Result` here as the type, if this is executed on the head node we are
 // losing the information about `who` is the peer that sent us the result - the `from` field.
-type executeFunc func(context.Context, peer.ID, string, execute.Request) (execute.Result, error)
+type executeFunc func(context.Context, string, execute.Request) (codes.Code, map[string]execute.Result, error)
 
 func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte) error {
 
@@ -39,14 +40,6 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 		}
 	}
 
-	// Create execute request.
-	execReq := execute.Request{
-		FunctionID: req.FunctionID,
-		Method:     req.Method,
-		Parameters: req.Parameters,
-		Config:     req.Config,
-	}
-
 	// Call the appropriate function that executes the request in the appropriate way.
 	// NOTE: In case of an error, we do not return from this function.
 	// Instead, we send the response back to the caller, whatever it may be.
@@ -57,7 +50,7 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 		execFunc = n.headExecute
 	}
 
-	result, err := execFunc(ctx, from, requestID, execReq)
+	code, results, err := execFunc(ctx, requestID, createExecuteRequest(req))
 	if err != nil {
 		n.log.Error().
 			Err(err).
@@ -67,15 +60,14 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 	}
 
 	// Cache the execution result.
-	n.executeResponses.Set(result.RequestID, result)
+	n.executeResponses.Set(requestID, results)
 
 	// Create the execution response from the execution result.
 	res := response.Execute{
 		Type:      blockless.MessageExecuteResponse,
-		RequestID: result.RequestID,
-		Code:      result.Code,
-		Result:    result.Result.Stdout,
-		ResultEx:  result.Result,
+		Code:      code,
+		RequestID: requestID,
+		Results:   results,
 	}
 
 	// Send the response, whatever it may be (success or failure).
@@ -87,43 +79,40 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 	return nil
 }
 
-func (n *Node) workerExecute(ctx context.Context, from peer.ID, requestID string, req execute.Request) (execute.Result, error) {
+// workerExecute is called on the worker node to use its executor component to invoke the function.
+// The return type (map) is in order to maintain the same interface as the head node - mapping the execution result to the peer that executed it.
+// In this case, the peer is us.
+func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.Request) (codes.Code, map[string]execute.Result, error) {
 
 	// Check if we have function in store.
 	functionInstalled, err := n.fstore.Installed(req.FunctionID)
 	if err != nil {
-		res := execute.Result{
-			Code: codes.Error,
-		}
-		return res, fmt.Errorf("could not lookup function in store: %w", err)
+		return codes.Error, nil, fmt.Errorf("could not lookup function in store: %w", err)
 	}
 
-	if !functionInstalled {
-		res := execute.Result{
-			Code: codes.NotFound,
-		}
+	out := make(map[string]execute.Result)
 
-		return res, nil
+	if !functionInstalled {
+		return codes.NotFound, out, nil
 	}
 
 	res, err := n.executor.ExecuteFunction(requestID, req)
+	out[n.ID()] = res
+
 	if err != nil {
-		return res, fmt.Errorf("execution failed: %w", err)
+		return res.Code, out, fmt.Errorf("execution failed: %w", err)
 	}
 
-	return res, nil
+	return res.Code, out, nil
 }
 
-func (n *Node) headExecute(ctx context.Context, from peer.ID, requestID string, req execute.Request) (execute.Result, error) {
+// headExecute is called on the head node. The head node will publish a roll call and delegate an execution request to chosen nodes.
+// The returned map contains execution results, mapped to the peer IDs of peers who reported them.
+func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request) (codes.Code, map[string]execute.Result, error) {
 
 	err := n.issueRollCall(ctx, requestID, req.FunctionID)
 	if err != nil {
-
-		res := execute.Result{
-			Code: codes.Error,
-		}
-
-		return res, fmt.Errorf("could not issue roll call: %w", err)
+		return codes.Error, nil, fmt.Errorf("could not issue roll call: %w", err)
 	}
 
 	n.log.Info().
@@ -135,8 +124,8 @@ func (n *Node) headExecute(ctx context.Context, from peer.ID, requestID string, 
 	tctx, cancel := context.WithTimeout(ctx, n.cfg.RollCallTimeout)
 	defer cancel()
 
-	// Peer that reports to roll call first.
-	var reportingPeer peer.ID
+	// Peers that have reported on roll call.
+	var reportingPeers []peer.ID
 rollCallResponseLoop:
 	for {
 		// Wait for responses from nodes who want to work on the request.
@@ -144,16 +133,12 @@ rollCallResponseLoop:
 		// Request timed out.
 		case <-tctx.Done():
 
-			n.log.Info().
+			n.log.Warn().
 				Str("function_id", req.FunctionID).
 				Str("request_id", requestID).
 				Msg("roll call timed out")
 
-			res := execute.Result{
-				Code: codes.Timeout,
-			}
-
-			return res, errRollCallTimeout
+			return codes.Timeout, nil, errRollCallTimeout
 
 		case reply := <-n.rollCall.responses(requestID):
 
@@ -184,18 +169,34 @@ rollCallResponseLoop:
 				continue
 			}
 
-			reportingPeer = reply.From
-			break rollCallResponseLoop
+			n.log.Info().
+				Str("request_id", requestID).
+				Str("peer", reply.From.String()).
+				Int("want_peers", rollCallNodeCount).
+				Msg("peer reported for roll call")
+
+			reportingPeers = append(reportingPeers, reply.From)
+
+			if len(reportingPeers) >= rollCallNodeCount {
+				n.log.Info().Str("request_id", requestID).Int("want", rollCallNodeCount).Msg("enough peers reported for roll call")
+				break rollCallResponseLoop
+			}
 		}
 	}
 
+	// TODO: Check - should be able to do it using Stringers method
+	peerIDs := make([]string, 0, len(reportingPeers))
+	for _, rp := range reportingPeers {
+		peerIDs = append(peerIDs, rp.String())
+	}
+
 	n.log.Info().
-		Str("peer", reportingPeer.String()).
+		Strs("peers", peerIDs).
 		Str("function_id", req.FunctionID).
 		Str("request_id", requestID).
-		Msg("peer reported for roll call - requesting execution")
+		Msg("requesting execution from peers who reported for roll call")
 
-	// Request execution from the peer who reported back first.
+	// Create execution request.
 	reqExecute := request.Execute{
 		Type:       blockless.MessageExecute,
 		FunctionID: req.FunctionID,
@@ -205,42 +206,78 @@ rollCallResponseLoop:
 		RequestID:  requestID,
 	}
 
-	// Send message to reporting peer to execute the function.
-	err = n.send(ctx, reportingPeer, reqExecute)
-	if err != nil {
+	// Request execution from peers.
+	for _, rp := range reportingPeers {
 
-		res := execute.Result{
-			Code: codes.Error,
+		err = n.send(ctx, rp, reqExecute)
+		if err != nil {
+
+			return codes.Error, nil, fmt.Errorf("could not send execution request to peer (peer: %s, function: %s, request: %s): %w",
+				rp.String(),
+				req.FunctionID,
+				requestID,
+				err)
 		}
-
-		return res, fmt.Errorf("could not send execution request to peer (peer: %s, function: %s, request: %s): %w",
-			reportingPeer.String(),
-			req.FunctionID,
-			requestID,
-			err)
 	}
 
 	n.log.Debug().
+		Int("want", rollCallNodeCount).
 		Str("request_id", requestID).
-		Msg("waiting for execution response")
+		Msg("waiting for execution responses")
 
-	// TODO: Verify that the response came from the peer that reported for the roll call.
-	resExecute := n.executeResponses.Wait(requestID).(response.Execute)
+	// we're willing to wait for a limited amount of time.
+	exctx, cancel := context.WithTimeout(ctx, DefaultExecutionTimeout)
+	defer cancel()
+
+	// Wait for multiple executions.
+	results := make(map[string]execute.Result)
+	var rlock sync.Mutex
+	var rw sync.WaitGroup
+	rw.Add(len(reportingPeers))
+
+	// Wait on peers asynchronously.
+	for _, rp := range reportingPeers {
+		rp := rp
+
+		go func() {
+			defer rw.Done()
+			key := executionResultKey(requestID, rp)
+			res, ok := n.executeResponses.WaitFor(exctx, key)
+			if !ok {
+				return
+			}
+
+			er := res.(response.Execute)
+			// Check if there's an actual result there.
+			exres, ok := er.Results[rp.String()]
+			if !ok {
+				return
+			}
+
+			rlock.Lock()
+			defer rlock.Unlock()
+			results[rp.String()] = exres
+		}()
+	}
+
+	// Wait for results, whatever they may be.
+	rw.Wait()
+
+	if len(results) != rollCallNodeCount {
+		n.log.Warn().
+			Str("request_id", requestID).
+			Int("have", len(results)).
+			Int("want", rollCallNodeCount).
+			Msg("did not receive enough execution responses")
+
+		return codes.Error, nil, errExecutionNotEnoughNodes
+	}
 
 	n.log.Info().
 		Str("request_id", requestID).
-		Str("peer", resExecute.From.String()).
-		Str("code", resExecute.Code.String()).
-		Msg("received execution response")
+		Msg("received enough execution responses")
 
-	// Return the execution result.
-	result := execute.Result{
-		Code:      resExecute.Code,
-		Result:    resExecute.ResultEx,
-		RequestID: resExecute.RequestID,
-	}
-
-	return result, nil
+	return codes.OK, results, nil
 }
 
 func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload []byte) error {
@@ -258,8 +295,12 @@ func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload
 		Str("from", from.String()).
 		Msg("received execution response")
 
-	// Record execution response.
-	n.executeResponses.Set(res.RequestID, res)
+	key := executionResultKey(res.RequestID, from)
+	n.executeResponses.Set(key, res)
 
 	return nil
+}
+
+func executionResultKey(requestID string, peer peer.ID) string {
+	return requestID + "/" + peer.String()
 }
