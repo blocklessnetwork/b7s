@@ -15,8 +15,9 @@ type ExecuteRequest execute.Request
 
 // ExecuteResponse describes the REST API response for function execution.
 type ExecuteResponse struct {
-	Code    codes.Code               `json:"code,omitempty"`
-	Results map[string]ExecuteResult `json:"results,omitempty"`
+	Code      codes.Code               `json:"code,omitempty"`
+	RequestID string                   `json:"request_id,omitempty"`
+	Results   map[string]ExecuteResult `json:"results,omitempty"`
 }
 
 // ExecuteResult represents the API representation of a single execution response.
@@ -43,21 +44,34 @@ func (a *API) Execute(ctx echo.Context) error {
 	// Get the execution results.
 	code, results, err := a.node.ExecuteFunction(ctx.Request().Context(), execute.Request(req))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("could not execute function: %w", err))
+		a.log.Warn().
+			Str("function_id", req.FunctionID).
+			Err(err).
+			Msg("node failed to execute function")
 	}
 
-	// Transform the node response format to the one returned by the API.
-	res := ExecuteResponse{
-		Code:    code,
-		Results: make(map[string]ExecuteResult),
-	}
+	requestID := ""
+	exResults := make(map[string]ExecuteResult)
 
 	for id, er := range results {
-		res.Results[id] = ExecuteResult{
+
+		// Get the requestID from any of the individual results.
+		if requestID == "" {
+			requestID = er.RequestID
+		}
+
+		exResults[id] = ExecuteResult{
 			Code:      er.Code,
 			Result:    er.Result,
 			RequestID: er.RequestID,
 		}
+	}
+
+	// Transform the node response format to the one returned by the API.
+	res := ExecuteResponse{
+		Code:      code,
+		RequestID: requestID,
+		Results:   exResults,
 	}
 
 	// Send the response.

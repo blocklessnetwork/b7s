@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/api"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
@@ -30,10 +31,13 @@ func TestAPI_Execute(t *testing.T) {
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 
 	require.Equal(t, http.StatusOK, rec.Result().StatusCode)
+
 	require.Equal(t, mocks.GenericExecutionResult.Code, res.Code)
-	require.Equal(t, mocks.GenericExecutionResult.RequestID, res.RequestID)
-	require.Equal(t, mocks.GenericExecutionResult.Result.Stdout, res.Result)
-	require.Equal(t, mocks.GenericExecutionResult.Result, res.ResultEx)
+	require.Len(t, res.Results, 1)
+
+	peerID := mocks.GenericPeerID.String()
+	require.Equal(t, mocks.GenericExecutionResult.RequestID, res.Results[peerID].RequestID)
+	require.Equal(t, mocks.GenericExecutionResult.Result, res.Results[peerID].Result)
 }
 
 func TestAPI_Execute_HandlesErrors(t *testing.T) {
@@ -46,9 +50,17 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 		},
 	}
 
+	peerID := mocks.GenericPeerID.String()
+
+	expectedCode := codes.Error
+
+	results := map[string]execute.Result{
+		peerID: executionResult,
+	}
+
 	node := mocks.BaselineNode(t)
-	node.ExecuteFunctionFunc = func(context.Context, execute.Request) (execute.Result, error) {
-		return executionResult, mocks.GenericError
+	node.ExecuteFunctionFunc = func(context.Context, execute.Request) (codes.Code, map[string]execute.Result, error) {
+		return expectedCode, results, mocks.GenericError
 	}
 
 	srv := api.New(mocks.NoopLogger, node)
@@ -65,10 +77,10 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 	err = json.Unmarshal(rec.Body.Bytes(), &res)
 	require.NoError(t, err)
 
-	require.Equal(t, http.StatusInternalServerError, rec.Result().StatusCode)
-	require.Equal(t, executionResult.Code, res.Code)
-	require.Equal(t, executionResult.Result.Stdout, res.Result)
-	require.Equal(t, executionResult.Result, res.ResultEx)
+	require.Equal(t, http.StatusOK, rec.Result().StatusCode)
+	require.Equal(t, expectedCode, res.Code)
+
+	require.Equal(t, results[peerID].Result, res.Results[peerID].Result)
 }
 
 func TestAPI_Execute_HandlesMalformedRequests(t *testing.T) {
