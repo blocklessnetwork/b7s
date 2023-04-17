@@ -38,6 +38,7 @@ func parseFlags() *config.Config {
 	pflag.UintVarP(&cfg.Concurrency, "concurrency", "c", defaultConcurrency, "maximum number of requests node will process in parallel")
 	pflag.StringVar(&cfg.API, "rest-api", "", "address where the head node REST API will listen on")
 	pflag.StringSliceVar(&cfg.BootNodes, "boot-nodes", nil, "list of addresses that this node will connect to on startup, in multiaddr format")
+	pflag.UintVarP(&cfg.Quorum, "quorum", "q", node.DefaultQuorum, "number of execution responses to require on each execution")
 
 	pflag.StringVar(&cfg.Workspace, "workspace", "./workspace", "directory that the node can use for file storage")
 	pflag.StringVar(&cfg.Runtime, "runtime", "", "runtime address (used by the worker node)")

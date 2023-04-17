@@ -47,6 +47,7 @@ func (n *Node) Run(ctx context.Context) error {
 
 	n.log.Info().
 		Uint("concurrency", n.cfg.Concurrency).
+		Uint("quorum", n.cfg.Quorum).
 		Msg("starting node main loop")
 
 	// Message processing loop.
