@@ -10,24 +10,23 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/api"
-	"github.com/blocklessnetworking/b7s/models/api/response"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
 
 func TestAPI_Execute(t *testing.T) {
 
-	api := setupAPI(t)
+	srv := setupAPI(t)
 
 	req := mocks.GenericExecutionRequest
 
 	rec, ctx, err := setupRecorder(executeEndpoint, req)
 	require.NoError(t, err)
 
-	err = api.Execute(ctx)
+	err = srv.Execute(ctx)
 	require.NoError(t, err)
 
-	var res response.Execute
+	var res api.ExecuteResponse
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 
 	require.Equal(t, http.StatusOK, rec.Result().StatusCode)
@@ -52,17 +51,17 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 		return executionResult, mocks.GenericError
 	}
 
-	api := api.New(mocks.NoopLogger, node)
+	srv := api.New(mocks.NoopLogger, node)
 
 	req := mocks.GenericExecutionRequest
 
 	rec, ctx, err := setupRecorder(executeEndpoint, req)
 	require.NoError(t, err)
 
-	err = api.Execute(ctx)
+	err = srv.Execute(ctx)
 	require.NoError(t, err)
 
-	var res response.Execute
+	var res api.ExecuteResponse
 	err = json.Unmarshal(rec.Body.Bytes(), &res)
 	require.NoError(t, err)
 
@@ -143,5 +142,4 @@ func TestAPI_Execute_HandlesMalformedRequests(t *testing.T) {
 			require.Equal(t, http.StatusBadRequest, echoErr.Code)
 		})
 	}
-
 }

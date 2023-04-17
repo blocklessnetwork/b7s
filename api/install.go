@@ -9,18 +9,27 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-
-	"github.com/blocklessnetworking/b7s/models/api/request"
 )
 
 const (
 	functionInstallTimeout = 10 * time.Second
 )
 
+// InstallFunctionRequest describes the payload for the REST API request for function install.
+type InstallFunctionRequest struct {
+	CID string `json:"cid"`
+	URI string `json:"uri"`
+}
+
+// InstallFunctionResponse describes the REST API response for the function install.
+type InstallFunctionResponse struct {
+	Code string `json:"code"`
+}
+
 func (a *API) Install(ctx echo.Context) error {
 
 	// Unpack the API request.
-	var req request.InstallFunction
+	var req InstallFunctionRequest
 	err := ctx.Bind(&req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("could not unpack request: %w", err))

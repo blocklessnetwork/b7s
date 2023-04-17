@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/api"
-	"github.com/blocklessnetworking/b7s/models/api/request"
-	"github.com/blocklessnetworking/b7s/models/response"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
 
@@ -21,17 +19,17 @@ func TestAPI_FunctionInstall(t *testing.T) {
 	t.Run("nominal case", func(t *testing.T) {
 		t.Parallel()
 
-		api := setupAPI(t)
-
-		req := request.InstallFunction{
+		req := api.InstallFunctionRequest{
 			URI: "dummy-function-id",
 			CID: "dummy-cid",
 		}
 
+		srv := setupAPI(t)
+
 		rec, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = api.Install(ctx)
+		err = srv.Install(ctx)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, rec.Result().StatusCode)
@@ -42,17 +40,17 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 	t.Run("missing URI and CID", func(t *testing.T) {
 		t.Parallel()
 
-		api := setupAPI(t)
-
-		req := request.InstallFunction{
+		req := api.InstallFunctionRequest{
 			URI: "",
 			CID: "",
 		}
 
+		srv := setupAPI(t)
+
 		_, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = api.Install(ctx)
+		err = srv.Install(ctx)
 		require.Error(t, err)
 
 		echoErr, ok := err.(*echo.HTTPError)
@@ -74,25 +72,25 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 			return nil
 		}
 
-		api := api.New(mocks.NoopLogger, node)
-
-		req := request.InstallFunction{
+		req := api.InstallFunctionRequest{
 			URI: "dummy-uri",
 			CID: "dummy-cid",
 		}
 
+		srv := api.New(mocks.NoopLogger, node)
+
 		rec, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = api.Install(ctx)
+		err = srv.Install(ctx)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, rec.Result().StatusCode)
 
-		var res = response.InstallFunction{}
+		var res api.InstallFunctionResponse
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 
-		num, err := strconv.Atoi(res.Code.String())
+		num, err := strconv.Atoi(res.Code)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusRequestTimeout, num)
@@ -105,9 +103,9 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 			return mocks.GenericError
 		}
 
-		api := api.New(mocks.NoopLogger, node)
+		srv := api.New(mocks.NoopLogger, node)
 
-		req := request.InstallFunction{
+		req := api.InstallFunctionRequest{
 			URI: "dummy-uri",
 			CID: "dummy-cid",
 		}
@@ -115,7 +113,7 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 		_, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = api.Install(ctx)
+		err = srv.Install(ctx)
 		require.Error(t, err)
 
 		echoErr, ok := err.(*echo.HTTPError)
@@ -127,7 +125,7 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 
 func TestAPI_InstallFunction_HandlesMalformedRequests(t *testing.T) {
 
-	api := setupAPI(t)
+	srv := setupAPI(t)
 
 	const (
 		wrongFieldType = `
@@ -183,7 +181,7 @@ func TestAPI_InstallFunction_HandlesMalformedRequests(t *testing.T) {
 			_, ctx, err := setupRecorder(installEndpoint, test.payload, prepare)
 			require.NoError(t, err)
 
-			err = api.Install(ctx)
+			err = srv.Install(ctx)
 			require.Error(t, err)
 
 			echoErr, ok := err.(*echo.HTTPError)

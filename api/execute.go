@@ -6,15 +6,27 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/blocklessnetworking/b7s/models/api/request"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
+
+// ExecuteRequest describes the payload for the REST API request for function execution.
+type ExecuteRequest execute.Request
+
+// ExecuteResponse describes the REST API response for function execution.
+type ExecuteResponse struct {
+	Code      codes.Code                `json:"code,omitempty"`
+	RequestID string                    `json:"request_id,omitempty"`
+	Results   map[string]execute.Result `json:"results,omitempty"`
+	// NOTE: Not sending the usage information for now.
+	Usage execute.Usage `json:"-"`
+}
 
 // Execute implements the REST API endpoint for function execution.
 func (a *API) Execute(ctx echo.Context) error {
 
 	// Unpack the API request.
-	var req request.Execute
+	var req ExecuteRequest
 	err := ctx.Bind(&req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("could not unpack request: %w", err))

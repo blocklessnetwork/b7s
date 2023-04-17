@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/api"
-	"github.com/blocklessnetworking/b7s/models/api/request"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
@@ -18,16 +17,16 @@ func TestAPI_ExecutionResult(t *testing.T) {
 	t.Run("nominal case", func(t *testing.T) {
 		t.Parallel()
 
-		api := setupAPI(t)
+		srv := setupAPI(t)
 
-		req := request.ExecutionResult{
+		req := api.ExecutionResultRequest{
 			ID: mocks.GenericString,
 		}
 
 		rec, ctx, err := setupRecorder(resultEndpoint, req)
 		require.NoError(t, err)
 
-		err = api.ExecutionResult(ctx)
+		err = srv.ExecutionResult(ctx)
 		require.NoError(t, err)
 
 		var res execute.Result
@@ -43,16 +42,16 @@ func TestAPI_ExecutionResult(t *testing.T) {
 			return execute.Result{}, false
 		}
 
-		api := api.New(mocks.NoopLogger, node)
+		srv := api.New(mocks.NoopLogger, node)
 
-		req := request.ExecutionResult{
+		req := api.ExecutionResultRequest{
 			ID: "dummy-request-id",
 		}
 
 		rec, ctx, err := setupRecorder(resultEndpoint, req)
 		require.NoError(t, err)
 
-		err = api.ExecutionResult(ctx)
+		err = srv.ExecutionResult(ctx)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
@@ -61,7 +60,7 @@ func TestAPI_ExecutionResult(t *testing.T) {
 
 func TestAPI_ExecutionResult_HandlesErrors(t *testing.T) {
 
-	api := setupAPI(t)
+	srv := setupAPI(t)
 
 	const (
 		emptyIDPayload = `
@@ -129,7 +128,7 @@ func TestAPI_ExecutionResult_HandlesErrors(t *testing.T) {
 			_, ctx, err := setupRecorder(resultEndpoint, test.payload, prepare)
 			require.NoError(t, err)
 
-			err = api.ExecutionResult(ctx)
+			err = srv.ExecutionResult(ctx)
 			require.Error(t, err)
 
 			echoErr, ok := err.(*echo.HTTPError)
