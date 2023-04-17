@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/models/request"
 )
@@ -15,21 +16,19 @@ import (
 // Problem is that delegator would need to be notified when an execution result has arrived.
 // Doing this way would make the execution flow more streamlined and would not differentiate as much between
 // worker and head node.
-func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (map[string]execute.Result, error) {
+func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (codes.Code, map[string]execute.Result, error) {
 
 	requestID, err := newRequestID()
 	if err != nil {
-		return nil, fmt.Errorf("could not generate request ID: %w", err)
+		return codes.Error, nil, fmt.Errorf("could not generate request ID: %w", err)
 	}
 
 	switch n.cfg.Role {
 	case blockless.WorkerNode:
-		_, results, err := n.workerExecute(ctx, requestID, req)
-		return results, err
+		return n.workerExecute(ctx, requestID, req)
 
 	case blockless.HeadNode:
-		_, results, err := n.headExecute(ctx, requestID, req)
-		return results, err
+		return n.headExecute(ctx, requestID, req)
 	}
 
 	panic(fmt.Errorf("invalid node role: %s", n.cfg.Role))

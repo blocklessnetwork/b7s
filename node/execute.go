@@ -166,6 +166,10 @@ rollCallResponseLoop:
 			// Check if we are connected to this peer.
 			connections := n.host.Network().ConnsToPeer(reply.From)
 			if len(connections) == 0 {
+				n.log.Debug().
+					Str("peer", reply.From.String()).
+					Str("request_id", requestID).
+					Msg("skipping unconnected peer")
 				continue
 			}
 
@@ -173,7 +177,7 @@ rollCallResponseLoop:
 				Str("request_id", requestID).
 				Str("peer", reply.From.String()).
 				Int("want_peers", rollCallNodeCount).
-				Msg("peer reported for roll call")
+				Msg("roll called peer chosen for execution")
 
 			reportingPeers = append(reportingPeers, reply.From)
 
