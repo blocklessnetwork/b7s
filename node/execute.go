@@ -188,7 +188,6 @@ rollCallResponseLoop:
 		}
 	}
 
-	// TODO: Check - should be able to do it using Stringers method
 	peerIDs := make([]string, 0, len(reportingPeers))
 	for _, rp := range reportingPeers {
 		peerIDs = append(peerIDs, rp.String())
@@ -281,7 +280,9 @@ rollCallResponseLoop:
 		Str("request_id", requestID).
 		Msg("received enough execution responses")
 
-	return codes.OK, results, nil
+	code := determineOverallCode(results)
+
+	return code, results, nil
 }
 
 func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload []byte) error {
@@ -307,4 +308,31 @@ func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload
 
 func executionResultKey(requestID string, peer peer.ID) string {
 	return requestID + "/" + peer.String()
+}
+
+// determineOverallCode will return the resulting code from a set of results. Rules are:
+// - if there's a single result, we use that results code
+// - return OK if at least one result was successful
+// - return error if none of the results were successful
+func determineOverallCode(results map[string]execute.Result) codes.Code {
+
+	if len(results) == 0 {
+		return codes.NoContent
+	}
+
+	// For a single peer, just return its code.
+	if len(results) == 1 {
+		for peer := range results {
+			return results[peer].Code
+		}
+	}
+
+	// For multiple results - return OK if any of them succeeded.
+	for _, res := range results {
+		if res.Code == codes.OK {
+			return codes.OK
+		}
+	}
+
+	return codes.Error
 }

@@ -358,6 +358,7 @@ func TestNode_HeadExecute(t *testing.T) {
 				Results:   make(map[string]execute.Result),
 			}
 			res.Results[mockWorker.ID().String()] = execute.Result{
+				Code:   codes.OK,
 				Result: executionResult,
 			}
 
@@ -443,5 +444,67 @@ func TestNode_HeadExecute(t *testing.T) {
 
 		receiverWG.Wait()
 		nodeWG.Wait()
+	})
+}
+
+func TestNode_DetermineOverallCode(t *testing.T) {
+
+	t.Run("no content", func(t *testing.T) {
+		require.Equal(t, codes.NoContent, determineOverallCode(nil))
+	})
+	t.Run("single result determines the code", func(t *testing.T) {
+
+		expectedCode := codes.NotImplemented
+		results := map[string]execute.Result{
+			"dummy": {
+				Code: expectedCode,
+			},
+		}
+
+		require.Equal(t, expectedCode, determineOverallCode(results))
+	})
+	t.Run("one successful result determines success", func(t *testing.T) {
+
+		results := map[string]execute.Result{
+			"work1": {
+				Code: codes.Error,
+			},
+			"work2": {
+				Code: codes.Error,
+			},
+			"work3": {
+				Code: codes.Error,
+			},
+			"work4": {
+				Code: codes.Error,
+			},
+			"work5": {
+				Code: codes.OK,
+			},
+		}
+
+		require.Equal(t, codes.OK, determineOverallCode(results))
+	})
+	t.Run("no successes means failure", func(t *testing.T) {
+
+		results := map[string]execute.Result{
+			"work1": {
+				Code: codes.Error,
+			},
+			"work2": {
+				Code: codes.Error,
+			},
+			"work3": {
+				Code: codes.Error,
+			},
+			"work4": {
+				Code: codes.Timeout,
+			},
+			"work5": {
+				Code: codes.NotImplemented,
+			},
+		}
+
+		require.Equal(t, codes.Error, determineOverallCode(results))
 	})
 }
