@@ -59,6 +59,12 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 			Msg("execution failed")
 	}
 
+	n.log.Info().
+		Str("request_id", requestID).
+		Int("results", len(results)).
+		Str("code", code.String()).
+		Msg("execution complete")
+
 	// Cache the execution result.
 	n.executeResponses.Set(requestID, results)
 
@@ -249,6 +255,11 @@ rollCallResponseLoop:
 			if !ok {
 				return
 			}
+
+			n.log.Debug().
+				Str("request_id", requestID).
+				Str("peer", rp.String()).
+				Msg("accounted execution response from roll called peer")
 
 			er := res.(response.Execute)
 			// Check if there's an actual result there.
