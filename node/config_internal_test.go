@@ -72,3 +72,42 @@ func TestConfig_RollCallTimeout(t *testing.T) {
 
 	require.Equal(t, timeout, cfg.RollCallTimeout)
 }
+
+func TestConfig_ExecutionTimeout(t *testing.T) {
+
+	const timeout = 10 * time.Second
+
+	cfg := Config{
+		ExecutionTimeout: 0,
+	}
+
+	WithExecutionTimeout(timeout)(&cfg)
+
+	require.Equal(t, timeout, cfg.ExecutionTimeout)
+}
+
+func TestConfig_Quorum(t *testing.T) {
+
+	const quorum = uint(3)
+
+	cfg := Config{
+		Quorum: 0,
+	}
+
+	WithQuorum(quorum)(&cfg)
+
+	require.Equal(t, quorum, cfg.Quorum)
+}
+
+func TestConfig_Concurrency(t *testing.T) {
+
+	const concurrency = uint(10)
+
+	cfg := Config{
+		Concurrency: 0,
+	}
+
+	WithConcurrency(concurrency)(&cfg)
+
+	require.Equal(t, concurrency, cfg.Concurrency)
+}

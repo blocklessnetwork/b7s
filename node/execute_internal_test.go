@@ -87,8 +87,8 @@ func TestNode_WorkerExecute(t *testing.T) {
 			expected := mocks.GenericExecutionResult
 			require.Equal(t, requestID, received.RequestID)
 			require.Equal(t, expected.Code, received.Code)
-			require.Equal(t, expected.Result.Stdout, received.Result)
-			require.Equal(t, expected.Result, received.ResultEx)
+
+			require.Equal(t, expected.Result, received.Results[node.ID()].Result)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -107,16 +107,22 @@ func TestNode_WorkerExecute(t *testing.T) {
 					Stderr:   "log of something horrible",
 					ExitCode: 1,
 				},
-				RequestID: mocks.GenericUUID.String(),
 			}
+
+			requestID string
 		)
 
 		node := createNode(t, blockless.WorkerNode)
 
 		// Use a custom executor to verify all execution parameters are correct.
 		executor := mocks.BaselineExecutor(t)
-		executor.ExecFunctionFunc = func(requestID string, req execute.Request) (execute.Result, error) {
-			return faultyExecutionResult, mocks.GenericError
+		executor.ExecFunctionFunc = func(reqID string, req execute.Request) (execute.Result, error) {
+			requestID = reqID
+
+			out := faultyExecutionResult
+			out.RequestID = reqID
+
+			return out, mocks.GenericError
 		}
 		node.executor = executor
 
@@ -140,11 +146,9 @@ func TestNode_WorkerExecute(t *testing.T) {
 			getStreamPayload(t, stream, &received)
 
 			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
-
-			require.Equal(t, faultyExecutionResult.RequestID, received.RequestID)
+			require.Equal(t, received.RequestID, requestID)
 			require.Equal(t, faultyExecutionResult.Code, received.Code)
-			require.Equal(t, faultyExecutionResult.Result.Stdout, received.Result)
-			require.Equal(t, faultyExecutionResult.Result, received.ResultEx)
+			require.Equal(t, faultyExecutionResult.Result, received.Results[node.ID()].Result)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -349,11 +353,14 @@ func TestNode_HeadExecute(t *testing.T) {
 
 			res := response.Execute{
 				Type:      blockless.MessageExecuteResponse,
-				RequestID: requestID,
-				Result:    executionResult.Stdout,
-				ResultEx:  executionResult,
 				Code:      codes.OK,
+				RequestID: requestID,
+				Results:   make(map[string]execute.Result),
 			}
+			res.Results[mockWorker.ID().String()] = execute.Result{
+				Result: executionResult,
+			}
+
 			payload := serialize(t, res)
 			err = mockWorker.SendMessage(ctx, node.host.ID(), payload)
 			require.NoError(t, err)
@@ -381,8 +388,9 @@ func TestNode_HeadExecute(t *testing.T) {
 
 			require.Equal(t, codes.OK, res.Code)
 			require.Equal(t, requestID, res.RequestID)
-			require.Equal(t, executionResult.Stdout, res.Result)
-			require.Equal(t, executionResult, res.ResultEx)
+
+			require.NotNil(t, res.Results[mockWorker.ID().String()])
+			require.Equal(t, executionResult, res.Results[mockWorker.ID().String()].Result)
 		})
 
 		var nodeWG sync.WaitGroup

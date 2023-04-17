@@ -176,13 +176,13 @@ rollCallResponseLoop:
 			n.log.Info().
 				Str("request_id", requestID).
 				Str("peer", reply.From.String()).
-				Int("want_peers", rollCallNodeCount).
+				Uint("want_peers", n.cfg.Quorum).
 				Msg("roll called peer chosen for execution")
 
 			reportingPeers = append(reportingPeers, reply.From)
 
-			if len(reportingPeers) >= rollCallNodeCount {
-				n.log.Info().Str("request_id", requestID).Int("want", rollCallNodeCount).Msg("enough peers reported for roll call")
+			if len(reportingPeers) >= int(n.cfg.Quorum) {
+				n.log.Info().Str("request_id", requestID).Uint("want", n.cfg.Quorum).Msg("enough peers reported for roll call")
 				break rollCallResponseLoop
 			}
 		}
@@ -225,7 +225,7 @@ rollCallResponseLoop:
 	}
 
 	n.log.Debug().
-		Int("want", rollCallNodeCount).
+		Uint("want", n.cfg.Quorum).
 		Str("request_id", requestID).
 		Msg("waiting for execution responses")
 
@@ -267,11 +267,11 @@ rollCallResponseLoop:
 	// Wait for results, whatever they may be.
 	rw.Wait()
 
-	if len(results) != rollCallNodeCount {
+	if len(results) != int(n.cfg.Quorum) {
 		n.log.Warn().
 			Str("request_id", requestID).
 			Int("have", len(results)).
-			Int("want", rollCallNodeCount).
+			Uint("want", n.cfg.Quorum).
 			Msg("did not receive enough execution responses")
 
 		return codes.Error, nil, errExecutionNotEnoughNodes

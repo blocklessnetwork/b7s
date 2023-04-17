@@ -11,21 +11,25 @@ type Option func(*Config)
 
 // DefaultConfig represents the default settings for the node.
 var DefaultConfig = Config{
-	Role:            blockless.WorkerNode,
-	Topic:           DefaultTopic,
-	HealthInterval:  DefaultHealthInterval,
-	RollCallTimeout: DefaultRollCallTimeout,
-	Concurrency:     DefaultConcurrency,
+	Role:             blockless.WorkerNode,
+	Topic:            DefaultTopic,
+	HealthInterval:   DefaultHealthInterval,
+	RollCallTimeout:  DefaultRollCallTimeout,
+	Concurrency:      DefaultConcurrency,
+	ExecutionTimeout: DefaultExecutionTimeout,
+	Quorum:           DefaultQuorum,
 }
 
 // Config represents the Node configuration.
 type Config struct {
-	Role            blockless.NodeRole // Node role.
-	Topic           string             // Topic to subscribe to.
-	Execute         Executor           // Executor to use for running functions.
-	HealthInterval  time.Duration      // How often should we emit the health ping.
-	RollCallTimeout time.Duration      // How long do we wait for roll call responses.
-	Concurrency     uint               // How many requests should the node process in parallel.
+	Role             blockless.NodeRole // Node role.
+	Topic            string             // Topic to subscribe to.
+	Execute          Executor           // Executor to use for running functions.
+	HealthInterval   time.Duration      // How often should we emit the health ping.
+	RollCallTimeout  time.Duration      // How long do we wait for roll call responses.
+	Concurrency      uint               // How many requests should the node process in parallel.
+	ExecutionTimeout time.Duration      // How long does the head node wait for worker nodes to send their execution results.
+	Quorum           uint               // How many nodes do we require for execution.
 }
 
 // WithRole specifies the role for the node.
@@ -60,6 +64,20 @@ func WithHealthInterval(d time.Duration) Option {
 func WithRollCallTimeout(d time.Duration) Option {
 	return func(cfg *Config) {
 		cfg.RollCallTimeout = d
+	}
+}
+
+// WithExecutionTimeout specifies how long does the head node wait for worker nodes to send their execution results.
+func WithExecutionTimeout(d time.Duration) Option {
+	return func(cfg *Config) {
+		cfg.ExecutionTimeout = d
+	}
+}
+
+// WithQuorum specifies how many worker nodes does the head node want for any given execution.
+func WithQuorum(n uint) Option {
+	return func(cfg *Config) {
+		cfg.Quorum = n
 	}
 }
 
