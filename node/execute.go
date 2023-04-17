@@ -235,7 +235,7 @@ rollCallResponseLoop:
 		Msg("waiting for execution responses")
 
 	// we're willing to wait for a limited amount of time.
-	exctx, cancel := context.WithTimeout(ctx, DefaultExecutionTimeout)
+	exctx, cancel := context.WithTimeout(ctx, n.cfg.ExecutionTimeout)
 	defer cancel()
 
 	// Wait for multiple executions.
