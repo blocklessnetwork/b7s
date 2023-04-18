@@ -43,9 +43,11 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	installed, err := n.fstore.Installed(req.FunctionID)
 	if err != nil {
 		sendErr := n.send(ctx, req.From, res)
-		// Log send error but choose to return the original error.
-		n.log.Error().Err(sendErr).Str("to", req.From.String()).
-			Msg("could not send response")
+		if sendErr != nil {
+			// Log send error but choose to return the original error.
+			n.log.Error().Err(sendErr).Str("to", req.From.String()).
+				Msg("could not send response")
+		}
 
 		return fmt.Errorf("could not check if function is installed: %w", err)
 	}
@@ -59,9 +61,11 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 		err = n.installFunction(req.FunctionID, manifestURLFromCID(req.FunctionID))
 		if err != nil {
 			sendErr := n.send(ctx, req.From, res)
-			// Log send error but choose to return the original error.
-			n.log.Error().Err(sendErr).Str("to", req.From.String()).
-				Msg("could not send response")
+			if sendErr != nil {
+				// Log send error but choose to return the original error.
+				n.log.Error().Err(sendErr).Str("to", req.From.String()).
+					Msg("could not send response")
+			}
 
 			return fmt.Errorf("could not install function: %w", err)
 		}

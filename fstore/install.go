@@ -32,7 +32,7 @@ func (h *FStore) Install(address string, cid string) error {
 	}
 
 	// Download the function identified by the manifest.
-	functionPath, err := h.download(manifest)
+	functionPath, err := h.download(cid, manifest)
 	if err != nil {
 		return fmt.Errorf("could not download function: %w", err)
 	}
