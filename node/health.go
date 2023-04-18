@@ -29,7 +29,7 @@ func (n *Node) HealthPing(ctx context.Context) {
 				n.log.Warn().Err(err).Msg("could not publish health signal")
 			}
 
-			n.log.Debug().Msg("emitted health ping")
+			n.log.Trace().Msg("emitted health ping")
 
 		case <-ctx.Done():
 			ticker.Stop()

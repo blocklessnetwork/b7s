@@ -14,4 +14,7 @@ type Execute struct {
 	From      peer.ID                   `json:"from,omitempty"`
 	Code      codes.Code                `json:"code,omitempty"`
 	Results   map[string]execute.Result `json:"results,omitempty"`
+
+	// Used to communicate the reason for failure to the user.
+	Message string `json:"message,omitempty"`
 }

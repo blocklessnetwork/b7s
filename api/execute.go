@@ -1,11 +1,13 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 
+	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
@@ -17,6 +19,7 @@ type ExecuteRequest execute.Request
 type ExecuteResponse struct {
 	Code      codes.Code               `json:"code,omitempty"`
 	RequestID string                   `json:"request_id,omitempty"`
+	Message   string                   `json:"message,omitempty"`
 	Results   map[string]ExecuteResult `json:"results,omitempty"`
 }
 
@@ -72,6 +75,11 @@ func (a *API) Execute(ctx echo.Context) error {
 		Code:      code,
 		RequestID: requestID,
 		Results:   exResults,
+	}
+
+	// Communicate the reason for failure in these cases.
+	if errors.Is(err, blockless.ErrRollCallTimeout) || errors.Is(err, blockless.ErrExecutionNotEnoughNodes) {
+		res.Message = err.Error()
 	}
 
 	// Send the response.

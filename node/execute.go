@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -74,6 +75,11 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 		Code:      code,
 		RequestID: requestID,
 		Results:   results,
+	}
+
+	// Communicate the reason for failure in these cases.
+	if errors.Is(err, blockless.ErrRollCallTimeout) || errors.Is(err, blockless.ErrExecutionNotEnoughNodes) {
+		res.Message = err.Error()
 	}
 
 	// Send the response, whatever it may be (success or failure).
@@ -154,7 +160,7 @@ rollCallResponseLoop:
 				Str("request_id", requestID).
 				Msg("roll call timed out")
 
-			return codes.Timeout, nil, errRollCallTimeout
+			return codes.Timeout, nil, blockless.ErrRollCallTimeout
 
 		case reply := <-n.rollCall.responses(requestID):
 
@@ -276,7 +282,7 @@ rollCallResponseLoop:
 			Int("want", quorum).
 			Msg("did not receive enough execution responses")
 
-		return codes.Error, nil, errExecutionNotEnoughNodes
+		return codes.Error, nil, blockless.ErrExecutionNotEnoughNodes
 	}
 
 	n.log.Info().
