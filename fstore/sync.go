@@ -45,7 +45,7 @@ func (h *FStore) Sync(cid string) error {
 
 	// If we don't have the archive - redownload it.
 	if !haveArchive {
-		path, err := h.download(fn.Manifest)
+		path, err := h.download(cid, fn.Manifest)
 		if err != nil {
 			return fmt.Errorf("could not download the function archive (cid: %v): %w", cid, err)
 		}
