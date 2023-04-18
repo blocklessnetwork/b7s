@@ -166,7 +166,7 @@ func TestFunction_Download(t *testing.T) {
 		},
 	}
 
-	path, err := fh.download(manifest)
+	path, err := fh.download("", manifest)
 	require.NoError(t, err)
 
 	// Check if the file created is within the specified workdir.
@@ -216,7 +216,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 			},
 		}
 
-		_, err = fh.download(manifest)
+		_, err = fh.download("", manifest)
 		require.Error(t, err)
 	})
 	t.Run("handles invalid URI", func(t *testing.T) {
@@ -239,7 +239,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 			},
 		}
 
-		_, err = fh.download(manifest)
+		_, err = fh.download("", manifest)
 		require.Error(t, err)
 	})
 	t.Run("handles download failure", func(t *testing.T) {
@@ -264,7 +264,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 			},
 		}
 
-		_, err = fh.download(manifest)
+		_, err = fh.download("", manifest)
 		require.Error(t, err)
 	})
 }
