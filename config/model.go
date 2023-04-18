@@ -8,7 +8,6 @@ type Config struct {
 	Role                 string
 	BootNodes            []string
 	Concurrency          uint
-	Quorum               uint
 
 	Host    Host
 	API     string

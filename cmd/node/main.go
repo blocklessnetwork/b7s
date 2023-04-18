@@ -115,7 +115,6 @@ func run() int {
 	opts := []node.Option{
 		node.WithRole(role),
 		node.WithConcurrency(cfg.Concurrency),
-		node.WithQuorum(cfg.Quorum),
 	}
 
 	// If this is a worker node, initialize an executor.

@@ -18,9 +18,9 @@ type Parameter struct {
 type Config struct {
 	Environment       []EnvVar          `json:"env_vars,omitempty"`
 	NodeCount         int               `json:"number_of_nodes,omitempty"`
-	ResultAggregation ResultAggregation `json:"result_aggregation,omitempty"`
 	Stdin             *string           `json:"stdin,omitempty"`
 	Permissions       []string          `json:"permissions,omitempty"`
+	ResultAggregation ResultAggregation `json:"result_aggregation,omitempty"`
 }
 
 // EnvVar represents the name and value of the environment variables set for the execution.

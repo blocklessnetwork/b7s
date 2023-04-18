@@ -11,8 +11,6 @@ const (
 	DefaultRollCallTimeout  = 5 * time.Second
 	DefaultExecutionTimeout = 10 * time.Second
 	DefaultConcurrency      = 10
-	// Default number of nodes needed for an execution.
-	DefaultQuorum = 1
 
 	rollCallQueueBufferSize = 1000
 

@@ -33,7 +33,6 @@ Usage of node:
   -c, --concurrency uint             maximum number of requests node will process in parallel (default 10)
       --rest-api string              address where the head node REST API will listen on
       --boot-nodes strings           list of addresses that this node will connect to on startup, in multiaddr format
-  -q, --quorum uint                  number of execution responses to require on each execution (default 1)
       --workspace string             directory that the node can use for file storage (default "./workspace")
       --runtime string               runtime address (used by the worker node)
       --cpu-percentage-limit float   amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited (default 1)

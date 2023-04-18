@@ -30,7 +30,6 @@ You can also use Docker to install b7s. See the [Docker documentation](/docker/R
 | port             | -p         | 0                       | Specifies the port that the libp2p host will use.                                             |
 | private-key      | N/A        | N/A                     | Specifies the private key that the libp2p host will use.                                      |
 | concurrency      | -c         | node.DefaultConcurrency | Specifies the maximum number of requests the node will process in parallel.                   |
-| quorum           | -1         | node.DefaultQuorum      | Specifies the number of execution responses to require on each execution.                     |
 | rest-api         | N/A        | N/A                     | Specifies the address where the head node REST API will listen on.                            |
 | boot-nodes       | N/A        | N/A                     | Specifies a list of addresses that this node will connect to on startup, in multiaddr format. |
 | workspace        | N/A        | "./workspace"           | Specifies the directory that the node can use for file storage.                               |

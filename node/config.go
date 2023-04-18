@@ -17,7 +17,6 @@ var DefaultConfig = Config{
 	RollCallTimeout:  DefaultRollCallTimeout,
 	Concurrency:      DefaultConcurrency,
 	ExecutionTimeout: DefaultExecutionTimeout,
-	Quorum:           DefaultQuorum,
 }
 
 // Config represents the Node configuration.
@@ -29,7 +28,6 @@ type Config struct {
 	RollCallTimeout  time.Duration      // How long do we wait for roll call responses.
 	Concurrency      uint               // How many requests should the node process in parallel.
 	ExecutionTimeout time.Duration      // How long does the head node wait for worker nodes to send their execution results.
-	Quorum           uint               // How many nodes do we require for execution.
 }
 
 // WithRole specifies the role for the node.
@@ -71,13 +69,6 @@ func WithRollCallTimeout(d time.Duration) Option {
 func WithExecutionTimeout(d time.Duration) Option {
 	return func(cfg *Config) {
 		cfg.ExecutionTimeout = d
-	}
-}
-
-// WithQuorum specifies how many worker nodes does the head node want for any given execution.
-func WithQuorum(n uint) Option {
-	return func(cfg *Config) {
-		cfg.Quorum = n
 	}
 }
 
