@@ -19,7 +19,6 @@ const (
 
 var (
 	ErrUnsupportedMessage      = errors.New("unsupported message")
-	errRollCallTimeout         = errors.New("roll call timed out")
-	errExecutionTimeout        = errors.New("execution timed out")
-	errExecutionNotEnoughNodes = errors.New("not enough execution results")
+	errRollCallTimeout         = errors.New("roll call timed out - not enough nodes responded")
+	errExecutionNotEnoughNodes = errors.New("not enough execution results received")
 )

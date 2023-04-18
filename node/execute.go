@@ -158,34 +158,16 @@ rollCallResponseLoop:
 
 		case reply := <-n.rollCall.responses(requestID):
 
-			n.log.Debug().
-				Str("peer", reply.From.String()).
-				Str("function_id", req.FunctionID).
-				Str("request_id", requestID).
-				Str("code", reply.Code.String()).
-				Msg("peer reported for roll call")
-
-			// Check if this is the reply we want.
-			if reply.Code != codes.Accepted ||
-				reply.FunctionID != req.FunctionID ||
-				reply.RequestID != requestID {
+			// Check if this is the reply we want - shouldn't really happen.
+			if reply.FunctionID != req.FunctionID {
 
 				n.log.Debug().
 					Str("peer", reply.From.String()).
 					Str("request_id", requestID).
-					Str("code", reply.Code.String()).
-					Msg("skipping inadequate roll call response")
+					Str("function_got", reply.FunctionID).
+					Str("function_want", req.FunctionID).
+					Msg("skipping inadequate roll call response - wrong function")
 
-				continue
-			}
-
-			// Check if we are connected to this peer.
-			connections := n.host.Network().ConnsToPeer(reply.From)
-			if len(connections) == 0 {
-				n.log.Debug().
-					Str("peer", reply.From.String()).
-					Str("request_id", requestID).
-					Msg("skipping unconnected peer")
 				continue
 			}
 

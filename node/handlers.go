@@ -7,6 +7,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/response"
 )
 
@@ -32,6 +33,34 @@ func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, payloa
 	res.From = from
 
 	n.log.Debug().
+		Str("peer", from.String()).
+		Str("request_id", res.RequestID).
+		Msg("processing peers roll call response")
+
+	// Check if the response is adequate.
+	if res.Code != codes.Accepted {
+		n.log.Info().
+			Str("peer", from.String()).
+			Str("code", res.Code.String()).
+			Str("request_id", res.RequestID).
+			Msg("skipping inadequate roll call response - unwanted code")
+
+		return nil
+	}
+
+	// Check if we are connected to this peer.
+	// Since we receive responses to roll call via direct messages - should not happen.
+	connections := n.host.Network().ConnsToPeer(from)
+	if len(connections) == 0 {
+		n.log.Info().
+			Str("peer", from.String()).
+			Str("request_id", res.RequestID).
+			Msg("skipping roll call response from unconnected peer")
+
+		return nil
+	}
+
+	n.log.Info().
 		Str("peer", from.String()).
 		Str("request_id", res.RequestID).
 		Msg("recording peers roll call response")
