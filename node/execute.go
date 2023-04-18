@@ -116,6 +116,16 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
 func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request) (codes.Code, map[string]execute.Result, error) {
 
+	quorum := 1
+	if req.Config.NodeCount > 1 {
+		quorum = req.Config.NodeCount
+	}
+
+	n.log.Info().
+		Str("request_id", requestID).
+		Int("quorum", quorum).
+		Msg("processing execution request")
+
 	err := n.issueRollCall(ctx, requestID, req.FunctionID)
 	if err != nil {
 		return codes.Error, nil, fmt.Errorf("could not issue roll call: %w", err)
@@ -182,13 +192,13 @@ rollCallResponseLoop:
 			n.log.Info().
 				Str("request_id", requestID).
 				Str("peer", reply.From.String()).
-				Uint("want_peers", n.cfg.Quorum).
+				Int("want_peers", quorum).
 				Msg("roll called peer chosen for execution")
 
 			reportingPeers = append(reportingPeers, reply.From)
 
-			if len(reportingPeers) >= int(n.cfg.Quorum) {
-				n.log.Info().Str("request_id", requestID).Uint("want", n.cfg.Quorum).Msg("enough peers reported for roll call")
+			if len(reportingPeers) >= quorum {
+				n.log.Info().Str("request_id", requestID).Int("want", quorum).Msg("enough peers reported for roll call")
 				break rollCallResponseLoop
 			}
 		}
@@ -230,7 +240,7 @@ rollCallResponseLoop:
 	}
 
 	n.log.Debug().
-		Uint("want", n.cfg.Quorum).
+		Int("want", quorum).
 		Str("request_id", requestID).
 		Msg("waiting for execution responses")
 
@@ -277,11 +287,11 @@ rollCallResponseLoop:
 	// Wait for results, whatever they may be.
 	rw.Wait()
 
-	if len(results) != int(n.cfg.Quorum) {
+	if len(results) != quorum {
 		n.log.Warn().
 			Str("request_id", requestID).
 			Int("have", len(results)).
-			Uint("want", n.cfg.Quorum).
+			Int("want", quorum).
 			Msg("did not receive enough execution responses")
 
 		return codes.Error, nil, errExecutionNotEnoughNodes
