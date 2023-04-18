@@ -48,18 +48,6 @@ func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, payloa
 		return nil
 	}
 
-	// Check if we are connected to this peer.
-	// Since we receive responses to roll call via direct messages - should not happen.
-	connections := n.host.Network().ConnsToPeer(from)
-	if len(connections) == 0 {
-		n.log.Info().
-			Str("peer", from.String()).
-			Str("request_id", res.RequestID).
-			Msg("skipping roll call response from unconnected peer")
-
-		return nil
-	}
-
 	n.log.Info().
 		Str("peer", from.String()).
 		Str("request_id", res.RequestID).

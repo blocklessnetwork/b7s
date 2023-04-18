@@ -42,7 +42,7 @@ func TestNode_Handlers(t *testing.T) {
 
 		res := response.RollCall{
 			Type:       blockless.MessageRollCallResponse,
-			Code:       codes.OK,
+			Code:       codes.Accepted,
 			Role:       "dummy-role",
 			FunctionID: "dummy-function-id",
 			RequestID:  requestID,
