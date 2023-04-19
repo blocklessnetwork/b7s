@@ -224,4 +224,27 @@ func Test_Store(t *testing.T) {
 		readKeys := store.Keys()
 		require.Equal(t, keys, readKeys)
 	})
+	t.Run("deleting key", func(t *testing.T) {
+		t.Parallel()
+
+		db := helpers.InMemoryDB(t)
+		defer db.Close()
+		store := store.New(db)
+
+		const (
+			key   = "some-key"
+			value = "some-value"
+		)
+
+		err := store.Set(key, value)
+		require.NoError(t, err)
+
+		// Deleting valid key works.
+		err = store.Delete(key)
+		require.NoError(t, err)
+
+		// Value is no longer found.
+		_, err = store.Get(key)
+		require.ErrorIs(t, err, blockless.ErrNotFound)
+	})
 }
