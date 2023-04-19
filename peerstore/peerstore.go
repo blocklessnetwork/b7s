@@ -24,6 +24,18 @@ func New(store Store) *PeerStore {
 	return &ps
 }
 
+// Get wil retrieve peer with the given ID.
+func (p *PeerStore) Get(id peer.ID) (blockless.Peer, error) {
+
+	var peer blockless.Peer
+	err := p.store.GetRecord(id.String(), &peer)
+	if err != nil {
+		return blockless.Peer{}, fmt.Errorf("could not retrieve peer: %w", err)
+	}
+
+	return peer, nil
+}
+
 // Store will persist the peer information.
 func (p *PeerStore) Store(id peer.ID, addr multiaddr.Multiaddr, info peer.AddrInfo) error {
 
