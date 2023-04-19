@@ -18,7 +18,8 @@ import (
 func TestNode_Health(t *testing.T) {
 
 	const (
-		healthInterval = 20 * time.Millisecond
+		testTimeLimit  = 10 * time.Second
+		healthInterval = 100 * time.Millisecond
 		topic          = DefaultTopic
 
 		expectedPingCount = 3
@@ -43,7 +44,8 @@ func TestNode_Health(t *testing.T) {
 	receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 	require.NoError(t, err)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	// Add a deadline for the test so we don't hang.
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeLimit)
 	defer cancel()
 
 	// Establish a connection between node and receiver.
@@ -78,4 +80,11 @@ func TestNode_Health(t *testing.T) {
 		require.Equal(t, blockless.MessageHealthCheck, received.Type)
 		require.Equal(t, http.StatusOK, received.Code)
 	}
+
+	cancel()
+
+	<-ctx.Done()
+
+	// Test should complete but not because of a timeout
+	require.NotErrorIsf(t, ctx.Err(), context.DeadlineExceeded, "health test timed out")
 }
