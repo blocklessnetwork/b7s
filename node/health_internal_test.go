@@ -62,6 +62,8 @@ func TestNode_Health(t *testing.T) {
 
 	go node.HealthPing(ctx)
 
+	time.Sleep(subscriptionDiseminationPause)
+
 	// Wait for subscribed messages and verify a few pings came in.
 	for i := 0; i < expectedPingCount; i++ {
 		msg, err := subscription.Next(ctx)
