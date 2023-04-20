@@ -17,9 +17,23 @@ func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd 
 	// Prepare command to be executed.
 	exePath := filepath.Join(e.cfg.RuntimeDir, e.cfg.ExecutableName)
 
+	cfg := req.Config.Runtime
+	cfg.Entry = ""
+	cfg.Input = paths.entry
+	cfg.FSRoot = paths.fsRoot
+	// TODO: Permissions are missing
+
 	// Prepare CLI arguments.
 	var args []string
-	args = append(args, paths.manifest)
+
+	// First append the arguments for the runtime.
+	runtimeFlags := execute.RuntimeFlags(cfg)
+	args = append(args, runtimeFlags...)
+
+	// Separate runtime arguments from the function arguments.
+	args = append(args, "--")
+
+	// Function arguments.
 	for _, param := range req.Parameters {
 		if param.Value != "" {
 			args = append(args, param.Value)
