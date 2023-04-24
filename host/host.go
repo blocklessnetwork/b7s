@@ -52,7 +52,7 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 		// Create a multiaddr with the external IP and port
 		externalMultiaddr, err := ma.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%d", cfg.DialBackAddress, cfg.DialBackPort))
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("could not parse external multiaddress: %w", err)
 		}
 		opts = append(opts, libp2p.AddrsFactory(func(addrs []ma.Multiaddr) []ma.Multiaddr {
 			// Return only the external multiaddr

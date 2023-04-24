@@ -79,6 +79,11 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 	return &n, nil
 }
 
+// ID returns the ID of this node.
+func (n *Node) ID() string {
+	return n.host.ID().String()
+}
+
 // getHandler returns the appropriate handler function for the given message.
 func (n Node) getHandler(msgType string) HandlerFunc {
 

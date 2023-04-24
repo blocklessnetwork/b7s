@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/response"
 )
 
@@ -146,7 +147,7 @@ This is the end of my program
 		getStreamPayload(t, stream, &res)
 
 		require.Equal(t, blockless.MessageInstallFunctionResponse, res.Type)
-		require.Equal(t, response.CodeAccepted, res.Code)
+		require.Equal(t, codes.Accepted, res.Code)
 		require.Equal(t, "installed", res.Message)
 
 		t.Log("client received function install response")
@@ -179,9 +180,9 @@ This is the end of my program
 		getStreamPayload(t, stream, &res)
 
 		require.Equal(t, blockless.MessageExecuteResponse, res.Type)
-		require.Equal(t, response.CodeOK, res.Code)
+		require.Equal(t, codes.OK, res.Code)
 		require.NotEmpty(t, res.RequestID)
-		require.Equal(t, expectedExecutionResult, res.Result)
+		require.Equal(t, expectedExecutionResult, res.Results[worker.node.ID()].Result.Stdout)
 
 		t.Log("client verified execution response")
 

@@ -1,6 +1,7 @@
 package waitmap
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -141,7 +142,10 @@ func TestWaitMap(t *testing.T) {
 		go func() {
 			defer wg.Done()
 
-			retrieved, ok := wm.WaitFor(key, 100*time.Millisecond)
+			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			defer cancel()
+
+			retrieved, ok := wm.WaitFor(ctx, key)
 			require.True(t, ok)
 			require.Equal(t, value, retrieved.(string))
 		}()
@@ -169,7 +173,10 @@ func TestWaitMap(t *testing.T) {
 		go func() {
 			defer wg.Done()
 
-			_, ok := wm.WaitFor(key, 5*time.Millisecond)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
+			defer cancel()
+
+			_, ok := wm.WaitFor(ctx, key)
 			require.False(t, ok)
 		}()
 
@@ -180,7 +187,10 @@ func TestWaitMap(t *testing.T) {
 		wg.Wait()
 
 		// Confirm that a second `WaitFor` will succeed.
-		retrieved, ok := wm.WaitFor(key, 5*time.Millisecond)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
+		defer cancel()
+
+		retrieved, ok := wm.WaitFor(ctx, key)
 		require.True(t, ok)
 		require.Equal(t, value, retrieved.(string))
 	})

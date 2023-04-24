@@ -12,6 +12,7 @@ import (
 
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/models/request"
 	"github.com/blocklessnetworking/b7s/models/response"
@@ -86,8 +87,8 @@ func TestNode_WorkerExecute(t *testing.T) {
 			expected := mocks.GenericExecutionResult
 			require.Equal(t, requestID, received.RequestID)
 			require.Equal(t, expected.Code, received.Code)
-			require.Equal(t, expected.Result.Stdout, received.Result)
-			require.Equal(t, expected.Result, received.ResultEx)
+
+			require.Equal(t, expected.Result, received.Results[node.ID()].Result)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -100,22 +101,28 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 		var (
 			faultyExecutionResult = execute.Result{
-				Code: response.CodeError,
+				Code: codes.Error,
 				Result: execute.RuntimeOutput{
 					Stdout:   "something horrible has happened",
 					Stderr:   "log of something horrible",
 					ExitCode: 1,
 				},
-				RequestID: mocks.GenericUUID.String(),
 			}
+
+			requestID string
 		)
 
 		node := createNode(t, blockless.WorkerNode)
 
 		// Use a custom executor to verify all execution parameters are correct.
 		executor := mocks.BaselineExecutor(t)
-		executor.ExecFunctionFunc = func(requestID string, req execute.Request) (execute.Result, error) {
-			return faultyExecutionResult, mocks.GenericError
+		executor.ExecFunctionFunc = func(reqID string, req execute.Request) (execute.Result, error) {
+			requestID = reqID
+
+			out := faultyExecutionResult
+			out.RequestID = reqID
+
+			return out, mocks.GenericError
 		}
 		node.executor = executor
 
@@ -139,11 +146,9 @@ func TestNode_WorkerExecute(t *testing.T) {
 			getStreamPayload(t, stream, &received)
 
 			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
-
-			require.Equal(t, faultyExecutionResult.RequestID, received.RequestID)
+			require.Equal(t, received.RequestID, requestID)
 			require.Equal(t, faultyExecutionResult.Code, received.Code)
-			require.Equal(t, faultyExecutionResult.Result.Stdout, received.Result)
-			require.Equal(t, faultyExecutionResult.Result, received.ResultEx)
+			require.Equal(t, faultyExecutionResult.Result, received.Results[node.ID()].Result)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -184,7 +189,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
 
-			require.Equal(t, received.Code, response.CodeError)
+			require.Equal(t, received.Code, codes.Error)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -212,7 +217,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
 
-			require.Equal(t, response.CodeNotFound, received.Code)
+			require.Equal(t, codes.NotFound, received.Code)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -285,7 +290,7 @@ func TestNode_HeadExecute(t *testing.T) {
 			getStreamPayload(t, stream, &received)
 
 			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
-			require.Equal(t, response.CodeTimeout, received.Code)
+			require.Equal(t, codes.Timeout, received.Code)
 		})
 
 		// Since no one will respond to a roll call, this is bound to time out.
@@ -348,11 +353,15 @@ func TestNode_HeadExecute(t *testing.T) {
 
 			res := response.Execute{
 				Type:      blockless.MessageExecuteResponse,
+				Code:      codes.OK,
 				RequestID: requestID,
-				Result:    executionResult.Stdout,
-				ResultEx:  executionResult,
-				Code:      response.CodeOK,
+				Results:   make(map[string]execute.Result),
 			}
+			res.Results[mockWorker.ID().String()] = execute.Result{
+				Code:   codes.OK,
+				Result: executionResult,
+			}
+
 			payload := serialize(t, res)
 			err = mockWorker.SendMessage(ctx, node.host.ID(), payload)
 			require.NoError(t, err)
@@ -378,10 +387,11 @@ func TestNode_HeadExecute(t *testing.T) {
 			getStreamPayload(t, stream, &res)
 			require.Equal(t, blockless.MessageExecuteResponse, res.Type)
 
-			require.Equal(t, response.CodeOK, res.Code)
+			require.Equal(t, codes.OK, res.Code)
 			require.Equal(t, requestID, res.RequestID)
-			require.Equal(t, executionResult.Stdout, res.Result)
-			require.Equal(t, executionResult, res.ResultEx)
+
+			require.NotNil(t, res.Results[mockWorker.ID().String()])
+			require.Equal(t, executionResult, res.Results[mockWorker.ID().String()].Result)
 		})
 
 		var nodeWG sync.WaitGroup
@@ -421,7 +431,7 @@ func TestNode_HeadExecute(t *testing.T) {
 		// Reply to the server that we can do the work.
 		res := response.RollCall{
 			Type:       blockless.MessageRollCallResponse,
-			Code:       response.CodeAccepted,
+			Code:       codes.Accepted,
 			FunctionID: received.FunctionID,
 			RequestID:  requestID,
 		}
@@ -434,5 +444,67 @@ func TestNode_HeadExecute(t *testing.T) {
 
 		receiverWG.Wait()
 		nodeWG.Wait()
+	})
+}
+
+func TestNode_DetermineOverallCode(t *testing.T) {
+
+	t.Run("no content", func(t *testing.T) {
+		require.Equal(t, codes.NoContent, determineOverallCode(nil))
+	})
+	t.Run("single result determines the code", func(t *testing.T) {
+
+		expectedCode := codes.NotImplemented
+		results := map[string]execute.Result{
+			"dummy": {
+				Code: expectedCode,
+			},
+		}
+
+		require.Equal(t, expectedCode, determineOverallCode(results))
+	})
+	t.Run("one successful result determines success", func(t *testing.T) {
+
+		results := map[string]execute.Result{
+			"work1": {
+				Code: codes.Error,
+			},
+			"work2": {
+				Code: codes.Error,
+			},
+			"work3": {
+				Code: codes.Error,
+			},
+			"work4": {
+				Code: codes.Error,
+			},
+			"work5": {
+				Code: codes.OK,
+			},
+		}
+
+		require.Equal(t, codes.OK, determineOverallCode(results))
+	})
+	t.Run("no successes means failure", func(t *testing.T) {
+
+		results := map[string]execute.Result{
+			"work1": {
+				Code: codes.Error,
+			},
+			"work2": {
+				Code: codes.Error,
+			},
+			"work3": {
+				Code: codes.Error,
+			},
+			"work4": {
+				Code: codes.Timeout,
+			},
+			"work5": {
+				Code: codes.NotImplemented,
+			},
+		}
+
+		require.Equal(t, codes.Error, determineOverallCode(results))
 	})
 }

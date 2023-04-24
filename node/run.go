@@ -65,7 +65,7 @@ func (n *Node) Run(ctx context.Context) error {
 			continue
 		}
 
-		n.log.Debug().
+		n.log.Trace().
 			Str("message_id", msg.ID).
 			Str("peer_id", msg.ReceivedFrom.String()).
 			Msg("received message")
@@ -112,6 +112,10 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 			n.log.Error().Err(err).Msg("error receiving direct message")
 			return
 		}
+
+		n.log.Debug().
+			Str("peer_id", from.String()).
+			Msg("received direct message")
 
 		err = n.processMessage(ctx, from, msg)
 		if err != nil {

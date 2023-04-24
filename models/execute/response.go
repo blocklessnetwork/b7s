@@ -2,11 +2,13 @@ package execute
 
 import (
 	"time"
+
+	"github.com/blocklessnetworking/b7s/models/codes"
 )
 
 // Result describes an execution result.
 type Result struct {
-	Code      string        `json:"code"`
+	Code      codes.Code    `json:"code"`
 	Result    RuntimeOutput `json:"result"`
 	RequestID string        `json:"request_id"`
 	Usage     Usage         `json:"usage,omitempty"`

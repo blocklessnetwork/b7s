@@ -8,6 +8,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/request"
 	"github.com/blocklessnetworking/b7s/models/response"
 )
@@ -36,7 +37,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 		Type:       blockless.MessageRollCallResponse,
 		FunctionID: req.FunctionID,
 		RequestID:  req.RequestID,
-		Code:       response.CodeError, // CodeError by default, changed if everything goes well.
+		Code:       codes.Error, // CodeError by default, changed if everything goes well.
 	}
 
 	// Check if we have this function installed.
@@ -75,7 +76,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 		Msg("reporting for roll call")
 
 	// Send postive response.
-	res.Code = response.CodeAccepted
+	res.Code = codes.Accepted
 	err = n.send(ctx, req.From, res)
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)

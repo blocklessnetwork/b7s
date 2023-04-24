@@ -12,6 +12,7 @@ import (
 
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/request"
 	"github.com/blocklessnetworking/b7s/models/response"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
@@ -64,7 +65,7 @@ func TestNode_RollCall(t *testing.T) {
 
 			require.Equal(t, rollCallReq.FunctionID, received.FunctionID)
 			require.Equal(t, rollCallReq.RequestID, received.RequestID)
-			require.Equal(t, response.CodeAccepted, received.Code)
+			require.Equal(t, codes.Accepted, received.Code)
 		})
 
 		err = node.processRollCall(context.Background(), receiver.ID(), payload)
@@ -106,7 +107,7 @@ func TestNode_RollCall(t *testing.T) {
 
 			require.Equal(t, rollCallReq.FunctionID, received.FunctionID)
 			require.Equal(t, rollCallReq.RequestID, received.RequestID)
-			require.Equal(t, response.CodeError, received.Code)
+			require.Equal(t, codes.Error, received.Code)
 		})
 
 		err = node.processRollCall(context.Background(), receiver.ID(), payload)
@@ -151,7 +152,7 @@ func TestNode_RollCall(t *testing.T) {
 
 			require.Equal(t, rollCallReq.FunctionID, received.FunctionID)
 			require.Equal(t, rollCallReq.RequestID, received.RequestID)
-			require.Equal(t, response.CodeAccepted, received.Code)
+			require.Equal(t, codes.Accepted, received.Code)
 		})
 
 		err = node.processRollCall(context.Background(), receiver.ID(), payload)
@@ -196,7 +197,7 @@ func TestNode_RollCall(t *testing.T) {
 
 			require.Equal(t, rollCallReq.FunctionID, received.FunctionID)
 			require.Equal(t, rollCallReq.RequestID, received.RequestID)
-			require.Equal(t, response.CodeError, received.Code)
+			require.Equal(t, codes.Error, received.Code)
 		})
 
 		err = node.processRollCall(context.Background(), receiver.ID(), payload)

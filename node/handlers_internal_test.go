@@ -11,6 +11,7 @@ import (
 
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/request"
 	"github.com/blocklessnetworking/b7s/models/response"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
@@ -41,7 +42,7 @@ func TestNode_Handlers(t *testing.T) {
 
 		res := response.RollCall{
 			Type:       blockless.MessageRollCallResponse,
-			Code:       response.CodeOK,
+			Code:       codes.Accepted,
 			Role:       "dummy-role",
 			FunctionID: "dummy-function-id",
 			RequestID:  requestID,
@@ -72,7 +73,7 @@ func TestNode_Handlers(t *testing.T) {
 
 		msg := response.InstallFunction{
 			Type:    blockless.MessageInstallFunctionResponse,
-			Code:    response.CodeOK,
+			Code:    codes.OK,
 			Message: "dummy-message",
 		}
 
@@ -131,7 +132,7 @@ func TestNode_InstallFunction(t *testing.T) {
 			getStreamPayload(t, stream, &received)
 
 			require.Equal(t, blockless.MessageInstallFunctionResponse, received.Type)
-			require.Equal(t, response.CodeAccepted, received.Code)
+			require.Equal(t, codes.Accepted, received.Code)
 			require.Equal(t, expectedMessage, received.Message)
 		})
 

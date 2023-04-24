@@ -7,6 +7,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/response"
 )
 
@@ -15,7 +16,7 @@ import (
 type HandlerFunc func(context.Context, peer.ID, []byte) error
 
 func (n *Node) processHealthCheck(ctx context.Context, from peer.ID, payload []byte) error {
-	n.log.Debug().
+	n.log.Trace().
 		Str("from", from.String()).
 		Msg("peer health check received")
 	return nil
@@ -31,6 +32,27 @@ func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, payloa
 	}
 	res.From = from
 
+	n.log.Debug().
+		Str("peer", from.String()).
+		Str("request_id", res.RequestID).
+		Msg("processing peers roll call response")
+
+	// Check if the response is adequate.
+	if res.Code != codes.Accepted {
+		n.log.Info().
+			Str("peer", from.String()).
+			Str("code", res.Code.String()).
+			Str("request_id", res.RequestID).
+			Msg("skipping inadequate roll call response - unwanted code")
+
+		return nil
+	}
+
+	n.log.Info().
+		Str("peer", from.String()).
+		Str("request_id", res.RequestID).
+		Msg("recording peers roll call response")
+
 	// Record the response.
 	n.rollCall.add(res.RequestID, res)
 
@@ -38,6 +60,6 @@ func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, payloa
 }
 
 func (n *Node) processInstallFunctionResponse(ctx context.Context, from peer.ID, payload []byte) error {
-	n.log.Debug().Msg("function install response received")
+	n.log.Trace().Msg("function install response received")
 	return nil
 }
