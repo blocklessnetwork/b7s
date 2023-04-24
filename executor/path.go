@@ -8,7 +8,7 @@ import (
 type requestPaths struct {
 	workdir string
 	fsRoot  string
-	entry   string
+	input   string
 }
 
 func (e *Executor) generateRequestPaths(requestID string, functionID string, method string) requestPaths {
@@ -18,7 +18,7 @@ func (e *Executor) generateRequestPaths(requestID string, functionID string, met
 	paths := requestPaths{
 		workdir: workdir,
 		fsRoot:  filepath.Join(workdir, "fs"),
-		entry:   filepath.Join(e.cfg.WorkDir, functionID, method), // TODO: Check, it seems like this is now named `input`, and `entry` is something else
+		input:   filepath.Join(e.cfg.WorkDir, functionID, method),
 	}
 
 	return paths

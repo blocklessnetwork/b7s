@@ -1,4 +1,4 @@
-package execute_test
+package executor
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ func TestRuntimeFlags(t *testing.T) {
 		t.Parallel()
 
 		cfg := execute.RuntimeConfig{}
-		flags := execute.RuntimeFlags(cfg)
+		flags := runtimeFlags(cfg)
 		require.Len(t, flags, 0)
 	})
 	t.Run("all flags set", func(t *testing.T) {
@@ -30,8 +30,8 @@ func TestRuntimeFlags(t *testing.T) {
 			memory        = 256
 			logger        = "runtime.log"
 
-			// Expect seven key-value pairs and a single boolean.
-			flagCount = 15
+			// Expect six key-value pairs and a single boolean.
+			flagCount = 13
 		)
 
 		cfg := execute.RuntimeConfig{
@@ -45,59 +45,51 @@ func TestRuntimeFlags(t *testing.T) {
 			Logger:        logger,
 		}
 
-		flags := execute.RuntimeFlags(cfg)
+		flags := runtimeFlags(cfg)
 
 		require.Len(t, flags, flagCount)
 
 		require.Equal(t, "--"+execute.RuntimeFlagEntry, flags[0])
 		require.Equal(t, entry, flags[1])
 
-		require.Equal(t, "--"+execute.RuntimeFlagInput, flags[2])
-		require.Equal(t, input, flags[3])
+		require.Equal(t, "--"+execute.RuntimeFlagExecutionTime, flags[2])
+		require.Equal(t, fmt.Sprint(executionTime), flags[3])
 
-		require.Equal(t, "--"+execute.RuntimeFlagExecutionTime, flags[4])
-		require.Equal(t, fmt.Sprint(executionTime), flags[5])
+		require.Equal(t, "--"+execute.RuntimeFlagDebug, flags[4])
 
-		require.Equal(t, "--"+execute.RuntimeFlagDebug, flags[6])
+		require.Equal(t, "--"+execute.RuntimeFlagFSRoot, flags[5])
+		require.Equal(t, fsRoot, flags[6])
 
-		require.Equal(t, "--"+execute.RuntimeFlagFSRoot, flags[7])
-		require.Equal(t, fsRoot, flags[8])
+		require.Equal(t, "--"+execute.RuntimeFlagFuel, flags[7])
+		require.Equal(t, fmt.Sprint(fuel), flags[8])
 
-		require.Equal(t, "--"+execute.RuntimeFlagFuel, flags[9])
-		require.Equal(t, fmt.Sprint(fuel), flags[10])
+		require.Equal(t, "--"+execute.RuntimeFlagMemory, flags[9])
+		require.Equal(t, fmt.Sprint(memory), flags[10])
 
-		require.Equal(t, "--"+execute.RuntimeFlagMemory, flags[11])
-		require.Equal(t, fmt.Sprint(memory), flags[12])
-
-		require.Equal(t, "--"+execute.RuntimeFlagLogger, flags[13])
-		require.Equal(t, logger, flags[14])
+		require.Equal(t, "--"+execute.RuntimeFlagLogger, flags[11])
+		require.Equal(t, logger, flags[12])
 	})
 	t.Run("some fields set", func(t *testing.T) {
 		t.Parallel()
 
 		const (
 			entry  = "something"
-			input  = "whatever.wasm"
 			memory = 256
 		)
 
 		cfg := execute.RuntimeConfig{
 			Entry:  entry,
-			Input:  input,
 			Memory: memory,
 		}
 
-		flags := execute.RuntimeFlags(cfg)
+		flags := runtimeFlags(cfg)
 
-		require.Len(t, flags, 6)
+		require.Len(t, flags, 4)
 
 		require.Equal(t, "--"+execute.RuntimeFlagEntry, flags[0])
 		require.Equal(t, entry, flags[1])
 
-		require.Equal(t, "--"+execute.RuntimeFlagInput, flags[2])
-		require.Equal(t, input, flags[3])
-
-		require.Equal(t, "--"+execute.RuntimeFlagMemory, flags[4])
-		require.Equal(t, fmt.Sprint(memory), flags[5])
+		require.Equal(t, "--"+execute.RuntimeFlagMemory, flags[2])
+		require.Equal(t, fmt.Sprint(memory), flags[3])
 	})
 }
