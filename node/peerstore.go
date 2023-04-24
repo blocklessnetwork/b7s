@@ -7,5 +7,4 @@ import (
 
 type PeerStore interface {
 	Store(peer.ID, multiaddr.Multiaddr, peer.AddrInfo) error
-	UpdatePeerList(peer.ID, multiaddr.Multiaddr, peer.AddrInfo) error
 }

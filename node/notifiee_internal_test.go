@@ -24,18 +24,13 @@ func TestNode_Notifiee(t *testing.T) {
 	require.NoError(t, err)
 
 	var (
-		storedPeer      bool
-		updatedPeerList bool
+		storedPeer bool
 	)
 
 	peerstore := mocks.BaselinePeerStore(t)
 	// Override the peerstore methods so we know if the node correctly handled incoming connection.
 	peerstore.StoreFunc = func(peer.ID, multiaddr.Multiaddr, peer.AddrInfo) error {
 		storedPeer = true
-		return nil
-	}
-	peerstore.UpdatePeerListFunc = func(peer.ID, multiaddr.Multiaddr, peer.AddrInfo) error {
-		updatedPeerList = true
 		return nil
 	}
 
@@ -53,5 +48,4 @@ func TestNode_Notifiee(t *testing.T) {
 
 	// Verify that peer store was updated.
 	require.True(t, storedPeer)
-	require.True(t, updatedPeerList)
 }

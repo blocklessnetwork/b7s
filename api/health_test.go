@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/blocklessnetworking/b7s/models/response"
 	"github.com/stretchr/testify/require"
+
+	"github.com/blocklessnetworking/b7s/models/response"
 )
 
 func TestAPI_HealthResult(t *testing.T) {
@@ -14,7 +15,6 @@ func TestAPI_HealthResult(t *testing.T) {
 		t.Parallel()
 
 		api := setupAPI(t)
-
 
 		rec, ctx, err := setupRecorder(healthEndpoint, nil)
 		require.NoError(t, err)
@@ -25,7 +25,6 @@ func TestAPI_HealthResult(t *testing.T) {
 		var res response.Health
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 
-	
 		require.Equal(t, http.StatusOK, res.Code)
 		require.Equal(t, http.StatusOK, rec.Result().StatusCode)
 	})
