@@ -105,3 +105,8 @@ func (l *Limits) RemoveAllLimits() error {
 
 	return nil
 }
+
+// Close will close the limiter.
+func (l *Limits) Close() error {
+	return nil
+}
