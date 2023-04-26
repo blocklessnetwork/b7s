@@ -63,7 +63,8 @@ func New(opts ...Option) (*Limits, error) {
 // LimitProcess will set the resource limits for the process identified by the handle.
 func (l *Limits) LimitProcess(proc execute.ProcessID) error {
 
-	err := windows.AssignProcessToJobObject(l.jh, proc.Handle)
+	handle := windows.Handle(proc.Handle)
+	err := windows.AssignProcessToJobObject(l.jh, handle)
 	if err != nil {
 		return fmt.Errorf("could not assign job to job object: %w", err)
 	}
@@ -84,4 +85,12 @@ func (l *Limits) ListProcesses() ([]int, error) {
 // Close will close the limiter.
 func (l *Limits) Close() error {
 	return windows.CloseHandle(l.jh)
+}
+
+// RemoveAllLimits exists to maintain the same interface as the linux version.
+// However, the Windows limiter does not support removing limits from a job after it has been set:
+// "After a process is associated with a job, the association cannot be broken"
+// See => https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects#creating-jobs.
+func (l *Limits) RemoveAllLimits() error {
+	return nil
 }
