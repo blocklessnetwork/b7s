@@ -56,8 +56,9 @@ func New(opts ...Option) (*Limits, error) {
 }
 
 // LimitProcess will set the resource limits for the process with the given PID.
-func (l *Limits) LimitProcess(pid int) error {
+func (l *Limits) LimitProcess(proc execute.ProcessID) error {
 
+	pid := proc.PID
 	err := l.cgroup.AddProc(uint64(pid))
 	if err != nil {
 		return fmt.Errorf("could not set resouce limit for process (pid: %v): %w", pid, err)

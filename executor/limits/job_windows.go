@@ -5,6 +5,7 @@ package limits
 
 import (
 	"fmt"
+	"strings"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -20,11 +21,39 @@ const (
 	// no threads associated with the job will run until the next interval.
 	// => See https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_cpu_rate_control_information
 	JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP = 0x4
+
+	// errMoreData is returned by QueryInformationJobObject to notify us on memory needed to store the response.
+	// Unfortunately there's no Go error defined for it.
+	errMoreDataStr = "More data is available."
 )
 
 type jobObjectCPURateControlInformation struct {
 	ControlFlags uint32
 	CPURate      uint32
+}
+
+type jobObjectExtendedLimitInformation struct {
+	BasicLimitInformation windows.JOBOBJECT_BASIC_LIMIT_INFORMATION
+	IoInfo                ioCounters
+	ProcessMemoryLimit    uintptr
+	JobMemoryLimit        uintptr
+	PeakProcessMemoryUsed uintptr
+	PeakJobMemoryUsed     uintptr
+}
+
+type ioCounters struct {
+	ReadOperationCount  uint64
+	WriteOperationCount uint64
+	OtherOperationCount uint64
+	ReadTransferCount   uint64
+	WriteTransferCount  uint64
+	OtherTransferCount  uint64
+}
+
+type jobObjectBasicProcessIdList struct {
+	NumberOfAssignedProcesses uint32
+	NumberOfProcessIDsInList  uint32
+	ProcessIDList             [1]uintptr
 }
 
 func setCPULimit(h windows.Handle, cpuRate float64) error {
@@ -53,27 +82,12 @@ func setCPULimit(h windows.Handle, cpuRate float64) error {
 	return nil
 }
 
-type jobObjectExtendedLimitInformation struct {
-	BasicLimitInformation windows.MemoryBasicInformation
-	IoInfo                ioCounters
-	ProcessMemoryLimit    uintptr
-	JobMemoryLimit        uintptr
-	PeakProcessMemoryUsed uintptr
-	PeakJobMemoryUsed     uintptr
-}
-
-type ioCounters struct {
-	ReadOperationCount  uint64
-	WriteOperationCount uint64
-	OtherOperationCount uint64
-	ReadTransferCount   uint64
-	WriteTransferCount  uint64
-	OtherTransferCount  uint64
-}
-
 func setMemLimit(h windows.Handle, memoryKB int64) error {
 
 	info := &jobObjectExtendedLimitInformation{
+		BasicLimitInformation: windows.JOBOBJECT_BASIC_LIMIT_INFORMATION{
+			LimitFlags: windows.JOB_OBJECT_LIMIT_JOB_MEMORY,
+		},
 		JobMemoryLimit: uintptr(memoryKB * 1000),
 	}
 
@@ -88,4 +102,63 @@ func setMemLimit(h windows.Handle, memoryKB int64) error {
 	}
 
 	return nil
+}
+
+func getJobObjectPids(h windows.Handle) ([]int, error) {
+
+	var info jobObjectBasicProcessIdList
+
+	err := windows.QueryInformationJobObject(
+		h,
+		jobObjectBasicProcessIdListInformationClass,
+		uintptr(unsafe.Pointer(&info)),
+		uint32(unsafe.Sizeof(info)),
+		nil,
+	)
+	if err == nil {
+		if info.NumberOfProcessIDsInList == 1 {
+
+			pids := []int{
+				int(info.ProcessIDList[0]),
+			}
+
+			return pids, nil
+		}
+
+		return []int{}, nil
+	}
+	if err != nil && !errIsMoreData(err) {
+		return nil, fmt.Errorf("could not list job object processes: %w", err)
+	}
+
+	bufSize := unsafe.Sizeof(info) + (unsafe.Sizeof(info.ProcessIDList[0]) * uintptr(info.NumberOfAssignedProcesses-1))
+	buf := make([]byte, bufSize)
+
+	err = windows.QueryInformationJobObject(
+		h,
+		jobObjectBasicProcessIdListInformationClass,
+		uintptr(unsafe.Pointer(&buf[0])),
+		uint32(len(buf)),
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not list job object processes: %w", err)
+	}
+
+	bufInfo := (*jobObjectBasicProcessIdList)(unsafe.Pointer(&buf[0]))
+
+	// Some dark sorcery ported from the MS `Host Compute Service Shim` library.
+	// => See `AllPids` method over at https://github.com/microsoft/hcsshim/blob/main/internal/winapi/jobobject.go#L101
+	pidList := (*[(1 << 27) - 1]uintptr)(unsafe.Pointer(&bufInfo.ProcessIDList[0]))[:bufInfo.NumberOfProcessIDsInList:bufInfo.NumberOfProcessIDsInList]
+
+	out := make([]int, 0, bufInfo.NumberOfProcessIDsInList)
+	for _, pid := range pidList {
+		out = append(out, int(pid))
+	}
+
+	return out, nil
+}
+
+func errIsMoreData(err error) bool {
+	return strings.Contains(err.Error(), errMoreDataStr)
 }

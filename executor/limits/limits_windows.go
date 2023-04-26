@@ -5,9 +5,10 @@ package limits
 
 import (
 	"fmt"
-	"unsafe"
 
 	"golang.org/x/sys/windows"
+
+	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
 type Limits struct {
@@ -60,9 +61,9 @@ func New(opts ...Option) (*Limits, error) {
 }
 
 // LimitProcess will set the resource limits for the process identified by the handle.
-func (l *Limits) LimitProcess(proc windows.Handle) error {
+func (l *Limits) LimitProcess(proc execute.ProcessID) error {
 
-	err := windows.AssignProcessToJobObject(l.jh, proc)
+	err := windows.AssignProcessToJobObject(l.jh, proc.Handle)
 	if err != nil {
 		return fmt.Errorf("could not assign job to job object: %w", err)
 	}
@@ -70,54 +71,11 @@ func (l *Limits) LimitProcess(proc windows.Handle) error {
 	return nil
 }
 
-type jobObjectBasicProcessIdList struct {
-	NumberOfAssignedProcesses uint32
-	NumberOfProcessIDsInList  uint32
-	ProcessIDList             [1]uintptr
-}
-
 func (l *Limits) ListProcesses() ([]int, error) {
 
-	info := &jobObjectBasicProcessIdList{}
-
-	err := windows.QueryInformationJobObject(
-		l.jh,
-		jobObjectBasicProcessIdListInformationClass,
-		uintptr(unsafe.Pointer(info)),
-		uint32(unsafe.Sizeof(*info)),
-		nil,
-	)
-	if err == nil {
-		if info.NumberOfProcessIDsInList == 1 {
-			return []int{
-				int(info.ProcessIDList[0]),
-			}, nil
-		}
-
-		return []int{}, nil
-	}
-
-	// TODO: Check if the error here is `ERROR_MORE_DATA`.
+	pids, err := getJobObjectPids(l.jh)
 	if err != nil {
-		return nil, fmt.Errorf("could not list job object processes: %w", err)
-	}
-
-	bufSize := unsafe.Sizeof(info) + (unsafe.Sizeof(info.ProcessIDList[0]) * uintptr(info.NumberOfAssignedProcesses-1))
-	buf := make([]byte, bufSize)
-
-	err = windows.QueryInformationJobObject(
-		l.jh,
-		jobObjectBasicProcessIdListInformationClass,
-		uintptr(unsafe.Pointer(&buf[0])),
-		uint32(unsafe.Sizeof(len(buf))),
-		nil,
-	)
-
-	bufInfo := (*jobObjectBasicProcessIdList)(unsafe.Pointer(&buf[0]))
-	pids := make([]int, 0, bufInfo.NumberOfProcessIDsInList)
-	for _, pid := range bufInfo.ProcessIDList {
-		p := int(pid)
-		pids = append(pids, p)
+		return nil, fmt.Errorf("could not get processes assigned to job object: %w", err)
 	}
 
 	return pids, nil

@@ -1,9 +1,13 @@
 package executor
 
+import (
+	"github.com/blocklessnetworking/b7s/models/execute"
+)
+
 // noopLimiter is a dummy limiter used when processes run without any resource limitations.
 type noopLimiter struct{}
 
-func (n *noopLimiter) LimitProcess(pid int) error {
+func (n *noopLimiter) LimitProcess(proc execute.ProcessID) error {
 	return nil
 }
 
