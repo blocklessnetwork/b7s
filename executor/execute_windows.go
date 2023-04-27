@@ -66,6 +66,15 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (execute.RuntimeOutput, execute
 		}
 	}()
 
+	proc := execute.ProcessID{
+		PID:    cmd.Process.Pid,
+		Handle: uintptr(handle),
+	}
+	err = e.cfg.Limiter.LimitProcess(proc)
+	if err != nil {
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not set resource limits: %w", err)
+	}
+
 	// Now we can safely wait for the child process to complete.
 	cmdErr := cmd.Wait()
 	end := time.Now()
