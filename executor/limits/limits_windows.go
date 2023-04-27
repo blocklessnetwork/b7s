@@ -85,7 +85,7 @@ func (l *Limits) ListProcesses() ([]int, error) {
 // Shutdown will shutdown the limiter. All processes currently associated with the limiter will complete
 // their execution as-is, meaning that the limitations will not be removed.
 // "After a process is associated with a job, the association cannot be broken"
-// See => https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects#creating-jobs.
+// => See https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects#creating-jobs.
 func (l *Limits) Shutdown() error {
 
 	err := windows.CloseHandle(l.jh)

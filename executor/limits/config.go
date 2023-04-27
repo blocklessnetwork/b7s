@@ -11,7 +11,7 @@ var DefaultConfig = Config{
 // Config represents the resource limits to set.
 type Config struct {
 	Cgroup  string // On Linux, Cgroup to use for limits.
-	JobName string // On Windows, job name to use for limits.
+	JobName string // On Windows, job object name to use for limits.
 
 	MemoryKB      int64   // Maximum amount of memory allowed in kilobytes.
 	CPUPercentage float64 // Percentage of the CPU time allowed.
