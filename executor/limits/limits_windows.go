@@ -82,15 +82,16 @@ func (l *Limits) ListProcesses() ([]int, error) {
 	return pids, nil
 }
 
-// Close will close the limiter.
-func (l *Limits) Close() error {
-	return windows.CloseHandle(l.jh)
-}
-
-// RemoveAllLimits exists to maintain the same interface as the linux version.
-// However, the Windows limiter does not support removing limits from a job after it has been set:
+// Shutdown will shutdown the limiter. All processes currently associated with the limiter will complete
+// their execution as-is, meaning that the limitations will not be removed.
 // "After a process is associated with a job, the association cannot be broken"
 // See => https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects#creating-jobs.
-func (l *Limits) RemoveAllLimits() error {
+func (l *Limits) Shutdown() error {
+
+	err := windows.CloseHandle(l.jh)
+	if err != nil {
+		return fmt.Errorf("could not close job object: %w", err)
+	}
+
 	return nil
 }

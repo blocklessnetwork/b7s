@@ -48,7 +48,14 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (execute.RuntimeOutput, execute
 	// Create a duplicate handle - only for me (current process), not inheritable.
 	var handle windows.Handle
 	me := windows.CurrentProcess()
-	err = windows.DuplicateHandle(me, childHandle, me, &handle, windows.PROCESS_QUERY_INFORMATION, false, 0)
+	err = windows.DuplicateHandle(
+		me,
+		childHandle,
+		me,
+		&handle,
+		windows.PROCESS_QUERY_INFORMATION|windows.PROCESS_TERMINATE|windows.PROCESS_SET_QUOTA,
+		false,
+		0)
 	if err != nil {
 		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not duplicate process handle: %w", err)
 	}

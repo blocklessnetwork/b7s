@@ -1,5 +1,5 @@
-//go:build limits
-// +build limits
+//go:build limits && linux
+// +build limits,linux
 
 package limits_test
 
@@ -38,9 +38,9 @@ func TestLimits(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	// Always remove all resource limits.
+	// Always remove all resource limits on end of test.
 	defer func() {
-		err = limiter.RemoveAllLimits()
+		err = limiter.Shutdown()
 		require.NoError(t, err)
 	}()
 

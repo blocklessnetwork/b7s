@@ -85,8 +85,8 @@ func (l *Limits) ListProcesses() ([]int, error) {
 	return list, nil
 }
 
-// RemoveAllLimits will remove any set resource limits.
-func (l *Limits) RemoveAllLimits() error {
+// Shutdown will remove any set resource limits.
+func (l *Limits) Shutdown() error {
 
 	// Remove all limits effectively sets them to very large values, which is different from "removing" them.
 	period := uint64(time.Second.Microseconds())
@@ -106,10 +106,5 @@ func (l *Limits) RemoveAllLimits() error {
 		return fmt.Errorf("could not update resource limits: %v", err)
 	}
 
-	return nil
-}
-
-// Close will close the limiter.
-func (l *Limits) Close() error {
 	return nil
 }
