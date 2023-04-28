@@ -16,9 +16,16 @@ build-node:
 
 .PHONY: build-keygen
 build-keygen:
-	@echo "\n🛠 Building node...\n"
+	@echo "\n🛠 Building node keygen...\n"
 	cd cmd/keygen && go build -o ../../dist/b7s-keygen
 	@echo "\n✅ Done.\n"
+
+.PHONY: build-manager
+build-manager:
+	@echo "\n🛠 Building node manager...\n"
+	cd cmd/manager && go build -o ../../dist/b7s-manager
+	@echo "\n✅ Done.\n"
+
 
 .PHONY: clean
 clean:
