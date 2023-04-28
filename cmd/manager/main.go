@@ -4,48 +4,55 @@ import (
 	"bufio"
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	mrand "math/rand"
+	"net/http"
+	"os"
+	"os/user"
+	"path/filepath"
 
 	"github.com/libp2p/go-libp2p"
-	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/mholt/archiver/v3"
+	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	golog "github.com/ipfs/go-log/v2"
 	ma "github.com/multiformats/go-multiaddr"
 )
+
+type Message struct {
+	Type    string `json:"type"`
+	Payload string `json:"payload"`
+}
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	golog.SetAllLoggers(golog.LevelInfo)
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 
 	listenF := pflag.IntP("listen", "l", 0, "wait for incoming connections")
 	insecureF := pflag.BoolP("insecure", "i", false, "use an unencrypted connection")
 	seedF := pflag.Int64P("seed", "s", 0, "set random seed for id generation")
 	allowedPeerF := pflag.StringP("allowed-peer", "a", "", "allowed peer ID")
-
 	pflag.Parse()
 
 	if *listenF == 0 {
-		log.Fatal("Please provide a port to bind on with -l")
+		logger.Fatal().Msg("Please provide a port to bind on with -l")
 	}
 
 	ha, err := makeBasicHost(*listenF, *insecureF, *seedF)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal().Err(err).Msg("Failed to create host")
 	}
 
-	// Replace the existing startListener function call with this:
-	startListener(ctx, ha, *listenF, *insecureF, *allowedPeerF)
-
-
+	startListener(ctx, ha, *listenF, *insecureF, *allowedPeerF, logger)
 	<-ctx.Done()
 }
 
@@ -81,50 +88,100 @@ func getHostAddress(ha host.Host) string {
 	return addr.Encapsulate(hostAddr).String()
 }
 
-func startListener(ctx context.Context, ha host.Host, listenPort int, insecure bool, allowedPeer string) {
+func startListener(ctx context.Context, ha host.Host, listenPort int, insecure bool, allowedPeer string, logger zerolog.Logger) {
 	fullAddr := getHostAddress(ha)
-	log.Printf("I am %s\n", fullAddr)
-
-	allowedPeerID, err := peer.Decode(allowedPeer)
-	if err != nil {
-		log.Fatalf("Invalid allowed peer ID: %s", allowedPeer)
-	}
+	logger.Info().Msgf("I am %s", fullAddr)
 
 	ha.SetStreamHandler("/echo/1.0.0", func(s network.Stream) {
-		// Check if the incoming connection is from the allowed peer
-		if s.Conn().RemotePeer() != allowedPeerID {
-			log.Printf("Connection from disallowed peer %s, closing stream\n", s.Conn().RemotePeer().Pretty())
+		if allowedPeer != "" && s.Conn().RemotePeer().Pretty() != allowedPeer {
+			logger.Info().Msg("Connection from disallowed peer")
 			s.Reset()
 			return
 		}
-
-		log.Println("listener received new stream from allowed peer")
+		logger.Info().Msg("listener received new stream")
 		if err := doEcho(s); err != nil {
-			log.Println(err)
+			logger.Info().Err(err).Msg("Error in doEcho")
 			s.Reset()
+	
+			} else {
+				s.Close()
+			}
+		})
+	
+		logger.Info().Msg("listening for connections")
+	
+		if insecure {
+			logger.Info().Msgf("Now run \"./echo -l %d -d %s --insecure\" on a different terminal", listenPort+1, fullAddr)
 		} else {
-			s.Close()
+			logger.Info().Msgf("Now run \"./echo -l %d -d %s\" on a different terminal", listenPort+1, fullAddr)
 		}
-	})
-
-	log.Println("listening for connections")
-
-	if insecure {
-		log.Printf("Now run \"./echo -l %d -d %s --insecure\" on a different terminal\n", listenPort+1, fullAddr)
-	} else {
-		log.Printf("Now run \"./echo -l %d -d %s\" on a different terminal\n", listenPort+1, fullAddr)
 	}
-}
-
-
-func doEcho(s network.Stream) error {
-	buf := bufio.NewReader(s)
-	str, err := buf.ReadString('\n')
-	if err != nil {
+	
+	func doEcho(s network.Stream) error {
+		buf := bufio.NewReader(s)
+		str, err := buf.ReadString('\n')
+		if err != nil {
+			return err
+		}
+	
+		var msg Message
+		err = json.Unmarshal([]byte(str), &msg)
+		if err != nil {
+			return err
+		}
+	
+		switch msg.Type {
+		case "install_bls":
+			go installBlsCLI(msg.Payload)
+		}
+	
+		_, err = s.Write([]byte(str))
 		return err
 	}
-
-	log.Printf("read: %s", str)
-	_, err = s.Write([]byte(str))
-	return err
-}
+	
+	
+	func installBlsCLI(url string) {
+		usr, err := user.Current()
+		if err != nil {
+			log.Fatal(err)
+		}
+	
+		binPath := filepath.Join(usr.HomeDir, ".b7s", "bin")
+		os.MkdirAll(binPath, os.ModePerm)
+	
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer resp.Body.Close()
+	
+		archiveName := filepath.Join(binPath, "bls.tar.gz")
+		out, err := os.Create(archiveName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer out.Close()
+	
+		_, err = io.Copy(out, resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+	
+		err = archiver.NewTarGz().Extract(archiveName, "bls", binPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+	
+		err = os.Chmod(filepath.Join(binPath, "bls"), 0755)
+		if err != nil {
+			log.Fatal(err)
+		}
+	
+		err = os.Remove(archiveName)
+		if err != nil {
+			log.Fatal(err)
+		}
+	
+		log.Printf("b7s CLI installed in %s", binPath)
+	}
+	
