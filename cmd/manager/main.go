@@ -1,7 +1,10 @@
 package main
 
 import (
+	"archive/tar"
 	"bufio"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"crypto/rand"
 	"encoding/json"
@@ -18,7 +21,6 @@ import (
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
-	"github.com/mholt/archiver/v3"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
@@ -102,86 +104,97 @@ func startListener(ctx context.Context, ha host.Host, listenPort int, insecure b
 		if err := doEcho(s); err != nil {
 			logger.Info().Err(err).Msg("Error in doEcho")
 			s.Reset()
-	
-			} else {
-				s.Close()
-			}
-		})
-	
-		logger.Info().Msg("listening for connections")
-	
-		if insecure {
-			logger.Info().Msgf("Now run \"./echo -l %d -d %s --insecure\" on a different terminal", listenPort+1, fullAddr)
 		} else {
-			logger.Info().Msgf("Now run \"./echo -l %d -d %s\" on a different terminal", listenPort+1, fullAddr)
+			s.Close()
 		}
+	})
+
+	logger.Info().Msg("listening for connections")
+
+	if insecure {
+		logger.Info().Msgf("Now run \"./echo -l %d -d %s --insecure\" on a different terminal", listenPort+1, fullAddr)
+	} else {
+		logger.Info().Msgf("Now run \"./echo -l %d -d %s\" on a different terminal", listenPort+1, fullAddr)
 	}
-	
-	func doEcho(s network.Stream) error {
-		buf := bufio.NewReader(s)
-		str, err := buf.ReadString('\n')
-		if err != nil {
-			return err
-		}
-	
-		var msg Message
-		err = json.Unmarshal([]byte(str), &msg)
-		if err != nil {
-			return err
-		}
-	
-		switch msg.Type {
-		case "install_bls":
-			go installBlsCLI(msg.Payload)
-		}
-	
-		_, err = s.Write([]byte(str))
+}
+
+func doEcho(s network.Stream) error {
+	buf := bufio.NewReader(s)
+	str, err := buf.ReadString('\n')
+	if err != nil {
 		return err
 	}
-	
-	
-	func installBlsCLI(url string) {
-		usr, err := user.Current()
-		if err != nil {
-			log.Fatal(err)
-		}
-	
-		binPath := filepath.Join(usr.HomeDir, ".b7s", "bin")
-		os.MkdirAll(binPath, os.ModePerm)
-	
-		resp, err := http.Get(url)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer resp.Body.Close()
-	
-		archiveName := filepath.Join(binPath, "bls.tar.gz")
-		out, err := os.Create(archiveName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer out.Close()
-	
-		_, err = io.Copy(out, resp.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-	
-		err = archiver.NewTarGz().Extract(archiveName, "bls", binPath)
-		if err != nil {
-			log.Fatal(err)
-		}
-	
-		err = os.Chmod(filepath.Join(binPath, "bls"), 0755)
-		if err != nil {
-			log.Fatal(err)
-		}
-	
-		err = os.Remove(archiveName)
-		if err != nil {
-			log.Fatal(err)
-		}
-	
-		log.Printf("b7s CLI installed in %s", binPath)
+
+	var msg Message
+	err = json.Unmarshal([]byte(str), &msg)
+	if err != nil {
+		return err
 	}
-	
+
+	switch msg.Type {
+	case "install_bls":
+		go installBlsCLI(msg.Payload)
+	}
+
+	_, err = s.Write([]byte(str))
+	return err
+}
+
+func installBlsCLI(url string) {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	binPath := filepath.Join(usr.HomeDir, ".b7s", "bin")
+	os.MkdirAll(binPath, os.ModePerm)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	archiveData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gzipReader, err := gzip.NewReader(bytes.NewReader(archiveData))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer gzipReader.Close()
+
+	tarReader := tar.NewReader(gzipReader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		target := filepath.Join(binPath, header.Name)
+		switch header.Typeflag {
+		case tar.TypeReg:
+			outFile, err := os.Create(target)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer outFile.Close()
+
+			if _, err := io.Copy(outFile, tarReader); err != nil {
+				log.Fatal(err)
+			}
+
+			if err := os.Chmod(target, 0755); err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+
+	log.Printf("b7s CLI installed in %s", binPath)
+}
