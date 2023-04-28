@@ -20,7 +20,6 @@ func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd 
 	cfg := req.Config.Runtime
 	cfg.Input = paths.input
 	cfg.FSRoot = paths.fsRoot
-	// TODO: Permissions are missing
 
 	// Prepare CLI arguments.
 	// Append the input argument first first.
@@ -28,7 +27,7 @@ func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd 
 	args = append(args, cfg.Input)
 
 	// Append the arguments for the runtime.
-	runtimeFlags := runtimeFlags(cfg)
+	runtimeFlags := runtimeFlags(cfg, req.Config.Permissions)
 	args = append(args, runtimeFlags...)
 
 	// Separate runtime arguments from the function arguments.

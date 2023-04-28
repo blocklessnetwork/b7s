@@ -20,10 +20,12 @@ type RuntimeConfig struct {
 const (
 	// Blockless Runtime flag names.
 	RuntimeFlagEntry         = "entry"
-	RuntimeFlagExecutionTime = "run_time"
-	RuntimeFlagDebug         = "debug_info"
-	RuntimeFlagFuel          = "limited_fuel"
-	RuntimeFlagMemory        = "limited_memory"
-	RuntimeFlagFSRoot        = "fs_root_path"
-	RuntimeFlagLogger        = "runtime_logger"
+	RuntimeFlagExecutionTime = "run-time"
+	RuntimeFlagDebug         = "debug-info"
+	RuntimeFlagFuel          = "limited-fuel"
+	RuntimeFlagMemory        = "limited-memory"
+	RuntimeFlagFSRoot        = "fs-root-path"
+	RuntimeFlagLogger        = "runtime-logger"
+	RuntimeFlagPermission    = "permission"
+	RuntimeFlagEnv           = "env"
 )

@@ -7,7 +7,7 @@ import (
 )
 
 // runtimeFlags returns flags that can be passed to the runtime, for example by `exec.Cmd`.
-func runtimeFlags(cfg execute.RuntimeConfig) []string {
+func runtimeFlags(cfg execute.RuntimeConfig, permissions []string) []string {
 
 	var flags []string
 
@@ -39,6 +39,10 @@ func runtimeFlags(cfg execute.RuntimeConfig) []string {
 
 	if cfg.Logger != "" {
 		flags = append(flags, "--"+execute.RuntimeFlagLogger, cfg.Logger)
+	}
+
+	for _, permission := range permissions {
+		flags = append(flags, "--"+execute.RuntimeFlagPermission, permission)
 	}
 
 	return flags

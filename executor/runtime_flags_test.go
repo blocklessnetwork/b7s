@@ -14,7 +14,7 @@ func TestRuntimeFlags(t *testing.T) {
 		t.Parallel()
 
 		cfg := execute.RuntimeConfig{}
-		flags := runtimeFlags(cfg)
+		flags := runtimeFlags(cfg, nil)
 		require.Len(t, flags, 0)
 	})
 	t.Run("all flags set", func(t *testing.T) {
@@ -29,9 +29,10 @@ func TestRuntimeFlags(t *testing.T) {
 			fuel          = 987
 			memory        = 256
 			logger        = "runtime.log"
+			permission    = "https://google.com/"
 
-			// Expect six key-value pairs and a single boolean.
-			flagCount = 13
+			// Expect seven key-value pairs and a single boolean.
+			flagCount = 15
 		)
 
 		cfg := execute.RuntimeConfig{
@@ -45,7 +46,11 @@ func TestRuntimeFlags(t *testing.T) {
 			Logger:        logger,
 		}
 
-		flags := runtimeFlags(cfg)
+		permissions := []string{
+			permission,
+		}
+
+		flags := runtimeFlags(cfg, permissions)
 
 		require.Len(t, flags, flagCount)
 
@@ -68,6 +73,9 @@ func TestRuntimeFlags(t *testing.T) {
 
 		require.Equal(t, "--"+execute.RuntimeFlagLogger, flags[11])
 		require.Equal(t, logger, flags[12])
+
+		require.Equal(t, "--"+execute.RuntimeFlagPermission, flags[13])
+		require.Equal(t, permission, flags[14])
 	})
 	t.Run("some fields set", func(t *testing.T) {
 		t.Parallel()
@@ -75,6 +83,9 @@ func TestRuntimeFlags(t *testing.T) {
 		const (
 			entry  = "something"
 			memory = 256
+
+			permission1 = "https://google.com/"
+			permission2 = "https://whatever.com/"
 		)
 
 		cfg := execute.RuntimeConfig{
@@ -82,14 +93,25 @@ func TestRuntimeFlags(t *testing.T) {
 			Memory: memory,
 		}
 
-		flags := runtimeFlags(cfg)
+		permissions := []string{
+			permission1,
+			permission2,
+		}
 
-		require.Len(t, flags, 4)
+		flags := runtimeFlags(cfg, permissions)
+
+		require.Len(t, flags, 8)
 
 		require.Equal(t, "--"+execute.RuntimeFlagEntry, flags[0])
 		require.Equal(t, entry, flags[1])
 
 		require.Equal(t, "--"+execute.RuntimeFlagMemory, flags[2])
 		require.Equal(t, fmt.Sprint(memory), flags[3])
+
+		require.Equal(t, "--"+execute.RuntimeFlagPermission, flags[4])
+		require.Equal(t, permission1, flags[5])
+
+		require.Equal(t, "--"+execute.RuntimeFlagPermission, flags[6])
+		require.Equal(t, permission2, flags[7])
 	})
 }
