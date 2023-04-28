@@ -10,6 +10,7 @@ import (
 	mrand "math/rand"
 
 	"github.com/libp2p/go-libp2p"
+	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
@@ -28,6 +29,8 @@ func main() {
 	listenF := pflag.IntP("listen", "l", 0, "wait for incoming connections")
 	insecureF := pflag.BoolP("insecure", "i", false, "use an unencrypted connection")
 	seedF := pflag.Int64P("seed", "s", 0, "set random seed for id generation")
+	allowedPeerF := pflag.StringP("allowed-peer", "a", "", "allowed peer ID")
+
 	pflag.Parse()
 
 	if *listenF == 0 {
@@ -39,7 +42,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	startListener(ctx, ha, *listenF, *insecureF)
+	// Replace the existing startListener function call with this:
+	startListener(ctx, ha, *listenF, *insecureF, *allowedPeerF)
+
+
 	<-ctx.Done()
 }
 
@@ -75,12 +81,24 @@ func getHostAddress(ha host.Host) string {
 	return addr.Encapsulate(hostAddr).String()
 }
 
-func startListener(ctx context.Context, ha host.Host, listenPort int, insecure bool) {
+func startListener(ctx context.Context, ha host.Host, listenPort int, insecure bool, allowedPeer string) {
 	fullAddr := getHostAddress(ha)
 	log.Printf("I am %s\n", fullAddr)
 
+	allowedPeerID, err := peer.Decode(allowedPeer)
+	if err != nil {
+		log.Fatalf("Invalid allowed peer ID: %s", allowedPeer)
+	}
+
 	ha.SetStreamHandler("/echo/1.0.0", func(s network.Stream) {
-		log.Println("listener received new stream")
+		// Check if the incoming connection is from the allowed peer
+		if s.Conn().RemotePeer() != allowedPeerID {
+			log.Printf("Connection from disallowed peer %s, closing stream\n", s.Conn().RemotePeer().Pretty())
+			s.Reset()
+			return
+		}
+
+		log.Println("listener received new stream from allowed peer")
 		if err := doEcho(s); err != nil {
 			log.Println(err)
 			s.Reset()
@@ -97,6 +115,7 @@ func startListener(ctx context.Context, ha host.Host, listenPort int, insecure b
 		log.Printf("Now run \"./echo -l %d -d %s\" on a different terminal\n", listenPort+1, fullAddr)
 	}
 }
+
 
 func doEcho(s network.Stream) error {
 	buf := bufio.NewReader(s)
