@@ -1,5 +1,5 @@
-//go:build !linux
-// +build !linux
+//go:build !linux && !windows
+// +build !linux,!windows
 
 package limits
 
@@ -30,5 +30,10 @@ func (l *Limits) ListProcesses() ([]int, error) {
 
 // RemoveAllLimits will remove any set resource limits.
 func (l *Limits) RemoveAllLimits() error {
+	return errors.New("TBD: not implemented")
+}
+
+// Close will close the limiter.
+func (l *Limits) Close() error {
 	return errors.New("TBD: not implemented")
 }

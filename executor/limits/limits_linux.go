@@ -11,6 +11,8 @@ import (
 
 	"github.com/containerd/cgroups/v3"
 	"github.com/containerd/cgroups/v3/cgroup2"
+
+	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
 // TODO: Add support for cgroups v1 - determine on the fly which version to use
@@ -56,8 +58,9 @@ func New(opts ...Option) (*Limits, error) {
 }
 
 // LimitProcess will set the resource limits for the process with the given PID.
-func (l *Limits) LimitProcess(pid int) error {
+func (l *Limits) LimitProcess(proc execute.ProcessID) error {
 
+	pid := proc.PID
 	err := l.cgroup.AddProc(uint64(pid))
 	if err != nil {
 		return fmt.Errorf("could not set resouce limit for process (pid: %v): %w", pid, err)
@@ -82,8 +85,8 @@ func (l *Limits) ListProcesses() ([]int, error) {
 	return list, nil
 }
 
-// RemoveAllLimits will remove any set resource limits.
-func (l *Limits) RemoveAllLimits() error {
+// Shutdown will remove any set resource limits.
+func (l *Limits) Shutdown() error {
 
 	// Remove all limits effectively sets them to very large values, which is different from "removing" them.
 	period := uint64(time.Second.Microseconds())

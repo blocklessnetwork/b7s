@@ -1,5 +1,5 @@
-//go:build limits
-// +build limits
+//go:build limits && linux
+// +build limits,linux
 
 package limits_test
 
@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/executor/limits"
+	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
 const (
@@ -37,9 +38,9 @@ func TestLimits(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	// Always remove all resource limits.
+	// Always remove all resource limits on end of test.
 	defer func() {
-		err = limiter.RemoveAllLimits()
+		err = limiter.Shutdown()
 		require.NoError(t, err)
 	}()
 
@@ -53,18 +54,20 @@ func TestLimits(t *testing.T) {
 
 	// Put resource limit on self.
 	// This is effectively a limit on go test so we're conservative with limits.
-	pid := os.Getpid()
-	err = limiter.LimitProcess(pid)
+	proc := execute.ProcessID{
+		PID: os.Getpid(),
+	}
+	err = limiter.LimitProcess(proc)
 	require.NoError(t, err)
 
 	// Verify list of limited processes now has a single process.
 	pids, err = limiter.ListProcesses()
 	require.NoError(t, err)
 	require.Len(t, pids, 1)
-	require.Equal(t, pids[0], pid)
+	require.Equal(t, pids[0], proc.PID)
 
 	// Manually verify the PID limit.
-	verifyPids(t, cgroup, []int{pid})
+	verifyPids(t, cgroup, []int{proc.PID})
 }
 
 func verifyCPULImit(t *testing.T, cgroup string, limit float64) {

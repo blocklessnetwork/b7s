@@ -30,9 +30,12 @@ func (e *Executor) executeCommand(cmd *exec.Cmd) (execute.RuntimeOutput, execute
 		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not start process: %w", err)
 	}
 
-	err = e.cfg.Limiter.LimitProcess(cmd.Process.Pid)
+	proc := execute.ProcessID{
+		PID: cmd.Process.Pid,
+	}
+	err = e.cfg.Limiter.LimitProcess(proc)
 	if err != nil {
-		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not limit process: %w", err)
+		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not set resource limits: %w", err)
 	}
 
 	// Return execution error with as much info below.

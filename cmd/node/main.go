@@ -134,9 +134,9 @@ func run() int {
 			}
 
 			defer func() {
-				err = limiter.RemoveAllLimits()
+				err = limiter.Shutdown()
 				if err != nil {
-					log.Error().Err(err).Msg("could not remove resource limtis")
+					log.Error().Err(err).Msg("could not shutdown resource limiter")
 				}
 			}()
 

@@ -41,3 +41,15 @@ func TestConfig_WithMemoryKB(t *testing.T) {
 	WithMemoryKB(limit)(&cfg)
 	require.Equal(t, limit, cfg.MemoryKB)
 }
+
+func TestConfig_JobName(t *testing.T) {
+
+	const jobName = "blockless-test"
+
+	cfg := Config{
+		JobName: DefaultJobObjectName,
+	}
+
+	WithJobObjectName(jobName)(&cfg)
+	require.Equal(t, jobName, cfg.JobName)
+}
