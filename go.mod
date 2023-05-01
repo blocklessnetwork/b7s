@@ -21,22 +21,15 @@ require (
 )
 
 require (
-	github.com/andybalholm/brotli v1.0.1 // indirect
 	github.com/cilium/ebpf v0.9.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/pprof v0.0.0-20230405160723-4a4c7d95572b // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.2 // indirect
-	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
-	github.com/libp2p/go-libp2p-core v0.20.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mholt/archiver/v3 v3.5.1 // indirect
-	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.2 // indirect
-	github.com/pierrec/lz4/v4 v4.1.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/qtls-go1-19 v0.3.2 // indirect
@@ -44,10 +37,8 @@ require (
 	github.com/quic-go/quic-go v0.33.0 // indirect
 	github.com/quic-go/webtransport-go v0.5.2 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/ulikunitz/xz v0.5.9 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.uber.org/dig v1.16.1 // indirect
 	go.uber.org/fx v1.19.2 // indirect
 	golang.org/x/text v0.8.0 // indirect
