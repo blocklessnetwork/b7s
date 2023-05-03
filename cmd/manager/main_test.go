@@ -1,27 +1,29 @@
 package main
 
 import (
-	"os"
-	"os/user"
-	"path/filepath"
 	"testing"
+
+	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestInstallBlsCLI(t *testing.T) {
-	// Test case: Linux x64
-	baseURL := "https://github.com/blocklessnetwork/cli/releases/download"
-	version := "latest"
-	installBlsCLI(baseURL, version)
+func TestMakeBasicHost(t *testing.T) {
+	listenPort := 0
+	insecure := false
+	randseed := int64(0)
 
-	usr, err := user.Current()
-	if err != nil {
-		t.Fatal(err)
-	}
+	h, err := makeBasicHost(listenPort, insecure, randseed)
+	assert.NoError(t, err)
+	assert.NotNil(t, h)
+	assert.Implements(t, (*host.Host)(nil), h)
+}
 
-	binPath := filepath.Join(usr.HomeDir, ".b7s", "bin", "b7s")
+func TestGetHostAddress(t *testing.T) {
+	listenPort := 0
+	insecure := false
+	randseed := int64(0)
 
-	// Check if the b7s CLI binary exists
-	if _, err := os.Stat(binPath); os.IsNotExist(err) {
-		t.Fatalf("b7s CLI not installed in %s", binPath)
-	}
+	host, _ := makeBasicHost(listenPort, insecure, randseed)
+	address := getHostAddress(host)
+	assert.Contains(t, address, "/p2p/")
 }
