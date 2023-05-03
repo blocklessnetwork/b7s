@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/stretchr/testify/require"
@@ -67,6 +68,37 @@ func TestNode_Handlers(t *testing.T) {
 		expected := res
 		expected.From = mocks.GenericPeerID
 		require.Equal(t, expected, recordedResponse)
+	})
+	t.Run("skipping inadequate roll call responses", func(t *testing.T) {
+		t.Parallel()
+
+		const (
+			requestID = "dummy-request-id-2"
+		)
+
+		// We only want responses with the code `Accepted`.
+		res := response.RollCall{
+			Type:       blockless.MessageRollCallResponse,
+			Code:       codes.NotFound,
+			RequestID:  requestID,
+			Role:       "dummy-role",
+			FunctionID: "dummy-function-id",
+		}
+
+		payload := serialize(t, res)
+		err := node.processRollCallResponse(context.Background(), mocks.GenericPeerID, payload)
+		require.NoError(t, err)
+
+		// Verify roll call response is not found, even though the response has been processed.
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+
+		select {
+		case <-node.rollCall.responses(requestID):
+			require.FailNow(t, "roll call response found but not expected")
+		case <-ctx.Done():
+			break
+		}
 	})
 	t.Run("function install response", func(t *testing.T) {
 		t.Parallel()
@@ -150,7 +182,7 @@ func TestNode_InstallFunction(t *testing.T) {
 		node := createNode(t, blockless.WorkerNode)
 		hostAddNewPeer(t, node.host, receiver)
 
-		fstore := mocks.BaselineFunctionHandler(t)
+		fstore := mocks.BaselineFStore(t)
 		fstore.InstalledFunc = func(string) (bool, error) {
 			return false, nil
 		}

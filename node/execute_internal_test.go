@@ -162,7 +162,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		node := createNode(t, blockless.WorkerNode)
 
 		// Error retrieving function manifest.
-		fstore := mocks.BaselineFunctionHandler(t)
+		fstore := mocks.BaselineFStore(t)
 		fstore.InstalledFunc = func(string) (bool, error) {
 			return false, mocks.GenericError
 		}
