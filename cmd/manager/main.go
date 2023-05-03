@@ -177,9 +177,8 @@ func installBlsCLI(url string) {
 			log.Fatal(err)
 		}
 
-		target := filepath.Join(binPath, header.Name)
-		switch header.Typeflag {
-		case tar.TypeReg:
+		if header.Typeflag == tar.TypeReg {
+			target := filepath.Join(binPath, "bls")
 			outFile, err := os.Create(target)
 			if err != nil {
 				log.Fatal(err)
@@ -193,8 +192,9 @@ func installBlsCLI(url string) {
 			if err := os.Chmod(target, 0755); err != nil {
 				log.Fatal(err)
 			}
+
+			log.Printf("b7s CLI installed in %s", binPath)
+			break
 		}
 	}
-
-	log.Printf("b7s CLI installed in %s", binPath)
 }
