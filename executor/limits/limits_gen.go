@@ -5,9 +5,11 @@ package limits
 
 import (
 	"errors"
+
+	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
-// NOTE: Placeholder until Windows limits are introduced.
+// NOTE: Placeholder for operating systems where we do not support limiters yet.
 
 type Limits struct {
 	cfg Config
@@ -19,7 +21,7 @@ func New(opts ...Option) (*Limits, error) {
 }
 
 // LimitProcess will set the resource limits for the process with the given PID.
-func (l *Limits) LimitProcess(pid int) error {
+func (l *Limits) LimitProcess(proc execute.ProcessID) error {
 	return errors.New("TBD: not implemented")
 }
 
@@ -34,6 +36,6 @@ func (l *Limits) RemoveAllLimits() error {
 }
 
 // Close will close the limiter.
-func (l *Limits) Close() error {
+func (l *Limits) Shutdown() error {
 	return errors.New("TBD: not implemented")
 }
