@@ -9,16 +9,16 @@ import (
 
 func TestInstallBlsCLI(t *testing.T) {
 	// Test case: Linux x64
-	url := "https://github.com/blocklessnetwork/cli/releases/download/0.0.46/bls-linux-x64-blockless-cli.tar.gz"
-
-	installBlsCLI(url)
+	baseURL := "https://github.com/blocklessnetwork/cli/releases/download"
+	version := "latest"
+	installBlsCLI(baseURL, version)
 
 	usr, err := user.Current()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	binPath := filepath.Join(usr.HomeDir, ".b7s", "bin", "bls")
+	binPath := filepath.Join(usr.HomeDir, ".b7s", "bin", "b7s")
 
 	// Check if the b7s CLI binary exists
 	if _, err := os.Stat(binPath); os.IsNotExist(err) {

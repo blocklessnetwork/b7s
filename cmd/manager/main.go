@@ -14,8 +14,10 @@ import (
 	mrand "math/rand"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
+	"runtime"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -131,16 +133,27 @@ func doEcho(s network.Stream) error {
 		return err
 	}
 
+	baseURL := "https://github.com/blocklessnetwork/cli/releases/download"
+	version := "0.0.46"
+
 	switch msg.Type {
 	case "install_bls":
-		go installBlsCLI(msg.Payload)
+		go func() {
+			installBlsCLI(baseURL, version)
+			usr, err := user.Current()
+			if err != nil {
+				log.Fatal(err)
+			}
+			binPath := filepath.Join(usr.HomeDir, ".b7s", "bin")
+			createServiceAndStartB7s(binPath)
+		}()
 	}
 
 	_, err = s.Write([]byte(str))
 	return err
 }
 
-func installBlsCLI(url string) {
+func installBlsCLI(baseURL string, version string) {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
@@ -148,6 +161,16 @@ func installBlsCLI(url string) {
 
 	binPath := filepath.Join(usr.HomeDir, ".b7s", "bin")
 	os.MkdirAll(binPath, os.ModePerm)
+
+	arch := runtime.GOARCH
+	platform := runtime.GOOS
+
+	// maybe change this in ci
+	if platform == "darwin" {
+		platform = "macOS"
+	}
+
+	url := fmt.Sprintf("%s/%s/bls-%s-%s-blockless-cli.tar.gz", baseURL, version, platform, arch)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -178,7 +201,7 @@ func installBlsCLI(url string) {
 		}
 
 		if header.Typeflag == tar.TypeReg {
-			target := filepath.Join(binPath, "bls")
+			target := filepath.Join(binPath, "b7s")
 			outFile, err := os.Create(target)
 			if err != nil {
 				log.Fatal(err)
@@ -197,4 +220,109 @@ func installBlsCLI(url string) {
 			break
 		}
 	}
+}
+
+func createServiceAndStartB7s(binPath string) {
+	platform := runtime.GOOS
+
+	switch platform {
+	case "linux":
+		createLinuxService(binPath)
+	case "darwin":
+		createMacOSService(binPath)
+	case "windows":
+		createWindowsService(binPath)
+	default:
+		log.Fatalf("Unsupported platform: %s", platform)
+	}
+}
+
+func createLinuxService(binPath string) {
+	serviceContent := `[Unit]
+Description=Blockless b7s CLI Service
+After=network.target
+
+[Service]
+ExecStart=%s/bls
+Restart=always
+User=%s
+
+[Install]
+WantedBy=multi-user.target
+`
+
+	serviceFilePath := "/etc/systemd/system/b7s.service"
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	serviceContent = fmt.Sprintf(serviceContent, binPath, usr.Username)
+
+	err = os.WriteFile(serviceFilePath, []byte(serviceContent), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cmd := exec.Command("systemctl", "enable", "b7s")
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cmd = exec.Command("systemctl", "start", "b7s")
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("b7s service created and started on Linux.")
+}
+
+func createMacOSService(binPath string) {
+	plistContent := `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.blockless.b7s</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>%s/bls</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+</dict>
+</plist>
+`
+
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	launchAgentsPath := filepath.Join(usr.HomeDir, "Library", "LaunchAgents")
+	os.MkdirAll(launchAgentsPath, os.ModePerm)
+
+	plistFilePath := filepath.Join(launchAgentsPath, "com.blockless.b7s.plist")
+	plistContent = fmt.Sprintf(plistContent, binPath)
+
+	err = os.WriteFile(plistFilePath, []byte(plistContent), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cmd := exec.Command("launchctl", "load", plistFilePath)
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("b7s service created and started on macOS.")
+}
+
+func createWindowsService(binPath string) {
+	log.Fatal("Creating and starting a service on Windows is not supported in this code.")
 }
