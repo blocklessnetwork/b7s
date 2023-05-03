@@ -48,22 +48,42 @@ func TestFunction_Install(t *testing.T) {
 	store := store.New(helpers.InMemoryDB(t))
 	fh := fstore.New(mocks.NoopLogger, store, workdir)
 
-	_, err = fh.Get(testCID)
-	require.ErrorIs(t, err, blockless.ErrNotFound)
+	t.Run("function install works", func(t *testing.T) {
 
-	address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
-	err = fh.Install(address, testCID)
-	require.NoError(t, err)
+		_, err = fh.Get(testCID)
+		require.ErrorIs(t, err, blockless.ErrNotFound)
 
-	manifest, err := fh.Get(testCID)
-	require.NoError(t, err)
+		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
+		err = fh.Install(address, testCID)
+		require.NoError(t, err)
 
-	// Verify downloaded file.
-	archive := manifest.Deployment.File
-	require.FileExists(t, archive)
+		manifest, err := fh.Get(testCID)
+		require.NoError(t, err)
 
-	ok := verifyFileHash(t, archive, hash)
-	require.Truef(t, ok, "file hash does not match")
+		// Verify downloaded file.
+		archive := manifest.Deployment.File
+		require.FileExists(t, archive)
+
+		ok := verifyFileHash(t, archive, hash)
+		require.Truef(t, ok, "file hash does not match")
+	})
+	t.Run("function installation info ok", func(t *testing.T) {
+
+		ok, err := fh.Installed(testCID)
+		require.NoError(t, err)
+
+		require.True(t, ok, "function installation info incorrect")
+	})
+	t.Run("function reported as not installed if files are missing", func(t *testing.T) {
+
+		err = os.RemoveAll(workdir)
+		require.NoError(t, err)
+
+		ok, err := fh.Installed(testCID)
+		require.NoError(t, err)
+
+		require.False(t, ok, "function installation info incorrect")
+	})
 }
 
 func TestFunction_InstallHandlesErrors(t *testing.T) {
@@ -83,6 +103,24 @@ func TestFunction_InstallHandlesErrors(t *testing.T) {
 	msrv, fsrv := createServers(t, manifestURL, functionURL, functionPayload)
 	// NOTE: Server shutdown handled in test cases below.
 
+	t.Run("download ok but failure to save returns no error", func(t *testing.T) {
+
+		workdir, err := os.MkdirTemp("", "b7s-function-get-")
+		require.NoError(t, err)
+
+		defer os.RemoveAll(workdir)
+
+		store := mocks.BaselineStore(t)
+		store.SetRecordFunc = func(string, interface{}) error {
+			return mocks.GenericError
+		}
+
+		fh := fstore.New(mocks.NoopLogger, store, workdir)
+
+		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
+		err = fh.Install(address, testCID)
+		require.NoError(t, err)
+	})
 	t.Run("handles failure to download function", func(t *testing.T) {
 
 		// Shutdown function server.
@@ -116,6 +154,55 @@ func TestFunction_InstallHandlesErrors(t *testing.T) {
 		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
 		err = fh.Install(address, testCID)
 		require.Error(t, err)
+	})
+}
+
+func TestFunction_InstalledHandlesError(t *testing.T) {
+
+	t.Run("installed handles store error", func(t *testing.T) {
+		t.Parallel()
+
+		const (
+			testCID = "dummy-cid"
+		)
+
+		workdir, err := os.MkdirTemp("", "b7s-function-get-")
+		require.NoError(t, err)
+
+		defer os.RemoveAll(workdir)
+
+		store := mocks.BaselineStore(t)
+		store.GetRecordFunc = func(string, interface{}) error {
+			return mocks.GenericError
+		}
+
+		fh := fstore.New(mocks.NoopLogger, store, workdir)
+
+		_, err = fh.Installed(testCID)
+		require.Error(t, err)
+	})
+	t.Run("installed handles non installed function", func(t *testing.T) {
+		t.Parallel()
+
+		const (
+			testCID = "dummy-cid"
+		)
+
+		workdir, err := os.MkdirTemp("", "b7s-function-get-")
+		require.NoError(t, err)
+
+		defer os.RemoveAll(workdir)
+
+		store := mocks.BaselineStore(t)
+		store.GetRecordFunc = func(string, interface{}) error {
+			return blockless.ErrNotFound
+		}
+
+		fh := fstore.New(mocks.NoopLogger, store, workdir)
+
+		ok, err := fh.Installed(testCID)
+		require.NoError(t, err)
+		require.False(t, ok)
 	})
 }
 
