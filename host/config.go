@@ -12,6 +12,7 @@ var defaultConfig = Config{
 	ConnectionThreshold: 20,
 	DialBackPeersLimit:  100,
 	DiscoveryInterval:   10 * time.Second,
+	Websocket:           false,
 }
 
 // Config represents the Host configuration.
@@ -24,6 +25,7 @@ type Config struct {
 	DiscoveryInterval   time.Duration
 	DialBackAddress     string
 	DialBackPort        uint
+	Websocket           bool
 }
 
 // WithPrivateKey specifies the private key for the Host.
@@ -77,5 +79,12 @@ func WithDialBackPeersLimit(n uint) func(*Config) {
 func WithDiscoveryInterval(d time.Duration) func(*Config) {
 	return func(cfg *Config) {
 		cfg.DiscoveryInterval = d
+	}
+}
+
+// WithWebsocket specifies whether libp2p host should use websocket protocol.
+func WithWebsocket(b bool) func(*Config) {
+	return func(cfg *Config) {
+		cfg.Websocket = b
 	}
 }

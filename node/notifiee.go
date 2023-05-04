@@ -43,10 +43,12 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 func (n *connectionNotifiee) Disconnected(_ network.Network, conn network.Conn) {
 
 	// TODO: Check - do we want to remove peer after he's been disconnected.
+	maddr := conn.RemoteMultiaddr()
 
 	peerID := conn.RemotePeer()
 	n.log.Debug().
 		Str("peer", peerID.String()).
+		Str("addr", maddr.String()).
 		Msg("peer disconnected")
 }
 

@@ -55,7 +55,7 @@ findPeers:
 				continue
 			}
 
-			h.log.Info().Str("peer", peer.String()).Msg("connected to peer")
+			h.log.Info().Str("peer", peer.ID.String()).Msg("connected to peer")
 
 			connected++
 

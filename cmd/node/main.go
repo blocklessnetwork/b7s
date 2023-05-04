@@ -98,6 +98,7 @@ func run() int {
 		host.WithDialBackPeers(peerAddrs),
 		host.WithDialBackAddress(cfg.Host.DialBackAddress),
 		host.WithDialBackPort(cfg.Host.DialBackPort),
+		host.WithWebsocket(cfg.Host.Websocket),
 	)
 	if err != nil {
 		log.Error().Err(err).Str("key", cfg.Host.PrivateKey).Msg("could not create host")

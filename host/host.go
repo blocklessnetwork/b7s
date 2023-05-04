@@ -29,6 +29,9 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	}
 
 	hostAddress := fmt.Sprintf("/ip4/%v/tcp/%v", address, port)
+	if cfg.Websocket {
+		hostAddress += "/ws"
+	}
 	opts := []libp2p.Option{
 		libp2p.ListenAddrStrings(hostAddress),
 		libp2p.DefaultTransports,
@@ -49,11 +52,17 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 
 	if cfg.DialBackAddress != "" && cfg.DialBackPort != 0 {
 
+		externalAddr := fmt.Sprintf("/ip4/%s/tcp/%d", cfg.DialBackAddress, cfg.DialBackPort)
+		if cfg.Websocket {
+			externalAddr += "/ws"
+		}
+
 		// Create a multiaddr with the external IP and port
-		externalMultiaddr, err := ma.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%d", cfg.DialBackAddress, cfg.DialBackPort))
+		externalMultiaddr, err := ma.NewMultiaddr(externalAddr)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse external multiaddress: %w", err)
 		}
+
 		opts = append(opts, libp2p.AddrsFactory(func(addrs []ma.Multiaddr) []ma.Multiaddr {
 			// Return only the external multiaddr
 			return []ma.Multiaddr{externalMultiaddr}

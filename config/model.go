@@ -26,6 +26,7 @@ type Host struct {
 	PrivateKey      string
 	DialBackPort    uint
 	DialBackAddress string
+	Websocket       bool
 }
 
 // Log describes the logging configuration.
