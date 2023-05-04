@@ -54,6 +54,15 @@
         "/ip4/0.0.0.0/tcp/9527/p2p/12D3KooWH9GerdSEroL2nqjpd2GuE5dwmqNi7uHX7FoywBdKcP4q"
       ],
       "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Launch Manager",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/manager",
+      "args": ["-l", "3333"],
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

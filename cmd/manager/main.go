@@ -106,12 +106,6 @@ func startListener(ctx context.Context, ha host.Host, listenPort int, insecure b
 	})
 
 	logger.Info().Msg("listening for connections")
-
-	if insecure {
-		logger.Info().Msgf("Now run \"./echo -l %d -d %s --insecure\" on a different terminal", listenPort+1, fullAddr)
-	} else {
-		logger.Info().Msgf("Now run \"./echo -l %d -d %s\" on a different terminal", listenPort+1, fullAddr)
-	}
 }
 
 func handleRequest(s network.Stream) error {
@@ -127,13 +121,17 @@ func handleRequest(s network.Stream) error {
 		return err
 	}
 
-	baseURL := "https://github.com/blocklessnetwork/cli/releases/download"
-	version := "0.0.46"
+	baseURL := "https://github.com/blocklessnetwork/b7s/releases/download"
+	version := "v0.0.25"
+
+	runtimeBaseURL := "https://github.com/blocklessnetwork/runtime/releases/download"
+	runtimeVersion := "v0.0.12"
 
 	switch msg.Type {
 	case "install_bls":
 		go func() {
-			installBlsCLI(baseURL, version)
+			installB7s(baseURL, version)
+			installRuntime(runtimeBaseURL,runtimeVersion)
 			usr, err := user.Current()
 			if err != nil {
 				log.Fatal(err)

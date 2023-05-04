@@ -10,7 +10,7 @@ import (
 )
 
 func TestInstallBlsCLI(t *testing.T) {
-	baseURL := "https://github.com/blocklessnetwork/cli/releases/download"
+	baseURL := "https://github.com/blocklessnetwork/b7s/releases/download"
 	version := "0.0.46"
 
 	// Run the installBlsCLI function

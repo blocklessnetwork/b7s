@@ -14,25 +14,14 @@ import (
 	"runtime"
 )
 
-
-func installBlsCLI(baseURL string, version string) {
+func installBinary(url, folder, binaryName string) {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	binPath := filepath.Join(usr.HomeDir, ".b7s", "bin")
+	binPath := filepath.Join(usr.HomeDir, folder, "bin")
 	os.MkdirAll(binPath, os.ModePerm)
-
-	arch := runtime.GOARCH
-	platform := runtime.GOOS
-
-	// maybe change this in ci
-	if platform == "darwin" {
-		platform = "macOS"
-	}
-
-	url := fmt.Sprintf("%s/%s/bls-%s-%s-blockless-cli.tar.gz", baseURL, version, platform, arch)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -63,7 +52,7 @@ func installBlsCLI(baseURL string, version string) {
 		}
 
 		if header.Typeflag == tar.TypeReg {
-			target := filepath.Join(binPath, "b7s")
+			target := filepath.Join(binPath, binaryName)
 			outFile, err := os.Create(target)
 			if err != nil {
 				log.Fatal(err)
@@ -78,13 +67,18 @@ func installBlsCLI(baseURL string, version string) {
 				log.Fatal(err)
 			}
 
-			log.Printf("b7s CLI installed in %s", binPath)
+			log.Printf("%s installed in %s", binaryName, binPath)
 			break
 		}
 	}
 }
 
-
+func installB7s(baseURL, version string) {
+	arch := runtime.GOARCH
+	platform := runtime.GOOS
+	url := fmt.Sprintf("%s/%s/b7s-%s.%s.tar.gz", baseURL, version, platform, arch)
+	installBinary(url, ".b7s", "b7s")
+}
 
 func removeB7s() {
 	usr, err := user.Current()
@@ -101,3 +95,22 @@ func removeB7s() {
 	log.Println("b7s removed.")
 }
 
+func installRuntime(baseURL, version string) {
+	arch := runtime.GOARCH
+	platform := runtime.GOOS
+
+	if(platform == "darwin") {
+		platform = "macos"
+	}
+
+	if(arch == "amd64") {
+		arch = "x86_64"
+	}
+
+	if(arch == "arm64") {
+		arch = "aarch64"
+	}
+
+	url := fmt.Sprintf("%s/%s/blockless-runtime.%s-latest.%s.tar.gz", baseURL, version, platform, arch)
+	installBinary(url, ".b7s/runtime", "blockless-cli")
+}
