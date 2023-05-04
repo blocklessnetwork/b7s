@@ -127,11 +127,13 @@ func handleRequest(s network.Stream) error {
 	runtimeBaseURL := "https://github.com/blocklessnetwork/runtime/releases/download"
 	runtimeVersion := "v0.0.12"
 
+	responseMsg := &Message{}
+
 	switch msg.Type {
 	case "install_bls":
 		go func() {
 			installB7s(baseURL, version)
-			installRuntime(runtimeBaseURL,runtimeVersion)
+			installRuntime(runtimeBaseURL, runtimeVersion)
 			usr, err := user.Current()
 			if err != nil {
 				log.Fatal(err)
@@ -139,8 +141,23 @@ func handleRequest(s network.Stream) error {
 			binPath := filepath.Join(usr.HomeDir, ".b7s", "bin")
 			createServiceAndStartB7s(binPath)
 		}()
+
+	case "queryProcess":
+		processInfo, err :=  CheckB7sRunning()
+		if err != nil {
+			log.Printf("Error checking b7s process: %v", err)
+		} else if processInfo != nil {
+			log.Printf("b7s process is running (PID: %d, Cmdline: %s)", processInfo.Pid, processInfo.Cmdline)
+		} else {
+			log.Println("b7s process is not running")
+		}
+
+		responseMsg.Type = "queryProcessResponse"
+		processInfoJSON, _ := json.Marshal(processInfo)
+		responseMsg.Payload = string(processInfoJSON)
 	}
 
-	_, err = s.Write([]byte(str))
+	responseData, _ := json.Marshal(responseMsg)
+	_, err = s.Write(append(responseData, '\n'))
 	return err
 }

@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInstallBlsCLI(t *testing.T) {
+func TestInstallB7s(t *testing.T) {
 	baseURL := "https://github.com/blocklessnetwork/b7s/releases/download"
-	version := "0.0.46"
+	version := "v0.0.25"
 
 	// Run the installBlsCLI function
-	installBlsCLI(baseURL, version)
+	installB7s(baseURL, version)
 
 	// Check if the b7s binary was installed
 	usr, _ := user.Current()
