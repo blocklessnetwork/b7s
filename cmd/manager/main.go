@@ -97,7 +97,7 @@ func startListener(ctx context.Context, ha host.Host, listenPort int, insecure b
 			return
 		}
 		logger.Info().Msg("listener received new stream")
-		if err := doEcho(s); err != nil {
+		if err := handleRequest(s); err != nil {
 			logger.Info().Err(err).Msg("Error in doEcho")
 			s.Reset()
 		} else {
@@ -114,7 +114,7 @@ func startListener(ctx context.Context, ha host.Host, listenPort int, insecure b
 	}
 }
 
-func doEcho(s network.Stream) error {
+func handleRequest(s network.Stream) error {
 	buf := bufio.NewReader(s)
 	str, err := buf.ReadString('\n')
 	if err != nil {

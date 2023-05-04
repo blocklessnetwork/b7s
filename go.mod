@@ -10,6 +10,7 @@ require (
 	github.com/fatih/color v1.15.0
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/libp2p/go-libp2p v0.27.1
+	github.com/libp2p/go-libp2p-core v0.20.1
 	github.com/libp2p/go-libp2p-kad-dht v0.21.1
 	github.com/libp2p/go-libp2p-pubsub v0.9.3
 	github.com/multiformats/go-multiaddr v0.9.0
