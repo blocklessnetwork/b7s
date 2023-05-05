@@ -28,7 +28,7 @@ func TestNode_Health(t *testing.T) {
 	var (
 		logger          = mocks.NoopLogger
 		peerstore       = mocks.BaselinePeerStore(t)
-		functionHandler = mocks.BaselineFunctionHandler(t)
+		functionHandler = mocks.BaselineFStore(t)
 	)
 
 	// Create a node with a short health interval that will issue quick pings.

@@ -84,7 +84,7 @@ func TestNode_RollCall(t *testing.T) {
 		hostAddNewPeer(t, node.host, receiver)
 
 		// Function store fails to check function presence.
-		fstore := mocks.BaselineFunctionHandler(t)
+		fstore := mocks.BaselineFStore(t)
 		fstore.InstalledFunc = func(string) (bool, error) {
 			return false, mocks.GenericError
 		}
@@ -126,7 +126,7 @@ func TestNode_RollCall(t *testing.T) {
 		hostAddNewPeer(t, node.host, receiver)
 
 		// Function store has no function but is able to install it.
-		fstore := mocks.BaselineFunctionHandler(t)
+		fstore := mocks.BaselineFStore(t)
 		fstore.InstalledFunc = func(string) (bool, error) {
 			return false, nil
 		}
@@ -171,7 +171,7 @@ func TestNode_RollCall(t *testing.T) {
 		hostAddNewPeer(t, node.host, receiver)
 
 		// Function store has no function but is not able to install it.
-		fstore := mocks.BaselineFunctionHandler(t)
+		fstore := mocks.BaselineFStore(t)
 		fstore.InstalledFunc = func(string) (bool, error) {
 			return false, nil
 		}

@@ -16,21 +16,42 @@ func TestFunction_GetHandlesErrors(t *testing.T) {
 		testCID = "dummy-cid"
 	)
 
-	t.Run("handles failure to read manifest from store", func(t *testing.T) {
+	workdir, err := os.MkdirTemp("", "b7s-function-get-")
+	require.NoError(t, err)
 
-		workdir, err := os.MkdirTemp("", "b7s-function-get-")
-		require.NoError(t, err)
+	defer os.RemoveAll(workdir)
 
-		defer os.RemoveAll(workdir)
+	store := mocks.BaselineStore(t)
+	store.GetRecordFunc = func(string, interface{}) error {
+		return mocks.GenericError
+	}
 
-		store := mocks.BaselineStore(t)
-		store.GetRecordFunc = func(string, interface{}) error {
-			return mocks.GenericError
-		}
+	fh := fstore.New(mocks.NoopLogger, store, workdir)
 
-		fh := fstore.New(mocks.NoopLogger, store, workdir)
+	_, err = fh.Get(testCID)
+	require.Error(t, err)
+}
 
-		_, err = fh.Get(testCID)
-		require.Error(t, err)
-	})
+func TestFunction_InstalledFunctions(t *testing.T) {
+
+	installed := []string{
+		"func1",
+		"func2",
+		"func3",
+	}
+
+	workdir, err := os.MkdirTemp("", "b7s-function-get-")
+	require.NoError(t, err)
+
+	defer os.RemoveAll(workdir)
+
+	store := mocks.BaselineStore(t)
+	store.KeysFunc = func() []string {
+		return installed
+	}
+
+	fh := fstore.New(mocks.NoopLogger, store, workdir)
+
+	list := fh.InstalledFunctions()
+	require.Equal(t, installed, list)
 }

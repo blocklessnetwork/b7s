@@ -17,7 +17,7 @@ func TestNode_Notifiee(t *testing.T) {
 
 	var (
 		logger          = mocks.NoopLogger
-		functionHandler = mocks.BaselineFunctionHandler(t)
+		functionHandler = mocks.BaselineFStore(t)
 	)
 
 	server, err := host.New(mocks.NoopLogger, loopback, 0)

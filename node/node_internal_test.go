@@ -39,7 +39,7 @@ func TestNode_New(t *testing.T) {
 	var (
 		logger          = mocks.NoopLogger
 		peerstore       = mocks.BaselinePeerStore(t)
-		functionHandler = mocks.BaselineFunctionHandler(t)
+		functionHandler = mocks.BaselineFStore(t)
 		executor        = mocks.BaselineExecutor(t)
 	)
 
@@ -95,7 +95,7 @@ func createNode(t *testing.T, role blockless.NodeRole) *Node {
 	var (
 		logger          = mocks.NoopLogger
 		peerstore       = mocks.BaselinePeerStore(t)
-		functionHandler = mocks.BaselineFunctionHandler(t)
+		functionHandler = mocks.BaselineFStore(t)
 	)
 
 	host, err := host.New(logger, loopback, 0)

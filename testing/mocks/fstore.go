@@ -14,7 +14,7 @@ type FStore struct {
 	SyncFunc               func(string) error
 }
 
-func BaselineFunctionHandler(t *testing.T) *FStore {
+func BaselineFStore(t *testing.T) *FStore {
 	t.Helper()
 
 	fh := FStore{
