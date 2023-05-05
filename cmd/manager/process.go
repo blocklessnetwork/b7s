@@ -8,29 +8,23 @@ import (
 )
 
 type ProcessInfo struct {
-	Pid      int
-	User     string
-	Cmdline  string
+	Pid     int
+	User    string
+	Cmdline string
 }
 
-func CheckB7sRunning() (*ProcessInfo, error) {
-	var cmd *exec.Cmd
-
+func getProcessCommand(processName string) *exec.Cmd {
 	switch runtime.GOOS {
 	case "linux", "darwin":
-		cmd = exec.Command("pgrep", "-fl", "b7s")
+		return exec.Command("pgrep", "-fl", processName)
 	case "windows":
-		cmd = exec.Command("tasklist", "/FI", "imagename eq b7s.exe")
+		return exec.Command("tasklist", "/FI", fmt.Sprintf("imagename eq %s.exe", processName))
 	default:
-		return nil, fmt.Errorf("unsupported platform: %s", runtime.GOOS)
+		return nil
 	}
+}
 
-	output, err := cmd.Output()
-	if err != nil {
-		return nil, err
-	}
-
-	outputStr := strings.TrimSpace(string(output))
+func parseProcessOutput(outputStr string) (*ProcessInfo, error) {
 	if outputStr == "" {
 		return nil, nil
 	}
@@ -48,4 +42,19 @@ func CheckB7sRunning() (*ProcessInfo, error) {
 	}
 
 	return &info, nil
+}
+
+func CheckB7sRunning(processName string) (*ProcessInfo, error) {
+	cmd := getProcessCommand(processName)
+	if cmd == nil {
+		return nil, fmt.Errorf("unsupported platform: %s", runtime.GOOS)
+	}
+
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	outputStr := strings.TrimSpace(string(output))
+	return parseProcessOutput(outputStr)
 }

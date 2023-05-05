@@ -143,7 +143,7 @@ func handleRequest(s network.Stream) error {
 		}()
 
 	case "queryProcess":
-		processInfo, err :=  CheckB7sRunning()
+		processInfo, err := CheckB7sRunning("b7s")
 		if err != nil {
 			log.Printf("Error checking b7s process: %v", err)
 		} else if processInfo != nil {
@@ -151,10 +151,6 @@ func handleRequest(s network.Stream) error {
 		} else {
 			log.Println("b7s process is not running")
 		}
-
-		responseMsg.Type = "queryProcessResponse"
-		processInfoJSON, _ := json.Marshal(processInfo)
-		responseMsg.Payload = string(processInfoJSON)
 	}
 
 	responseData, _ := json.Marshal(responseMsg)
