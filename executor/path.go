@@ -6,10 +6,9 @@ import (
 
 // requestPaths defines a number of path components relevant to a request.
 type requestPaths struct {
-	workdir  string
-	fsRoot   string
-	manifest string
-	entry    string
+	workdir string
+	fsRoot  string
+	input   string
 }
 
 func (e *Executor) generateRequestPaths(requestID string, functionID string, method string) requestPaths {
@@ -17,10 +16,9 @@ func (e *Executor) generateRequestPaths(requestID string, functionID string, met
 	// Workdir Should be the root for all other paths.
 	workdir := filepath.Join(e.cfg.WorkDir, "t", requestID)
 	paths := requestPaths{
-		workdir:  workdir,
-		fsRoot:   filepath.Join(workdir, "fs"),
-		manifest: filepath.Join(workdir, "runtime-manifest.json"),
-		entry:    filepath.Join(e.cfg.WorkDir, functionID, method),
+		workdir: workdir,
+		fsRoot:  filepath.Join(workdir, "fs"),
+		input:   filepath.Join(e.cfg.WorkDir, functionID, method),
 	}
 
 	return paths

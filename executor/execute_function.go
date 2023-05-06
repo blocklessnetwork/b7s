@@ -65,11 +65,6 @@ func (e *Executor) executeFunction(requestID string, req execute.Request) (execu
 		Str("request_id", requestID).
 		Msg("working directory for the request")
 
-	err = e.writeExecutionManifest(req, paths)
-	if err != nil {
-		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not write execution manifest: %w", err)
-	}
-
 	// Create command that will be executed.
 	cmd := e.createCmd(paths, req)
 
