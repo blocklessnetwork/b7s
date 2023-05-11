@@ -17,15 +17,20 @@ var defaultConfig = Config{
 
 // Config represents the Host configuration.
 type Config struct {
-	PrivateKey          string
+	PrivateKey string
+
 	ConnectionThreshold uint
 	BootNodes           []multiaddr.Multiaddr
 	DialBackPeers       []multiaddr.Multiaddr
 	DialBackPeersLimit  uint
 	DiscoveryInterval   time.Duration
-	DialBackAddress     string
-	DialBackPort        uint
-	Websocket           bool
+
+	Websocket     bool
+	WebsocketPort uint
+
+	DialBackAddress       string
+	DialBackPort          uint
+	DialBackWebsocketPort uint
 }
 
 // WithPrivateKey specifies the private key for the Host.
@@ -68,6 +73,12 @@ func WithDialBackPort(n uint) func(*Config) {
 	}
 }
 
+func WithDialBackWebsocketPort(n uint) func(*Config) {
+	return func(cfg *Config) {
+		cfg.DialBackWebsocketPort = n
+	}
+}
+
 // WithDialBackPeersLimit specifies the maximum number of dial-back peers to use.
 func WithDialBackPeersLimit(n uint) func(*Config) {
 	return func(cfg *Config) {
@@ -86,5 +97,12 @@ func WithDiscoveryInterval(d time.Duration) func(*Config) {
 func WithWebsocket(b bool) func(*Config) {
 	return func(cfg *Config) {
 		cfg.Websocket = b
+	}
+}
+
+// WithWebsocketPort specifies on which port the host should listen for websocket connections.
+func WithWebsocketPort(port uint) func(*Config) {
+	return func(cfg *Config) {
+		cfg.WebsocketPort = port
 	}
 }

@@ -34,7 +34,7 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	}
 
 	if cfg.Websocket {
-		wsAddr := hostAddress + "/ws"
+		wsAddr := fmt.Sprintf("/ip4/%v/tcp/%v/ws", address, cfg.WebsocketPort)
 		addresses = append(addresses, wsAddr)
 	}
 
@@ -59,18 +59,18 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	if cfg.DialBackAddress != "" && cfg.DialBackPort != 0 {
 
 		externalAddr := fmt.Sprintf("/ip4/%s/tcp/%d", cfg.DialBackAddress, cfg.DialBackPort)
-		addrs := []string{
+		extAddresses := []string{
 			externalAddr,
 		}
 
-		if cfg.Websocket {
-			externalWsAddr := externalAddr + "/ws"
-			addresses = append(addrs, externalWsAddr)
+		if cfg.Websocket && cfg.DialBackWebsocketPort != 0 {
+			externalWsAddr := fmt.Sprintf("/ip4/%v/tcp/%v/ws", address, cfg.WebsocketPort)
+			extAddresses = append(extAddresses, externalWsAddr)
 		}
 
 		// Create list of multiaddrs with the external IP and port.
 		var externalAddrs []ma.Multiaddr
-		for _, addr := range addresses {
+		for _, addr := range extAddresses {
 			maddr, err := ma.NewMultiaddr(addr)
 			if err != nil {
 				return nil, fmt.Errorf("could not create external multiaddress: %w", err)
