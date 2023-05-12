@@ -34,6 +34,12 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	}
 
 	if cfg.Websocket {
+
+		// If the TCP and websocket port are explicitely chosen and set to the same value, one of the two listens will silently fail.
+		if port == cfg.WebsocketPort && cfg.WebsocketPort != 0 {
+			return nil, fmt.Errorf("TCP and websocket ports cannot be the same (TCP: %v, Websocket: %v)", port, cfg.WebsocketPort)
+		}
+
 		wsAddr := fmt.Sprintf("/ip4/%v/tcp/%v/ws", address, cfg.WebsocketPort)
 		addresses = append(addresses, wsAddr)
 	}
@@ -64,6 +70,11 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 		}
 
 		if cfg.Websocket && cfg.DialBackWebsocketPort != 0 {
+
+			if cfg.DialBackWebsocketPort == cfg.DialBackPort {
+				return nil, fmt.Errorf("TCP and websocket dialback ports cannot be the same (TCP: %v, Websocket: %v)", cfg.DialBackPort, cfg.DialBackWebsocketPort)
+			}
+
 			externalWsAddr := fmt.Sprintf("/ip4/%v/tcp/%v/ws", address, cfg.WebsocketPort)
 			extAddresses = append(extAddresses, externalWsAddr)
 		}
