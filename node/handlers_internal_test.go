@@ -41,6 +41,8 @@ func TestNode_Handlers(t *testing.T) {
 			requestID = "dummy-request-id"
 		)
 
+		node.rollCall.create(requestID)
+
 		res := response.RollCall{
 			Type:       blockless.MessageRollCallResponse,
 			Code:       codes.Accepted,

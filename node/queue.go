@@ -13,6 +13,7 @@ type rollCallQueue struct {
 	m    map[string]chan response.RollCall
 }
 
+// newQueue is used to record per-request roll call responses.
 func newQueue(bufSize uint) *rollCallQueue {
 
 	q := rollCallQueue{
@@ -23,6 +24,20 @@ func newQueue(bufSize uint) *rollCallQueue {
 	return &q
 }
 
+// create will create a response queue for the given requestID.
+// Needs to be called before receiving/reading roll call responses.
+func (q *rollCallQueue) create(reqID string) {
+	q.Lock()
+	defer q.Unlock()
+
+	_, ok := q.m[reqID]
+	if ok {
+		return
+	}
+
+	q.m[reqID] = make(chan response.RollCall, q.size)
+}
+
 // add records a new response to a roll call.
 func (q *rollCallQueue) add(id string, res response.RollCall) {
 	q.Lock()
@@ -30,22 +45,52 @@ func (q *rollCallQueue) add(id string, res response.RollCall) {
 
 	_, ok := q.m[id]
 	if !ok {
-		q.m[id] = make(chan response.RollCall, q.size)
+		return
 	}
 
 	q.m[id] <- res
 }
 
+// exists returns true if a given request ID exists in the roll call map.
+func (q *rollCallQueue) exists(reqID string) bool {
+	q.Lock()
+	defer q.Unlock()
+
+	_, ok := q.m[reqID]
+	return ok
+}
+
 // responses will return a channel that can be used to iterate through all of the responses.
-func (q *rollCallQueue) responses(id string) <-chan response.RollCall {
+func (q *rollCallQueue) responses(reqID string) <-chan response.RollCall {
 	q.Lock()
 
-	_, ok := q.m[id]
+	_, ok := q.m[reqID]
 	if !ok {
-		q.m[id] = make(chan response.RollCall, q.size)
+		// Technically we shouldn't be here since we already called `create`, but there's also no harm in it.
+		q.m[reqID] = make(chan response.RollCall, q.size)
 	}
 
 	q.Unlock()
 
-	return q.m[id]
+	return q.m[reqID]
+}
+
+// Remove will remove the channel with the given ID.
+func (q *rollCallQueue) remove(reqID string) {
+	q.Lock()
+	defer q.Unlock()
+
+	_, ok := q.m[reqID]
+	if !ok {
+		// Should not be done but make it safe for double close.
+		return
+	}
+
+	// First drain the channel.
+	for len(q.m[reqID]) > 0 {
+		<-q.m[reqID]
+	}
+
+	close(q.m[reqID])
+	delete(q.m, reqID)
 }

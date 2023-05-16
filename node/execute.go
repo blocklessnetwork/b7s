@@ -132,6 +132,10 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 		Int("quorum", quorum).
 		Msg("processing execution request")
 
+	// Create the queue to record roll call respones.
+	n.rollCall.create(requestID)
+	defer n.rollCall.remove(requestID)
+
 	err := n.issueRollCall(ctx, requestID, req.FunctionID)
 	if err != nil {
 		return codes.Error, nil, fmt.Errorf("could not issue roll call: %w", err)
