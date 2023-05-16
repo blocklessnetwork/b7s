@@ -29,8 +29,23 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	}
 
 	hostAddress := fmt.Sprintf("/ip4/%v/tcp/%v", address, port)
+	addresses := []string{
+		hostAddress,
+	}
+
+	if cfg.Websocket {
+
+		// If the TCP and websocket port are explicitely chosen and set to the same value, one of the two listens will silently fail.
+		if port == cfg.WebsocketPort && cfg.WebsocketPort != 0 {
+			return nil, fmt.Errorf("TCP and websocket ports cannot be the same (TCP: %v, Websocket: %v)", port, cfg.WebsocketPort)
+		}
+
+		wsAddr := fmt.Sprintf("/ip4/%v/tcp/%v/ws", address, cfg.WebsocketPort)
+		addresses = append(addresses, wsAddr)
+	}
+
 	opts := []libp2p.Option{
-		libp2p.ListenAddrStrings(hostAddress),
+		libp2p.ListenAddrStrings(addresses...),
 		libp2p.DefaultTransports,
 		libp2p.DefaultMuxers,
 		libp2p.DefaultSecurity,
@@ -49,15 +64,38 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 
 	if cfg.DialBackAddress != "" && cfg.DialBackPort != 0 {
 
-		// Create a multiaddr with the external IP and port
-		externalMultiaddr, err := ma.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%d", cfg.DialBackAddress, cfg.DialBackPort))
-		if err != nil {
-			return nil, fmt.Errorf("could not parse external multiaddress: %w", err)
+		externalAddr := fmt.Sprintf("/ip4/%s/tcp/%d", cfg.DialBackAddress, cfg.DialBackPort)
+		extAddresses := []string{
+			externalAddr,
 		}
-		opts = append(opts, libp2p.AddrsFactory(func(addrs []ma.Multiaddr) []ma.Multiaddr {
-			// Return only the external multiaddr
-			return []ma.Multiaddr{externalMultiaddr}
-		}))
+
+		if cfg.Websocket && cfg.DialBackWebsocketPort != 0 {
+
+			if cfg.DialBackWebsocketPort == cfg.DialBackPort {
+				return nil, fmt.Errorf("TCP and websocket dialback ports cannot be the same (TCP: %v, Websocket: %v)", cfg.DialBackPort, cfg.DialBackWebsocketPort)
+			}
+
+			externalWsAddr := fmt.Sprintf("/ip4/%v/tcp/%v/ws", address, cfg.WebsocketPort)
+			extAddresses = append(extAddresses, externalWsAddr)
+		}
+
+		// Create list of multiaddrs with the external IP and port.
+		var externalAddrs []ma.Multiaddr
+		for _, addr := range extAddresses {
+			maddr, err := ma.NewMultiaddr(addr)
+			if err != nil {
+				return nil, fmt.Errorf("could not create external multiaddress: %w", err)
+			}
+
+			externalAddrs = append(externalAddrs, maddr)
+		}
+
+		addrFactory := libp2p.AddrsFactory(func(addrs []ma.Multiaddr) []ma.Multiaddr {
+			// Return only the external multiaddrs.
+			return externalAddrs
+		})
+
+		opts = append(opts, addrFactory)
 	}
 
 	// Create libp2p host.

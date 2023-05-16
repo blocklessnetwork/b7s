@@ -26,11 +26,13 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 	// Get peer information.
 	peerID := conn.RemotePeer()
 	maddr := conn.RemoteMultiaddr()
+	laddr := conn.LocalMultiaddr()
 	addrInfo := network.Peerstore().PeerInfo(peerID)
 
 	n.log.Debug().
 		Str("peer", peerID.String()).
-		Str("addr", maddr.String()).
+		Str("remote_address", maddr.String()).
+		Str("local_address", laddr.String()).
 		Msg("peer connected")
 
 	// Store the peer info.
@@ -43,10 +45,14 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 func (n *connectionNotifiee) Disconnected(_ network.Network, conn network.Conn) {
 
 	// TODO: Check - do we want to remove peer after he's been disconnected.
+	maddr := conn.RemoteMultiaddr()
+	laddr := conn.LocalMultiaddr()
 
 	peerID := conn.RemotePeer()
 	n.log.Debug().
 		Str("peer", peerID.String()).
+		Str("remote_address", maddr.String()).
+		Str("local_address", laddr.String()).
 		Msg("peer disconnected")
 }
 

@@ -21,22 +21,25 @@ Head Nodes also serve a REST API that can be used to query or trigger certain ac
 
 ```console
 Usage of node:
-  -l, --log-level string             log level to use (default "info")
-      --peer-db string               path to the database used for persisting peer data (default "peer-db")
-      --function-db string           path to the database used for persisting function data (default "function-db")
-  -r, --role string                  role this note will have in the Blockless protocol (head or worker) (default "worker")
-  -a, --address string               address that the b7s host will use (default "0.0.0.0")
-  -p, --port uint                    port that the b7s host will use
-      --dialback-address string      external address that the b7s host will advertise (default "0.0.0.0")
-      --dialback-port uint           external port that the b7s host will advertise
-      --private-key string           private key that the b7s host will use
-  -c, --concurrency uint             maximum number of requests node will process in parallel (default 10)
-      --rest-api string              address where the head node REST API will listen on
-      --boot-nodes strings           list of addresses that this node will connect to on startup, in multiaddr format
-      --workspace string             directory that the node can use for file storage (default "./workspace")
-      --runtime string               runtime address (used by the worker node)
-      --cpu-percentage-limit float   amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited (default 1)
-      --memory-limit int             memory limit (kB) for Blockless Functions
+  -l, --log-level string               log level to use (default "info")
+  -r, --role string                    role this note will have in the Blockless protocol (head or worker) (default "worker")
+      --peer-db string                 path to the database used for persisting peer data (default "peer-db")
+      --function-db string             path to the database used for persisting function data (default "function-db")
+  -c, --concurrency uint               maximum number of requests node will process in parallel (default 10)
+      --rest-api string                address where the head node REST API will listen on
+      --workspace string               directory that the node can use for file storage (default "./workspace")
+      --runtime string                 runtime address (used by the worker node)
+      --private-key string             private key that the b7s host will use
+  -a, --address string                 address that the b7s host will use (default "0.0.0.0")
+  -p, --port uint                      port that the b7s host will use
+      --boot-nodes strings             list of addresses that this node will connect to on startup, in multiaddr format
+      --dialback-address string        external address that the b7s host will advertise (default "0.0.0.0")
+      --dialback-port uint             external port that the b7s host will advertise
+      --websocket-dialback-port uint   external port that the b7s host will advertise for websocket connections
+  -w, --websocket                      should the node use websocket protocol for communication
+      --websocket-port uint            port to use for websocket connections
+      --cpu-percentage-limit float     amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited (default 1)
+      --memory-limit int               memory limit (kB) for Blockless Functions
 ```
 
 You can find more information about `multiaddr` format for network addresses [here](https://github.com/multiformats/multiaddr) and [here](https://multiformats.io/multiaddr/).

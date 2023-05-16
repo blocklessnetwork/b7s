@@ -21,11 +21,16 @@ type Config struct {
 
 // Host describes the libp2p host that the node will use.
 type Host struct {
-	Port            uint
-	Address         string
-	PrivateKey      string
-	DialBackPort    uint
-	DialBackAddress string
+	Port       uint
+	Address    string
+	PrivateKey string
+
+	DialBackPort          uint
+	DialBackAddress       string
+	DialBackWebsocketPort uint
+
+	Websocket     bool
+	WebsocketPort uint
 }
 
 // Log describes the logging configuration.
