@@ -48,10 +48,14 @@ func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, payloa
 		return nil
 	}
 
-	n.log.Info().
-		Str("peer", from.String()).
-		Str("request_id", res.RequestID).
-		Msg("recording peers roll call response")
+	// Check if there's an active roll call already.
+	exists := n.rollCall.exists(res.RequestID)
+	if !exists {
+		n.log.Info().Str("peer", from.String()).Str("request_id", res.RequestID).Msg("no pending roll call for the given request, dropping response")
+		return nil
+	}
+
+	n.log.Info().Str("peer", from.String()).Str("request_id", res.RequestID).Msg("recording roll call response")
 
 	// Record the response.
 	n.rollCall.add(res.RequestID, res)
