@@ -61,7 +61,12 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/manager",
-      "args": ["-l", "3333"],
+      "args": [
+        "-l",
+        "3333",
+        "--private-key",
+        "${workspaceFolder}/configs/testkeys/ident2/priv.bin"
+      ],
       "cwd": "${workspaceFolder}"
     }
   ]

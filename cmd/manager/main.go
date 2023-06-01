@@ -3,12 +3,10 @@ package main
 import (
 	"bufio"
 	"context"
-	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
-	mrand "math/rand"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -37,7 +35,7 @@ func main() {
 
 	listenF := pflag.IntP("listen", "l", 0, "wait for incoming connections")
 	insecureF := pflag.BoolP("insecure", "i", false, "use an unencrypted connection")
-	seedF := pflag.Int64P("seed", "s", 0, "set random seed for id generation")
+	privKeyPathF := pflag.StringP("private-key", "p", "", "path to the private key file")
 	allowedPeerF := pflag.StringP("allowed-peer", "a", "", "allowed peer ID")
 	pflag.Parse()
 
@@ -45,7 +43,11 @@ func main() {
 		logger.Fatal().Msg("Please provide a port to bind on with -l")
 	}
 
-	ha, err := makeBasicHost(*listenF, *insecureF, *seedF)
+	if *privKeyPathF == "" {
+		logger.Fatal().Msg("Please provide a path to the private key file with -p")
+	}
+
+	ha, err := makeBasicHost(*listenF, *insecureF, *privKeyPathF)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to create host")
 	}
@@ -54,15 +56,9 @@ func main() {
 	<-ctx.Done()
 }
 
-func makeBasicHost(listenPort int, insecure bool, randseed int64) (host.Host, error) {
-	var r io.Reader
-	if randseed == 0 {
-		r = rand.Reader
-	} else {
-		r = mrand.New(mrand.NewSource(randseed))
-	}
 
-	priv, _, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+func makeBasicHost(listenPort int, insecure bool, privKeyPath string) (host.Host, error) {
+	priv, err := loadPrivateKey(privKeyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +74,22 @@ func makeBasicHost(listenPort int, insecure bool, randseed int64) (host.Host, er
 	}
 
 	return libp2p.New(opts...)
+}
+
+
+
+func loadPrivateKey(filePath string) (crypto.PrivKey, error) {
+    keyBytes, err := ioutil.ReadFile(filePath)
+    if err != nil {
+        return nil, err
+    }
+
+    priv, err := crypto.UnmarshalPrivateKey(keyBytes)
+    if err != nil {
+        return nil, err
+    }
+
+    return priv, nil
 }
 
 func getHostAddress(ha host.Host) string {
