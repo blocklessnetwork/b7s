@@ -14,70 +14,76 @@ import (
 	"runtime"
 )
 
-func installBinary(url, folder, binaryName string) {
-	usr, err := user.Current()
-	if err != nil {
-		log.Fatal(err)
-	}
+func installBinary(url, folder string) {
+    usr, err := user.Current()
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	binPath := filepath.Join(usr.HomeDir, folder, "bin")
-	os.MkdirAll(binPath, os.ModePerm)
+    targetPath := filepath.Join(usr.HomeDir, folder)
+    os.MkdirAll(targetPath, os.ModePerm)
 
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
+    resp, err := http.Get(url)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer resp.Body.Close()
 
-	archiveData, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
+    archiveData, err := io.ReadAll(resp.Body)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	gzipReader, err := gzip.NewReader(bytes.NewReader(archiveData))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer gzipReader.Close()
+    gzipReader, err := gzip.NewReader(bytes.NewReader(archiveData))
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer gzipReader.Close()
 
-	tarReader := tar.NewReader(gzipReader)
+    tarReader := tar.NewReader(gzipReader)
 
-	for {
-		header, err := tarReader.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
+    for {
+        header, err := tarReader.Next()
+        if err == io.EOF {
+            break
+        }
+        if err != nil {
+            log.Fatal(err)
+        }
 
-		if header.Typeflag == tar.TypeReg {
-			target := filepath.Join(binPath, binaryName)
-			outFile, err := os.Create(target)
-			if err != nil {
-				log.Fatal(err)
-			}
-			defer outFile.Close()
+        path := filepath.Join(targetPath, header.Name)
+        switch header.Typeflag {
+        case tar.TypeDir:
+            if err := os.MkdirAll(path, os.FileMode(header.Mode)); err != nil {
+                log.Fatal(err)
+            }
 
-			if _, err := io.Copy(outFile, tarReader); err != nil {
-				log.Fatal(err)
-			}
+        case tar.TypeReg:
+            outFile, err := os.Create(path)
+            if err != nil {
+                log.Fatal(err)
+            }
 
-			if err := os.Chmod(target, 0755); err != nil {
-				log.Fatal(err)
-			}
+            if _, err := io.Copy(outFile, tarReader); err != nil {
+                log.Fatal(err)
+            }
 
-			log.Printf("%s installed in %s", binaryName, binPath)
-			break
-		}
-	}
+            outFile.Close()
+
+            if err := os.Chmod(path, os.FileMode(header.Mode)); err != nil {
+                log.Fatal(err)
+            }
+
+            log.Printf("File %s installed in %s", header.Name, targetPath)
+        }
+    }
 }
 
 func installB7s(baseURL, version string) {
 	arch := runtime.GOARCH
 	platform := runtime.GOOS
 	url := fmt.Sprintf("%s/%s/b7s-%s.%s.tar.gz", baseURL, version, platform, arch)
-	installBinary(url, ".b7s", "b7s")
+	installBinary(url, ".b7s/networking")
 }
 
 func removeB7s() {
@@ -112,5 +118,5 @@ func installRuntime(baseURL, version string) {
 	}
 
 	url := fmt.Sprintf("%s/%s/blockless-runtime.%s-latest.%s.tar.gz", baseURL, version, platform, arch)
-	installBinary(url, ".b7s/runtime", "blockless-cli")
+	installBinary(url, ".b7s/runtime")
 }
