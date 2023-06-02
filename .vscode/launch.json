@@ -65,7 +65,9 @@
         "-l",
         "3333",
         "--private-key",
-        "${workspaceFolder}/configs/testkeys/ident2/priv.bin"
+        "${workspaceFolder}/configs/testkeys/ident2/priv.bin",
+        "--allowed-peer",
+        "QmSz8bJZjg9gWfvrJjYibo4UhSo8dXYtpNRb4kxn28SoHG"
       ],
       "cwd": "${workspaceFolder}"
     }

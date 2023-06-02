@@ -103,7 +103,7 @@ func startListener(ctx context.Context, ha host.Host, listenPort int, insecure b
 	logger.Info().Msgf("I am %s", fullAddr)
 
 	ha.SetStreamHandler("/echo/1.0.0", func(s network.Stream) {
-		if allowedPeer != "" && s.Conn().RemotePeer().Pretty() != allowedPeer {
+		if allowedPeer == "" && s.Conn().RemotePeer().Pretty() != allowedPeer {
 			logger.Info().Msg("Connection from disallowed peer")
 			s.Reset()
 			return
