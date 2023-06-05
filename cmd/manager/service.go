@@ -76,7 +76,7 @@ func createMacOSService(binPath string) {
 	<string>com.blockless.b7s</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>%s/bls</string>
+		<string>%s/Blockless Compute Engine</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>
