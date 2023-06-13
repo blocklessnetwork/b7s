@@ -8,11 +8,14 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20220929203247-18d98601a233
 	github.com/containerd/cgroups/v3 v3.0.1
 	github.com/fatih/color v1.15.0
+	github.com/hashicorp/go-hclog v1.3.0
+	github.com/hashicorp/raft v1.4.0
+	github.com/hashicorp/raft-boltdb/v2 v2.2.2
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/libp2p/go-libp2p v0.27.1
-	github.com/libp2p/go-libp2p-core v0.20.1
 	github.com/libp2p/go-libp2p-kad-dht v0.21.1
 	github.com/libp2p/go-libp2p-pubsub v0.9.3
+	github.com/libp2p/go-libp2p-raft v0.4.0
 	github.com/multiformats/go-multiaddr v0.9.0
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/afero v1.9.3
@@ -22,13 +25,19 @@ require (
 )
 
 require (
+	github.com/armon/go-metrics v0.4.1 // indirect
+	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/cilium/ebpf v0.9.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/pprof v0.0.0-20230405160723-4a4c7d95572b // indirect
+	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
+	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.2 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
+	github.com/libp2p/go-libp2p-consensus v0.0.1 // indirect
+	github.com/libp2p/go-libp2p-gostream v0.6.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -38,8 +47,10 @@ require (
 	github.com/quic-go/quic-go v0.33.0 // indirect
 	github.com/quic-go/webtransport-go v0.5.2 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/ugorji/go/codec v1.1.13 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
+	go.etcd.io/bbolt v1.3.5 // indirect
 	go.uber.org/dig v1.16.1 // indirect
 	go.uber.org/fx v1.19.2 // indirect
 	golang.org/x/text v0.8.0 // indirect

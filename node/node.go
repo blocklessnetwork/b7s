@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/raft"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
@@ -35,8 +37,17 @@ type Node struct {
 	sema  chan struct{}
 	wg    *sync.WaitGroup
 
-	rollCall         *rollCallQueue
-	executeResponses *waitmap.WaitMap
+	rollCall *rollCallQueue
+
+	// clusters maps request ID to the raft cluster the node belongs to.
+	// TODO: (raft) think when the raft cluster should be disbanded and this removed.
+	clusters map[string]*raft.Raft
+
+	// clusterLock is used to synchronize access to the `clusters` map
+	clusterLock sync.RWMutex
+
+	executeResponses   *waitmap.WaitMap
+	consensusResponses *waitmap.WaitMap
 }
 
 // New creates a new Node.
@@ -57,6 +68,13 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		return nil, errors.New("worker node requires an executor component")
 	}
 
+	// Convert the working directory to an absolute path.
+	workspace, err := filepath.Abs(cfg.Workspace)
+	if err != nil {
+		return nil, fmt.Errorf("could not get absolute path for workspace (path: %s): %w", cfg.Workspace, err)
+	}
+	cfg.Workspace = workspace
+
 	n := Node{
 		cfg: cfg,
 
@@ -68,8 +86,10 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		wg:   &sync.WaitGroup{},
 		sema: make(chan struct{}, cfg.Concurrency),
 
-		rollCall:         newQueue(rollCallQueueBufferSize),
-		executeResponses: waitmap.New(),
+		rollCall:           newQueue(rollCallQueueBufferSize),
+		clusters:           make(map[string]*raft.Raft),
+		executeResponses:   waitmap.New(),
+		consensusResponses: waitmap.New(),
 	}
 
 	// Create a notifiee with a backing peerstore.
@@ -102,6 +122,10 @@ func (n Node) getHandler(msgType string) HandlerFunc {
 		return n.processInstallFunction
 	case blockless.MessageInstallFunctionResponse:
 		return n.processInstallFunctionResponse
+	case blockless.MessageFormCluster:
+		return n.processFormCluster
+	case blockless.MessageFormClusterResponse:
+		return n.processFormClusterResponse
 
 	default:
 		return func(_ context.Context, from peer.ID, _ []byte) error {

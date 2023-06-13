@@ -17,10 +17,10 @@ type ExecuteRequest execute.Request
 
 // ExecuteResponse describes the REST API response for function execution.
 type ExecuteResponse struct {
-	Code      codes.Code               `json:"code,omitempty"`
-	RequestID string                   `json:"request_id,omitempty"`
-	Message   string                   `json:"message,omitempty"`
-	Results   map[string]ExecuteResult `json:"results,omitempty"`
+	Code      codes.Code    `json:"code,omitempty"`
+	RequestID string        `json:"request_id,omitempty"`
+	Message   string        `json:"message,omitempty"`
+	Result    ExecuteResult `json:"results,omitempty"`
 }
 
 // ExecuteResult represents the API representation of a single execution response.
@@ -44,37 +44,21 @@ func (a *API) Execute(ctx echo.Context) error {
 	// TODO: Check - We perhaps want to return the request ID and not wait for the execution, right?
 	// It's probable that it will time out anyway, right?
 
-	// Get the execution results.
-	code, results, err := a.node.ExecuteFunction(ctx.Request().Context(), execute.Request(req))
+	// Get the execution result.
+	code, result, err := a.node.ExecuteFunction(ctx.Request().Context(), execute.Request(req))
 	if err != nil {
-		a.log.Warn().
-			Str("function_id", req.FunctionID).
-			Err(err).
-			Msg("node failed to execute function")
-	}
-
-	requestID := ""
-	exResults := make(map[string]ExecuteResult)
-
-	for id, er := range results {
-
-		// Get the requestID from any of the individual results.
-		if requestID == "" {
-			requestID = er.RequestID
-		}
-
-		exResults[id] = ExecuteResult{
-			Code:      er.Code,
-			Result:    er.Result,
-			RequestID: er.RequestID,
-		}
+		a.log.Warn().Str("function_id", req.FunctionID).Err(err).Msg("node failed to execute function")
 	}
 
 	// Transform the node response format to the one returned by the API.
 	res := ExecuteResponse{
 		Code:      code,
-		RequestID: requestID,
-		Results:   exResults,
+		RequestID: result.RequestID,
+		Result: ExecuteResult{
+			Code:      result.Code,
+			Result:    result.Result,
+			RequestID: result.RequestID,
+		},
 	}
 
 	// Communicate the reason for failure in these cases.

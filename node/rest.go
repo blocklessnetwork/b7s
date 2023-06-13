@@ -16,11 +16,12 @@ import (
 // Problem is that delegator would need to be notified when an execution result has arrived.
 // Doing this way would make the execution flow more streamlined and would not differentiate as much between
 // worker and head node.
-func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (codes.Code, map[string]execute.Result, error) {
+// TODO: (raft) - see how this was done before aggregation, do we need code and result separate?
+func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (codes.Code, execute.Result, error) {
 
 	requestID, err := newRequestID()
 	if err != nil {
-		return codes.Error, nil, fmt.Errorf("could not generate request ID: %w", err)
+		return codes.Error, execute.Result{}, fmt.Errorf("could not generate request ID: %w", err)
 	}
 
 	switch n.cfg.Role {
