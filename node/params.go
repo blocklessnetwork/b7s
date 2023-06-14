@@ -22,6 +22,9 @@ const (
 
 	// prefix to use for consensus related files and databases.
 	consensusDirPrefix = "consensus"
+
+	// TODO: (raft) consider having this configurable
+	defaultRaftApplyTimeout = time.Minute
 )
 
 var (

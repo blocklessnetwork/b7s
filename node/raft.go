@@ -55,8 +55,10 @@ func (n *Node) newRaftNode(requestID string) (*raft.Raft, error) {
 	// TODO: (raft) Check how this works and if it's okay for production.
 	snapshot := raft.NewDiscardSnapshotStore()
 
+	fsm := newFsmExecutor(n.log, n.executor)
+
 	raftCfg := getRaftConfig(n.host.ID().String())
-	raftNode, err := raft.NewRaft(&raftCfg, &NotImplementedFSM{}, logStore, stableStore, snapshot, transport)
+	raftNode, err := raft.NewRaft(&raftCfg, fsm, logStore, stableStore, snapshot, transport)
 	if err != nil {
 		return nil, fmt.Errorf("could not create a raft node: %w", err)
 	}

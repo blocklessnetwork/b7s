@@ -43,7 +43,7 @@ type Node struct {
 	// TODO: (raft) think when the raft cluster should be disbanded and this removed.
 	clusters map[string]*raft.Raft
 
-	// clusterLock is used to synchronize access to the `clusters` map
+	// clusterLock is used to synchronize access to the `clusters` map.
 	clusterLock sync.RWMutex
 
 	executeResponses   *waitmap.WaitMap
@@ -105,7 +105,7 @@ func (n *Node) ID() string {
 }
 
 // getHandler returns the appropriate handler function for the given message.
-func (n Node) getHandler(msgType string) HandlerFunc {
+func (n *Node) getHandler(msgType string) HandlerFunc {
 
 	switch msgType {
 	case blockless.MessageHealthCheck:
