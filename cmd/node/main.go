@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 
 	"github.com/cockroachdb/pebble"
 	"github.com/labstack/echo/v4"
@@ -59,6 +60,14 @@ func run() int {
 		log.Error().Err(err).Str("role", cfg.Role).Msg("invalid node role specified")
 		return failure
 	}
+
+	// Convert workspace path to an absolute one.
+	workspace, err := filepath.Abs(cfg.Workspace)
+	if err != nil {
+		log.Error().Err(err).Str("path", cfg.Workspace).Msg("could not determine absolute path for workspace")
+		return failure
+	}
+	cfg.Workspace = workspace
 
 	// Open the pebble peer database.
 	pdb, err := pebble.Open(cfg.PeerDatabasePath, &pebble.Options{})
