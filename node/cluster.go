@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/hashicorp/raft"
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
@@ -30,6 +31,46 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []b
 		return fmt.Errorf("could not create raft node: %w", err)
 	}
 
+	// TODO: (raft) Stopgap, have this done correctly.
+	// Register an observer to monitor leadership changes. More precisely,
+	// wait on the first leader election, so we know when the cluster is operational.
+
+	obsCh := make(chan raft.Observation, 1)
+	observer := raft.NewObserver(obsCh, false, func(obs *raft.Observation) bool {
+		_, ok := obs.Data.(raft.LeaderObservation)
+		return ok
+	})
+
+	// TODO: (raft) - consider making this synchronous
+	go func() {
+		// Wait on leadership observation.
+		obs := <-obsCh
+		leaderObs, ok := obs.Data.(raft.LeaderObservation)
+		if !ok {
+			n.log.Error().Type("type", obs.Data).Msg("invalid observation type received")
+			return
+		}
+
+		// We don't need the observer anymore.
+		raftHandler.DeregisterObserver(observer)
+
+		n.log.Info().Str("peer", from.String()).Str("leader", string(leaderObs.LeaderID)).Msg("observed a leadership event - sending response")
+
+		res := response.FormCluster{
+			Type:      blockless.MessageFormClusterResponse,
+			RequestID: req.RequestID,
+			Code:      codes.OK,
+		}
+
+		err = n.send(ctx, from, res)
+		if err != nil {
+			n.log.Error().Err(err).Msg("could not send cluster confirmation message")
+			return
+		}
+	}()
+
+	raftHandler.RegisterObserver(observer)
+
 	err = bootstrapCluster(raftHandler, req.Peers)
 	if err != nil {
 		return fmt.Errorf("could not bootstrap cluster: %w", err)
@@ -38,24 +79,6 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []b
 	n.clusterLock.Lock()
 	n.clusters[req.RequestID] = raftHandler
 	n.clusterLock.Unlock()
-
-	n.log.Info().Msg("waiting on leadership notification")
-
-	// Wait until we have leadership info to confirm.
-	isLeader := <-raftHandler.LeaderCh()
-
-	n.log.Info().Bool("leader", isLeader).Msg("notified of leadership change")
-
-	res := response.FormCluster{
-		Type:      blockless.MessageFormClusterResponse,
-		RequestID: req.RequestID,
-		Code:      codes.OK,
-	}
-
-	err = n.send(ctx, from, res)
-	if err != nil {
-		return fmt.Errorf("could not send cluster confirmation message: %w", err)
-	}
 
 	return nil
 }
