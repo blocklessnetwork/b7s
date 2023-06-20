@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/raft"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
@@ -41,7 +40,7 @@ type Node struct {
 
 	// clusters maps request ID to the raft cluster the node belongs to.
 	// TODO: (raft) think when the raft cluster should be disbanded and this removed.
-	clusters map[string]*raft.Raft
+	clusters map[string]*raftHandler
 
 	// clusterLock is used to synchronize access to the `clusters` map.
 	clusterLock sync.RWMutex
@@ -87,7 +86,7 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		sema: make(chan struct{}, cfg.Concurrency),
 
 		rollCall:           newQueue(rollCallQueueBufferSize),
-		clusters:           make(map[string]*raft.Raft),
+		clusters:           make(map[string]*raftHandler),
 		executeResponses:   waitmap.New(),
 		consensusResponses: waitmap.New(),
 	}

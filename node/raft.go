@@ -20,7 +20,14 @@ const (
 	defaultStableStoreName  = "stable.dat"
 )
 
-func (n *Node) newRaftNode(requestID string) (*raft.Raft, error) {
+type raftHandler struct {
+	*raft.Raft
+
+	log    *boltdb.BoltStore
+	stable *boltdb.BoltStore
+}
+
+func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 
 	// Determine directory that should be used for consensus for this request.
 	dirPath := filepath.Join(n.cfg.Workspace, defaultConsensusDirName, requestID)
@@ -63,7 +70,13 @@ func (n *Node) newRaftNode(requestID string) (*raft.Raft, error) {
 		return nil, fmt.Errorf("could not create a raft node: %w", err)
 	}
 
-	return raftNode, nil
+	rh := raftHandler{
+		Raft:   raftNode,
+		log:    logStore,
+		stable: stableStore,
+	}
+
+	return &rh, nil
 }
 
 func getRaftConfig(nodeID string) raft.Config {
@@ -83,7 +96,7 @@ func getRaftConfig(nodeID string) raft.Config {
 	return *cfg
 }
 
-func bootstrapCluster(raftNode *raft.Raft, peerIDs []peer.ID) error {
+func bootstrapCluster(raftHandler *raftHandler, peerIDs []peer.ID) error {
 
 	if len(peerIDs) == 0 {
 		return errors.New("empty peer list")
@@ -94,7 +107,7 @@ func bootstrapCluster(raftNode *raft.Raft, peerIDs []peer.ID) error {
 
 		s := raft.Server{
 			Suffrage: raft.Voter,
-			ID:       raft.ServerID(id),
+			ID:       raft.ServerID(id.String()),
 			Address:  raft.ServerAddress(id),
 		}
 
@@ -107,13 +120,11 @@ func bootstrapCluster(raftNode *raft.Raft, peerIDs []peer.ID) error {
 
 	// Bootstrapping will only succeed for the first node to start it.
 	// Other attempts will fail with an error that can be ignored.
-	ret := raftNode.BootstrapCluster(cfg)
+	ret := raftHandler.BootstrapCluster(cfg)
 	err := ret.Error()
 	if err != nil && !errors.Is(err, raft.ErrCantBootstrap) {
 		return fmt.Errorf("could not bootstrap cluster: %w", err)
 	}
-
-	// TODO: (raft) check if we want to establish connections to hosts directly or it will be done automatically.
 
 	return nil
 }

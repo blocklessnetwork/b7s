@@ -161,25 +161,29 @@ rollCallResponseLoop:
 		return codes.Error, execute.Result{}, fmt.Errorf("could not send execution request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)
 	}
 
-	n.log.Debug().Int("want", quorum).Str("request_id", requestID).Msg("waiting for execution responses")
+	n.log.Debug().Int("want", quorum).Str("request_id", requestID).Msg("waiting for an execution response")
 
 	// We're willing to wait for a limited amount of time.
 	exCtx, exCancel := context.WithTimeout(ctx, n.cfg.ExecutionTimeout)
 	defer exCancel()
 
 	var (
+		// We're waiting for a single execution result now, as only the cluster leader will return a result.
 		res        response.Execute
 		exlock     sync.Mutex
 		haveResult bool
+		wg         sync.WaitGroup
 	)
 
-	// We're waiting for a single execution result now, as only the cluster leader will return a result.
+	wg.Add(len(reportingPeers))
 
 	// Wait on peers asynchronously.
 	for _, rp := range reportingPeers {
 		rp := rp
 
 		go func() {
+			defer wg.Done()
+
 			key := executionResultKey(requestID, rp)
 			res, ok := n.executeResponses.WaitFor(exCtx, key)
 			if !ok {
@@ -201,10 +205,12 @@ rollCallResponseLoop:
 		}()
 	}
 
+	wg.Wait()
+
 	// We should receive an execution result back.
 	// TODO: (raft) What should we do if we don't get a response back? We know which other peers should have the result.
 	if !haveResult {
-		return codes.NotAvailable, execute.Result{}, fmt.Errorf("no execution results received: %w", err)
+		return codes.NotAvailable, execute.Result{}, fmt.Errorf("no execution results received")
 	}
 
 	n.log.Info().Str("request_id", requestID).Msg("received execution response")

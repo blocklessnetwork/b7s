@@ -28,7 +28,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 	// Determine if we should just execute this function, or are we part of the cluster.
 	n.clusterLock.RLock()
 	raftNode, ok := n.clusters[requestID]
-	n.clusterLock.Unlock()
+	n.clusterLock.RUnlock()
 
 	// There's no cluster handle created - it means we only got a direct execution request.
 	if !ok {

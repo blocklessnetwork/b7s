@@ -42,7 +42,6 @@ func (f fsmExecutor) Apply(log *raft.Log) interface{} {
 		return fmt.Errorf("could not unmarshal request: %w", err)
 	}
 
-	// TODO: (raft) propagate requestID
 	f.log.Info().Str("request_id", logEntry.RequestID).Str("function_id", logEntry.Execute.FunctionID).Msg("FSM executing function")
 
 	res, err := f.executor.ExecuteFunction(logEntry.RequestID, logEntry.Execute)

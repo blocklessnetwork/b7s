@@ -23,22 +23,31 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []b
 	}
 	req.From = from
 
-	raftNode, err := n.newRaftNode(req.RequestID)
+	n.log.Info().Str("request_id", req.RequestID).Strs("peers", peerIDList(req.Peers)).Msg("received request to form consensus cluster")
+
+	raftHandler, err := n.newRaftHandler(req.RequestID)
 	if err != nil {
 		return fmt.Errorf("could not create raft node: %w", err)
 	}
 
-	err = bootstrapCluster(raftNode, req.Peers)
+	err = bootstrapCluster(raftHandler, req.Peers)
 	if err != nil {
 		return fmt.Errorf("could not bootstrap cluster: %w", err)
 	}
 
 	n.clusterLock.Lock()
-	n.clusters[req.RequestID] = raftNode
+	n.clusters[req.RequestID] = raftHandler
 	n.clusterLock.Unlock()
 
+	n.log.Info().Msg("waiting on leadership notification")
+
+	// Wait until we have leadership info to confirm.
+	isLeader := <-raftHandler.LeaderCh()
+
+	n.log.Info().Bool("leader", isLeader).Msg("notified of leadership change")
+
 	res := response.FormCluster{
-		Type:      blockless.MessageFormCluster,
+		Type:      blockless.MessageFormClusterResponse,
 		RequestID: req.RequestID,
 		Code:      codes.OK,
 	}
