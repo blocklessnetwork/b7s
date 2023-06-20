@@ -169,7 +169,7 @@ rollCallResponseLoop:
 
 	var (
 		// We're waiting for a single execution result now, as only the cluster leader will return a result.
-		res        response.Execute
+		result     response.Execute
 		exlock     sync.Mutex
 		haveResult bool
 		wg         sync.WaitGroup
@@ -198,7 +198,7 @@ rollCallResponseLoop:
 			defer exlock.Unlock()
 
 			haveResult = true
-			res = er
+			result = er
 
 			// Cancel goroutines waiting for other peers.
 			exCancel()
@@ -215,5 +215,5 @@ rollCallResponseLoop:
 
 	n.log.Info().Str("request_id", requestID).Msg("received execution response")
 
-	return res.Code, res.Result, nil
+	return result.Code, result.Result, nil
 }

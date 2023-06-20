@@ -58,6 +58,12 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 			Msg("execution failed")
 	}
 
+	// There's little benefit to sending a response just to say we didn't execute anything.
+	if code == codes.NoContent {
+		n.log.Info().Str("request_id", requestID).Msg("no execution done - stopping")
+		return nil
+	}
+
 	n.log.Info().
 		Str("request_id", requestID).
 		Str("code", code.String()).

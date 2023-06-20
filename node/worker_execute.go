@@ -53,7 +53,12 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 
 	n.log.Info().Str("request_id", requestID).Msg("we're the cluster leader, executing the request")
 
-	payload, err := json.Marshal(req)
+	fsmReq := fsmLogEntry{
+		RequestID: requestID,
+		Execute:   req,
+	}
+
+	payload, err := json.Marshal(fsmReq)
 	if err != nil {
 		return codes.Error, execute.Result{}, fmt.Errorf("could not serialize request for FSM")
 	}
