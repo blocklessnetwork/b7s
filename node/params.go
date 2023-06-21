@@ -25,6 +25,10 @@ const (
 
 	// TODO: (raft) consider having this configurable
 	defaultRaftApplyTimeout = time.Minute
+
+	DefaultRaftHeartbeatTimeout = 300 * time.Millisecond
+	DefaultRaftElectionTimeout  = 300 * time.Millisecond
+	DefaultRaftLeaderLease      = 200 * time.Millisecond
 )
 
 var (

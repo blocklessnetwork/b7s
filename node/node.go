@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/raft"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
@@ -89,6 +90,15 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		clusters:           make(map[string]*raftHandler),
 		executeResponses:   waitmap.New(),
 		consensusResponses: waitmap.New(),
+	}
+
+	// If we're a worker node, make sure we have a valid configuration for consensus.
+	if cfg.Role == blockless.WorkerNode {
+		rcfg := n.getRaftConfig(n.host.ID().String())
+		err = raft.ValidateConfig(&rcfg)
+		if err != nil {
+			return nil, fmt.Errorf("consensus configuration is not valid: %w", err)
+		}
 	}
 
 	// Create a notifiee with a backing peerstore.

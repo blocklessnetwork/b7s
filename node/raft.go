@@ -64,7 +64,7 @@ func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 
 	fsm := newFsmExecutor(n.log, n.executor)
 
-	raftCfg := getRaftConfig(n.host.ID().String())
+	raftCfg := n.getRaftConfig(n.host.ID().String())
 	raftNode, err := raft.NewRaft(&raftCfg, fsm, logStore, stableStore, snapshot, transport)
 	if err != nil {
 		return nil, fmt.Errorf("could not create a raft node: %w", err)
@@ -79,7 +79,7 @@ func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 	return &rh, nil
 }
 
-func getRaftConfig(nodeID string) raft.Config {
+func (n *Node) getRaftConfig(nodeID string) raft.Config {
 	// TODO: (raft): use zerolog here, not a random hclog instance, even if it is JSON.
 	logOpts := hclog.LoggerOptions{
 		JSONFormat: true,
@@ -92,6 +92,9 @@ func getRaftConfig(nodeID string) raft.Config {
 	cfg := raft.DefaultConfig()
 	cfg.LocalID = raft.ServerID(nodeID)
 	cfg.Logger = raftLogger
+	cfg.HeartbeatTimeout = n.cfg.ConsensusHeartbeatTimeout
+	cfg.ElectionTimeout = n.cfg.ConsensusElectionTimeout
+	cfg.LeaderLeaseTimeout = n.cfg.ConsensusLeaderLease
 
 	return *cfg
 }

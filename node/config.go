@@ -11,26 +11,32 @@ type Option func(*Config)
 
 // DefaultConfig represents the default settings for the node.
 var DefaultConfig = Config{
-	Role:                    blockless.WorkerNode,
-	Topic:                   DefaultTopic,
-	HealthInterval:          DefaultHealthInterval,
-	RollCallTimeout:         DefaultRollCallTimeout,
-	Concurrency:             DefaultConcurrency,
-	ExecutionTimeout:        DefaultExecutionTimeout,
-	ClusterFormationTimeout: DefaultClusterFormationTimeout,
+	Role:                      blockless.WorkerNode,
+	Topic:                     DefaultTopic,
+	HealthInterval:            DefaultHealthInterval,
+	RollCallTimeout:           DefaultRollCallTimeout,
+	Concurrency:               DefaultConcurrency,
+	ExecutionTimeout:          DefaultExecutionTimeout,
+	ClusterFormationTimeout:   DefaultClusterFormationTimeout,
+	ConsensusHeartbeatTimeout: DefaultRaftHeartbeatTimeout,
+	ConsensusElectionTimeout:  DefaultRaftElectionTimeout,
+	ConsensusLeaderLease:      DefaultRaftLeaderLease,
 }
 
 // Config represents the Node configuration.
 type Config struct {
-	Role                    blockless.NodeRole // Node role.
-	Topic                   string             // Topic to subscribe to.
-	Execute                 Executor           // Executor to use for running functions.
-	HealthInterval          time.Duration      // How often should we emit the health ping.
-	RollCallTimeout         time.Duration      // How long do we wait for roll call responses.
-	Concurrency             uint               // How many requests should the node process in parallel.
-	ExecutionTimeout        time.Duration      // How long does the head node wait for worker nodes to send their execution results.
-	ClusterFormationTimeout time.Duration      // How long do we wait for the nodes to form a cluster for an execution.
-	Workspace               string             // Directory where we can store files needed for execution.
+	Role                      blockless.NodeRole // Node role.
+	Topic                     string             // Topic to subscribe to.
+	Execute                   Executor           // Executor to use for running functions.
+	HealthInterval            time.Duration      // How often should we emit the health ping.
+	RollCallTimeout           time.Duration      // How long do we wait for roll call responses.
+	Concurrency               uint               // How many requests should the node process in parallel.
+	ExecutionTimeout          time.Duration      // How long does the head node wait for worker nodes to send their execution results.
+	ClusterFormationTimeout   time.Duration      // How long do we wait for the nodes to form a cluster for an execution.
+	Workspace                 string             // Directory where we can store files needed for execution.
+	ConsensusHeartbeatTimeout time.Duration      // How often a consensus cluster leader should ping its followers.
+	ConsensusElectionTimeout  time.Duration      // How long does a consensus cluster node wait for a leader before it triggers an election.
+	ConsensusLeaderLease      time.Duration      // How long does a leader remain a leader if it cannot contact a quorum of cluster nodes.
 }
 
 // WithRole specifies the role for the node.
@@ -93,5 +99,26 @@ func WithConcurrency(n uint) Option {
 func WithWorkspace(path string) Option {
 	return func(cfg *Config) {
 		cfg.Workspace = path
+	}
+}
+
+// WithConsensusHeartbeatTimeout sets the heartbeat timeout for the consensus cluster.
+func WithConsensusHeartbeatTimeout(d time.Duration) Option {
+	return func(cfg *Config) {
+		cfg.ConsensusHeartbeatTimeout = d
+	}
+}
+
+// WithConsensusElectionTimeout sets the election timeout for the consensus cluster.
+func WithConsensusElectionTimeout(d time.Duration) Option {
+	return func(cfg *Config) {
+		cfg.ConsensusElectionTimeout = d
+	}
+}
+
+// WithConsensusLeaderLease sets the leader lease for the consensus cluster leader.
+func WithConsensusLeaderLease(d time.Duration) Option {
+	return func(cfg *Config) {
+		cfg.ConsensusLeaderLease = d
 	}
 }
