@@ -29,7 +29,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	}
 	req.From = from
 
-	n.log.Debug().Str("cid", req.FunctionID).Str("request_id", req.RequestID).
+	n.log.Debug().Str("cid", req.FunctionID).Str("request_id", req.RequestID).Str("origin", req.Origin.String()).
 		Msg("received roll call request")
 
 	// Base response to return.
@@ -43,7 +43,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	// Check if we have this function installed.
 	installed, err := n.fstore.Installed(req.FunctionID)
 	if err != nil {
-		sendErr := n.send(ctx, req.From, res)
+		sendErr := n.send(ctx, req.Origin, res)
 		if sendErr != nil {
 			// Log send error but choose to return the original error.
 			n.log.Error().Err(sendErr).Str("to", req.From.String()).
@@ -61,23 +61,22 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 
 		err = n.installFunction(req.FunctionID, manifestURLFromCID(req.FunctionID))
 		if err != nil {
-			sendErr := n.send(ctx, req.From, res)
+			sendErr := n.send(ctx, req.Origin, res)
 			if sendErr != nil {
 				// Log send error but choose to return the original error.
-				n.log.Error().Err(sendErr).Str("to", req.From.String()).
+				n.log.Error().Err(sendErr).Str("to", req.Origin.String()).
 					Msg("could not send response")
 			}
-
 			return fmt.Errorf("could not install function: %w", err)
 		}
 	}
 
-	n.log.Info().Str("cid", req.FunctionID).Str("request_id", req.RequestID).
+	n.log.Info().Str("cid", req.FunctionID).Str("request_id", req.RequestID).Str("origin", req.Origin.String()).
 		Msg("reporting for roll call")
 
 	// Send postive response.
 	res.Code = codes.Accepted
-	err = n.send(ctx, req.From, res)
+	err = n.send(ctx, req.Origin, res)
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)
 	}
@@ -92,6 +91,7 @@ func (n *Node) issueRollCall(ctx context.Context, requestID string, functionID s
 	// Create a roll call request.
 	rollCall := request.RollCall{
 		Type:       blockless.MessageRollCall,
+		Origin:     n.host.ID(),
 		FunctionID: functionID,
 		RequestID:  requestID,
 	}
