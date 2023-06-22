@@ -1,5 +1,5 @@
 .PHONY: all
-all: clean build-node build-keygen
+all: clean build-node build-keygen build-manager
 
 .PHONY: test
 test:
