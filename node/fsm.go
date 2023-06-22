@@ -16,16 +16,25 @@ type fsmLogEntry struct {
 	Execute   execute.Request `json:"execute,omitempty"`
 }
 
+type fsmProcessFunc func(req fsmLogEntry, res execute.Result)
+
 type fsmExecutor struct {
-	log      zerolog.Logger
-	executor Executor
+	log        zerolog.Logger
+	executor   Executor
+	processors []fsmProcessFunc
 }
 
-func newFsmExecutor(log zerolog.Logger, executor Executor) *fsmExecutor {
+func newFsmExecutor(log zerolog.Logger, executor Executor, processors ...fsmProcessFunc) *fsmExecutor {
+
+	ps := make([]fsmProcessFunc, 0, len(processors))
+	ps = append(ps, processors...)
+
 	fsm := fsmExecutor{
-		log:      log.With().Str("component", "fsm").Logger(),
-		executor: executor,
+		log:        log.With().Str("component", "fsm").Logger(),
+		executor:   executor,
+		processors: ps,
 	}
+
 	return &fsm
 }
 
@@ -47,6 +56,11 @@ func (f fsmExecutor) Apply(log *raft.Log) interface{} {
 	res, err := f.executor.ExecuteFunction(logEntry.RequestID, logEntry.Execute)
 	if err != nil {
 		return fmt.Errorf("could not execute function: %w", err)
+	}
+
+	// Execute processors.
+	for _, proc := range f.processors {
+		proc(logEntry, res)
 	}
 
 	f.log.Info().Msg("log entry successfully applied")

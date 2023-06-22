@@ -12,6 +12,8 @@ import (
 
 	libp2praft "github.com/libp2p/go-libp2p-raft"
 	"github.com/libp2p/go-libp2p/core/peer"
+
+	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
 const (
@@ -62,7 +64,12 @@ func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 	// TODO: (raft) Check how this works and if it's okay for production.
 	snapshot := raft.NewDiscardSnapshotStore()
 
-	fsm := newFsmExecutor(n.log, n.executor)
+	// Add a callback function to cache the execution result
+	cacheFn := func(req fsmLogEntry, res execute.Result) {
+		n.executeResponses.Set(req.RequestID, res)
+	}
+
+	fsm := newFsmExecutor(n.log, n.executor, cacheFn)
 
 	raftCfg := n.getRaftConfig(n.host.ID().String())
 	raftNode, err := raft.NewRaft(&raftCfg, fsm, logStore, stableStore, snapshot, transport)
