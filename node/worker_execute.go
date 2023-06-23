@@ -30,7 +30,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 	raftNode, ok := n.clusters[requestID]
 	n.clusterLock.RUnlock()
 
-	// There's no cluster handle created - it means we only got a direct execution request.
+	// We are not part of a cluster - just execute the request.
 	if !ok {
 		res, err := n.executor.ExecuteFunction(requestID, req)
 		if err != nil {
@@ -40,18 +40,17 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 		return res.Code, res, nil
 	}
 
-	// We're a part of a cluster - for now acknowledge it and return an error.
 	n.log.Info().Str("request_id", requestID).Msg("execution request to be executed as part of a cluster")
 
 	if raftNode.State() != raft.Leader {
 		_, id := raftNode.LeaderWithID()
 
-		n.log.Info().Str("request_id", requestID).Str("leader", string(id)).Msg("we're not the cluster leader - dropping the request")
+		n.log.Info().Str("request_id", requestID).Str("leader", string(id)).Msg("we are not the cluster leader - dropping the request")
 		// TODO: (raft) see how we should handle this scenario upwards.
 		return codes.NoContent, execute.Result{}, nil
 	}
 
-	n.log.Info().Str("request_id", requestID).Msg("we're the cluster leader, executing the request")
+	n.log.Info().Str("request_id", requestID).Msg("we are the cluster leader, executing the request")
 
 	fsmReq := fsmLogEntry{
 		RequestID: requestID,

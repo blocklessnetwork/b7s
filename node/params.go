@@ -23,9 +23,7 @@ const (
 	// prefix to use for consensus related files and databases.
 	consensusDirPrefix = "consensus"
 
-	// TODO: (raft) consider having this configurable
-	defaultRaftApplyTimeout = time.Minute
-
+	defaultRaftApplyTimeout     = 0 // No timeout.
 	DefaultRaftHeartbeatTimeout = 300 * time.Millisecond
 	DefaultRaftElectionTimeout  = 300 * time.Millisecond
 	DefaultRaftLeaderLease      = 200 * time.Millisecond

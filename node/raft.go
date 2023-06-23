@@ -16,6 +16,7 @@ import (
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
+// TODO: (raft) move these to params.go
 const (
 	defaultConsensusDirName = "consensus"
 	defaultLogStoreName     = "logs.dat"
@@ -43,8 +44,6 @@ func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not create libp2p transport: %w", err)
 	}
-
-	// TODO: (raft) bundle all raft depedencies into a single type - keep all the handles for everything.
 
 	// Create log store.
 	logDB := filepath.Join(dirPath, defaultLogStoreName)
@@ -137,4 +136,43 @@ func bootstrapCluster(raftHandler *raftHandler, peerIDs []peer.ID) error {
 	}
 
 	return nil
+}
+
+func (n *Node) leaveCluster(requestID string) error {
+
+	n.log.Info().Str("request_id", requestID).Msg("shutting down cluster")
+
+	n.clusterLock.RLock()
+	raftHandler, ok := n.clusters[requestID]
+	n.clusterLock.RUnlock()
+
+	if !ok {
+		return nil
+	}
+
+	future := raftHandler.Shutdown()
+	err := future.Error()
+	if err != nil {
+		return fmt.Errorf("could not shutdown raft cluster: %w", err)
+	}
+
+	// We'll log the actual error but return an "umbrella" one if we fail to close any of the two stores.
+	var retErr error
+	err = raftHandler.log.Close()
+	if err != nil {
+		n.log.Error().Err(err).Str("request_id", requestID).Msg("could not close log store")
+		retErr = fmt.Errorf("could not close raft database")
+	}
+
+	err = raftHandler.stable.Close()
+	if err != nil {
+		n.log.Error().Err(err).Str("request_id", requestID).Msg("could not close stable store")
+		retErr = fmt.Errorf("could not close raft database")
+	}
+
+	n.clusterLock.Lock()
+	delete(n.clusters, requestID)
+	n.clusterLock.Unlock()
+
+	return retErr
 }
