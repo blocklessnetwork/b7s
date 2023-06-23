@@ -15,18 +15,21 @@ const (
 
 	rollCallQueueBufferSize = 1000
 
-	// TODO: (raft) - think abot this
-	consensusTransportTimeout = 5 * time.Second
+	syncInterval = time.Hour // How often do we recheck function installations.
+)
 
-	syncInterval = time.Hour
-
-	// prefix to use for consensus related files and databases.
-	consensusDirPrefix = "consensus"
+// Raft and consensus related parameters.
+const (
+	defaultConsensusDirName = "consensus"
+	defaultLogStoreName     = "logs.dat"
+	defaultStableStoreName  = "stable.dat"
 
 	defaultRaftApplyTimeout     = 0 // No timeout.
 	DefaultRaftHeartbeatTimeout = 300 * time.Millisecond
 	DefaultRaftElectionTimeout  = 300 * time.Millisecond
 	DefaultRaftLeaderLease      = 200 * time.Millisecond
+
+	consensusTransportTimeout = 1 * time.Minute
 )
 
 var (

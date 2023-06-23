@@ -46,7 +46,6 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 		_, id := raftNode.LeaderWithID()
 
 		n.log.Info().Str("request_id", requestID).Str("leader", string(id)).Msg("we are not the cluster leader - dropping the request")
-		// TODO: (raft) see how we should handle this scenario upwards.
 		return codes.NoContent, execute.Result{}, nil
 	}
 

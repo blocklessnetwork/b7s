@@ -40,11 +40,7 @@ func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte)
 		}
 	}
 
-	execFunc, err := n.determineExecuteFunction(req)
-	if err != nil {
-		// TODO: Consider returning response here?
-		return fmt.Errorf("could not determine execution function: %w", err)
-	}
+	execFunc := n.getExecuteFunction(req)
 
 	// Call the appropriate function that executes the request in the appropriate way.
 	// NOTE: In case of an error, we do not return early from this function.
@@ -155,12 +151,11 @@ func peerIDList(ids []peer.ID) []string {
 	return peerIDs
 }
 
-// TODO: (raft) revert this as it's less necessary.
-func (n *Node) determineExecuteFunction(req request.Execute) (executeFunc, error) {
+func (n *Node) getExecuteFunction(req request.Execute) executeFunc {
 
 	if n.cfg.Role == blockless.HeadNode {
-		return n.headExecute, nil
+		return n.headExecute
 	}
 
-	return n.workerExecute, nil
+	return n.workerExecute
 }

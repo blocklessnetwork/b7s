@@ -16,13 +16,6 @@ import (
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
-// TODO: (raft) move these to params.go
-const (
-	defaultConsensusDirName = "consensus"
-	defaultLogStoreName     = "logs.dat"
-	defaultStableStoreName  = "stable.dat"
-)
-
 type raftHandler struct {
 	*raft.Raft
 
@@ -33,7 +26,7 @@ type raftHandler struct {
 func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 
 	// Determine directory that should be used for consensus for this request.
-	dirPath := filepath.Join(n.cfg.Workspace, defaultConsensusDirName, requestID)
+	dirPath := n.consensusDir(requestID)
 	err := os.MkdirAll(dirPath, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("could not create consensus work directory: %w", err)
@@ -59,8 +52,8 @@ func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 		return nil, fmt.Errorf("could not create stable store (path: %s): %w", stableDB, err)
 	}
 
-	// Create snapshot store.
-	// TODO: (raft) Check how this works and if it's okay for production.
+	// Create snapshot store. We never really expect we'll need snapshots
+	// since our clusters are short lived, so this should be fine.
 	snapshot := raft.NewDiscardSnapshotStore()
 
 	// Add a callback function to cache the execution result
@@ -170,9 +163,21 @@ func (n *Node) leaveCluster(requestID string) error {
 		retErr = fmt.Errorf("could not close raft database")
 	}
 
+	// Delete residual files. This may fail if we failed to close the databases above.
+	dir := n.consensusDir(requestID)
+	err = os.RemoveAll(dir)
+	if err != nil {
+		n.log.Error().Err(err).Str("request_id", requestID).Str("path", dir).Msg("could not delete consensus dir")
+		retErr = fmt.Errorf("could not delete consensus directory")
+	}
+
 	n.clusterLock.Lock()
 	delete(n.clusters, requestID)
 	n.clusterLock.Unlock()
 
 	return retErr
+}
+
+func (n *Node) consensusDir(requestID string) string {
+	return filepath.Join(n.cfg.Workspace, defaultConsensusDirName, requestID)
 }
