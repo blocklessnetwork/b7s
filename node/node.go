@@ -2,13 +2,10 @@ package node
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"path/filepath"
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/raft"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
@@ -59,23 +56,7 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		option(&cfg)
 	}
 
-	// If we're a head node, we don't have an executor.
-	if cfg.Role == blockless.HeadNode && cfg.Execute != nil {
-		return nil, errors.New("head node does not support execution")
-	}
-	// If we're a worker node, we require an executor.
-	if cfg.Role == blockless.WorkerNode && cfg.Execute == nil {
-		return nil, errors.New("worker node requires an executor component")
-	}
-
-	// Convert the working directory to an absolute path.
-	workspace, err := filepath.Abs(cfg.Workspace)
-	if err != nil {
-		return nil, fmt.Errorf("could not get absolute path for workspace (path: %s): %w", cfg.Workspace, err)
-	}
-	cfg.Workspace = workspace
-
-	n := Node{
+	n := &Node{
 		cfg: cfg,
 
 		log:      log.With().Str("component", "node").Logger(),
@@ -92,20 +73,16 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		consensusResponses: waitmap.New(),
 	}
 
-	// If we're a worker node, make sure we have a valid configuration for consensus.
-	if cfg.Role == blockless.WorkerNode {
-		rcfg := n.getRaftConfig(n.host.ID().String())
-		err = raft.ValidateConfig(&rcfg)
-		if err != nil {
-			return nil, fmt.Errorf("consensus configuration is not valid: %w", err)
-		}
+	err := n.ValidateConfig()
+	if err != nil {
+		return nil, fmt.Errorf("node configuration is not valid: %w", err)
 	}
 
 	// Create a notifiee with a backing peerstore.
 	cn := newConnectionNotifee(log, peerStore)
 	host.Network().Notify(cn)
 
-	return &n, nil
+	return n, nil
 }
 
 // ID returns the ID of this node.
@@ -119,8 +96,6 @@ func (n *Node) getHandler(msgType string) HandlerFunc {
 	switch msgType {
 	case blockless.MessageHealthCheck:
 		return n.processHealthCheck
-	case blockless.MessageExecute:
-		return n.processExecute
 	case blockless.MessageExecuteResponse:
 		return n.processExecuteResponse
 	case blockless.MessageRollCall:
@@ -135,6 +110,14 @@ func (n *Node) getHandler(msgType string) HandlerFunc {
 		return n.processFormCluster
 	case blockless.MessageFormClusterResponse:
 		return n.processFormClusterResponse
+
+	case blockless.MessageExecute:
+
+		// We execute functions differently depending on the node role.
+		if n.isHead() {
+			return n.headProcessExecute
+		}
+		return n.workerProcessExecute
 
 	default:
 		return func(_ context.Context, from peer.ID, _ []byte) error {

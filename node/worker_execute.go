@@ -7,10 +7,70 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/raft"
+	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetworking/b7s/models/request"
+	"github.com/blocklessnetworking/b7s/models/response"
 )
+
+func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload []byte) error {
+
+	// Unpack the request.
+	var req request.Execute
+	err := json.Unmarshal(payload, &req)
+	if err != nil {
+		return fmt.Errorf("could not unpack the request: %w", err)
+	}
+	req.From = from
+
+	requestID := req.RequestID
+	if requestID == "" {
+		return fmt.Errorf("request ID must be set by the head node")
+	}
+
+	// NOTE: In case of an error, we do not return early from this function.
+	// Instead, we send the response back to the caller, whatever it may be.
+	code, result, err := n.workerExecute(ctx, requestID, createExecuteRequest(req))
+	if err != nil {
+		n.log.Error().
+			Err(err).
+			Str("peer", from.String()).
+			Str("function_id", req.FunctionID).
+			Str("request_id", requestID).
+			Msg("execution failed")
+	}
+
+	// There's little benefit to sending a response just to say we didn't execute anything.
+	if code == codes.NoContent {
+		n.log.Info().Str("request_id", requestID).Msg("no execution done - stopping")
+		return nil
+	}
+
+	n.log.Info().Str("request_id", requestID).Str("code", code.String()).Msg("execution complete")
+
+	// TODO: (raft) see if we should cache here or before.
+	// Cache the execution result.
+	n.executeResponses.Set(requestID, result)
+
+	// Create the execution response from the execution result.
+	res := response.Execute{
+		Type:      blockless.MessageExecuteResponse,
+		Code:      code,
+		RequestID: requestID,
+		Result:    result,
+	}
+
+	// Send the response, whatever it may be (success or failure).
+	err = n.send(ctx, req.From, res)
+	if err != nil {
+		return fmt.Errorf("could not send response: %w", err)
+	}
+
+	return nil
+}
 
 // workerExecute is called on the worker node to use its executor component to invoke the function.
 func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.Request) (codes.Code, execute.Result, error) {

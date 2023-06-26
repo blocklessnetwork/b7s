@@ -2,6 +2,8 @@ package node
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -13,6 +15,61 @@ import (
 	"github.com/blocklessnetworking/b7s/models/request"
 	"github.com/blocklessnetworking/b7s/models/response"
 )
+
+func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []byte) error {
+
+	// Unpack the request.
+	var req request.Execute
+	err := json.Unmarshal(payload, &req)
+	if err != nil {
+		return fmt.Errorf("could not unpack the request: %w", err)
+	}
+	req.From = from
+
+	requestID, err := newRequestID()
+	if err != nil {
+		return fmt.Errorf("could not generate new request ID: %w", err)
+	}
+
+	code, result, err := n.headExecute(ctx, requestID, createExecuteRequest(req))
+	if err != nil {
+		n.log.Error().
+			Err(err).
+			Str("peer", from.String()).
+			Str("function_id", req.FunctionID).
+			Str("request_id", requestID).
+			Msg("execution failed")
+	}
+
+	n.log.Info().
+		Str("request_id", requestID).
+		Str("code", code.String()).
+		Msg("execution complete")
+
+	// Cache the execution result.
+	n.executeResponses.Set(requestID, result)
+
+	// Create the execution response from the execution result.
+	res := response.Execute{
+		Type:      blockless.MessageExecuteResponse,
+		Code:      code,
+		RequestID: requestID,
+		Result:    result,
+	}
+
+	// Communicate the reason for failure in these cases.
+	if errors.Is(err, blockless.ErrRollCallTimeout) || errors.Is(err, blockless.ErrExecutionNotEnoughNodes) {
+		res.Message = err.Error()
+	}
+
+	// Send the response, whatever it may be (success or failure).
+	err = n.send(ctx, req.From, res)
+	if err != nil {
+		return fmt.Errorf("could not send response: %w", err)
+	}
+
+	return nil
+}
 
 // headExecute is called on the head node. The head node will publish a roll call and delegate an execution request to chosen nodes.
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.

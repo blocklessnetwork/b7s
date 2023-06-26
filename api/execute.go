@@ -20,7 +20,7 @@ type ExecuteResponse struct {
 	Code      codes.Code    `json:"code,omitempty"`
 	RequestID string        `json:"request_id,omitempty"`
 	Message   string        `json:"message,omitempty"`
-	Result    ExecuteResult `json:"results,omitempty"`
+	Result    ExecuteResult `json:"results,omitempty"` // TODO: (raft) On main - map[string]ExecuteResult
 }
 
 // ExecuteResult represents the API representation of a single execution response.

@@ -3,6 +3,8 @@ package execute
 import (
 	"time"
 
+	"github.com/libp2p/go-libp2p/core/peer"
+
 	"github.com/blocklessnetworking/b7s/models/codes"
 )
 
@@ -12,6 +14,12 @@ type Result struct {
 	Result    RuntimeOutput `json:"result"`
 	RequestID string        `json:"request_id"`
 	Usage     Usage         `json:"usage,omitempty"`
+}
+
+// Cluster represents the set of peers that executed the request.
+type Cluster struct {
+	Main  peer.ID   `json:"main,omitempty"`
+	Peers []peer.ID `json:"peers,omitempty"`
 }
 
 // RuntimeOutput describes the output produced by the Blockless Runtime during exection.

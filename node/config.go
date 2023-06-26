@@ -1,7 +1,12 @@
 package node
 
 import (
+	"errors"
+	"fmt"
+	"path/filepath"
 	"time"
+
+	"github.com/hashicorp/raft"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
@@ -37,6 +42,49 @@ type Config struct {
 	ConsensusHeartbeatTimeout time.Duration      // How often a consensus cluster leader should ping its followers.
 	ConsensusElectionTimeout  time.Duration      // How long does a consensus cluster node wait for a leader before it triggers an election.
 	ConsensusLeaderLease      time.Duration      // How long does a leader remain a leader if it cannot contact a quorum of cluster nodes.
+}
+
+// Validate checks if the given configuration is correct.
+func (n *Node) ValidateConfig() error {
+
+	if !n.cfg.Role.Valid() {
+		return errors.New("node role is not valid")
+	}
+
+	if n.cfg.Topic == "" {
+		return errors.New("topic cannot be empty")
+	}
+
+	if !filepath.IsAbs(n.cfg.Workspace) {
+		return errors.New("workspace must be an absolute path")
+	}
+
+	// Worker specific validation.
+	if n.isWorker() {
+
+		// We require an execution component.
+		if n.cfg.Execute == nil {
+			return errors.New("execution component is required")
+		}
+
+		// Make sure we have a valid consensus configuration.
+		rcfg := n.getRaftConfig(n.host.ID().String())
+		err := raft.ValidateConfig(&rcfg)
+		if err != nil {
+			return fmt.Errorf("consensus configuration is not valid: %w", err)
+		}
+	}
+
+	// Head node specific validation.
+	if n.isHead() {
+
+		if n.cfg.Execute != nil {
+			return errors.New("execution not supported on this type of node")
+		}
+
+	}
+
+	return nil
 }
 
 // WithRole specifies the role for the node.
@@ -121,4 +169,12 @@ func WithConsensusLeaderLease(d time.Duration) Option {
 	return func(cfg *Config) {
 		cfg.ConsensusLeaderLease = d
 	}
+}
+
+func (n *Node) isWorker() bool {
+	return n.cfg.Role == blockless.WorkerNode
+}
+
+func (n *Node) isHead() bool {
+	return n.cfg.Role == blockless.HeadNode
 }
