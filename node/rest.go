@@ -11,28 +11,19 @@ import (
 	"github.com/blocklessnetworking/b7s/models/request"
 )
 
-// TODO: Consider introducing an entity - a `delegator`. This could be like an Executor, only
-// instead of local execution, it would issue a roll call and delegate work to the worker nodes.
-// Problem is that delegator would need to be notified when an execution result has arrived.
-// Doing this way would make the execution flow more streamlined and would not differentiate as much between
-// worker and head node.
-// TODO: (raft) - see how this was done before aggregation, do we need code and result separate?
-func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (codes.Code, execute.Result, error) {
+// ExecuteFunction can be used to start function execution. At the moment this is used by the API server to start execution on the head node.
+func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (codes.Code, execute.Result, execute.Cluster, error) {
+
+	if !n.isHead() {
+		return codes.NotAvailable, execute.Result{}, execute.Cluster{}, fmt.Errorf("action not supported on this node type")
+	}
 
 	requestID, err := newRequestID()
 	if err != nil {
-		return codes.Error, execute.Result{}, fmt.Errorf("could not generate request ID: %w", err)
+		return codes.Error, execute.Result{}, execute.Cluster{}, fmt.Errorf("could not generate request ID: %w", err)
 	}
 
-	switch n.cfg.Role {
-	case blockless.WorkerNode:
-		return n.workerExecute(ctx, requestID, req)
-
-	case blockless.HeadNode:
-		return n.headExecute(ctx, requestID, req)
-	}
-
-	panic(fmt.Errorf("invalid node role: %s", n.cfg.Role))
+	return n.headExecute(ctx, requestID, req)
 }
 
 // ExecutionResult fetches the execution result from the node cache.

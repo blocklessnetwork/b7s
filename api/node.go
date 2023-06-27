@@ -8,7 +8,7 @@ import (
 )
 
 type Node interface {
-	ExecuteFunction(context.Context, execute.Request) (codes.Code, execute.Result, error)
+	ExecuteFunction(context.Context, execute.Request) (codes.Code, execute.Result, execute.Cluster, error)
 	ExecutionResult(id string) (execute.Result, bool)
 	PublishFunctionInstall(ctx context.Context, uri string, cid string) error
 }

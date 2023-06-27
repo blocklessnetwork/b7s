@@ -17,10 +17,11 @@ type ExecuteRequest execute.Request
 
 // ExecuteResponse describes the REST API response for function execution.
 type ExecuteResponse struct {
-	Code      codes.Code    `json:"code,omitempty"`
-	RequestID string        `json:"request_id,omitempty"`
-	Message   string        `json:"message,omitempty"`
-	Result    ExecuteResult `json:"results,omitempty"` // TODO: (raft) On main - map[string]ExecuteResult
+	Code      codes.Code               `json:"code,omitempty"`
+	RequestID string                   `json:"request_id,omitempty"`
+	Message   string                   `json:"message,omitempty"`
+	Result    map[string]ExecuteResult `json:"results,omitempty"`
+	Cluster   execute.Cluster          `json:"cluster,omitempty"`
 }
 
 // ExecuteResult represents the API representation of a single execution response.
@@ -45,7 +46,7 @@ func (a *API) Execute(ctx echo.Context) error {
 	// It's probable that it will time out anyway, right?
 
 	// Get the execution result.
-	code, result, err := a.node.ExecuteFunction(ctx.Request().Context(), execute.Request(req))
+	code, result, cluster, err := a.node.ExecuteFunction(ctx.Request().Context(), execute.Request(req))
 	if err != nil {
 		a.log.Warn().Str("function_id", req.FunctionID).Err(err).Msg("node failed to execute function")
 	}
@@ -54,11 +55,14 @@ func (a *API) Execute(ctx echo.Context) error {
 	res := ExecuteResponse{
 		Code:      code,
 		RequestID: result.RequestID,
-		Result: ExecuteResult{
-			Code:      result.Code,
-			Result:    result.Result,
-			RequestID: result.RequestID,
+		Result: map[string]ExecuteResult{
+			cluster.Main.String(): {
+				Code:      result.Code,
+				Result:    result.Result,
+				RequestID: result.RequestID,
+			},
 		},
+		Cluster: cluster,
 	}
 
 	// Communicate the reason for failure in these cases.
