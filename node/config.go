@@ -33,6 +33,7 @@ type Config struct {
 	Role                      blockless.NodeRole // Node role.
 	Topic                     string             // Topic to subscribe to.
 	Execute                   Executor           // Executor to use for running functions.
+	API                       string             // Address on which the head node will serve the API.
 	HealthInterval            time.Duration      // How often should we emit the health ping.
 	RollCallTimeout           time.Duration      // How long do we wait for roll call responses.
 	Concurrency               uint               // How many requests should the node process in parallel.
@@ -55,16 +56,21 @@ func (n *Node) ValidateConfig() error {
 		return errors.New("topic cannot be empty")
 	}
 
-	if !filepath.IsAbs(n.cfg.Workspace) {
-		return errors.New("workspace must be an absolute path")
-	}
-
 	// Worker specific validation.
 	if n.isWorker() {
+
+		if !filepath.IsAbs(n.cfg.Workspace) {
+			return errors.New("workspace must be an absolute path")
+		}
 
 		// We require an execution component.
 		if n.cfg.Execute == nil {
 			return errors.New("execution component is required")
+		}
+
+		// Worker nodes don't have an API.
+		if n.cfg.API != "" {
+			return errors.New("type of node does not support API")
 		}
 
 		// Make sure we have a valid consensus configuration.
@@ -82,6 +88,10 @@ func (n *Node) ValidateConfig() error {
 			return errors.New("execution not supported on this type of node")
 		}
 
+		// Head nodes require an API address.
+		if n.cfg.API == "" {
+			return errors.New("API address is required")
+		}
 	}
 
 	return nil
@@ -105,6 +115,13 @@ func WithTopic(topic string) Option {
 func WithExecutor(execute Executor) Option {
 	return func(cfg *Config) {
 		cfg.Execute = execute
+	}
+}
+
+// WithAPI specifies the address on whch the head node will serve the API.
+func WithAPI(api string) Option {
+	return func(cfg *Config) {
+		cfg.API = api
 	}
 }
 

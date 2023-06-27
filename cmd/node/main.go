@@ -2,18 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
 
 	"github.com/cockroachdb/pebble"
-	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
-	"github.com/ziflex/lecho/v3"
 
-	"github.com/blocklessnetworking/b7s/api"
 	"github.com/blocklessnetworking/b7s/config"
 	"github.com/blocklessnetworking/b7s/executor"
 	"github.com/blocklessnetworking/b7s/executor/limits"
@@ -167,6 +162,11 @@ func run() int {
 		}
 
 		opts = append(opts, node.WithExecutor(executor))
+		opts = append(opts, node.WithWorkspace(cfg.Workspace))
+	}
+
+	if role == blockless.HeadNode {
+		opts = append(opts, node.WithAPI(cfg.API))
 	}
 
 	// Open the pebble function database.
@@ -199,9 +199,7 @@ func run() int {
 	// Start node main loop in a separate goroutine.
 	go func() {
 
-		log.Info().
-			Str("role", role.String()).
-			Msg("Blockless Node starting")
+		log.Info().Str("role", role.String()).Msg("Blockless Node starting")
 
 		err := node.Run(ctx)
 		if err != nil {
@@ -213,48 +211,6 @@ func run() int {
 
 		log.Info().Msg("Blockless Node stopped")
 	}()
-
-	// If we're a head node - start the REST API.
-	if role == blockless.HeadNode {
-
-		if cfg.API == "" {
-			log.Error().Err(err).Msg("REST API address is required")
-			return failure
-		}
-
-		// Create echo server and iniialize logging.
-		server := echo.New()
-		server.HideBanner = true
-		server.HidePort = true
-
-		elog := lecho.From(log)
-		server.Logger = elog
-		server.Use(lecho.Middleware(lecho.Config{Logger: elog}))
-
-		// Create an API handler.
-		api := api.New(log, node)
-
-		// Set endpoint handlers.
-		server.GET("/api/v1/health", api.Health)
-		server.POST("/api/v1/functions/execute", api.Execute)
-		server.POST("/api/v1/functions/install", api.Install)
-		server.POST("/api/v1/functions/requests/result", api.ExecutionResult)
-
-		// Start API in a separate goroutine.
-		go func() {
-
-			log.Info().Msg("Node API starting")
-			err := server.Start(cfg.API)
-			if err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Warn().Err(err).Msg("Node API failed")
-				close(failed)
-			} else {
-				close(done)
-			}
-
-			log.Info().Msg("Node API stopped")
-		}()
-	}
 
 	select {
 	case <-sig:

@@ -6,10 +6,14 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog"
+	"github.com/ziflex/lecho/v3"
+
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/rs/zerolog"
 
+	"github.com/blocklessnetworking/b7s/api"
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/node/internal/waitmap"
@@ -25,10 +29,12 @@ import (
 type Node struct {
 	cfg Config
 
-	log      zerolog.Logger
-	host     *host.Host
-	executor Executor
-	fstore   FStore
+	log       zerolog.Logger
+	host      *host.Host
+	executor  Executor
+	fstore    FStore
+	apiServer *echo.Echo
+	api       *api.API
 
 	topic *pubsub.Topic
 	sema  chan struct{}
@@ -76,6 +82,20 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 	err := n.ValidateConfig()
 	if err != nil {
 		return nil, fmt.Errorf("node configuration is not valid: %w", err)
+	}
+
+	if n.isHead() {
+		// Create echo server and iniialize logging.
+		n.apiServer = echo.New()
+		n.apiServer.HideBanner = true
+		n.apiServer.HidePort = true
+
+		elog := lecho.From(log)
+		n.apiServer.Logger = elog
+		n.apiServer.Use(lecho.Middleware(lecho.Config{Logger: elog}))
+
+		// Create an API handler.
+		n.api = api.New(log, n.apiServer, n)
 	}
 
 	// Create a notifiee with a backing peerstore.
