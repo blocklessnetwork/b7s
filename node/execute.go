@@ -12,6 +12,14 @@ import (
 	"github.com/blocklessnetworking/b7s/models/response"
 )
 
+func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte) error {
+	// We execute functions differently depending on the node role.
+	if n.isHead() {
+		return n.headProcessExecute(ctx, from, payload)
+	}
+	return n.workerProcessExecute(ctx, from, payload)
+}
+
 func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload []byte) error {
 
 	// Unpack the message.

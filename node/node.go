@@ -134,12 +134,7 @@ func (n *Node) getHandler(msgType string) HandlerFunc {
 		return n.processDisbandCluster
 
 	case blockless.MessageExecute:
-
-		// We execute functions differently depending on the node role.
-		if n.isHead() {
-			return n.headProcessExecute
-		}
-		return n.workerProcessExecute
+		return n.processExecute
 
 	default:
 		return func(_ context.Context, from peer.ID, _ []byte) error {

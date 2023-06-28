@@ -88,7 +88,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 			require.Equal(t, requestID, received.RequestID)
 			require.Equal(t, expected.Code, received.Code)
 
-			require.Equal(t, expected.Result, received.Results[node.ID()].Result)
+			require.Equal(t, expected.Result, received.Result)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -148,7 +148,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
 			require.Equal(t, received.RequestID, requestID)
 			require.Equal(t, faultyExecutionResult.Code, received.Code)
-			require.Equal(t, faultyExecutionResult.Result, received.Results[node.ID()].Result)
+			require.Equal(t, faultyExecutionResult.Result, received.Result)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), payload)
@@ -355,11 +355,10 @@ func TestNode_HeadExecute(t *testing.T) {
 				Type:      blockless.MessageExecuteResponse,
 				Code:      codes.OK,
 				RequestID: requestID,
-				Results:   make(map[string]execute.Result),
-			}
-			res.Results[mockWorker.ID().String()] = execute.Result{
-				Code:   codes.OK,
-				Result: executionResult,
+				Result: execute.Result{
+					Code:   codes.OK,
+					Result: executionResult,
+				},
 			}
 
 			payload := serialize(t, res)
@@ -390,8 +389,7 @@ func TestNode_HeadExecute(t *testing.T) {
 			require.Equal(t, codes.OK, res.Code)
 			require.Equal(t, requestID, res.RequestID)
 
-			require.NotNil(t, res.Results[mockWorker.ID().String()])
-			require.Equal(t, executionResult, res.Results[mockWorker.ID().String()].Result)
+			require.Equal(t, executionResult, res.Result)
 		})
 
 		var nodeWG sync.WaitGroup
