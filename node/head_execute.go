@@ -162,6 +162,31 @@ rollCallResponseLoop:
 	// Wait for cluster confirmation messages.
 	n.log.Debug().Int("want", quorum).Str("request_id", requestID).Msg("waiting for cluster to be formed")
 
+	// When we're done, send a message to disband the cluster.
+	// NOTE: We could schedule this on the worker nodes when receiving the execution request.
+	// One variant I tried is waiting on the execution to be done on the leader (using a timed wait on the execution response) and starting raft shutdown after.
+	// However, this can happen too fast and the execution request might not have been propagated to all of the nodes in the cluster, but "only" to a majority.
+	// Doing this here allows for more wiggle room and ~probably~ all nodes will have seen the request so far.
+	defer func() {
+		go func() {
+
+			msgDisband := request.DisbandCluster{
+				Type:      blockless.MessageDisbandCluster,
+				RequestID: requestID,
+			}
+
+			ctx, cancel := context.WithTimeout(context.Background(), raftClusterSendTimeout)
+			defer cancel()
+
+			err = n.sendToMany(ctx, reportingPeers, msgDisband)
+			if err != nil {
+				n.log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Str("request_id", requestID).Msg("could not send cluster disband request")
+			}
+
+			n.log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Str("request_id", requestID).Msg("sent cluster disband request")
+		}()
+	}()
+
 	// We're willing to wait for a limited amount of time.
 	clusterCtx, exCancel := context.WithTimeout(ctx, n.cfg.ExecutionTimeout)
 	defer exCancel()

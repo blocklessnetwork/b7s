@@ -3,7 +3,6 @@ package node
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/hashicorp/raft"
@@ -139,9 +138,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 			return codes.Error, execute.Result{}, fmt.Errorf("execution encountered an error: %w", fsmErr)
 		}
 
-		n.log.Error().Type("type", response).Msg("unexpected FSM response format")
-
-		return codes.Error, execute.Result{}, errors.New("unexpected FSM response format")
+		return codes.Error, execute.Result{}, fmt.Errorf("unexpected FSM response format: %T", response)
 	}
 
 	n.log.Info().Str("request_id", requestID).Msg("cluster leader executed the request")

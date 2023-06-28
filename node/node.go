@@ -130,6 +130,8 @@ func (n *Node) getHandler(msgType string) HandlerFunc {
 		return n.processFormCluster
 	case blockless.MessageFormClusterResponse:
 		return n.processFormClusterResponse
+	case blockless.MessageDisbandCluster:
+		return n.processDisbandCluster
 
 	case blockless.MessageExecute:
 

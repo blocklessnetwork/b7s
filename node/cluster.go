@@ -83,7 +83,7 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []b
 	return nil
 }
 
-// processFormClusterResponse will record the cluster formation response
+// processFormClusterResponse will record the cluster formation response.
 func (n *Node) processFormClusterResponse(ctx context.Context, from peer.ID, payload []byte) error {
 
 	// Unpack the message.
@@ -98,6 +98,45 @@ func (n *Node) processFormClusterResponse(ctx context.Context, from peer.ID, pay
 
 	key := consensusResponseKey(res.RequestID, from)
 	n.consensusResponses.Set(key, res)
+
+	return nil
+}
+
+// processDisbandCluster will start cluster shutdown command.
+func (n *Node) processDisbandCluster(ctx context.Context, from peer.ID, payload []byte) error {
+
+	// Unpack the request.
+	var req request.DisbandCluster
+	err := json.Unmarshal(payload, &req)
+	if err != nil {
+		return fmt.Errorf("could not unpack the request: %w", err)
+	}
+	req.From = from
+
+	n.log.Info().Str("request_id", req.RequestID).Msg("received request to disband consensus cluster")
+
+	err = n.leaveCluster(req.RequestID)
+	if err != nil {
+		return fmt.Errorf("could not disband cluster (request_id: %s): %w", req.RequestID, err)
+	}
+
+	return nil
+}
+
+func (n *Node) leaveCluster(requestID string) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), raftClusterDisbandTimeout)
+	defer cancel()
+
+	// We know that the request is done executing when we have a result for it.
+	_, ok := n.executeResponses.WaitFor(ctx, requestID)
+
+	n.log.Info().Bool("executed_work", ok).Str("request_id", requestID).Msg("waiting for execution done, leaving raft cluster")
+
+	err := n.shutdownCluster(requestID)
+	if err != nil {
+		return fmt.Errorf("could not leave raft cluster (request_id: %v): %w", requestID, err)
+	}
 
 	return nil
 }

@@ -131,7 +131,7 @@ func bootstrapCluster(raftHandler *raftHandler, peerIDs []peer.ID) error {
 	return nil
 }
 
-func (n *Node) leaveCluster(requestID string) error {
+func (n *Node) shutdownCluster(requestID string) error {
 
 	n.log.Info().Str("request_id", requestID).Msg("shutting down cluster")
 
