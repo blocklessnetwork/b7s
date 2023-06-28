@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 
 	"github.com/libp2p/go-libp2p/core/network"
 
@@ -46,26 +45,6 @@ func (n *Node) Run(ctx context.Context) error {
 	// Start the function sync in the background to periodically check functions.
 	go n.runSyncLoop(ctx)
 
-	if n.isHead() {
-
-		// Send shutdown command.
-		defer func() {
-			err := n.apiServer.Shutdown(ctx)
-			if err != nil {
-				n.log.Error().Err(err).Msg("could not shutdown API")
-			}
-		}()
-
-		// Start API server in a separate goroutine.
-		// TODO: API can fail to start - it should not go unnoticed.
-		go func() {
-			err = n.apiServer.Start(n.cfg.API)
-			if err != nil && !errors.Is(err, http.ErrServerClosed) {
-				n.log.Error().Err(err).Msg("Node API failed")
-			}
-		}()
-	}
-
 	n.log.Info().
 		Uint("concurrency", n.cfg.Concurrency).
 		Msg("starting node main loop")
@@ -88,7 +67,7 @@ func (n *Node) Run(ctx context.Context) error {
 
 		n.log.Trace().
 			Str("message_id", msg.ID).
-			Str("peer", msg.ReceivedFrom.String()).
+			Str("peer_id", msg.ReceivedFrom.String()).
 			Msg("received message")
 
 		// Try to get a slot for processing the request.
@@ -105,7 +84,7 @@ func (n *Node) Run(ctx context.Context) error {
 				n.log.Error().
 					Err(err).
 					Str("id", msg.ID).
-					Str("peer", msg.ReceivedFrom.String()).
+					Str("peer_id", msg.ReceivedFrom.String()).
 					Msg("could not process message")
 			}
 		}()
@@ -134,13 +113,15 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 			return
 		}
 
-		n.log.Debug().Str("peer", from.String()).Msg("received direct message")
+		n.log.Debug().
+			Str("peer_id", from.String()).
+			Msg("received direct message")
 
 		err = n.processMessage(ctx, from, msg)
 		if err != nil {
 			n.log.Error().
 				Err(err).
-				Str("peer", from.String()).
+				Str("peer_id", from.String()).
 				Msg("could not process direct message")
 		}
 	})
