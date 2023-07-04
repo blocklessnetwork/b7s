@@ -60,7 +60,7 @@ func TestNode_New(t *testing.T) {
 	t.Run("create a worker node", func(t *testing.T) {
 		t.Parallel()
 
-		node, err := New(logger, host, peerstore, functionHandler, WithRole(blockless.WorkerNode), WithExecutor(executor))
+		node, err := New(logger, host, peerstore, functionHandler, WithRole(blockless.WorkerNode), WithExecutor(executor), WithWorkspace(t.TempDir()))
 		require.NoError(t, err)
 		require.NotNil(t, node)
 
@@ -108,6 +108,7 @@ func createNode(t *testing.T, role blockless.NodeRole) *Node {
 	if role == blockless.WorkerNode {
 		executor := mocks.BaselineExecutor(t)
 		opts = append(opts, WithExecutor(executor))
+		opts = append(opts, WithWorkspace(t.TempDir()))
 	}
 
 	node, err := New(logger, host, peerstore, functionHandler, opts...)

@@ -1,6 +1,7 @@
 package node
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -13,7 +14,9 @@ import (
 	libp2praft "github.com/libp2p/go-libp2p-raft"
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetworking/b7s/models/response"
 )
 
 type raftHandler struct {
@@ -61,7 +64,28 @@ func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 		n.executeResponses.Set(req.RequestID, res)
 	}
 
-	fsm := newFsmExecutor(n.log, n.executor, cacheFn)
+	// Add a callback function to send the execution result to origin.
+	sendFn := func(req fsmLogEntry, res execute.Result) {
+
+		ctx, cancel := context.WithTimeout(context.Background(), raftClusterSendTimeout)
+		defer cancel()
+
+		msg := response.Execute{
+			Type:      blockless.MessageExecuteResponse,
+			Code:      res.Code,
+			RequestID: req.RequestID,
+			Results: execute.ResultMap{
+				n.host.ID(): res,
+			},
+		}
+
+		err := n.send(ctx, req.Origin, msg)
+		if err != nil {
+			n.log.Error().Err(err).Str("peer", req.Origin.String()).Msg("could not send execution result to node")
+		}
+	}
+
+	fsm := newFsmExecutor(n.log, n.executor, cacheFn, sendFn)
 
 	raftCfg := n.getRaftConfig(n.host.ID().String())
 	raftNode, err := raft.NewRaft(&raftCfg, fsm, logStore, stableStore, snapshot, transport)

@@ -5,9 +5,10 @@ type Code string
 
 // Response codes.
 const (
-	OK        Code = "200"
-	Accepted  Code = "202"
-	NoContent Code = "204"
+	OK             Code = "200"
+	Accepted       Code = "202"
+	NoContent      Code = "204"
+	PartialContent Code = "206"
 
 	Invalid       Code = "400"
 	NotAuthorized Code = "401"

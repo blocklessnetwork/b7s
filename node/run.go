@@ -65,10 +65,7 @@ func (n *Node) Run(ctx context.Context) error {
 			continue
 		}
 
-		n.log.Trace().
-			Str("message_id", msg.ID).
-			Str("peer_id", msg.ReceivedFrom.String()).
-			Msg("received message")
+		n.log.Trace().Str("message_id", msg.ID).Str("peer_id", msg.ReceivedFrom.String()).Msg("received message")
 
 		// Try to get a slot for processing the request.
 		n.sema <- struct{}{}
@@ -81,11 +78,7 @@ func (n *Node) Run(ctx context.Context) error {
 
 			err = n.processMessage(ctx, msg.ReceivedFrom, msg.Data)
 			if err != nil {
-				n.log.Error().
-					Err(err).
-					Str("id", msg.ID).
-					Str("peer_id", msg.ReceivedFrom.String()).
-					Msg("could not process message")
+				n.log.Error().Err(err).Str("id", msg.ID).Str("peer_id", msg.ReceivedFrom.String()).Msg("could not process message")
 			}
 		}()
 	}
@@ -113,16 +106,11 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 			return
 		}
 
-		n.log.Debug().
-			Str("peer_id", from.String()).
-			Msg("received direct message")
+		n.log.Debug().Str("peer_id", from.String()).Msg("received direct message")
 
 		err = n.processMessage(ctx, from, msg)
 		if err != nil {
-			n.log.Error().
-				Err(err).
-				Str("peer_id", from.String()).
-				Msg("could not process direct message")
+			n.log.Error().Err(err).Str("peer_id", from.String()).Msg("could not process direct message")
 		}
 	})
 }

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/api"
@@ -17,7 +18,33 @@ import (
 
 func TestAPI_Execute(t *testing.T) {
 
-	srv := setupAPI(t)
+	executionResult := execute.Result{
+		Result: execute.RuntimeOutput{
+			Stdout:   "dummy-failed-execution-result",
+			Stderr:   "dummy-failed-execution-log",
+			ExitCode: 0,
+		},
+	}
+	peerIDs := []peer.ID{
+		peer.ID([]byte{0x0, 0x24, 0x8, 0x1, 0x12, 0x20, 0x56, 0x77, 0x86, 0x82, 0x76, 0xa, 0xc5, 0x9, 0x63, 0xde, 0xe4, 0x31, 0xfc, 0x44, 0x75, 0xdd, 0x5a, 0x27, 0xee, 0x6b, 0x94, 0x13, 0xed, 0xe2, 0xa3, 0x6d, 0x8a, 0x1d, 0x57, 0xb6, 0xb8, 0x91}),
+	}
+	expectedCode := codes.OK
+
+	node := mocks.BaselineNode(t)
+	node.ExecuteFunctionFunc = func(context.Context, execute.Request) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
+
+		res := execute.ResultMap{
+			mocks.GenericPeerID: executionResult,
+		}
+
+		cluster := execute.Cluster{
+			Peers: peerIDs,
+		}
+
+		return expectedCode, mocks.GenericUUID.String(), res, cluster, nil
+	}
+
+	srv := api.New(mocks.NoopLogger, node)
 
 	req := mocks.GenericExecutionRequest
 
@@ -32,12 +59,17 @@ func TestAPI_Execute(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, rec.Result().StatusCode)
 
-	require.Equal(t, mocks.GenericExecutionResult.Code, res.Code)
-	require.Len(t, res.Results, 1)
+	require.Equal(t, expectedCode, res.Code)
 
-	peerID := mocks.GenericPeerID.String()
-	require.Equal(t, mocks.GenericExecutionResult.RequestID, res.Results[peerID].RequestID)
-	require.Equal(t, mocks.GenericExecutionResult.Result, res.Results[peerID].Result)
+	require.Len(t, res.Cluster.Peers, 1)
+	require.Equal(t, res.Cluster.Peers, peerIDs)
+
+	require.Len(t, res.Results, 1)
+	require.Equal(t, executionResult.Result, res.Results[0].Result)
+	require.Equal(t, float64(100), res.Results[0].Frequency)
+	require.Equal(t, peerIDs, res.Results[0].Peers)
+
+	require.Equal(t, mocks.GenericUUID.String(), res.RequestID)
 }
 
 func TestAPI_Execute_HandlesErrors(t *testing.T) {
@@ -50,17 +82,16 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 		},
 	}
 
-	peerID := mocks.GenericPeerID.String()
-
 	expectedCode := codes.Error
 
-	results := map[string]execute.Result{
-		peerID: executionResult,
-	}
-
 	node := mocks.BaselineNode(t)
-	node.ExecuteFunctionFunc = func(context.Context, execute.Request) (codes.Code, map[string]execute.Result, error) {
-		return expectedCode, results, mocks.GenericError
+	node.ExecuteFunctionFunc = func(context.Context, execute.Request) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
+
+		res := execute.ResultMap{
+			mocks.GenericPeerID: executionResult,
+		}
+
+		return expectedCode, "", res, execute.Cluster{}, mocks.GenericError
 	}
 
 	srv := api.New(mocks.NoopLogger, node)
@@ -80,7 +111,11 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Result().StatusCode)
 	require.Equal(t, expectedCode, res.Code)
 
-	require.Equal(t, results[peerID].Result, res.Results[peerID].Result)
+	require.Len(t, res.Results, 1)
+	require.Equal(t, executionResult.Result, res.Results[0].Result)
+	require.Equal(t, float64(100), res.Results[0].Frequency)
+	require.Len(t, res.Results[0].Peers, 1)
+	require.Equal(t, mocks.GenericPeerID, res.Results[0].Peers[0])
 }
 
 func TestAPI_Execute_HandlesMalformedRequests(t *testing.T) {

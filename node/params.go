@@ -15,6 +15,8 @@ const (
 
 	rollCallQueueBufferSize = 1000
 
+	defaultExecutionThreshold = 0.6
+
 	syncInterval = time.Hour // How often do we recheck function installations.
 )
 

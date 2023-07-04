@@ -31,7 +31,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 		return fmt.Errorf("could not generate new request ID: %w", err)
 	}
 
-	code, result, cluster, err := n.headExecute(ctx, requestID, createExecuteRequest(req))
+	code, results, cluster, err := n.headExecute(ctx, requestID, createExecuteRequest(req))
 	if err != nil {
 		n.log.Error().
 			Err(err).
@@ -41,20 +41,16 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 			Msg("execution failed")
 	}
 
-	n.log.Info().
-		Str("request_id", requestID).
-		Str("code", code.String()).
-		Msg("execution complete")
+	n.log.Info().Str("request_id", requestID).Str("code", code.String()).Msg("execution complete")
 
-	// Cache the execution result.
-	n.executeResponses.Set(requestID, result)
+	// NOTE: Head node no longer caches execution results because it doesn't have one of its own.
 
 	// Create the execution response from the execution result.
 	res := response.Execute{
 		Type:      blockless.MessageExecuteResponse,
 		Code:      code,
 		RequestID: requestID,
-		Result:    result,
+		Results:   results,
 		Cluster:   cluster,
 	}
 
@@ -74,7 +70,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 
 // headExecute is called on the head node. The head node will publish a roll call and delegate an execution request to chosen nodes.
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
-func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request) (codes.Code, execute.Result, execute.Cluster, error) {
+func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request) (codes.Code, execute.ResultMap, execute.Cluster, error) {
 
 	// TODO: (raft) if no cluster/consensus is required - request direct execution.
 	quorum := 1
@@ -92,7 +88,7 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 
 	err := n.issueRollCall(ctx, requestID, req.FunctionID)
 	if err != nil {
-		return codes.Error, execute.Result{}, execute.Cluster{}, fmt.Errorf("could not issue roll call: %w", err)
+		return codes.Error, nil, execute.Cluster{}, fmt.Errorf("could not issue roll call: %w", err)
 	}
 
 	n.log.Info().Str("function_id", req.FunctionID).Str("request_id", requestID).Msg("roll call published")
@@ -111,7 +107,7 @@ rollCallResponseLoop:
 		case <-tctx.Done():
 
 			n.log.Warn().Str("function_id", req.FunctionID).Str("request_id", requestID).Msg("roll call timed out")
-			return codes.Timeout, execute.Result{}, execute.Cluster{}, blockless.ErrRollCallTimeout
+			return codes.Timeout, nil, execute.Cluster{}, blockless.ErrRollCallTimeout
 
 		case reply := <-n.rollCall.responses(requestID):
 
@@ -156,7 +152,7 @@ rollCallResponseLoop:
 	// Request execution from peers.
 	err = n.sendToMany(ctx, reportingPeers, reqCluster)
 	if err != nil {
-		return codes.Error, execute.Result{}, cluster, fmt.Errorf("could not send cluster formation request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)
+		return codes.Error, nil, cluster, fmt.Errorf("could not send cluster formation request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)
 	}
 
 	// Wait for cluster confirmation messages.
@@ -228,7 +224,7 @@ rollCallResponseLoop:
 
 	// Bail if not all peers joined the cluster successfully.
 	if len(bootstrapped) != quorum {
-		return codes.NotAvailable, execute.Result{}, cluster, fmt.Errorf("some peers failed to join consensus cluster (have: %d, want: %d)", len(bootstrapped), quorum)
+		return codes.NotAvailable, nil, cluster, fmt.Errorf("some peers failed to join consensus cluster (have: %d, want: %d)", len(bootstrapped), quorum)
 	}
 
 	// Phase 3. - Request execution.
@@ -244,22 +240,20 @@ rollCallResponseLoop:
 	}
 	err = n.sendToMany(ctx, reportingPeers, reqExecute)
 	if err != nil {
-		return codes.Error, execute.Result{}, cluster, fmt.Errorf("could not send execution request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)
+		return codes.Error, nil, cluster, fmt.Errorf("could not send execution request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)
 	}
 
-	n.log.Debug().Int("want", quorum).Str("request_id", requestID).Msg("waiting for an execution response")
+	n.log.Debug().Int("want", quorum).Str("request_id", requestID).Msg("waiting for execution responses")
 
 	// We're willing to wait for a limited amount of time.
-	exCtx, exCancel := context.WithTimeout(ctx, n.cfg.ExecutionTimeout)
+	exctx, exCancel := context.WithTimeout(ctx, n.cfg.ExecutionTimeout)
 	defer exCancel()
 
 	var (
 		// We're waiting for a single execution result now, as only the cluster leader will return a result.
-		result     response.Execute
-		exlock     sync.Mutex
-		leader     peer.ID
-		haveResult bool
-		wg         sync.WaitGroup
+		results execute.ResultMap = make(map[peer.ID]execute.Result)
+		reslock sync.Mutex
+		wg      sync.WaitGroup
 	)
 
 	wg.Add(len(reportingPeers))
@@ -270,9 +264,8 @@ rollCallResponseLoop:
 
 		go func() {
 			defer wg.Done()
-
 			key := executionResultKey(requestID, rp)
-			res, ok := n.executeResponses.WaitFor(exCtx, key)
+			res, ok := n.executeResponses.WaitFor(exctx, key)
 			if !ok {
 				return
 			}
@@ -281,28 +274,39 @@ rollCallResponseLoop:
 
 			er := res.(response.Execute)
 
-			exlock.Lock()
-			defer exlock.Unlock()
+			exres, ok := er.Results[rp]
+			if !ok {
+				return
+			}
 
-			haveResult = true
-			result = er
-			leader = rp
-
-			// Cancel goroutines waiting for other peers.
-			exCancel()
+			reslock.Lock()
+			defer reslock.Unlock()
+			results[rp] = exres
 		}()
 	}
 
 	wg.Wait()
 
-	// We should receive an execution result back.
-	if !haveResult {
-		return codes.NotAvailable, execute.Result{}, cluster, fmt.Errorf("no execution results received")
+	n.log.Info().Str("request_id", requestID).Int("cluster_size", len(reportingPeers)).Int("responded", len(results)).Msg("received execution responses")
+
+	// How many results do we have, and how many do we expect.
+	respondRatio := float64(len(results)) / float64(len(reportingPeers))
+	threshold := determineThreshold(req)
+
+	retcode := codes.OK
+	if respondRatio < threshold {
+		n.log.Warn().Str("request_id", requestID).Float64("expected", threshold).Float64("have", respondRatio).Msg("threshold condition not met")
+		retcode = codes.PartialContent
 	}
 
-	n.log.Info().Str("request_id", requestID).Msg("received execution response")
+	return retcode, results, cluster, nil
+}
 
-	cluster.Main = leader
+func determineThreshold(req execute.Request) float64 {
 
-	return result.Code, result.Result, cluster, nil
+	if req.Config.Threshold > 0 && req.Config.Threshold <= 1 {
+		return req.Config.Threshold
+	}
+
+	return defaultExecutionThreshold
 }

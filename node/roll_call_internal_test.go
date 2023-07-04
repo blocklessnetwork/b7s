@@ -20,21 +20,17 @@ import (
 
 func TestNode_RollCall(t *testing.T) {
 
-	var (
-		rollCallReq = request.RollCall{
+	t.Run("head node handles roll call", func(t *testing.T) {
+		t.Parallel()
+
+		rollCallReq := request.RollCall{
 			Type:       blockless.MessageRollCall,
 			FunctionID: "dummy-function-id",
 			RequestID:  mocks.GenericUUID.String(),
 		}
-	)
-
-	payload := serialize(t, rollCallReq)
-
-	t.Run("head node handles roll call", func(t *testing.T) {
-		t.Parallel()
 
 		node := createNode(t, blockless.HeadNode)
-		err := node.processRollCall(context.Background(), mocks.GenericPeerID, payload)
+		err := node.processRollCall(context.Background(), mocks.GenericPeerID, serialize(t, rollCallReq))
 		require.NoError(t, err)
 	})
 
@@ -45,6 +41,13 @@ func TestNode_RollCall(t *testing.T) {
 
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
+
+		rollCallReq := request.RollCall{
+			Type:       blockless.MessageRollCall,
+			FunctionID: "dummy-function-id",
+			RequestID:  mocks.GenericUUID.String(),
+			Origin:     receiver.ID(),
+		}
 
 		hostAddNewPeer(t, node.host, receiver)
 
@@ -68,7 +71,7 @@ func TestNode_RollCall(t *testing.T) {
 			require.Equal(t, codes.Accepted, received.Code)
 		})
 
-		err = node.processRollCall(context.Background(), receiver.ID(), payload)
+		err = node.processRollCall(context.Background(), receiver.ID(), serialize(t, rollCallReq))
 		require.NoError(t, err)
 
 		wg.Wait()
@@ -80,6 +83,13 @@ func TestNode_RollCall(t *testing.T) {
 
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
+
+		rollCallReq := request.RollCall{
+			Type:       blockless.MessageRollCall,
+			FunctionID: "dummy-function-id",
+			RequestID:  mocks.GenericUUID.String(),
+			Origin:     receiver.ID(),
+		}
 
 		hostAddNewPeer(t, node.host, receiver)
 
@@ -110,7 +120,7 @@ func TestNode_RollCall(t *testing.T) {
 			require.Equal(t, codes.Error, received.Code)
 		})
 
-		err = node.processRollCall(context.Background(), receiver.ID(), payload)
+		err = node.processRollCall(context.Background(), receiver.ID(), serialize(t, rollCallReq))
 		require.Error(t, err)
 
 		wg.Wait()
@@ -122,6 +132,13 @@ func TestNode_RollCall(t *testing.T) {
 
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
+
+		rollCallReq := request.RollCall{
+			Type:       blockless.MessageRollCall,
+			FunctionID: "dummy-function-id",
+			RequestID:  mocks.GenericUUID.String(),
+			Origin:     receiver.ID(),
+		}
 
 		hostAddNewPeer(t, node.host, receiver)
 
@@ -155,7 +172,7 @@ func TestNode_RollCall(t *testing.T) {
 			require.Equal(t, codes.Accepted, received.Code)
 		})
 
-		err = node.processRollCall(context.Background(), receiver.ID(), payload)
+		err = node.processRollCall(context.Background(), receiver.ID(), serialize(t, rollCallReq))
 		require.NoError(t, err)
 
 		wg.Wait()
@@ -167,6 +184,13 @@ func TestNode_RollCall(t *testing.T) {
 
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
+
+		rollCallReq := request.RollCall{
+			Type:       blockless.MessageRollCall,
+			FunctionID: "dummy-function-id",
+			RequestID:  mocks.GenericUUID.String(),
+			Origin:     receiver.ID(),
+		}
 
 		hostAddNewPeer(t, node.host, receiver)
 
@@ -200,7 +224,7 @@ func TestNode_RollCall(t *testing.T) {
 			require.Equal(t, codes.Error, received.Code)
 		})
 
-		err = node.processRollCall(context.Background(), receiver.ID(), payload)
+		err = node.processRollCall(context.Background(), receiver.ID(), serialize(t, rollCallReq))
 		require.Error(t, err)
 
 		wg.Wait()

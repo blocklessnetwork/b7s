@@ -32,14 +32,9 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 
 	// NOTE: In case of an error, we do not return early from this function.
 	// Instead, we send the response back to the caller, whatever it may be.
-	code, result, err := n.workerExecute(ctx, requestID, createExecuteRequest(req))
+	code, result, err := n.workerExecute(ctx, requestID, createExecuteRequest(req), req.From)
 	if err != nil {
-		n.log.Error().
-			Err(err).
-			Str("peer", from.String()).
-			Str("function_id", req.FunctionID).
-			Str("request_id", requestID).
-			Msg("execution failed")
+		n.log.Error().Err(err).Str("peer", from.String()).Str("function_id", req.FunctionID).Str("request_id", requestID).Msg("execution failed")
 	}
 
 	// There's little benefit to sending a response just to say we didn't execute anything.
@@ -59,7 +54,9 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 		Type:      blockless.MessageExecuteResponse,
 		Code:      code,
 		RequestID: requestID,
-		Result:    result,
+		Results: execute.ResultMap{
+			n.host.ID(): result,
+		},
 	}
 
 	// Send the response, whatever it may be (success or failure).
@@ -72,7 +69,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 }
 
 // workerExecute is called on the worker node to use its executor component to invoke the function.
-func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.Request) (codes.Code, execute.Result, error) {
+func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.Request, from peer.ID) (codes.Code, execute.Result, error) {
 
 	// Check if we have function in store.
 	functionInstalled, err := n.fstore.Installed(req.FunctionID)
@@ -112,6 +109,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 
 	fsmReq := fsmLogEntry{
 		RequestID: requestID,
+		Origin:    from,
 		Execute:   req,
 	}
 

@@ -55,12 +55,12 @@ func (n *Node) ValidateConfig() error {
 		return errors.New("topic cannot be empty")
 	}
 
-	if !filepath.IsAbs(n.cfg.Workspace) {
-		return errors.New("workspace must be an absolute path")
-	}
-
 	// Worker specific validation.
 	if n.isWorker() {
+
+		if !filepath.IsAbs(n.cfg.Workspace) {
+			return errors.New("workspace must be an absolute path")
+		}
 
 		// We require an execution component.
 		if n.cfg.Execute == nil {

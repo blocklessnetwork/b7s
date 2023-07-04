@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/hashicorp/raft"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 
 	"github.com/blocklessnetworking/b7s/models/execute"
@@ -13,6 +14,7 @@ import (
 
 type fsmLogEntry struct {
 	RequestID string          `json:"request_id,omitempty"`
+	Origin    peer.ID         `json:"origin,omitempty"`
 	Execute   execute.Request `json:"execute,omitempty"`
 }
 
