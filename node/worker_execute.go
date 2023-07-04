@@ -45,7 +45,6 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 
 	n.log.Info().Str("request_id", requestID).Str("code", code.String()).Msg("execution complete")
 
-	// TODO: (raft) see if we should cache here or before.
 	// Cache the execution result.
 	n.executeResponses.Set(requestID, result)
 

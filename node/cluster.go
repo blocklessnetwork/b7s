@@ -31,7 +31,6 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []b
 		return fmt.Errorf("could not create raft node: %w", err)
 	}
 
-	// TODO: (raft) Stopgap, have this done correctly.
 	// Register an observer to monitor leadership changes. More precisely,
 	// wait on the first leader election, so we know when the cluster is operational.
 
@@ -41,7 +40,6 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []b
 		return ok
 	})
 
-	// TODO: (raft) - consider making this synchronous
 	go func() {
 		// Wait on leadership observation.
 		obs := <-obsCh

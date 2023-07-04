@@ -29,8 +29,13 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	}
 	req.From = from
 
-	n.log.Debug().Str("cid", req.FunctionID).Str("request_id", req.RequestID).Str("origin", req.Origin.String()).
-		Msg("received roll call request")
+	n.log.Debug().Str("cid", req.FunctionID).Str("request_id", req.RequestID).Str("origin", req.Origin.String()).Msg("received roll call request")
+
+	// TODO: (raft) temporary measure - at the moment we don't support multiple raft clusters on the same node at the same time.
+	if req.ConsensusNeeded && len(n.clusters) > 0 {
+		n.log.Warn().Str("request_id", req.RequestID).Msg("cannot respond to a roll call as we're already participating in one raft cluster")
+		return nil
+	}
 
 	// Base response to return.
 	res := response.RollCall{
@@ -86,14 +91,15 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 
 // issueRollCall will create a roll call request for executing the given function.
 // On successful issuance of the roll call request, we return the ID of the issued request.
-func (n *Node) issueRollCall(ctx context.Context, requestID string, functionID string) error {
+func (n *Node) issueRollCall(ctx context.Context, requestID string, functionID string, consensusNeeded bool) error {
 
 	// Create a roll call request.
 	rollCall := request.RollCall{
-		Type:       blockless.MessageRollCall,
-		Origin:     n.host.ID(),
-		FunctionID: functionID,
-		RequestID:  requestID,
+		Type:            blockless.MessageRollCall,
+		Origin:          n.host.ID(),
+		FunctionID:      functionID,
+		RequestID:       requestID,
+		ConsensusNeeded: consensusNeeded,
 	}
 
 	// Publish the mssage.

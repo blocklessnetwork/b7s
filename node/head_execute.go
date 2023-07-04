@@ -86,7 +86,8 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 	n.rollCall.create(requestID)
 	defer n.rollCall.remove(requestID)
 
-	err := n.issueRollCall(ctx, requestID, req.FunctionID)
+	consensusNeeded := quorum > 1
+	err := n.issueRollCall(ctx, requestID, req.FunctionID, consensusNeeded)
 	if err != nil {
 		return codes.Error, nil, execute.Cluster{}, fmt.Errorf("could not issue roll call: %w", err)
 	}

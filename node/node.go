@@ -37,7 +37,6 @@ type Node struct {
 	rollCall *rollCallQueue
 
 	// clusters maps request ID to the raft cluster the node belongs to.
-	// TODO: (raft) think when the raft cluster should be disbanded and this removed.
 	clusters map[string]*raftHandler
 
 	// clusterLock is used to synchronize access to the `clusters` map.
