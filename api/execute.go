@@ -10,6 +10,7 @@ import (
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetworking/b7s/node/aggregate"
 )
 
 // ExecuteRequest describes the payload for the REST API request for function execution.
@@ -17,10 +18,11 @@ type ExecuteRequest execute.Request
 
 // ExecuteResponse describes the REST API response for function execution.
 type ExecuteResponse struct {
-	Code      codes.Code               `json:"code,omitempty"`
-	RequestID string                   `json:"request_id,omitempty"`
-	Message   string                   `json:"message,omitempty"`
-	Results   map[string]ExecuteResult `json:"results,omitempty"`
+	Code      codes.Code        `json:"code,omitempty"`
+	RequestID string            `json:"request_id,omitempty"`
+	Message   string            `json:"message,omitempty"`
+	Results   aggregate.Results `json:"results,omitempty"`
+	Cluster   execute.Cluster   `json:"cluster,omitempty"`
 }
 
 // ExecuteResult represents the API representation of a single execution response.
@@ -41,40 +43,18 @@ func (a *API) Execute(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("could not unpack request: %w", err))
 	}
 
-	// TODO: Check - We perhaps want to return the request ID and not wait for the execution, right?
-	// It's probable that it will time out anyway, right?
-
-	// Get the execution results.
-	code, results, err := a.node.ExecuteFunction(ctx.Request().Context(), execute.Request(req))
+	// Get the execution result.
+	code, id, results, cluster, err := a.node.ExecuteFunction(ctx.Request().Context(), execute.Request(req))
 	if err != nil {
-		a.log.Warn().
-			Str("function_id", req.FunctionID).
-			Err(err).
-			Msg("node failed to execute function")
-	}
-
-	requestID := ""
-	exResults := make(map[string]ExecuteResult)
-
-	for id, er := range results {
-
-		// Get the requestID from any of the individual results.
-		if requestID == "" {
-			requestID = er.RequestID
-		}
-
-		exResults[id] = ExecuteResult{
-			Code:      er.Code,
-			Result:    er.Result,
-			RequestID: er.RequestID,
-		}
+		a.log.Warn().Str("function_id", req.FunctionID).Err(err).Msg("node failed to execute function")
 	}
 
 	// Transform the node response format to the one returned by the API.
 	res := ExecuteResponse{
 		Code:      code,
-		RequestID: requestID,
-		Results:   exResults,
+		RequestID: id,
+		Results:   aggregate.Aggregate(results),
+		Cluster:   cluster,
 	}
 
 	// Communicate the reason for failure in these cases.

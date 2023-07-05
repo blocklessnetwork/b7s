@@ -18,10 +18,15 @@ type Parameter struct {
 type Config struct {
 	Runtime           RuntimeConfig     `json:"runtime,omitempty"`
 	Environment       []EnvVar          `json:"env_vars,omitempty"`
-	NodeCount         int               `json:"number_of_nodes,omitempty"`
 	Stdin             *string           `json:"stdin,omitempty"`
 	Permissions       []string          `json:"permissions,omitempty"`
 	ResultAggregation ResultAggregation `json:"result_aggregation,omitempty"`
+
+	// NodeCount specifies how many nodes should execute this request.
+	NodeCount int `json:"number_of_nodes,omitempty"`
+
+	// Threshold (percentage) defines how many nodes should respond with a result to consider this execution successful.
+	Threshold float64 `json:"threshold,omitempty"`
 }
 
 // EnvVar represents the name and value of the environment variables set for the execution.

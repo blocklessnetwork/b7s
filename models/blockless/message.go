@@ -26,4 +26,7 @@ const (
 	MessageExecuteResponse         = "MsgExecuteResponse"
 	MessageInstallFunction         = "MsgInstallFunction"
 	MessageInstallFunctionResponse = "MsgInstallFunctionResponse"
+	MessageFormCluster             = "MsgFormCluster"
+	MessageFormClusterResponse     = "MsgFormClusterResponse"
+	MessageDisbandCluster          = "MsgDisbandCluster"
 )

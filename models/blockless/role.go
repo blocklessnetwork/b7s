@@ -31,3 +31,12 @@ func (n NodeRole) String() string {
 		return "invalid"
 	}
 }
+
+func (n NodeRole) Valid() bool {
+	switch n {
+	case HeadNode, WorkerNode:
+		return true
+	default:
+		return false
+	}
+}

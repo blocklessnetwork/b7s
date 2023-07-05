@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 
@@ -35,8 +34,16 @@ type Node struct {
 	sema  chan struct{}
 	wg    *sync.WaitGroup
 
-	rollCall         *rollCallQueue
-	executeResponses *waitmap.WaitMap
+	rollCall *rollCallQueue
+
+	// clusters maps request ID to the raft cluster the node belongs to.
+	clusters map[string]*raftHandler
+
+	// clusterLock is used to synchronize access to the `clusters` map.
+	clusterLock sync.RWMutex
+
+	executeResponses   *waitmap.WaitMap
+	consensusResponses *waitmap.WaitMap
 }
 
 // New creates a new Node.
@@ -48,16 +55,7 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		option(&cfg)
 	}
 
-	// If we're a head node, we don't have an executor.
-	if cfg.Role == blockless.HeadNode && cfg.Execute != nil {
-		return nil, errors.New("head node does not support execution")
-	}
-	// If we're a worker node, we require an executor.
-	if cfg.Role == blockless.WorkerNode && cfg.Execute == nil {
-		return nil, errors.New("worker node requires an executor component")
-	}
-
-	n := Node{
+	n := &Node{
 		cfg: cfg,
 
 		log:      log.With().Str("component", "node").Logger(),
@@ -68,15 +66,22 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		wg:   &sync.WaitGroup{},
 		sema: make(chan struct{}, cfg.Concurrency),
 
-		rollCall:         newQueue(rollCallQueueBufferSize),
-		executeResponses: waitmap.New(),
+		rollCall:           newQueue(rollCallQueueBufferSize),
+		clusters:           make(map[string]*raftHandler),
+		executeResponses:   waitmap.New(),
+		consensusResponses: waitmap.New(),
+	}
+
+	err := n.ValidateConfig()
+	if err != nil {
+		return nil, fmt.Errorf("node configuration is not valid: %w", err)
 	}
 
 	// Create a notifiee with a backing peerstore.
 	cn := newConnectionNotifee(log, peerStore)
 	host.Network().Notify(cn)
 
-	return &n, nil
+	return n, nil
 }
 
 // ID returns the ID of this node.
@@ -85,13 +90,11 @@ func (n *Node) ID() string {
 }
 
 // getHandler returns the appropriate handler function for the given message.
-func (n Node) getHandler(msgType string) HandlerFunc {
+func (n *Node) getHandler(msgType string) HandlerFunc {
 
 	switch msgType {
 	case blockless.MessageHealthCheck:
 		return n.processHealthCheck
-	case blockless.MessageExecute:
-		return n.processExecute
 	case blockless.MessageExecuteResponse:
 		return n.processExecuteResponse
 	case blockless.MessageRollCall:
@@ -102,6 +105,15 @@ func (n Node) getHandler(msgType string) HandlerFunc {
 		return n.processInstallFunction
 	case blockless.MessageInstallFunctionResponse:
 		return n.processInstallFunctionResponse
+	case blockless.MessageFormCluster:
+		return n.processFormCluster
+	case blockless.MessageFormClusterResponse:
+		return n.processFormClusterResponse
+	case blockless.MessageDisbandCluster:
+		return n.processDisbandCluster
+
+	case blockless.MessageExecute:
+		return n.processExecute
 
 	default:
 		return func(_ context.Context, from peer.ID, _ []byte) error {

@@ -17,10 +17,7 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte)
 		return fmt.Errorf("could not determine message type: %w", err)
 	}
 
-	n.log.Debug().
-		Str("peer", from.String()).
-		Str("message", msgType).
-		Msg("received message from peer")
+	n.log.Trace().Str("peer", from.String()).Str("message", msgType).Msg("received message from peer")
 
 	// Get the registered handler for the message.
 	handler := n.getHandler(msgType)

@@ -167,6 +167,7 @@ func run() int {
 		}
 
 		opts = append(opts, node.WithExecutor(executor))
+		opts = append(opts, node.WithWorkspace(cfg.Workspace))
 	}
 
 	// Open the pebble function database.

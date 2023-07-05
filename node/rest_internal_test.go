@@ -7,45 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/models/codes"
-	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
 
-func TestNode_RestExecute(t *testing.T) {
-
-	var (
-		request = mocks.GenericExecutionRequest
-
-		result = execute.Result{
-			Code: codes.OK,
-			Result: execute.RuntimeOutput{
-				Stdout:   "executor-output",
-				Stderr:   "executor stderr log",
-				ExitCode: 101,
-			},
-		}
-	)
-
+func TestNode_RestExecuteNotSupportedOnWorker(t *testing.T) {
 	node := createNode(t, blockless.WorkerNode)
-
-	executor := mocks.BaselineExecutor(t)
-	executor.ExecFunctionFunc = func(requestID string, req execute.Request) (execute.Result, error) {
-		return result, nil
-	}
-	node.executor = executor
-
-	code, results, err := node.ExecuteFunction(context.Background(), request)
-	require.NoError(t, err)
-
-	require.Equal(t, result.Code, code)
-	require.Len(t, results, 1)
-
-	// Worker node should provide only its own result.
-	nodeID := node.host.ID().String()
-	res, ok := results[nodeID]
-	require.True(t, ok)
-	require.Equal(t, result, res)
+	_, _, _, _, err := node.ExecuteFunction(context.Background(), mocks.GenericExecutionRequest)
+	require.Error(t, err)
 }
 
 func TestNode_InstallMessageFromCID(t *testing.T) {
