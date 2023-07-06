@@ -1,4 +1,4 @@
-package raft
+package hclog
 
 import (
 	"io"
@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	nameField = "name"
+	nameField = "module"
 )
 
 // Logger is a zerolog logger that fullfils the `go-hclog` Logger interface.
@@ -174,9 +174,22 @@ func (l *Logger) ImpliedArgs() []interface{} {
 	return nil
 }
 
-// Named returns a named logger. We don't support chained naming, so our behavior is basically the one of ResetNamed.
+// Named returns a named logger.
 func (l *Logger) Named(name string) hclog.Logger {
-	return l.ResetNamed(name)
+
+	newLoggerName := name
+	current := l.Name()
+	if current != "" {
+		// If the current logger already has a name, keep it as a prefix.
+		newLoggerName = current + "." + name
+	}
+
+	logger := New(
+		l.logger.With().Str(nameField, newLoggerName).Logger(),
+	)
+	logger.name = newLoggerName
+
+	return logger
 }
 
 // Named returns a named logger.
