@@ -180,7 +180,7 @@ rollCallResponseLoop:
 				n.log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Str("request_id", requestID).Msg("could not send cluster disband request")
 			}
 
-			n.log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Str("request_id", requestID).Msg("sent cluster disband request")
+			n.log.Info().Err(err).Strs("peers", peerIDList(reportingPeers)).Str("request_id", requestID).Msg("sent cluster disband request")
 		}()
 	}()
 

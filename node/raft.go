@@ -13,6 +13,7 @@ import (
 
 	libp2praft "github.com/libp2p/go-libp2p-raft"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/protocol"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/execute"
@@ -35,8 +36,10 @@ func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 		return nil, fmt.Errorf("could not create consensus work directory: %w", err)
 	}
 
+	protocolID := fmt.Sprintf("%s/%s", libp2praft.RaftProtocol, requestID)
+
 	// Transport layer for raft communication.
-	transport, err := libp2praft.NewLibp2pTransport(n.host, consensusTransportTimeout)
+	transport, err := libp2praft.NewLibp2pTransportWithProtocol(n.host, consensusTransportTimeout, protocol.ID(protocolID))
 	if err != nil {
 		return nil, fmt.Errorf("could not create libp2p transport: %w", err)
 	}

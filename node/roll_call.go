@@ -31,12 +31,6 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 
 	n.log.Debug().Str("cid", req.FunctionID).Str("request_id", req.RequestID).Str("origin", req.Origin.String()).Msg("received roll call request")
 
-	// TODO: (raft) temporary measure - at the moment we don't support multiple raft clusters on the same node at the same time.
-	if req.ConsensusNeeded && len(n.clusters) > 0 {
-		n.log.Warn().Str("request_id", req.RequestID).Msg("cannot respond to a roll call as we're already participating in one raft cluster")
-		return nil
-	}
-
 	// Base response to return.
 	res := response.RollCall{
 		Type:       blockless.MessageRollCallResponse,
