@@ -153,7 +153,8 @@ func bootstrapCluster(raftHandler *raftHandler, peerIDs []peer.ID) error {
 
 func (n *Node) shutdownCluster(requestID string) error {
 
-	n.log.Info().Str("request_id", requestID).Msg("shutting down cluster")
+	log := n.log.With().Str("request", requestID).Logger()
+	log.Info().Msg("shutting down cluster")
 
 	n.clusterLock.RLock()
 	raftHandler, ok := n.clusters[requestID]
@@ -173,13 +174,13 @@ func (n *Node) shutdownCluster(requestID string) error {
 	var retErr error
 	err = raftHandler.log.Close()
 	if err != nil {
-		n.log.Error().Err(err).Str("request_id", requestID).Msg("could not close log store")
+		log.Error().Err(err).Msg("could not close log store")
 		retErr = fmt.Errorf("could not close raft database")
 	}
 
 	err = raftHandler.stable.Close()
 	if err != nil {
-		n.log.Error().Err(err).Str("request_id", requestID).Msg("could not close stable store")
+		log.Error().Err(err).Msg("could not close stable store")
 		retErr = fmt.Errorf("could not close raft database")
 	}
 
@@ -187,7 +188,7 @@ func (n *Node) shutdownCluster(requestID string) error {
 	dir := n.consensusDir(requestID)
 	err = os.RemoveAll(dir)
 	if err != nil {
-		n.log.Error().Err(err).Str("request_id", requestID).Str("path", dir).Msg("could not delete consensus dir")
+		log.Error().Err(err).Str("path", dir).Msg("could not delete consensus dir")
 		retErr = fmt.Errorf("could not delete consensus directory")
 	}
 

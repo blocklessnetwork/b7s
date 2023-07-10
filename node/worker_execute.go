@@ -30,20 +30,22 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 		return fmt.Errorf("request ID must be set by the head node")
 	}
 
+	log := n.log.With().Str("request", req.RequestID).Str("function", req.FunctionID).Logger()
+
 	// NOTE: In case of an error, we do not return early from this function.
 	// Instead, we send the response back to the caller, whatever it may be.
 	code, result, err := n.workerExecute(ctx, requestID, createExecuteRequest(req), req.From)
 	if err != nil {
-		n.log.Error().Err(err).Str("peer", from.String()).Str("function_id", req.FunctionID).Str("request_id", requestID).Msg("execution failed")
+		log.Error().Err(err).Str("peer", from.String()).Msg("execution failed")
 	}
 
 	// There's little benefit to sending a response just to say we didn't execute anything.
 	if code == codes.NoContent {
-		n.log.Info().Str("request_id", requestID).Msg("no execution done - stopping")
+		log.Info().Msg("no execution done - stopping")
 		return nil
 	}
 
-	n.log.Info().Str("request_id", requestID).Str("code", code.String()).Msg("execution complete")
+	log.Info().Str("code", code.String()).Msg("execution complete")
 
 	// Cache the execution result.
 	n.executeResponses.Set(requestID, result)
@@ -95,16 +97,18 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 		return res.Code, res, nil
 	}
 
-	n.log.Info().Str("request_id", requestID).Msg("execution request to be executed as part of a cluster")
+	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Logger()
+
+	log.Info().Msg("execution request to be executed as part of a cluster")
 
 	if raftNode.State() != raft.Leader {
 		_, id := raftNode.LeaderWithID()
 
-		n.log.Info().Str("request_id", requestID).Str("leader", string(id)).Msg("we are not the cluster leader - dropping the request")
+		log.Info().Str("leader", string(id)).Msg("we are not the cluster leader - dropping the request")
 		return codes.NoContent, execute.Result{}, nil
 	}
 
-	n.log.Info().Str("request_id", requestID).Msg("we are the cluster leader, executing the request")
+	log.Info().Msg("we are the cluster leader, executing the request")
 
 	fsmReq := fsmLogEntry{
 		RequestID: requestID,
@@ -124,7 +128,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 		return codes.Error, execute.Result{}, fmt.Errorf("could not apply raft log: %w", err)
 	}
 
-	n.log.Info().Str("request_id", requestID).Msg("node applied raft log")
+	log.Info().Msg("node applied raft log")
 
 	// Get execution result.
 	response := future.Response()
@@ -138,7 +142,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 		return codes.Error, execute.Result{}, fmt.Errorf("unexpected FSM response format: %T", response)
 	}
 
-	n.log.Info().Str("request_id", requestID).Msg("cluster leader executed the request")
+	log.Info().Msg("cluster leader executed the request")
 
 	return codes.OK, value, nil
 }

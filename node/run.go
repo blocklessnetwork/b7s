@@ -33,9 +33,7 @@ func (n *Node) Run(ctx context.Context) error {
 	go func() {
 		err = n.host.DiscoverPeers(ctx, n.cfg.Topic)
 		if err != nil {
-			n.log.Error().
-				Err(err).
-				Msg("could not discover peers")
+			n.log.Error().Err(err).Msg("could not discover peers")
 		}
 	}()
 
@@ -45,9 +43,7 @@ func (n *Node) Run(ctx context.Context) error {
 	// Start the function sync in the background to periodically check functions.
 	go n.runSyncLoop(ctx)
 
-	n.log.Info().
-		Uint("concurrency", n.cfg.Concurrency).
-		Msg("starting node main loop")
+	n.log.Info().Uint("concurrency", n.cfg.Concurrency).Msg("starting node main loop")
 
 	// Message processing loop.
 	for {
@@ -65,7 +61,7 @@ func (n *Node) Run(ctx context.Context) error {
 			continue
 		}
 
-		n.log.Trace().Str("message_id", msg.ID).Str("peer_id", msg.ReceivedFrom.String()).Msg("received message")
+		n.log.Trace().Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("received message")
 
 		// Try to get a slot for processing the request.
 		n.sema <- struct{}{}
@@ -106,11 +102,11 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 			return
 		}
 
-		n.log.Debug().Str("peer_id", from.String()).Msg("received direct message")
+		n.log.Debug().Str("peer", from.String()).Msg("received direct message")
 
 		err = n.processMessage(ctx, from, msg)
 		if err != nil {
-			n.log.Error().Err(err).Str("peer_id", from.String()).Msg("could not process direct message")
+			n.log.Error().Err(err).Str("peer", from.String()).Msg("could not process direct message")
 		}
 	})
 }

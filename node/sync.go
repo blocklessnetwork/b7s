@@ -19,7 +19,7 @@ func (n *Node) syncFunctions() {
 			continue
 		}
 
-		n.log.Debug().Str("cid", cid).Msg("function sync ok")
+		n.log.Debug().Str("function", cid).Msg("function sync ok")
 	}
 }
 

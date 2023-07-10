@@ -16,9 +16,7 @@ import (
 type HandlerFunc func(context.Context, peer.ID, []byte) error
 
 func (n *Node) processHealthCheck(ctx context.Context, from peer.ID, payload []byte) error {
-	n.log.Trace().
-		Str("from", from.String()).
-		Msg("peer health check received")
+	n.log.Trace().Str("from", from.String()).Msg("peer health check received")
 	return nil
 }
 
@@ -32,30 +30,24 @@ func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, payloa
 	}
 	res.From = from
 
-	n.log.Debug().
-		Str("peer", from.String()).
-		Str("request_id", res.RequestID).
-		Msg("processing peers roll call response")
+	log := n.log.With().Str("request", res.RequestID).Str("peer", from.String()).Logger()
+
+	log.Debug().Msg("processing peers roll call response")
 
 	// Check if the response is adequate.
 	if res.Code != codes.Accepted {
-		n.log.Info().
-			Str("peer", from.String()).
-			Str("code", res.Code.String()).
-			Str("request_id", res.RequestID).
-			Msg("skipping inadequate roll call response - unwanted code")
-
+		log.Info().Str("code", res.Code.String()).Msg("skipping inadequate roll call response - unwanted code")
 		return nil
 	}
 
 	// Check if there's an active roll call already.
 	exists := n.rollCall.exists(res.RequestID)
 	if !exists {
-		n.log.Info().Str("peer", from.String()).Str("request_id", res.RequestID).Msg("no pending roll call for the given request, dropping response")
+		log.Info().Msg("no pending roll call for the given request, dropping response")
 		return nil
 	}
 
-	n.log.Info().Str("peer", from.String()).Str("request_id", res.RequestID).Msg("recording roll call response")
+	log.Info().Msg("recording roll call response")
 
 	// Record the response.
 	n.rollCall.add(res.RequestID, res)
