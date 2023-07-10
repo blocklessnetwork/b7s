@@ -7,13 +7,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/raft"
 	boltdb "github.com/hashicorp/raft-boltdb/v2"
 
 	libp2praft "github.com/libp2p/go-libp2p-raft"
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/log/hclog"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/models/response"
@@ -87,8 +87,12 @@ func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 
 	fsm := newFsmExecutor(n.log, n.executor, cacheFn, sendFn)
 
-	raftCfg := n.getRaftConfig(n.host.ID().String())
-	raftNode, err := raft.NewRaft(&raftCfg, fsm, logStore, stableStore, snapshot, transport)
+	cfg := n.getRaftConfig(n.host.ID().String())
+
+	// Tag the logger with the cluster ID (request ID).
+	cfg.Logger = cfg.Logger.With("cluster", requestID)
+
+	raftNode, err := raft.NewRaft(&cfg, fsm, logStore, stableStore, snapshot, transport)
 	if err != nil {
 		return nil, fmt.Errorf("could not create a raft node: %w", err)
 	}
@@ -103,18 +107,10 @@ func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 }
 
 func (n *Node) getRaftConfig(nodeID string) raft.Config {
-	// TODO: (raft): use zerolog here, not a random hclog instance, even if it is JSON.
-	logOpts := hclog.LoggerOptions{
-		JSONFormat: true,
-		Level:      hclog.Debug,
-		Output:     os.Stderr,
-		Name:       "raft",
-	}
-	raftLogger := hclog.New(&logOpts)
 
 	cfg := raft.DefaultConfig()
 	cfg.LocalID = raft.ServerID(nodeID)
-	cfg.Logger = raftLogger
+	cfg.Logger = hclog.New(n.log).Named("raft")
 	cfg.HeartbeatTimeout = n.cfg.ConsensusHeartbeatTimeout
 	cfg.ElectionTimeout = n.cfg.ConsensusElectionTimeout
 	cfg.LeaderLeaseTimeout = n.cfg.ConsensusLeaderLease
