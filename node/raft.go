@@ -36,10 +36,10 @@ func (n *Node) newRaftHandler(requestID string) (*raftHandler, error) {
 		return nil, fmt.Errorf("could not create consensus work directory: %w", err)
 	}
 
-	protocolID := fmt.Sprintf("%s/%s", libp2praft.RaftProtocol, requestID)
+	protocolID := getProtocolID(requestID)
 
 	// Transport layer for raft communication.
-	transport, err := libp2praft.NewLibp2pTransportWithProtocol(n.host, consensusTransportTimeout, protocol.ID(protocolID))
+	transport, err := libp2praft.NewLibp2pTransportWithProtocol(n.host, consensusTransportTimeout, protocolID)
 	if err != nil {
 		return nil, fmt.Errorf("could not create libp2p transport: %w", err)
 	}
@@ -207,4 +207,8 @@ func (n *Node) shutdownCluster(requestID string) error {
 
 func (n *Node) consensusDir(requestID string) string {
 	return filepath.Join(n.cfg.Workspace, defaultConsensusDirName, requestID)
+}
+
+func getProtocolID(requestID string) protocol.ID {
+	return protocol.ID(fmt.Sprintf("%s/b7s/%s", libp2praft.RaftProtocol, requestID))
 }
