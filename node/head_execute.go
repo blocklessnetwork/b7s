@@ -135,7 +135,7 @@ rollCallResponseLoop:
 		}
 	}
 
-	n.log.Info().Strs("peers", peerIDList(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
+	log.Info().Strs("peers", peerIDList(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
 
 	cluster := execute.Cluster{
 		Peers: reportingPeers,
@@ -178,6 +178,7 @@ rollCallResponseLoop:
 			err = n.sendToMany(ctx, reportingPeers, msgDisband)
 			if err != nil {
 				log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Msg("could not send cluster disband request")
+				return
 			}
 
 			log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Msg("sent cluster disband request")
@@ -206,7 +207,7 @@ rollCallResponseLoop:
 				return
 			}
 
-			log.Debug().Str("peer", rp.String()).Msg("accounted consensus response from roll called peer")
+			log.Info().Str("peer", rp.String()).Msg("accounted consensus response from roll called peer")
 
 			fc := res.(response.FormCluster)
 			if fc.Code != codes.OK {
@@ -271,7 +272,7 @@ rollCallResponseLoop:
 				return
 			}
 
-			log.Debug().Str("peer", rp.String()).Msg("accounted execution response from peer")
+			log.Info().Str("peer", rp.String()).Msg("accounted execution response from peer")
 
 			er := res.(response.Execute)
 
