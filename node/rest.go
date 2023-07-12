@@ -25,7 +25,7 @@ func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (codes.
 
 	code, results, cluster, err := n.headExecute(ctx, requestID, req)
 	if err != nil {
-		n.log.Error().Str("request_id", requestID).Err(err).Msg("execution failed")
+		n.log.Error().Str("request", requestID).Err(err).Msg("execution failed")
 	}
 
 	return code, requestID, results, cluster, nil
@@ -51,10 +51,7 @@ func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid strin
 		req = createInstallMessageFromCID(cid)
 	}
 
-	n.log.Debug().
-		Str("url", req.ManifestURL).
-		Str("cid", req.CID).
-		Msg("publishing function install message")
+	n.log.Debug().Str("url", req.ManifestURL).Str("cid", req.CID).Msg("publishing function install message")
 
 	err := n.publish(ctx, req)
 	if err != nil {

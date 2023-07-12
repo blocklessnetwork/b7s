@@ -77,9 +77,5 @@ func (n *Node) publish(ctx context.Context, msg interface{}) error {
 
 func (n *Node) haveConnection(peer peer.ID) bool {
 	connections := n.host.Network().ConnsToPeer(peer)
-	if len(connections) > 0 {
-		return true
-	}
-
-	return false
+	return len(connections) > 0
 }

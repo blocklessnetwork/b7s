@@ -31,17 +31,14 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 		return fmt.Errorf("could not generate new request ID: %w", err)
 	}
 
+	log := n.log.With().Str("request", req.RequestID).Str("peer", from.String()).Str("function", req.FunctionID).Logger()
+
 	code, results, cluster, err := n.headExecute(ctx, requestID, createExecuteRequest(req))
 	if err != nil {
-		n.log.Error().
-			Err(err).
-			Str("peer", from.String()).
-			Str("function_id", req.FunctionID).
-			Str("request_id", requestID).
-			Msg("execution failed")
+		log.Error().Err(err).Msg("execution failed")
 	}
 
-	n.log.Info().Str("request_id", requestID).Str("code", code.String()).Msg("execution complete")
+	log.Info().Str("code", code.String()).Msg("execution complete")
 
 	// NOTE: Head node no longer caches execution results because it doesn't have one of its own.
 
@@ -78,7 +75,10 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 		quorum = req.Config.NodeCount
 	}
 
-	n.log.Info().Str("request_id", requestID).Int("quorum", quorum).Msg("processing execution request")
+	// Create a logger with relevant context.
+	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Int("quorum", quorum).Logger()
+
+	log.Info().Msg("processing execution request")
 
 	// Phase 1. - Issue roll call to nodes.
 
@@ -92,7 +92,7 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 		return codes.Error, nil, execute.Cluster{}, fmt.Errorf("could not issue roll call: %w", err)
 	}
 
-	n.log.Info().Str("function_id", req.FunctionID).Str("request_id", requestID).Msg("roll call published")
+	log.Info().Msg("roll call published")
 
 	// Limit for how long we wait for responses.
 	tctx, exCancel := context.WithTimeout(ctx, n.cfg.RollCallTimeout)
@@ -107,35 +107,35 @@ rollCallResponseLoop:
 		// Request timed out.
 		case <-tctx.Done():
 
-			n.log.Warn().Str("function_id", req.FunctionID).Str("request_id", requestID).Msg("roll call timed out")
+			log.Warn().Msg("roll call timed out")
 			return codes.Timeout, nil, execute.Cluster{}, blockless.ErrRollCallTimeout
 
 		case reply := <-n.rollCall.responses(requestID):
 
 			// Check if this is the reply we want - shouldn't really happen.
 			if reply.FunctionID != req.FunctionID {
-				n.log.Info().Str("peer", reply.From.String()).Str("request_id", requestID).Str("function_got", reply.FunctionID).Str("function_want", req.FunctionID).Msg("skipping inadequate roll call response - wrong function")
+				log.Info().Str("peer", reply.From.String()).Str("function_got", reply.FunctionID).Msg("skipping inadequate roll call response - wrong function")
 				continue
 			}
 
 			// Check if we are connected to this peer.
 			// Since we receive responses to roll call via direct messages - should not happen.
 			if !n.haveConnection(reply.From) {
-				n.log.Info().Str("peer", reply.From.String()).Str("request_id", reply.RequestID).Msg("skipping roll call response from unconnected peer")
+				n.log.Info().Str("peer", reply.From.String()).Msg("skipping roll call response from unconnected peer")
 				continue
 			}
 
-			n.log.Info().Str("request_id", requestID).Str("peer", reply.From.String()).Int("want_peers", quorum).Msg("roll called peer chosen for execution")
+			log.Info().Str("peer", reply.From.String()).Msg("roll called peer chosen for execution")
 
 			reportingPeers = append(reportingPeers, reply.From)
 			if len(reportingPeers) >= quorum {
-				n.log.Info().Str("request_id", requestID).Int("want", quorum).Msg("enough peers reported for roll call")
+				log.Info().Msg("enough peers reported for roll call")
 				break rollCallResponseLoop
 			}
 		}
 	}
 
-	n.log.Info().Strs("peers", peerIDList(reportingPeers)).Str("function_id", req.FunctionID).Str("request_id", requestID).Msg("requesting cluster formation from peers who reported for roll call")
+	log.Info().Strs("peers", peerIDList(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
 
 	cluster := execute.Cluster{
 		Peers: reportingPeers,
@@ -157,7 +157,7 @@ rollCallResponseLoop:
 	}
 
 	// Wait for cluster confirmation messages.
-	n.log.Debug().Int("want", quorum).Str("request_id", requestID).Msg("waiting for cluster to be formed")
+	log.Debug().Msg("waiting for cluster to be formed")
 
 	// When we're done, send a message to disband the cluster.
 	// NOTE: We could schedule this on the worker nodes when receiving the execution request.
@@ -177,10 +177,11 @@ rollCallResponseLoop:
 
 			err = n.sendToMany(ctx, reportingPeers, msgDisband)
 			if err != nil {
-				n.log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Str("request_id", requestID).Msg("could not send cluster disband request")
+				log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Msg("could not send cluster disband request")
+				return
 			}
 
-			n.log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Str("request_id", requestID).Msg("sent cluster disband request")
+			log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Msg("sent cluster disband request")
 		}()
 	}()
 
@@ -206,11 +207,11 @@ rollCallResponseLoop:
 				return
 			}
 
-			n.log.Debug().Str("request_id", requestID).Str("peer", rp.String()).Msg("accounted consensus response from roll called peer")
+			log.Info().Str("peer", rp.String()).Msg("accounted consensus response from roll called peer")
 
 			fc := res.(response.FormCluster)
 			if fc.Code != codes.OK {
-				n.log.Debug().Str("request_id", requestID).Str("peer", rp.String()).Msg("peer failed to join consensus cluster")
+				log.Warn().Str("peer", rp.String()).Msg("peer failed to join consensus cluster")
 				return
 			}
 
@@ -244,7 +245,7 @@ rollCallResponseLoop:
 		return codes.Error, nil, cluster, fmt.Errorf("could not send execution request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)
 	}
 
-	n.log.Debug().Int("want", quorum).Str("request_id", requestID).Msg("waiting for execution responses")
+	log.Debug().Msg("waiting for execution responses")
 
 	// We're willing to wait for a limited amount of time.
 	exctx, exCancel := context.WithTimeout(ctx, n.cfg.ExecutionTimeout)
@@ -271,7 +272,7 @@ rollCallResponseLoop:
 				return
 			}
 
-			n.log.Debug().Str("request_id", requestID).Str("peer", rp.String()).Msg("accounted execution response from peer")
+			log.Info().Str("peer", rp.String()).Msg("accounted execution response from peer")
 
 			er := res.(response.Execute)
 
@@ -288,7 +289,7 @@ rollCallResponseLoop:
 
 	wg.Wait()
 
-	n.log.Info().Str("request_id", requestID).Int("cluster_size", len(reportingPeers)).Int("responded", len(results)).Msg("received execution responses")
+	log.Info().Int("cluster_size", len(reportingPeers)).Int("responded", len(results)).Msg("received execution responses")
 
 	// How many results do we have, and how many do we expect.
 	respondRatio := float64(len(results)) / float64(len(reportingPeers))
@@ -296,7 +297,7 @@ rollCallResponseLoop:
 
 	retcode := codes.OK
 	if respondRatio < threshold {
-		n.log.Warn().Str("request_id", requestID).Float64("expected", threshold).Float64("have", respondRatio).Msg("threshold condition not met")
+		log.Warn().Float64("expected", threshold).Float64("have", respondRatio).Msg("threshold condition not met")
 		retcode = codes.PartialContent
 	}
 

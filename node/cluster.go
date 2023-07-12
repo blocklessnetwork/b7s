@@ -24,7 +24,7 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []b
 	}
 	req.From = from
 
-	n.log.Info().Str("request_id", req.RequestID).Strs("peers", peerIDList(req.Peers)).Msg("received request to form consensus cluster")
+	n.log.Info().Str("request", req.RequestID).Strs("peers", peerIDList(req.Peers)).Msg("received request to form consensus cluster")
 
 	raftHandler, err := n.newRaftHandler(req.RequestID)
 	if err != nil {
@@ -92,7 +92,7 @@ func (n *Node) processFormClusterResponse(ctx context.Context, from peer.ID, pay
 	}
 	res.From = from
 
-	n.log.Debug().Str("request_id", res.RequestID).Str("from", from.String()).Msg("received cluster formation response")
+	n.log.Debug().Str("request", res.RequestID).Str("from", from.String()).Msg("received cluster formation response")
 
 	key := consensusResponseKey(res.RequestID, from)
 	n.consensusResponses.Set(key, res)
@@ -111,11 +111,11 @@ func (n *Node) processDisbandCluster(ctx context.Context, from peer.ID, payload 
 	}
 	req.From = from
 
-	n.log.Info().Str("request_id", req.RequestID).Msg("received request to disband consensus cluster")
+	n.log.Info().Str("request", req.RequestID).Msg("received request to disband consensus cluster")
 
 	err = n.leaveCluster(req.RequestID)
 	if err != nil {
-		return fmt.Errorf("could not disband cluster (request_id: %s): %w", req.RequestID, err)
+		return fmt.Errorf("could not disband cluster (request: %s): %w", req.RequestID, err)
 	}
 
 	return nil
@@ -129,11 +129,11 @@ func (n *Node) leaveCluster(requestID string) error {
 	// We know that the request is done executing when we have a result for it.
 	_, ok := n.executeResponses.WaitFor(ctx, requestID)
 
-	n.log.Info().Bool("executed_work", ok).Str("request_id", requestID).Msg("waiting for execution done, leaving raft cluster")
+	n.log.Info().Bool("executed_work", ok).Str("request", requestID).Msg("waiting for execution done, leaving raft cluster")
 
 	err := n.shutdownCluster(requestID)
 	if err != nil {
-		return fmt.Errorf("could not leave raft cluster (request_id: %v): %w", requestID, err)
+		return fmt.Errorf("could not leave raft cluster (request: %v): %w", requestID, err)
 	}
 
 	return nil

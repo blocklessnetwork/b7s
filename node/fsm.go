@@ -53,7 +53,7 @@ func (f fsmExecutor) Apply(log *raft.Log) interface{} {
 		return fmt.Errorf("could not unmarshal request: %w", err)
 	}
 
-	f.log.Info().Str("request_id", logEntry.RequestID).Str("function_id", logEntry.Execute.FunctionID).Msg("FSM executing function")
+	f.log.Info().Str("request", logEntry.RequestID).Str("function", logEntry.Execute.FunctionID).Msg("FSM executing function")
 
 	res, err := f.executor.ExecuteFunction(logEntry.RequestID, logEntry.Execute)
 	if err != nil {
@@ -65,7 +65,7 @@ func (f fsmExecutor) Apply(log *raft.Log) interface{} {
 		proc(logEntry, res)
 	}
 
-	f.log.Info().Msg("log entry successfully applied")
+	f.log.Info().Str("request", logEntry.RequestID).Msg("FSM successfully executed function")
 
 	return res
 }

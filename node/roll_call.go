@@ -29,11 +29,12 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	}
 	req.From = from
 
-	n.log.Debug().Str("cid", req.FunctionID).Str("request_id", req.RequestID).Str("origin", req.Origin.String()).Msg("received roll call request")
+	log := n.log.With().Str("request", req.RequestID).Str("origin", req.Origin.String()).Str("function", req.FunctionID).Logger()
+	log.Debug().Msg("received roll call request")
 
 	// TODO: (raft) temporary measure - at the moment we don't support multiple raft clusters on the same node at the same time.
 	if req.ConsensusNeeded && len(n.clusters) > 0 {
-		n.log.Warn().Str("request_id", req.RequestID).Msg("cannot respond to a roll call as we're already participating in one raft cluster")
+		log.Warn().Msg("cannot respond to a roll call as we're already participating in one raft cluster")
 		return nil
 	}
 
@@ -51,8 +52,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 		sendErr := n.send(ctx, req.Origin, res)
 		if sendErr != nil {
 			// Log send error but choose to return the original error.
-			n.log.Error().Err(sendErr).Str("to", req.From.String()).
-				Msg("could not send response")
+			log.Error().Err(sendErr).Str("to", req.Origin.String()).Msg("could not send response")
 		}
 
 		return fmt.Errorf("could not check if function is installed: %w", err)
@@ -61,23 +61,20 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	// We don't have this function - install it now.
 	if !installed {
 
-		n.log.Info().Str("cid", req.FunctionID).
-			Msg("roll call but function not installed, installing now")
+		log.Info().Msg("roll call but function not installed, installing now")
 
 		err = n.installFunction(req.FunctionID, manifestURLFromCID(req.FunctionID))
 		if err != nil {
 			sendErr := n.send(ctx, req.Origin, res)
 			if sendErr != nil {
 				// Log send error but choose to return the original error.
-				n.log.Error().Err(sendErr).Str("to", req.Origin.String()).
-					Msg("could not send response")
+				log.Error().Err(sendErr).Str("to", req.Origin.String()).Msg("could not send response")
 			}
 			return fmt.Errorf("could not install function: %w", err)
 		}
 	}
 
-	n.log.Info().Str("cid", req.FunctionID).Str("request_id", req.RequestID).Str("origin", req.Origin.String()).
-		Msg("reporting for roll call")
+	log.Info().Str("origin", req.Origin.String()).Msg("reporting for roll call")
 
 	// Send postive response.
 	res.Code = codes.Accepted

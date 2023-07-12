@@ -46,7 +46,7 @@ func (a *API) Execute(ctx echo.Context) error {
 	// Get the execution result.
 	code, id, results, cluster, err := a.node.ExecuteFunction(ctx.Request().Context(), execute.Request(req))
 	if err != nil {
-		a.log.Warn().Str("function_id", req.FunctionID).Err(err).Msg("node failed to execute function")
+		a.log.Warn().Str("function", req.FunctionID).Err(err).Msg("node failed to execute function")
 	}
 
 	// Transform the node response format to the one returned by the API.
