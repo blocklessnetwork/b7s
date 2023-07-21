@@ -22,7 +22,6 @@ docker run -d --name b7s \
   -e AWS_SECRET_ACCESS_KEY=<YOUR_AWS_SECRET_ACCESS_KEY> \
   -e KEY_PATH=<YOUR_S3_KEY_PATH> \
   -e KEY_PASSWORD=<YOUR_S3_KEY_PASSWORD> \
-  -e CHAIN_RPC_NODE=<YOUR_CHAIN_RPC_NODE> \
   -e NODE_ROLE=head \
   -e P2P_PORT=9527 \
   -v /var/tmp/b7s/peerdb:/var/tmp/b7s/peerdb \
@@ -38,7 +37,6 @@ docker run -d --name b7s \
   -e AWS_SECRET_ACCESS_KEY=<YOUR_AWS_SECRET_ACCESS_KEY> \
   -e KEY_PATH=<YOUR_S3_KEY_PATH> \
   -e KEY_PASSWORD=<YOUR_S3_KEY_PASSWORD> \
-  -e CHAIN_RPC_NODE=<YOUR_CHAIN_RPC_NODE> \
   -e NODE_ROLE=worker \
   -e P2P_PORT=9527 \
   -v /var/tmp/b7s/peerdb:/var/tmp/b7s/peerdb \
