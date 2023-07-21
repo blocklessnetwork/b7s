@@ -24,6 +24,9 @@ docker run -d --name b7s \
   -e KEY_PASSWORD=<YOUR_S3_KEY_PASSWORD> \
   -e NODE_ROLE=head \
   -e P2P_PORT=9527 \
+  -e REST_API=8081 \
+  -e DIALBACK_PORT=32342 \
+  -e DIALBACK_ADDRESS=1.1.1.1 \
   -v /var/tmp/b7s/peerdb:/var/tmp/b7s/peerdb \
   -v /var/tmp/b7s/function-db:/var/tmp/b7s/function-db \
   -p 9527:9527 \
