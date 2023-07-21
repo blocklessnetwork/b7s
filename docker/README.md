@@ -14,6 +14,8 @@ docker pull ghcr.io/blocklessnetwork/b7s:v0.0.3
 
 Run the image
 
+To Run the Node in the Head Node Configuration
+
 ```bash
 docker run -d --name b7s \
   -e AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY_ID> \
@@ -21,6 +23,25 @@ docker run -d --name b7s \
   -e KEY_PATH=<YOUR_S3_KEY_PATH> \
   -e KEY_PASSWORD=<YOUR_S3_KEY_PASSWORD> \
   -e CHAIN_RPC_NODE=<YOUR_CHAIN_RPC_NODE> \
+  -e NODE_ROLE=head \
+  -e P2P_PORT=9527 \
+  -v /var/tmp/b7s/peerdb:/var/tmp/b7s/peerdb \
+  -v /var/tmp/b7s/function-db:/var/tmp/b7s/function-db \
   -p 9527:9527 \
   ghcr.io/blocklessnetwork/b7s:v0.0.5-rc1
+```
+To Run the Node in the Worker Node Configuration
+
+```bash
+docker run -d --name b7s \
+  -e AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY_ID> \
+  -e AWS_SECRET_ACCESS_KEY=<YOUR_AWS_SECRET_ACCESS_KEY> \
+  -e KEY_PATH=<YOUR_S3_KEY_PATH> \
+  -e KEY_PASSWORD=<YOUR_S3_KEY_PASSWORD> \
+  -e CHAIN_RPC_NODE=<YOUR_CHAIN_RPC_NODE> \
+  -e NODE_ROLE=worker \
+  -e P2P_PORT=9527 \
+  -v /var/tmp/b7s/peerdb:/var/tmp/b7s/peerdb \
+  -v /var/tmp/b7s/function-db:/var/tmp/b7s/function-db \
+  -p 9527:9527 \
 ```
