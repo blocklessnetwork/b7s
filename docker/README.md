@@ -28,7 +28,7 @@ docker run -d --name b7s \
   -v /var/tmp/b7s/peerdb:/var/tmp/b7s/peerdb \
   -v /var/tmp/b7s/function-db:/var/tmp/b7s/function-db \
   -p 9527:9527 \
-  ghcr.io/blocklessnetwork/b7s:v0.0.5-rc1
+  ghcr.io/blocklessnetwork/b7s:v0.0.25
 ```
 To Run the Node in the Worker Node Configuration
 
@@ -44,4 +44,5 @@ docker run -d --name b7s \
   -v /var/tmp/b7s/peerdb:/var/tmp/b7s/peerdb \
   -v /var/tmp/b7s/function-db:/var/tmp/b7s/function-db \
   -p 9527:9527 \
+  ghcr.io/blocklessnetwork/b7s:v0.0.25
 ```
