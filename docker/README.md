@@ -9,7 +9,7 @@
 First, you'll need to pull the latest version of the b7s Docker image from the public registry:
 
 ```bash
-docker pull ghcr.io/blocklessnetwork/b7s:v0.0.3
+docker pull ghcr.io/blocklessnetwork/b7s:v0.0.25
 ```
 
 Run the image
