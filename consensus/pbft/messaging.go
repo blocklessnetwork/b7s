@@ -20,7 +20,7 @@ func (r *Replica) send(to peer.ID, msg interface{}) error {
 	}
 
 	// Send message.
-	err = r.host.SendMessage(context.Background(), to, payload)
+	err = r.host.SendMessageOnProtocol(context.Background(), to, payload, Protocol)
 	if err != nil {
 		return fmt.Errorf("could not send message: %w", err)
 	}
@@ -42,7 +42,13 @@ func (r *Replica) broadcast(msg interface{}) error {
 	}
 
 	for _, peer := range r.peers {
-		err = r.host.SendMessage(context.Background(), peer, payload)
+
+		// Skip self.
+		if peer == r.id {
+			continue
+		}
+
+		err = r.host.SendMessageOnProtocol(context.Background(), peer, payload, Protocol)
 		if err != nil {
 			return fmt.Errorf("could not send message: %w", err)
 		}

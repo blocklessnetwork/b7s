@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/libp2p/go-libp2p/core/peer"
-
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
@@ -33,9 +31,24 @@ func (m MessageType) String() string {
 }
 
 type Request struct {
+	ID        string    `json:"id"`
 	Timestamp time.Time `json:"timestamp"`
 	// TODO: Comes from the client, add relevant stuff here. Rethink this model.
 	Execute execute.Request `json:"execute"`
+}
+
+func (r Request) MarshalJSON() ([]byte, error) {
+
+	// Define an alias without the JSON marshaller.
+	type alias Request
+	return json.Marshal(
+		struct {
+			Type MessageType `json:"type"`
+			Data alias       `json:"data"`
+		}{
+			Type: MessageRequest,
+			Data: alias(r),
+		})
 }
 
 // TODO: In fabric code, all messages have a `replicaID` field.
@@ -45,7 +58,6 @@ type PrePrepare struct {
 	SequenceNumber uint    `json:"sequence_number"`
 	Digest         string  `json:"digest"`
 	Request        Request `json:"request"`
-	ReplicaID      peer.ID `json:"replica"`
 }
 
 func (p PrePrepare) MarshalJSON() ([]byte, error) {
@@ -63,10 +75,9 @@ func (p PrePrepare) MarshalJSON() ([]byte, error) {
 }
 
 type Prepare struct {
-	View           uint    `json:"view"`
-	SequenceNumber uint    `json:"sequence_number"`
-	Digest         string  `json:"digest"`
-	ReplicaID      peer.ID `json:"replica"`
+	View           uint   `json:"view"`
+	SequenceNumber uint   `json:"sequence_number"`
+	Digest         string `json:"digest"`
 }
 
 func (p Prepare) MarshalJSON() ([]byte, error) {
@@ -82,10 +93,9 @@ func (p Prepare) MarshalJSON() ([]byte, error) {
 }
 
 type Commit struct {
-	View           uint    `json:"view"`
-	SequenceNumber uint    `json:"sequence_number"`
-	Digest         string  `json:"digest"`
-	ReplicaID      peer.ID `json:"replica"`
+	View           uint   `json:"view"`
+	SequenceNumber uint   `json:"sequence_number"`
+	Digest         string `json:"digest"`
 }
 
 func (c Commit) MarshalJSON() ([]byte, error) {
