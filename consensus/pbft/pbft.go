@@ -13,6 +13,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetworking/b7s/host"
+	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
 // TODO (pbft): View change.
@@ -20,8 +21,9 @@ import (
 // Replica is a single PBFT node. Both Primary and Backup nodes are all replicas.
 type Replica struct {
 	pbftCore
-	log  zerolog.Logger
-	host *host.Host
+	log      zerolog.Logger
+	host     *host.Host
+	executor Executor
 
 	id    peer.ID
 	key   crypto.PrivKey
@@ -43,7 +45,7 @@ type Replica struct {
 }
 
 // NewReplica creates a new PBFT replica.
-func NewReplica(log zerolog.Logger, host *host.Host, peers []peer.ID, key crypto.PrivKey) (*Replica, error) {
+func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []peer.ID, key crypto.PrivKey) (*Replica, error) {
 
 	total := uint(len(peers))
 
@@ -69,14 +71,18 @@ func NewReplica(log zerolog.Logger, host *host.Host, peers []peer.ID, key crypto
 
 	log.Info().Strs("replicas", peerIDList(peers)).Uint("total", total).Msg("created PBFT replica")
 
-	// Set the message handler.
-	// TODO (pbft): Split the protocols - requests should come in on the regular `b7s` protocol, while the replica communication should be on the other, `pbft cluster consensus` protocol.
-	replica.setMessageHandler()
+	// Set the message handlers.
+
+	// Handling messages on the PBFT protocol.
+	replica.setPBFTMessageHandler()
+
+	// Handling messages on the standard B7S protocol. We ONLY support client requests there.
+	replica.setGeneralMessageHandler()
 
 	return &replica, nil
 }
 
-func (r *Replica) setMessageHandler() {
+func (r *Replica) setPBFTMessageHandler() {
 
 	// We want to only accept messages from replicas in our cluster.
 	// Create a map so we can perform a faster lookup.
@@ -90,14 +96,12 @@ func (r *Replica) setMessageHandler() {
 
 		from := stream.Conn().RemotePeer()
 
-		// TODO (pbft): This makes sense but more locally - we have to allow requests to come in lul.
-		/*
-			_, known := pm[from]
-			if !known {
-				r.log.Info().Str("peer", from.String()).Msg("received message from a peer not in our cluster, discarding")
-				return
-			}
-		*/
+		// On this protocol we only allow messages from other replicas in the cluster.
+		_, known := pm[from]
+		if !known {
+			r.log.Info().Str("peer", from.String()).Msg("received message from a peer not in our cluster, discarding")
+			return
+		}
 
 		buf := bufio.NewReader(stream)
 		msg, err := buf.ReadBytes('\n')
@@ -139,6 +143,46 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 	}
 
 	return fmt.Errorf("unexpected message type (from: %s): %T", from, msg)
+}
+
+func (r *Replica) setGeneralMessageHandler() {
+
+	r.host.Host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+		defer stream.Close()
+
+		from := stream.Conn().RemotePeer()
+
+		buf := bufio.NewReader(stream)
+		payload, err := buf.ReadBytes('\n')
+		if err != nil && !errors.Is(err, io.EOF) {
+			stream.Reset()
+			r.log.Error().Err(err).Msg("error receiving direct message")
+			return
+		}
+
+		r.log.Debug().Str("peer", from.String()).Msg("received message")
+
+		msg, err := unpackMessage(payload)
+		if err != nil {
+			r.log.Error().Err(err).Msg("could not unpack message")
+			return
+		}
+
+		// On the general protocol we ONLY support client requests.
+		req, ok := msg.(Request)
+		if !ok {
+			r.log.Error().Str("peer", from.String()).Type("type", msg).Msg("unexpected message type")
+			return
+		}
+
+		err = r.processRequest(from, req)
+		if err != nil {
+			r.log.Error().Err(err).Str("request", req.ID).Str("origin", req.Origin.String()).Msg("could not process request")
+			return
+		}
+
+		r.log.Info().Str("request", req.ID).Str("origin", req.Origin.String()).Msg("request processed ok")
+	})
 }
 
 func (r *Replica) primaryReplicaID() peer.ID {

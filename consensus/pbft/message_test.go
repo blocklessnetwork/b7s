@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/blocklessnetworking/b7s/testing/mocks"
 )
 
 func TestMessage_Encode(t *testing.T) {
@@ -17,7 +15,6 @@ func TestMessage_Encode(t *testing.T) {
 			View:           1,
 			SequenceNumber: 2,
 			Digest:         "123456789",
-			ReplicaID:      mocks.GenericPeerID,
 		}
 
 		encoded, err := json.Marshal(orig)
@@ -43,7 +40,6 @@ func TestMessage_Encode(t *testing.T) {
 			View:           14,
 			SequenceNumber: 45,
 			Digest:         "abc123def",
-			ReplicaID:      mocks.GenericPeerID,
 		}
 
 		encoded, err := json.Marshal(orig)
@@ -69,7 +65,6 @@ func TestMessage_Encode(t *testing.T) {
 			View:           23,
 			SequenceNumber: 51,
 			Digest:         "987xyz",
-			ReplicaID:      mocks.GenericPeerID,
 		}
 
 		encoded, err := json.Marshal(orig)
@@ -100,7 +95,6 @@ func TestMessage_Decode(t *testing.T) {
 			View:           1,
 			SequenceNumber: 2,
 			Digest:         "123456789",
-			ReplicaID:      mocks.GenericPeerID,
 		}
 
 		encoded, err := json.Marshal(orig)
@@ -122,7 +116,6 @@ func TestMessage_Decode(t *testing.T) {
 			View:           14,
 			SequenceNumber: 45,
 			Digest:         "abc123def",
-			ReplicaID:      mocks.GenericPeerID,
 		}
 
 		encoded, err := json.Marshal(orig)
@@ -144,7 +137,6 @@ func TestMessage_Decode(t *testing.T) {
 			View:           23,
 			SequenceNumber: 51,
 			Digest:         "987xyz",
-			ReplicaID:      mocks.GenericPeerID,
 		}
 
 		encoded, err := json.Marshal(orig)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 type MessageType uint
@@ -31,10 +32,10 @@ func (m MessageType) String() string {
 }
 
 type Request struct {
-	ID        string    `json:"id"`
-	Timestamp time.Time `json:"timestamp"`
-	// TODO: Comes from the client, add relevant stuff here. Rethink this model.
-	Execute execute.Request `json:"execute"`
+	ID        string          `json:"id"`
+	Timestamp time.Time       `json:"timestamp"`
+	Origin    peer.ID         `json:"origin"`
+	Execute   execute.Request `json:"execute"`
 }
 
 func (r Request) MarshalJSON() ([]byte, error) {

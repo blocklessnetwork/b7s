@@ -40,12 +40,9 @@ func (r *Replica) maybeSendCommit(view uint, sequenceNo uint, digest string) err
 		return nil
 	}
 
-	err = r.execute(digest)
-	if err != nil {
-		return fmt.Errorf("request execution failed: %w", err)
-	}
+	log.Info().Msg("request committed, executing")
 
-	return nil
+	return r.execute(digest)
 }
 
 func (r *Replica) sendCommit(view uint, sequenceNo uint, digest string) error {
