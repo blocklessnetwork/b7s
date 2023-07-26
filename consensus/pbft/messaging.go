@@ -6,12 +6,13 @@ import (
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/protocol"
 )
 
 // TODO (pbft): Consider creating an abstraction like a "network stack" that will be cognizant of the peers in a cluster.
 // TODO (pbft): context.Background() used at the moment, fix.
 
-func (r *Replica) send(to peer.ID, msg interface{}) error {
+func (r *Replica) send(to peer.ID, msg interface{}, protocol protocol.ID) error {
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -20,7 +21,7 @@ func (r *Replica) send(to peer.ID, msg interface{}) error {
 	}
 
 	// Send message.
-	err = r.host.SendMessageOnProtocol(context.Background(), to, payload, Protocol)
+	err = r.host.SendMessageOnProtocol(context.Background(), to, payload, protocol)
 	if err != nil {
 		return fmt.Errorf("could not send message: %w", err)
 	}

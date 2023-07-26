@@ -19,6 +19,12 @@ func (r *Replica) execute(digest string) error {
 
 	log := r.log.With().Str("digest", digest).Str("request", request.ID).Logger()
 
+	// We don't want to execute a job multiple times.
+	_, havePending := r.pending[digest]
+	if !havePending {
+		r.log.Warn().Str("digest", digest).Str("request", request.ID).Msg("no pending request with matching info - likely already executed")
+		return nil
+	}
 	// Remove this request from the list of outstanding requests.
 	delete(r.pending, digest)
 
@@ -40,7 +46,7 @@ func (r *Replica) execute(digest string) error {
 		},
 	}
 
-	err = r.send(request.Origin, msg)
+	err = r.send(request.Origin, msg, blockless.ProtocolID)
 	if err != nil {
 		return fmt.Errorf("could not send execution response to node (target: %s, request: %s): %w", request.Origin.String(), request.ID, err)
 	}

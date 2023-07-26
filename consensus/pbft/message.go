@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/blocklessnetworking/b7s/models/execute"
+
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
@@ -63,15 +64,27 @@ type PrePrepare struct {
 
 func (p PrePrepare) MarshalJSON() ([]byte, error) {
 
-	// Define an alias without the JSON marshaller.
-	type alias PrePrepare
+	// Define aliases without the JSON marshaller.
+	type arequest Request
+	type alias struct {
+		View           uint     `json:"view"`
+		SequenceNumber uint     `json:"sequence_number"`
+		Digest         string   `json:"digest"`
+		Request        arequest `json:"request"`
+	}
+
 	return json.Marshal(
 		struct {
 			Type MessageType `json:"type"`
 			Data alias       `json:"data"`
 		}{
 			Type: MessagePrePrepare,
-			Data: alias(p),
+			Data: alias{
+				View:           p.View,
+				SequenceNumber: p.SequenceNumber,
+				Digest:         p.Digest,
+				Request:        arequest(p.Request),
+			},
 		})
 }
 

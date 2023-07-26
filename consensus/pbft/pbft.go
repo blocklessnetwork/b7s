@@ -57,6 +57,7 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []
 		pbftCore: newPbftCore(total),
 		log:      log.With().Str("component", "pbft").Logger(),
 		host:     host,
+		executor: executor,
 
 		id:    host.ID(),
 		key:   key,
