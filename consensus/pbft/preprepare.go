@@ -63,6 +63,10 @@ func (r *Replica) processPrePrepare(replica peer.ID, msg PrePrepare) error {
 		return nil
 	}
 
+	if msg.View != r.view {
+		return fmt.Errorf("pre-prepare has an invalid view value (received: %v, current: %v)", msg.View, r.view)
+	}
+
 	id := getMessageID(msg.View, msg.SequenceNumber)
 
 	// TODO (pbft): in reality more involved, for now we'll stop if there's something existing already.

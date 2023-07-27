@@ -65,6 +65,10 @@ func (r *Replica) processPrepare(replica peer.ID, prepare Prepare) error {
 		return nil
 	}
 
+	if prepare.View != r.view {
+		return fmt.Errorf("prepare has an invalid view value (received: %v, current: %v)", prepare.View, r.view)
+	}
+
 	r.recordPrepareReceipt(replica, prepare)
 
 	log.Info().Msg("processed prepare message")
