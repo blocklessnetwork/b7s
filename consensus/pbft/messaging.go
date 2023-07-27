@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
+
+	"github.com/hashicorp/go-multierror"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
 )
-
-// TODO (pbft): Consider creating an abstraction like a "network stack" that will be cognizant of the peers in a cluster.
-// TODO (pbft): context.Background() used at the moment, fix.
 
 func (r *Replica) send(to peer.ID, msg interface{}, protocol protocol.ID) error {
 
@@ -20,8 +20,12 @@ func (r *Replica) send(to peer.ID, msg interface{}, protocol protocol.ID) error 
 		return fmt.Errorf("could not encode record: %w", err)
 	}
 
+	// We don't want to wait indefinitely.
+	ctx, cancel := context.WithTimeout(context.Background(), NetworkTimeout)
+	defer cancel()
+
 	// Send message.
-	err = r.host.SendMessageOnProtocol(context.Background(), to, payload, protocol)
+	err = r.host.SendMessageOnProtocol(ctx, to, payload, protocol)
 	if err != nil {
 		return fmt.Errorf("could not send message: %w", err)
 	}
@@ -32,27 +36,58 @@ func (r *Replica) send(to peer.ID, msg interface{}, protocol protocol.ID) error 
 // broadcast sends message to all peers in the replica set.
 func (r *Replica) broadcast(msg interface{}) error {
 
-	// TODO (pbft): Harden this. Consider what to do when some sends fail. Say we failed or retry?
-	//	It's a valid scenario that some peers may be offline, so we should probably continue
-	//	despite errors, at least to a point.
-
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("could not encode record: %w", err)
 	}
 
-	for _, peer := range r.peers {
+	ctx, cancel := context.WithTimeout(context.Background(), NetworkTimeout)
+	defer cancel()
 
+	var (
+		wg       sync.WaitGroup
+		multierr *multierror.Error
+		lock     sync.Mutex
+	)
+
+	for _, target := range r.peers {
 		// Skip self.
-		if peer == r.id {
+		if target == r.id {
 			continue
 		}
 
-		err = r.host.SendMessageOnProtocol(context.Background(), peer, payload, Protocol)
-		if err != nil {
-			return fmt.Errorf("could not send message: %w", err)
-		}
+		wg.Add(1)
+
+		// Send concurrently to everyone.
+		go func(peer peer.ID) {
+			defer wg.Done()
+
+			// NOTE: We could potentially retry sending to nodes if we fail once. On the other hand, somewhat unlikely they're
+			// back online split second later.
+
+			err := r.host.SendMessageOnProtocol(ctx, peer, payload, Protocol)
+			if err != nil {
+
+				lock.Lock()
+				defer lock.Unlock()
+
+				multierr = multierror.Append(multierr, err)
+			}
+		}(target)
+	}
+
+	wg.Wait()
+
+	// Warn if we had more send errors than we bargained for.
+	errCount := uint(multierr.Len())
+	if errCount > r.f {
+		r.log.Warn().Uint("f", r.f).Uint("errors", errCount).Msg("broadcast error count higher than pBFT f value")
+	}
+
+	sendErr := multierr.ErrorOrNil()
+	if sendErr != nil {
+		return fmt.Errorf("could not broadcast message: %w", sendErr)
 	}
 
 	return nil
