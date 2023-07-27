@@ -165,6 +165,9 @@ func (r *Replica) setGeneralMessageHandler() {
 			return
 		}
 
+		r.sl.Lock()
+		defer r.sl.Unlock()
+
 		err = r.processRequest(from, req)
 		if err != nil {
 			r.log.Error().Err(err).Str("request", req.ID).Str("origin", req.Origin.String()).Msg("could not process request")
