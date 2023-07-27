@@ -21,6 +21,8 @@ import (
 // Replica is a single PBFT node. Both Primary and Backup nodes are all replicas.
 type Replica struct {
 	pbftCore
+	replicaState
+
 	log      zerolog.Logger
 	host     *host.Host
 	executor Executor
@@ -28,20 +30,6 @@ type Replica struct {
 	id    peer.ID
 	key   crypto.PrivKey
 	peers []peer.ID
-
-	// TODO (pbft): locking for these.
-
-	// Keep track of seen requests. Map request to the digest.
-	requests map[string]Request
-	// Keep track of requests queued for execution. Could also be tracked via a single map.
-	pending map[string]Request
-
-	// Keep track of seen pre-prepare messages.
-	preprepares map[messageID]PrePrepare
-	// Keep track of seen prepare messages.
-	prepares map[messageID]*prepareReceipts
-	// Keep track of seen commit messages.
-	commits map[messageID]*commitReceipts
 }
 
 // NewReplica creates a new PBFT replica.
@@ -54,7 +42,9 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []
 	}
 
 	replica := Replica{
-		pbftCore: newPbftCore(total),
+		pbftCore:     newPbftCore(total),
+		replicaState: newState(),
+
 		log:      log.With().Str("component", "pbft").Logger(),
 		host:     host,
 		executor: executor,
@@ -62,12 +52,6 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []
 		id:    host.ID(),
 		key:   key,
 		peers: peers,
-
-		requests:    make(map[string]Request),
-		pending:     make(map[string]Request),
-		preprepares: make(map[messageID]PrePrepare),
-		prepares:    make(map[messageID]*prepareReceipts),
-		commits:     make(map[messageID]*commitReceipts),
 	}
 
 	log.Info().Strs("replicas", peerIDList(peers)).Uint("total", total).Msg("created PBFT replica")
@@ -127,6 +111,11 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 	if err != nil {
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
+
+	// Access to individual segments (pre-prepares, prepares, commits etc) could be managed on an individual level,
+	// but it's probably not worth it. This way we just do it request by request.
+	r.sl.Lock()
+	defer r.sl.Unlock()
 
 	switch m := msg.(type) {
 

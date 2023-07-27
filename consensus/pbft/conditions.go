@@ -27,14 +27,14 @@ func (r *Replica) prePrepared(view uint, sequenceNo uint, digest string) bool {
 
 func (r *Replica) prepared(view uint, sequenceNo uint, digest string) bool {
 
-	// Have we seen this request before?
+	// Check if we have seen this request before.
 	// NOTE: This is also checked as part of the pre-prepare check.
 	_, seen := r.requests[digest]
 	if !seen {
 		return false
 	}
 
-	// Do we have a pre-prepare for this request?
+	// Is the pre-prepare condition met for this request?
 	if !r.prePrepared(view, sequenceNo, digest) {
 		return false
 	}
