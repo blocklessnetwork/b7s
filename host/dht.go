@@ -124,8 +124,6 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 			break
 		}
 
-		h.log.Debug().Str("peer", peer.ID.String()).Interface("addr_info", peer.AddrInfo).Msg("adding dial-back peer")
-
 		// If we don't have any addresses, add the multiaddress we (hopefully) do have - last one we received a connection from.
 		if len(peer.AddrInfo.Addrs) == 0 {
 
@@ -135,8 +133,12 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 				break
 			}
 
+			h.log.Debug().Str("peer", peer.ID.String()).Msg("using last known multiaddress for dial-back peer")
+
 			peer.AddrInfo.Addrs = []multiaddr.Multiaddr{ma}
 		}
+
+		h.log.Debug().Str("peer", peer.ID.String()).Interface("addr_info", peer.AddrInfo).Msg("adding dial-back peer")
 
 		bootNodes = append(bootNodes, peer)
 		added++
