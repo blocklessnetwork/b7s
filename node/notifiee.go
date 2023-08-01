@@ -33,6 +33,7 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 		Str("peer", peerID.String()).
 		Str("remote_address", maddr.String()).
 		Str("local_address", laddr.String()).
+		Interface("addr_info", addrInfo).
 		Msg("peer connected")
 
 	// Store the peer info.
