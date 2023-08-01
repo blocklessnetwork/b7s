@@ -10,6 +10,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	"github.com/libp2p/go-libp2p/p2p/discovery/util"
+	"github.com/multiformats/go-multiaddr"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
@@ -124,6 +125,18 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 		}
 
 		h.log.Debug().Str("peer", peer.ID.String()).Interface("addr_info", peer.AddrInfo).Msg("adding dial-back peer")
+
+		// If we don't have any addresses, add the multiaddress we (hopefully) do have - last one we received a connection from.
+		if len(peer.AddrInfo.Addrs) == 0 {
+
+			ma, err := multiaddr.NewMultiaddr(peer.MultiAddr)
+			if err != nil {
+				h.log.Warn().Str("peer", peer.ID.String()).Str("addr", peer.MultiAddr).Msg("invalid multiaddress for dial-back peer, skipping")
+				break
+			}
+
+			peer.AddrInfo.Addrs = []multiaddr.Multiaddr{ma}
+		}
 
 		bootNodes = append(bootNodes, peer)
 		added++
