@@ -11,6 +11,9 @@ import (
 // execute executes the request AND sends the result back to origin.
 func (r *Replica) execute(digest string) error {
 
+	defer r.stopRequestTimer()
+	// TODO (pbft): Start new timer after this, as we're now waiting for a new request to execute - IF there are any pending requests.
+
 	// Sanity check, should not happen.
 	request, ok := r.requests[digest]
 	if !ok {

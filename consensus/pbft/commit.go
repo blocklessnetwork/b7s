@@ -76,6 +76,10 @@ func (r *Replica) processCommit(replica peer.ID, commit Commit) error {
 
 	log.Info().Msg("received commit message")
 
+	if !r.activeView {
+		return ErrViewChange
+	}
+
 	if commit.View != r.view {
 		return fmt.Errorf("commit has an invalid view value (received: %v, current: %v)", commit.View, r.view)
 	}

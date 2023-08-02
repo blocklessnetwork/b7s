@@ -13,6 +13,8 @@ func (r *Replica) sendPrePrepare(req Request) error {
 		return nil
 	}
 
+	r.startRequestTimer(false)
+
 	// TODO: Check - is there a reason we just don't use 0 too?
 	seqNo := r.sequence + 1
 	r.sequence++
@@ -57,6 +59,10 @@ func (r *Replica) processPrePrepare(replica peer.ID, msg PrePrepare) error {
 	log := r.log.With().Str("replica", replica.String()).Uint("view", msg.View).Uint("sequence_no", msg.SequenceNumber).Str("digest", msg.Digest).Logger()
 
 	log.Info().Msg("received pre-prepare message")
+
+	if !r.activeView {
+		return ErrViewChange
+	}
 
 	if replica != r.primaryReplicaID() {
 		log.Warn().Str("primary", r.primaryReplicaID().String()).Msg("pre-prepare came from a replica that is not the primary, dropping")

@@ -1,6 +1,7 @@
 package pbft
 
 import (
+	"errors"
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/protocol"
@@ -14,5 +15,13 @@ const (
 	MinimumReplicaCount = 4
 
 	// How long do the send/broadcast operation have until we consider it failed.
+	// TODO: Check - doesn't this go against the claim in PBFT that messages eventually get delivered? Think how to handle this.
 	NetworkTimeout = 5 * time.Second
+
+	// How long is the inactivity period before we trigger a view change.
+	RequestTimeout = 10 * time.Second
+)
+
+var (
+	ErrViewChange = errors.New("view change in progress")
 )

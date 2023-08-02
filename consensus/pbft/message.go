@@ -17,6 +17,7 @@ const (
 	MessagePrePrepare
 	MessagePrepare
 	MessageCommit
+	MessageViewChange
 )
 
 func (m MessageType) String() string {
@@ -27,6 +28,8 @@ func (m MessageType) String() string {
 		return "MessagePrepare"
 	case MessageCommit:
 		return "MessageCommit"
+	case MessageViewChange:
+		return "MessageViewChange"
 	default:
 		return fmt.Sprintf("unknown: %d", m)
 	}
@@ -121,6 +124,37 @@ func (c Commit) MarshalJSON() ([]byte, error) {
 		}{
 			Type: MessageCommit,
 			Data: alias(c),
+		})
+}
+
+type ViewChange struct {
+	View     uint          `json:"view"`
+	Prepares []PrepareInfo `json:"prepares"`
+
+	// Technically, view change message also includes:
+	//	- n - sequence number of the last stable checkpoint => not needed here since we don't support checkpoints
+	//  - C - 2f+1 checkpoint messages proving the correctness of s => see above
+	//	- P - set Pm for each request m prepared at replica i with a sequence number higher than n; Pm includes a valid pre-prepare message and 2f matching, valid prepared messages (same view, sequence number and digest of m). Because we don't support checkpoints, this means everything from sequence number 0.
+}
+
+// TODO (pbft): Set of requests prepared here.
+type PrepareInfo struct {
+	View       uint                `json:"view"`
+	Sequnce    uint                `json:"sequence_number"`
+	Digest     string              `json:"digest"`
+	PrePrepare PrePrepare          `json:"preprepare"`
+	Prepares   map[peer.ID]Prepare `json:"prepares"`
+}
+
+func (v ViewChange) MarshalJSON() ([]byte, error) {
+	type alias ViewChange
+	return json.Marshal(
+		struct {
+			Type MessageType `json:"type"`
+			Data alias       `json:"data"`
+		}{
+			Type: MessageViewChange,
+			Data: alias(v),
 		})
 }
 

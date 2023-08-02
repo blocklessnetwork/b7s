@@ -10,6 +10,9 @@ type replicaState struct {
 	// sure it's worth it.
 	sl *sync.Mutex
 
+	// False if view change is in progress.
+	activeView bool
+
 	// Keep track of seen requests. Map request to the digest.
 	requests map[string]Request
 	// Keep track of requests queued for execution. Could also be tracked via a single map.
@@ -28,6 +31,7 @@ func newState() replicaState {
 	state := replicaState{
 		sl: &sync.Mutex{},
 
+		activeView:  true,
 		requests:    make(map[string]Request),
 		pending:     make(map[string]Request),
 		preprepares: make(map[messageID]PrePrepare),

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/rs/zerolog"
 
@@ -20,13 +21,20 @@ import (
 
 // Replica is a single PBFT node. Both Primary and Backup nodes are all replicas.
 type Replica struct {
+	// PBFT related data.
 	pbftCore
 	replicaState
 
+	// Track inactivity period to trigger a view change.
+	// TODO (pbft): Timer fires repeatedly. Not what we want. Perhaps use a time.AfterFunc one?
+	requestTimer *time.Timer
+
+	// Components.
 	log      zerolog.Logger
 	host     *host.Host
 	executor Executor
 
+	// Cluster identity.
 	id    peer.ID
 	key   crypto.PrivKey
 	peers []peer.ID
@@ -65,6 +73,11 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []
 	replica.setGeneralMessageHandler()
 
 	return &replica, nil
+}
+
+func (r *Replica) Shutdown() error {
+	r.stopRequestTimer()
+	return nil
 }
 
 func (r *Replica) setPBFTMessageHandler() {
@@ -130,6 +143,9 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 
 	case Commit:
 		return r.processCommit(from, m)
+
+	case ViewChange:
+		return r.processViewChange(from, m)
 	}
 
 	return fmt.Errorf("unexpected message type (from: %s): %T", from, msg)
