@@ -75,3 +75,21 @@ func (r *Replica) committed(view uint, sequenceNo uint, digest string) bool {
 
 	return haveQuorum
 }
+
+func (r *Replica) viewChangeReady(view uint) bool {
+
+	vc, ok := r.viewChanges[view]
+	if !ok {
+		return false
+	}
+
+	vc.Lock()
+	defer vc.Unlock()
+
+	vcCount := uint(len(vc.m))
+	haveQuorum := vcCount >= r.prepareQuorum()
+
+	r.log.Debug().Uint("view", view).Uint("quorum", vcCount).Bool("have_quorum", haveQuorum).Msg("number of view change messages for a view")
+
+	return haveQuorum
+}

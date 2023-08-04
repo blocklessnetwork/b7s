@@ -139,11 +139,11 @@ type ViewChange struct {
 
 // TODO (pbft): Set of requests prepared here.
 type PrepareInfo struct {
-	View       uint                `json:"view"`
-	Sequnce    uint                `json:"sequence_number"`
-	Digest     string              `json:"digest"`
-	PrePrepare PrePrepare          `json:"preprepare"`
-	Prepares   map[peer.ID]Prepare `json:"prepares"`
+	View           uint                `json:"view"`
+	SequenceNumber uint                `json:"sequence_number"`
+	Digest         string              `json:"digest"`
+	PrePrepare     PrePrepare          `json:"preprepare"`
+	Prepares       map[peer.ID]Prepare `json:"prepares"`
 }
 
 func (v ViewChange) MarshalJSON() ([]byte, error) {

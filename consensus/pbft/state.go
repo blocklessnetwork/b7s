@@ -24,6 +24,8 @@ type replicaState struct {
 	prepares map[messageID]*prepareReceipts
 	// Keep track of seen commit messages.
 	commits map[messageID]*commitReceipts
+	// Keep track of view change messages.
+	viewChanges map[uint]*viewChangeReceipts
 }
 
 func newState() replicaState {
@@ -37,6 +39,7 @@ func newState() replicaState {
 		preprepares: make(map[messageID]PrePrepare),
 		prepares:    make(map[messageID]*prepareReceipts),
 		commits:     make(map[messageID]*commitReceipts),
+		viewChanges: make(map[uint]*viewChangeReceipts),
 	}
 
 	return state

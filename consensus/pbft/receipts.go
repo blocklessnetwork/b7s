@@ -36,3 +36,18 @@ func newCommitReceipts() *commitReceipts {
 
 	return &cr
 }
+
+type viewChangeReceipts struct {
+	m map[peer.ID]ViewChange
+	*sync.Mutex
+}
+
+func newViewChangeReceipts() *viewChangeReceipts {
+
+	vcr := viewChangeReceipts{
+		m:     make(map[peer.ID]ViewChange),
+		Mutex: &sync.Mutex{},
+	}
+
+	return &vcr
+}

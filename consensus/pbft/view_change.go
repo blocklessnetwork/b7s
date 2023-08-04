@@ -1,6 +1,7 @@
 package pbft
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -36,14 +37,61 @@ func (r *Replica) startViewChange() error {
 
 func (r *Replica) processViewChange(replica peer.ID, msg ViewChange) error {
 
-	r.log.Info().Str("replica", replica.String()).Msg("processing view change message")
+	log := r.log.With().Str("replica", replica.String()).Uint("view", msg.View).Logger()
+	log.Info().Msg("processing view change message")
 
 	if msg.View < r.view {
-		r.log.Warn().Uint("current", r.view).Uint("received", msg.View).Msg("received view change for an old view")
+		log.Warn().Uint("current_view", r.view).Msg("received view change for an old view")
 		return nil
 	}
 
-	return fmt.Errorf("TBD: not implemented")
+	// Check if the view change message is valid.
+	err := r.validViewChange(msg)
+	if err != nil {
+		return fmt.Errorf("view change message is not valid (replica: %s): %w", replica.String(), err)
+	}
+
+	r.recordViewChangeReceipt(replica, msg)
+
+	log.Info().Msg("processed view change message")
+
+	projectedPrimary := r.peers[r.primary(msg.View)]
+	log.Info().Str("id", projectedPrimary.String()).Msg("expected primary for the view")
+
+	// If `I` am not the expected primary for this view - I've done all I should.
+	if projectedPrimary != r.id {
+		return nil
+	}
+
+	// I am the primary for the view in question.
+	if !r.viewChangeReady(msg.View) {
+		log.Info().Msg("I am the expected primary for the view, but not enough view change messages yet")
+		return nil
+	}
+
+	log.Info().Msg("I am the expected primary for the new view, have enough view change messages")
+
+	return r.startNewView(msg)
+}
+
+func (r *Replica) recordViewChangeReceipt(replica peer.ID, vc ViewChange) {
+
+	vcs, ok := r.viewChanges[vc.View]
+	if !ok {
+		r.viewChanges[vc.View] = newViewChangeReceipts()
+		vcs = r.viewChanges[vc.View]
+	}
+
+	vcs.Lock()
+	defer vcs.Unlock()
+
+	_, exists := vcs.m[replica]
+	if exists {
+		r.log.Warn().Uint("view", vc.View).Str("replica", replica.String()).Msg("ignoring duplicate view change message")
+		return
+	}
+
+	vcs.m[replica] = vc
 }
 
 // Required for a view change, getPrepareSet returns the set of all requests prepared on this replica.
@@ -73,11 +121,11 @@ func (r *Replica) getPrepareSet() []PrepareInfo {
 			log.Info().Msg("request prepared - including")
 
 			prepareInfo := PrepareInfo{
-				View:       msgID.view,
-				Sequnce:    msgID.sequence,
-				Digest:     digest,
-				PrePrepare: r.preprepares[msgID],
-				Prepares:   prepare.m,
+				View:           msgID.view,
+				SequenceNumber: msgID.sequence,
+				Digest:         digest,
+				PrePrepare:     r.preprepares[msgID],
+				Prepares:       prepare.m,
 			}
 
 			out = append(out, prepareInfo)
@@ -87,4 +135,56 @@ func (r *Replica) getPrepareSet() []PrepareInfo {
 	r.log.Debug().Interface("prepare_set", out).Msg("prepare set for the replica")
 
 	return out
+}
+
+func (r *Replica) validViewChange(vc ViewChange) error {
+
+	if vc.View == 0 {
+		return errors.New("invalid view number")
+	}
+
+	for _, prepare := range vc.Prepares {
+
+		if prepare.View >= vc.View || prepare.SequenceNumber == 0 {
+			return fmt.Errorf("view change - prepare has an invalid view/sequence number (view: %v, prepare view: %v, sequence: %v)", vc.View, prepare.View, prepare.SequenceNumber)
+		}
+
+		if prepare.View != prepare.PrePrepare.View || prepare.SequenceNumber != prepare.PrePrepare.SequenceNumber {
+			return fmt.Errorf("view change - prepare has an unmatching pre-prepare message (view/sequence number)")
+		}
+
+		if prepare.Digest == "" {
+			return fmt.Errorf("view change - prepare has an empty digest")
+		}
+
+		if prepare.Digest != prepare.PrePrepare.Digest {
+			return fmt.Errorf("view change - prepare has an unmatching pre-prepare message (digest)")
+		}
+
+		if uint(len(prepare.Prepares)) < r.prepareQuorum() {
+			return fmt.Errorf("view change - prepare has an insufficient number of prepare messages (have: %v)", len(prepare.Prepares))
+		}
+
+		for _, pp := range prepare.Prepares {
+			if pp.View != prepare.View || pp.SequenceNumber != prepare.SequenceNumber || pp.Digest != prepare.Digest {
+				return fmt.Errorf("view change - included prepare message for wrong request")
+			}
+		}
+
+		return nil
+	}
+
+	// Condition:
+	// !(p.View < vc.View && p.SequenceNumber > vc.H && p.SequenceNumber <= vc.H+instance.L)
+	//
+	// Translate to english:
+	// view change is bad if condition is NOT met:
+	// so, view is good if the following is true:
+	// p.View < vc.View && p.SequenceNumber > vc.H && p.SequenceNumber <= vc.H+instance.L
+	//
+	// - prepares have to be for a view lower than one received
+	// - prepares have a sequence number higher than the view change's H value
+	// - prepares have a sequence number lower than the view change's H + L value
+
+	return fmt.Errorf("TBD: not implemented")
 }
