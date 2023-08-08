@@ -86,7 +86,14 @@ func (r *Replica) viewChangeReady(view uint) bool {
 	vc.Lock()
 	defer vc.Unlock()
 
-	vcCount := uint(len(vc.m))
+	var vcCount uint
+
+	// Count how many OTHER replicas sent their view count messages.
+	for replica := range vc.m {
+		if replica != r.id {
+			vcCount++
+		}
+	}
 	haveQuorum := vcCount >= r.prepareQuorum()
 
 	r.log.Debug().Uint("view", view).Uint("quorum", vcCount).Bool("have_quorum", haveQuorum).Msg("number of view change messages for a view")

@@ -146,6 +146,9 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 
 	case ViewChange:
 		return r.processViewChange(from, m)
+
+	case NewView:
+		return r.processNewView(from, m)
 	}
 
 	return fmt.Errorf("unexpected message type (from: %s): %T", from, msg)

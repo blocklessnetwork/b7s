@@ -24,6 +24,7 @@ const (
 
 var (
 	ErrViewChange = errors.New("view change in progress")
+	ErrActiveView = errors.New("replica is currently in an active view")
 )
 
 var (

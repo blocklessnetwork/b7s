@@ -34,14 +34,14 @@ func (c pbftCore) currentPrimary() uint {
 	return c.view % c.n
 }
 
-// TODO (pbft): are there different quorums? this one is for the prepare messages.
 func (c pbftCore) prepareQuorum() uint {
-	// TODO (pbft): Check if we should use 2f here or, as in fabric - (n+f+2)/2?
+	// TODO (pbft): Not sure about this quorum - is it 2f total or 2f prepares from OTHER replicas?
+	// We need 2f+1 for a quorum; but, the primary's `preprepare` message counts as it's vote, so we may need 2f more.
 	return 2 * c.f
 }
 
 func (c pbftCore) commitQuorum() uint {
-	return 2 * c.f
+	return 2*c.f + 1
 }
 
 // based on the number of replicas, determine how many byzantine replicas we can tolerate.

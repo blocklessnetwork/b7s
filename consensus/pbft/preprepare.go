@@ -15,7 +15,6 @@ func (r *Replica) sendPrePrepare(req Request) error {
 
 	r.startRequestTimer(false)
 
-	// TODO: Check - is there a reason we just don't use 0 too?
 	seqNo := r.sequence + 1
 	r.sequence++
 

@@ -159,9 +159,9 @@ func (v ViewChange) MarshalJSON() ([]byte, error) {
 }
 
 type NewView struct {
-	View        uint         `json:"view"`
-	Messages    []ViewChange `json:"messages"`
-	PrePrepares []PrePrepare `json:"preprepares"`
+	View        uint                   `json:"view"`
+	Messages    map[peer.ID]ViewChange `json:"messages"`
+	PrePrepares []PrePrepare           `json:"preprepares"`
 }
 
 // messageRecord is used as an interim format to supplement the original type with its type.
