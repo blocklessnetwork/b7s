@@ -53,6 +53,10 @@ func (r *Replica) processViewChange(replica peer.ID, msg ViewChange) error {
 
 	r.recordViewChangeReceipt(replica, msg)
 
+	// TODO (pbft): Liveness condition - if we received f+1 valid view change messages from other replicas,
+	// (greater than our current view), send a view change message for the smallest view in the set. Do so
+	// even if our timer has not expired.
+
 	log.Info().Msg("processed view change message")
 
 	projectedPrimary := r.peers[r.primary(msg.View)]
@@ -71,7 +75,7 @@ func (r *Replica) processViewChange(replica peer.ID, msg ViewChange) error {
 
 	log.Info().Msg("I am the expected primary for the new view, have enough view change messages")
 
-	return r.startNewView(msg)
+	return r.startNewView(msg.View)
 }
 
 func (r *Replica) recordViewChangeReceipt(replica peer.ID, vc ViewChange) {

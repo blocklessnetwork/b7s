@@ -18,6 +18,7 @@ const (
 	MessagePrepare
 	MessageCommit
 	MessageViewChange
+	MessageNewView
 )
 
 func (m MessageType) String() string {
@@ -30,6 +31,8 @@ func (m MessageType) String() string {
 		return "MessageCommit"
 	case MessageViewChange:
 		return "MessageViewChange"
+	case MessageNewView:
+		return "MessageNewView"
 	default:
 		return fmt.Sprintf("unknown: %d", m)
 	}
@@ -55,8 +58,6 @@ func (r Request) MarshalJSON() ([]byte, error) {
 			Data: alias(r),
 		})
 }
-
-// TODO: In fabric code, all messages have a `replicaID` field.
 
 type PrePrepare struct {
 	View           uint    `json:"view"`
@@ -137,7 +138,6 @@ type ViewChange struct {
 	//	- P - set Pm for each request m prepared at replica i with a sequence number higher than n; Pm includes a valid pre-prepare message and 2f matching, valid prepared messages (same view, sequence number and digest of m). Because we don't support checkpoints, this means everything from sequence number 0.
 }
 
-// TODO (pbft): Set of requests prepared here.
 type PrepareInfo struct {
 	View           uint                `json:"view"`
 	SequenceNumber uint                `json:"sequence_number"`
@@ -156,6 +156,12 @@ func (v ViewChange) MarshalJSON() ([]byte, error) {
 			Type: MessageViewChange,
 			Data: alias(v),
 		})
+}
+
+type NewView struct {
+	View        uint         `json:"view"`
+	Messages    []ViewChange `json:"messages"`
+	PrePrepares []PrePrepare `json:"preprepares"`
 }
 
 // messageRecord is used as an interim format to supplement the original type with its type.
@@ -205,6 +211,22 @@ func unpackMessage(payload []byte) (any, error) {
 			return nil, fmt.Errorf("could not unpack commit message: %w", err)
 		}
 		return commit, nil
+
+	case MessageViewChange:
+		var viewChange ViewChange
+		err = json.Unmarshal(msg.Data, &viewChange)
+		if err != nil {
+			return nil, fmt.Errorf("could not unpack view change message: %w", err)
+		}
+		return viewChange, nil
+
+	case MessageNewView:
+		var newView NewView
+		err = json.Unmarshal(msg.Data, &newView)
+		if err != nil {
+			return nil, fmt.Errorf("could not unpack new view message: %w", err)
+		}
+		return newView, nil
 	}
 
 	return nil, fmt.Errorf("unexpected message type (type: %v)", msg.Type)

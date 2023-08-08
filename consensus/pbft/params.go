@@ -25,3 +25,7 @@ const (
 var (
 	ErrViewChange = errors.New("view change in progress")
 )
+
+var (
+	NullRequest = Request{}
+)
