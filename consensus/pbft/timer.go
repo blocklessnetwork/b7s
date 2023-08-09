@@ -19,7 +19,14 @@ func (r *Replica) startRequestTimer(overrideExisting bool) {
 
 	go func() {
 		<-r.requestTimer.C
-		r.startViewChange()
+
+		r.sl.Lock()
+		defer r.sl.Unlock()
+
+		err := r.startViewChange(r.view + 1)
+		if err != nil {
+			r.log.Error().Err(err).Msg("could not start view change")
+		}
 	}()
 }
 

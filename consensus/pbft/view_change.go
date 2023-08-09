@@ -7,20 +7,14 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-func (r *Replica) startViewChange() error {
-
-	r.sl.Lock()
-	defer r.sl.Unlock()
+func (r *Replica) startViewChange(view uint) error {
 
 	r.log.Info().Uint("current_view", r.view).Msg("starting view change")
 
 	r.stopRequestTimer()
 
-	r.view++
+	r.view = view
 	r.activeView = false
-
-	// TODO (pbft): Signing.
-	// TODO (pbft): Resending.
 
 	vc := ViewChange{
 		View:     r.view,
@@ -53,11 +47,18 @@ func (r *Replica) processViewChange(replica peer.ID, msg ViewChange) error {
 
 	r.recordViewChangeReceipt(replica, msg)
 
-	// TODO (pbft): Liveness condition - if we received f+1 valid view change messages from other replicas,
-	// (greater than our current view), send a view change message for the smallest view in the set. Do so
-	// even if our timer has not expired.
-
 	log.Info().Msg("processed view change message")
+
+	nextView, should := r.shouldSendViewChange()
+	if should {
+
+		log.Info().Uint("next_view", nextView).Msg("we have received enough view change messages, joining view change")
+
+		err = r.startViewChange(nextView)
+		if err != nil {
+			log.Error().Err(err).Uint("next_view", nextView).Msg("unable to send view change")
+		}
+	}
 
 	projectedPrimary := r.peers[r.primary(msg.View)]
 	log.Info().Str("id", projectedPrimary.String()).Msg("expected primary for the view")
@@ -110,7 +111,7 @@ func (r *Replica) getPrepareSet() []PrepareInfo {
 
 	for msgID, prepare := range r.prepares {
 
-		log := r.log.With().Uint("view", msgID.view).Uint("sequnce", msgID.sequence).Logger()
+		log := r.log.With().Uint("view", msgID.view).Uint("sequence", msgID.sequence).Logger()
 
 		for digest := range r.requests {
 
@@ -175,8 +176,11 @@ func (r *Replica) validViewChange(vc ViewChange) error {
 			}
 		}
 
-		return nil
 	}
+
+	return nil
+
+	// TODO (pbft): Is this below relevant?
 
 	// Condition:
 	// !(p.View < vc.View && p.SequenceNumber > vc.H && p.SequenceNumber <= vc.H+instance.L)
@@ -189,6 +193,55 @@ func (r *Replica) validViewChange(vc ViewChange) error {
 	// - prepares have to be for a view lower than one received
 	// - prepares have a sequence number higher than the view change's H value
 	// - prepares have a sequence number lower than the view change's H + L value
+}
 
-	return fmt.Errorf("TBD: not implemented")
+// Liveness condition - if we received f+1 valid view change messages from other replicas,
+// (greater than our current view), send a view change message for the smallest view in the set. Do so
+// even if our timer has not expired.
+func (r *Replica) shouldSendViewChange() (uint, bool) {
+
+	// If we're already participating in a view change, we're good.
+	if !r.activeView {
+		return 0, false
+	}
+
+	var newView uint
+
+	// Go through view change messages we have received.
+	for view, vcs := range r.viewChanges {
+		// Only consider views higher than our current one.
+		if view <= r.view {
+			continue
+		}
+
+		vcs.Lock()
+
+		// See how many view change messages we received. Don't count our own.
+		count := 0
+		for replica := range vcs.m {
+			if replica != r.id {
+				count++
+			}
+
+			// NOTE: We already check if the view change is valid on receiving it.
+		}
+
+		vcs.Unlock()
+
+		// If we have more than f+1 view change messages, consider sending one too.
+		if uint(count) >= r.f+1 {
+
+			if newView == 0 { // Set new view if it was uninitialized.
+				newView = view
+			} else if view < newView { // We have multiple sets of f+1 view change messages. Use the lowest one.
+				newView = view
+			}
+		}
+	}
+
+	if newView != 0 {
+		return newView, true
+	}
+
+	return newView, false
 }

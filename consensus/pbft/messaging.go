@@ -63,7 +63,7 @@ func (r *Replica) broadcast(msg interface{}) error {
 		go func(peer peer.ID) {
 			defer wg.Done()
 
-			// NOTE: We could potentially retry sending to nodes if we fail once. On the other hand, somewhat unlikely they're
+			// NOTE: We could potentially retry sending if we fail once. On the other hand, somewhat unlikely they're
 			// back online split second later.
 
 			err := r.host.SendMessageOnProtocol(ctx, peer, payload, Protocol)

@@ -17,7 +17,9 @@ import (
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
-// TODO (pbft): View change.
+// TODO (pbft): Add signatures to messages and signature verification.
+// TODO (pbft): Resetting timers when an execution is done.
+// TODO (pbft): View change advancing and backoff.
 
 // Replica is a single PBFT node. Both Primary and Backup nodes are all replicas.
 type Replica struct {

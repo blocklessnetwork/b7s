@@ -16,7 +16,17 @@ func (r *Replica) startNewView(view uint) error {
 	vcs.Lock()
 	defer vcs.Unlock()
 
-	// TODO (pbft): If we don't have our own view change message yet - add it here now.
+	// If we don't have our own view change message added yet - do it now.
+	_, ok = vcs.m[r.id]
+	if !ok {
+
+		vc := ViewChange{
+			View:     view,
+			Prepares: r.getPrepareSet(),
+		}
+
+		vcs.m[r.id] = vc
+	}
 
 	// Recheck that we have a valid view change state (quorum).
 	if !r.viewChangeReady(view) {

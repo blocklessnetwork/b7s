@@ -2,6 +2,7 @@ package pbft
 
 func (r *Replica) prePrepared(view uint, sequenceNo uint, digest string) bool {
 
+	// TODO (pbft): This is now okay as it's a null request.
 	if digest == "" {
 		return false
 	}
@@ -86,15 +87,8 @@ func (r *Replica) viewChangeReady(view uint) bool {
 	vc.Lock()
 	defer vc.Unlock()
 
-	var vcCount uint
-
-	// Count how many OTHER replicas sent their view count messages.
-	for replica := range vc.m {
-		if replica != r.id {
-			vcCount++
-		}
-	}
-	haveQuorum := vcCount >= r.prepareQuorum()
+	vcCount := uint(len(vc.m))
+	haveQuorum := vcCount >= r.commitQuorum()
 
 	r.log.Debug().Uint("view", view).Uint("quorum", vcCount).Bool("have_quorum", haveQuorum).Msg("number of view change messages for a view")
 
