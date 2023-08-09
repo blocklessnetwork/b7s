@@ -8,11 +8,7 @@ import (
 
 func (r *Replica) processRequest(from peer.ID, req Request) error {
 
-	r.log.Info().Str("peer", from.String()).Str("id", req.ID).Msg("received a request")
-
-	if !r.activeView {
-		return ErrViewChange
-	}
+	r.log.Info().Str("client", from.String()).Str("id", req.ID).Msg("received a request")
 
 	// If we're not the primary, we'll drop the request. We do start a request timer though.
 	if !r.isPrimary() {

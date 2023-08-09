@@ -20,6 +20,8 @@ import (
 // TODO (pbft): Add signatures to messages and signature verification.
 // TODO (pbft): Resetting timers when an execution is done.
 // TODO (pbft): View change advancing and backoff.
+// TODO (pbft): Request timestamp - execution exactly once, prevent multiple/out of order executions.
+// TODO (pbft): Reply format (view number etc).
 
 // Replica is a single PBFT node. Both Primary and Backup nodes are all replicas.
 type Replica struct {
@@ -132,6 +134,11 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 	r.sl.Lock()
 	defer r.sl.Unlock()
 
+	err = r.isMessageAllowed(msg)
+	if err != nil {
+		return fmt.Errorf("message not allowed: %w", err)
+	}
+
 	switch m := msg.(type) {
 
 	case Request:
@@ -214,4 +221,27 @@ func peerIDList(ids []peer.ID) []string {
 		peerIDs = append(peerIDs, rp.String())
 	}
 	return peerIDs
+}
+
+func (r *Replica) isMessageAllowed(msg interface{}) error {
+
+	// If we're in an active view, we accept all but new-view messages.
+	if r.activeView {
+
+		switch msg.(type) {
+		case NewView:
+			return ErrActiveView
+		default:
+			return nil
+		}
+	}
+
+	// We are in a view change. Only accept view-change and new-view messages.
+	// PBFT also supports checkpoint messages, but we don't use those.
+	switch msg.(type) {
+	case ViewChange, NewView:
+		return nil
+	default:
+		return ErrViewChange
+	}
 }

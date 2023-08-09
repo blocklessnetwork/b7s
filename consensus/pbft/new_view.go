@@ -172,10 +172,6 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 
 	log.Info().Msg("received new view message")
 
-	if r.activeView {
-		return ErrActiveView
-	}
-
 	if newView.View <= r.view {
 		log.Warn().Uint("current_view", r.view).Msg("received new view message for a view lower than ours, discarding")
 		return nil

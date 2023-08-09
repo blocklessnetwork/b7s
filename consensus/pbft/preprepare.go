@@ -59,10 +59,6 @@ func (r *Replica) processPrePrepare(replica peer.ID, msg PrePrepare) error {
 
 	log.Info().Msg("received pre-prepare message")
 
-	if !r.activeView {
-		return ErrViewChange
-	}
-
 	if replica != r.primaryReplicaID() {
 		log.Warn().Str("primary", r.primaryReplicaID().String()).Msg("pre-prepare came from a replica that is not the primary, dropping")
 		return nil

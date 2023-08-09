@@ -60,10 +60,6 @@ func (r *Replica) processPrepare(replica peer.ID, prepare Prepare) error {
 
 	log.Info().Msg("received prepare message")
 
-	if !r.activeView {
-		return ErrViewChange
-	}
-
 	if replica == r.primaryReplicaID() {
 		log.Warn().Msg("received prepare message from primary, ignoring")
 		return nil
