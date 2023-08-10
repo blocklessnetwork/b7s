@@ -6,25 +6,13 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-// TODO (pbft): Split into `shouldSendCommit` and `sendCommit`.
 func (r *Replica) maybeSendCommit(view uint, sequenceNo uint, digest string) error {
 
 	log := r.log.With().Uint("view", view).Uint("sequence_number", sequenceNo).Str("digest", digest).Logger()
 
-	if !r.prepared(view, sequenceNo, digest) {
-		log.Info().Msg("request not yet prepared, not committing")
+	if !r.shouldSendCommit(view, sequenceNo, digest) {
+		log.Info().Msg("commit for request not due yet")
 		return nil
-	}
-
-	// Have we already sent a commit message?
-	msgID := getMessageID(view, sequenceNo)
-	commits, ok := r.commits[msgID]
-	if ok {
-		_, sent := commits.m[r.id]
-		if sent {
-			log.Info().Msg("already have broadcast commit for this request, stopping now")
-			return nil
-		}
 	}
 
 	log.Info().Msg("request prepared, broadcasting commit")
@@ -36,7 +24,6 @@ func (r *Replica) maybeSendCommit(view uint, sequenceNo uint, digest string) err
 
 	log.Info().Msg("commit successfuly broadcast")
 
-	// TODO (pbft): This function does too much, split.
 	if !r.committed(view, sequenceNo, digest) {
 		log.Info().Msg("request is not yet committed")
 		return nil
@@ -45,6 +32,29 @@ func (r *Replica) maybeSendCommit(view uint, sequenceNo uint, digest string) err
 	log.Info().Msg("request committed, executing")
 
 	return r.execute(view, sequenceNo, digest)
+}
+
+func (r *Replica) shouldSendCommit(view uint, sequenceNo uint, digest string) bool {
+
+	log := r.log.With().Uint("view", view).Uint("sequence_number", sequenceNo).Str("digest", digest).Logger()
+
+	if !r.prepared(view, sequenceNo, digest) {
+		log.Info().Msg("request not yet prepared, commit not due yet")
+		return false
+	}
+
+	// Have we already sent a commit message?
+	msgID := getMessageID(view, sequenceNo)
+	commits, ok := r.commits[msgID]
+	if ok {
+		_, sent := commits.m[r.id]
+		if sent {
+			log.Info().Msg("commit for this request already broadcast")
+			return false
+		}
+	}
+
+	return true
 }
 
 func (r *Replica) sendCommit(view uint, sequenceNo uint, digest string) error {
