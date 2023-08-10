@@ -15,12 +15,12 @@ func (r *Replica) sendPrePrepare(req Request) error {
 
 	r.startRequestTimer(false)
 
-	seqNo := r.sequence + 1
 	r.sequence++
+	sequence := r.sequence
 
 	msg := PrePrepare{
 		View:           r.view,
-		SequenceNumber: seqNo,
+		SequenceNumber: sequence,
 		Request:        req,
 		Digest:         getDigest(req),
 	}
@@ -47,7 +47,7 @@ func (r *Replica) sendPrePrepare(req Request) error {
 	return nil
 }
 
-// Process a pre-prepare message. This should naturally only happen on non-primary replicas.
+// Process a pre-prepare message. This should only happen on backup replicas.
 func (r *Replica) processPrePrepare(replica peer.ID, msg PrePrepare) error {
 
 	if r.isPrimary() {
@@ -60,30 +60,31 @@ func (r *Replica) processPrePrepare(replica peer.ID, msg PrePrepare) error {
 	log.Info().Msg("received pre-prepare message")
 
 	if replica != r.primaryReplicaID() {
-		log.Warn().Str("primary", r.primaryReplicaID().String()).Msg("pre-prepare came from a replica that is not the primary, dropping")
+		log.Error().Str("primary", r.primaryReplicaID().String()).Msg("pre-prepare came from a replica that is not the primary, dropping")
 		return nil
 	}
 
 	if msg.View != r.view {
-		return fmt.Errorf("pre-prepare has an invalid view value (received: %v, current: %v)", msg.View, r.view)
+		return fmt.Errorf("pre-prepare for an invalid view (received: %v, current: %v)", msg.View, r.view)
 	}
 
 	id := getMessageID(msg.View, msg.SequenceNumber)
 
-	// TODO (pbft): in reality more involved, for now we'll stop if there's something existing already.
 	existing, ok := r.preprepares[id]
 	if ok {
-		log.Warn().Str("existing_digest", existing.Digest).Msg("pre-prepare message already exists for this view and sequence number, dropping")
-		return nil
+		log.Error().Str("existing_digest", existing.Digest).Msg("pre-prepare message already exists for this view and sequence number, dropping")
+		return ErrConflictingPreprepare
 	}
 
 	// We don't have this pre-prepare. Save it now.
 	r.preprepares[id] = msg
 
+	// TODO (pbft): See if this is the same request we saw. If it isn't consider triggering a view change right here and now.
 	// Save this request.
 	r.requests[msg.Digest] = msg.Request
 	r.pending[msg.Digest] = msg.Request
 
+	// Just a sanity check at this point, since we've set up the state just now.
 	if !r.prePrepared(msg.View, msg.SequenceNumber, msg.Digest) {
 		log.Warn().Msg("request is not pre-prepared, stopping")
 		return nil

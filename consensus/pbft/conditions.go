@@ -2,10 +2,7 @@ package pbft
 
 func (r *Replica) prePrepared(view uint, sequenceNo uint, digest string) bool {
 
-	// TODO (pbft): This is now okay as it's a null request.
-	if digest == "" {
-		return false
-	}
+	// NOTE: Digest can be empty (NullRequest).
 
 	// Have we seen this request before?
 	_, seen := r.requests[digest]
