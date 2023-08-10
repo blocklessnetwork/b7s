@@ -79,16 +79,17 @@ func (r *Replica) broadcast(msg interface{}) error {
 
 	wg.Wait()
 
+	// If all went well, just return.
+	sendErr := multierr.ErrorOrNil()
+	if sendErr == nil {
+		return nil
+	}
+
 	// Warn if we had more send errors than we bargained for.
 	errCount := uint(multierr.Len())
 	if errCount > r.f {
 		r.log.Warn().Uint("f", r.f).Uint("errors", errCount).Msg("broadcast error count higher than pBFT f value")
 	}
 
-	sendErr := multierr.ErrorOrNil()
-	if sendErr != nil {
-		return fmt.Errorf("could not broadcast message: %w", sendErr)
-	}
-
-	return nil
+	return fmt.Errorf("could not broadcast message: %w", sendErr)
 }
