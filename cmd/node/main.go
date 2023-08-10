@@ -87,11 +87,6 @@ func run() int {
 		log.Error().Err(err).Msg("could not get list of dial-back peers")
 		return failure
 	}
-	peerAddrs, err := getPeerAddresses(peers)
-	if err != nil {
-		log.Error().Err(err).Msg("could not get peer addresses")
-		return failure
-	}
 
 	// Get the list of boot nodes addresses.
 	bootNodeAddrs, err := getBootNodeAddresses(cfg.BootNodes)
@@ -104,7 +99,7 @@ func run() int {
 	host, err := host.New(log, cfg.Host.Address, cfg.Host.Port,
 		host.WithPrivateKey(cfg.Host.PrivateKey),
 		host.WithBootNodes(bootNodeAddrs),
-		host.WithDialBackPeers(peerAddrs),
+		host.WithDialBackPeers(peers),
 		host.WithDialBackAddress(cfg.Host.DialBackAddress),
 		host.WithDialBackPort(cfg.Host.DialBackPort),
 		host.WithDialBackWebsocketPort(cfg.Host.DialBackWebsocketPort),
@@ -120,7 +115,7 @@ func run() int {
 		Str("id", host.ID().String()).
 		Strs("addresses", host.Addresses()).
 		Int("boot_nodes", len(bootNodeAddrs)).
-		Int("dial_back_peers", len(peerAddrs)).
+		Int("dial_back_peers", len(peers)).
 		Msg("created host")
 
 	// Set node options.

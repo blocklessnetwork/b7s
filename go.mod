@@ -26,6 +26,7 @@ require (
 
 require (
 	github.com/armon/go-metrics v0.4.1 // indirect
+	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/cilium/ebpf v0.9.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

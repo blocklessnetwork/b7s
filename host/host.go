@@ -1,9 +1,11 @@
 package host
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/rs/zerolog"
 
 	"github.com/libp2p/go-libp2p"
@@ -14,9 +16,9 @@ import (
 
 // Host represents a new libp2p host.
 type Host struct {
-	log       zerolog.Logger
-	host.Host // TODO: Once the use cases cristalize - reconsider embedding vs private field
+	host.Host
 
+	log zerolog.Logger
 	cfg Config
 }
 
@@ -64,7 +66,12 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 
 	if cfg.DialBackAddress != "" && cfg.DialBackPort != 0 {
 
-		externalAddr := fmt.Sprintf("/ip4/%s/tcp/%d", cfg.DialBackAddress, cfg.DialBackPort)
+		protocol, dialbackAddress, err := determineAddressProtocol(cfg.DialBackAddress)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse dialback multiaddress (address: %s): %w", cfg.DialBackAddress, err)
+		}
+
+		externalAddr := fmt.Sprintf("/%v/%v/tcp/%v", protocol, dialbackAddress, cfg.DialBackPort)
 		extAddresses := []string{
 			externalAddr,
 		}
@@ -75,7 +82,7 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 				return nil, fmt.Errorf("TCP and websocket dialback ports cannot be the same (TCP: %v, Websocket: %v)", cfg.DialBackPort, cfg.DialBackWebsocketPort)
 			}
 
-			externalWsAddr := fmt.Sprintf("/ip4/%v/tcp/%v/ws", address, cfg.WebsocketPort)
+			externalWsAddr := fmt.Sprintf("/%v/%v/tcp/%v/ws", protocol, dialbackAddress, cfg.WebsocketPort)
 			extAddresses = append(extAddresses, externalWsAddr)
 		}
 
@@ -142,4 +149,23 @@ func readPrivateKey(filepath string) (crypto.PrivKey, error) {
 	}
 
 	return key, nil
+}
+
+// determineAddressProtocol parses the provided address and tries to determine its type. We typically expect either a IPv4, IPv6 or a hostname.
+// At times it's a bit tricky to determine the address type in Go and a lot of parsers end up guessing when dealing with some more exotic variants.
+func determineAddressProtocol(address string) (string, string, error) {
+
+	if govalidator.IsIPv4(address) {
+		return "ip4", address, nil
+	}
+
+	if govalidator.IsIPv6(address) {
+		return "ip6", address, nil
+	}
+
+	if govalidator.IsDNSName(address) {
+		return "dns", address, nil
+	}
+
+	return "", "", errors.New("could not parse address")
 }

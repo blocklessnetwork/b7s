@@ -3,7 +3,6 @@ package host
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -11,6 +10,9 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	"github.com/libp2p/go-libp2p/p2p/discovery/util"
+	"github.com/multiformats/go-multiaddr"
+
+	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
 func (h *Host) DiscoverPeers(ctx context.Context, topic string) error {
@@ -86,17 +88,34 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 		return nil, fmt.Errorf("could not bootstrap the DHT: %w", err)
 	}
 
-	bootNodes := h.cfg.BootNodes
-	peers := h.cfg.DialBackPeers
+	// Nodes we will try to connect to on start.
+	var bootNodes []blockless.Peer
+
+	// Add explicitly specified nodes first.
+	for _, addr := range h.cfg.BootNodes {
+		addr := addr
+
+		addrInfo, err := peer.AddrInfoFromP2pAddr(addr)
+		if err != nil {
+			h.log.Warn().Err(err).Str("address", addr.String()).Msg("could not get addrinfo for boot node - skipping")
+			continue
+		}
+
+		node := blockless.Peer{
+			ID:       addrInfo.ID,
+			AddrInfo: *addrInfo,
+		}
+
+		bootNodes = append(bootNodes, node)
+	}
 
 	// Add the dial-back peers to the list of bootstrap nodes if they do not already exist.
-	// TODO: Limit to workers.
 
 	// We may want to limit the number of dial back peers we use.
 	added := uint(0)
 	addLimit := h.cfg.DialBackPeersLimit
 
-	for _, peer := range peers {
+	for _, peer := range h.cfg.DialBackPeers {
 		peer := peer
 
 		// If the limit of dial-back peers is set and we've reached it - stop now.
@@ -105,55 +124,50 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 			break
 		}
 
-		addr := peer.String()
-		addr = strings.Replace(addr, "127.0.0.1", "0.0.0.0", 1)
+		// If we don't have any addresses, add the multiaddress we (hopefully) do have - last one we received a connection from.
+		if len(peer.AddrInfo.Addrs) == 0 {
 
-		// Check if the peer is already among the boot nodes.
-		exists := false
-		for _, bootNode := range bootNodes {
-			if bootNode.String() == addr {
-				exists = true
+			ma, err := multiaddr.NewMultiaddr(peer.MultiAddr)
+			if err != nil {
+				h.log.Warn().Str("peer", peer.ID.String()).Str("addr", peer.MultiAddr).Msg("invalid multiaddress for dial-back peer, skipping")
 				break
 			}
+
+			h.log.Debug().Str("peer", peer.ID.String()).Msg("using last known multiaddress for dial-back peer")
+
+			peer.AddrInfo.Addrs = []multiaddr.Multiaddr{ma}
 		}
 
-		// If the peer is not among the boot nodes - add it now.
-		if !exists {
-			bootNodes = append(bootNodes, peer)
-			added++
-		}
+		h.log.Debug().Str("peer", peer.ID.String()).Interface("addr_info", peer.AddrInfo).Msg("adding dial-back peer")
+
+		bootNodes = append(bootNodes, peer)
+		added++
 	}
 
 	// Connect to the bootstrap nodes.
 	var wg sync.WaitGroup
 	for _, bootNode := range bootNodes {
+		bootNode := bootNode
 
-		addrInfo, err := peer.AddrInfoFromP2pAddr(bootNode)
-		if err != nil {
-			h.log.Warn().
-				Err(err).
-				Str("address", bootNode.String()).
-				Msg("could not get addrinfo for boot node - skipping")
+		// Skip peers we're already connected to (perhaps a dial-back peer was also a boot node).
+		connections := h.Network().ConnsToPeer(bootNode.ID)
+		if len(connections) > 0 {
 			continue
 		}
 
 		wg.Add(1)
-
-		go func() {
+		go func(peer blockless.Peer) {
 			defer wg.Done()
 
-			peerAddr := addrInfo
+			peerAddr := peer.AddrInfo
 
-			err := h.Host.Connect(ctx, *peerAddr)
+			err := h.Host.Connect(ctx, peerAddr)
 			if err != nil {
 				if err.Error() != errNoGoodAddresses {
-					h.log.Error().
-						Err(err).
-						Str("addrinfo", peerAddr.String()).
-						Msg("could not connect to bootstrap node")
+					h.log.Error().Err(err).Str("peer", peerAddr.ID.String()).Interface("addr_info", peerAddr).Msg("could not connect to bootstrap node")
 				}
 			}
-		}()
+		}(bootNode)
 	}
 
 	// Wait until we know the outcome of all connection attempts.
