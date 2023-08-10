@@ -13,8 +13,6 @@ func (r *Replica) sendPrePrepare(req Request) error {
 		return nil
 	}
 
-	r.startRequestTimer(false)
-
 	r.sequence++
 	sequence := r.sequence
 
@@ -83,6 +81,8 @@ func (r *Replica) processPrePrepare(replica peer.ID, msg PrePrepare) error {
 	// Save this request.
 	r.requests[msg.Digest] = msg.Request
 	r.pending[msg.Digest] = msg.Request
+
+	r.startRequestTimer(false)
 
 	// Just a sanity check at this point, since we've set up the state just now.
 	if !r.prePrepared(msg.View, msg.SequenceNumber, msg.Digest) {

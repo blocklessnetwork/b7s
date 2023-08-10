@@ -65,7 +65,7 @@ func (r *Replica) committed(view uint, sequenceNo uint, digest string) bool {
 	}
 
 	commitCount := uint(len(commits.m))
-	haveQuorum := commitCount > r.commitQuorum()
+	haveQuorum := commitCount >= r.commitQuorum()
 
 	r.log.Debug().Str("digest", digest).Uint("view", view).Uint("sequence_no", sequenceNo).
 		Uint("quorum", commitCount).Bool("have_quorum", haveQuorum).
