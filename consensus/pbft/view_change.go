@@ -26,6 +26,8 @@ func (r *Replica) startViewChange(view uint) error {
 		return fmt.Errorf("could not broadcast view change: %w", err)
 	}
 
+	r.log.Info().Uint("pending_view", r.view).Msg("view change successfully broadcast")
+
 	return nil
 }
 
@@ -65,6 +67,7 @@ func (r *Replica) processViewChange(replica peer.ID, msg ViewChange) error {
 
 	// If `I` am not the expected primary for this view - I've done all I should.
 	if projectedPrimary != r.id {
+		log.Info().Msg("processed view change message")
 		return nil
 	}
 

@@ -9,7 +9,7 @@ func (r *Replica) startRequestTimer(overrideExisting bool) {
 	r.log.Info().Msg("starting view change timer")
 
 	if r.requestTimer != nil && !overrideExisting {
-		r.log.Info().Bool("override", overrideExisting).Msg("view change timer running, not overriding")
+		r.log.Info().Msg("view change timer running, not overriding")
 		return
 	}
 
@@ -28,6 +28,8 @@ func (r *Replica) startRequestTimer(overrideExisting bool) {
 			r.log.Error().Err(err).Msg("could not start view change")
 		}
 	}()
+
+	r.log.Info().Msg("view change timer started")
 }
 
 func (r *Replica) stopRequestTimer() {
@@ -41,4 +43,6 @@ func (r *Replica) stopRequestTimer() {
 
 	r.requestTimer.Stop()
 	r.requestTimer = nil
+
+	r.log.Info().Msg("view change timer stopped")
 }

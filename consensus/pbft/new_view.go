@@ -8,6 +8,15 @@ import (
 
 func (r *Replica) startNewView(view uint) error {
 
+	log := r.log.With().Uint("view", view).Logger()
+
+	log.Info().Msg("starting a new view")
+
+	projectedPrimary := r.peers[r.primary(view)]
+	if projectedPrimary != r.id {
+		return fmt.Errorf("am not the expected primary for the specified view (view: %v, primary: %v)", view, projectedPrimary.String())
+	}
+
 	vcs, ok := r.viewChanges[view]
 	if !ok {
 		return fmt.Errorf("no view change messages for the specified view (view: %v)", view)
@@ -170,19 +179,19 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 
 	log := r.log.With().Str("replica", replica.String()).Uint("new_view", newView.View).Logger()
 
-	log.Info().Msg("received new view message")
+	log.Info().Msg("processing new view message")
 
 	if newView.View <= r.view {
-		log.Warn().Uint("current_view", r.view).Msg("received new view message for a view lower than ours, discarding")
+		log.Warn().Uint("current_view", r.view).Msg("received new view message for a view lower or equal to ours, discarding")
 		return nil
 	}
 
 	// Make sure that the replica sending this is the replica that will be the primary for the view in question.
 	projectedPrimary := r.peers[r.primary(newView.View)]
 	if projectedPrimary != replica {
-		return fmt.Errorf("projected primary for the view isn't the sender of the new-view message (projected: %v, sender: %v)",
-			projectedPrimary.String(),
-			replica.String())
+		return fmt.Errorf("sender of the new-view message is not the projected primary for the view (sender: %v, projected: %v)",
+			replica.String(),
+			projectedPrimary.String())
 	}
 
 	// Verify number of messages included.
@@ -190,7 +199,7 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 	haveQuorum := count >= r.commitQuorum()
 
 	if !haveQuorum {
-		return fmt.Errorf("new-view message does not have a quorum of view-change messages (replica: %v, count: %v)", replica.String(), count)
+		return fmt.Errorf("new-view message does not have a quorum of view-change messages (sender: %v, count: %v)", replica.String(), count)
 	}
 
 	// Go through ViewChange messages and validate them.
@@ -198,8 +207,6 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 		if vc.View != newView.View {
 			return fmt.Errorf("view change message references a wrong view (view_change: %v, new_view: %v)", vc.View, newView.View)
 		}
-
-		// TODO (pbft): verify signatures.
 	}
 
 	for i, preprepare := range newView.PrePrepares {
@@ -207,10 +214,10 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 			return fmt.Errorf("new view preprepare message for a wrong view (preprepare_view: %v, new_view: %v)", preprepare.View, newView.View)
 		}
 
-		// Verify our sequence numbers are all there, though offset by one.
+		// Verify sequence numbers are all there, though offset by one.
 		if uint(i) != preprepare.SequenceNumber {
 			log.Warn().Interface("preprepares", newView.PrePrepares).Msg("preprepares have unexpected sequence number value (possible gap)")
-			return fmt.Errorf("unexpected sequence number gap")
+			return fmt.Errorf("unexpected sequence number list")
 		}
 	}
 

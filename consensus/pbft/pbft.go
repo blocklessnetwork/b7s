@@ -22,6 +22,8 @@ import (
 // TODO (pbft): View change advancing and backoff.
 // TODO (pbft): Request timestamp - execution exactly once, prevent multiple/out of order executions.
 // TODO (pbft): Reply format (view number etc).
+// TODO (pbft): If we advance to a new view, we can clear all old messages for previous views.
+// TODO (pbft): Perhaps instead of an empty digest for a NullRequest - we use an actual digest of such a request?
 
 // Replica is a single PBFT node. Both Primary and Backup nodes are all replicas.
 type Replica struct {
