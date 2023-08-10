@@ -13,6 +13,9 @@ type replicaState struct {
 	// False if view change is in progress.
 	activeView bool
 
+	// Sequence number of last execution.
+	lastExecuted uint
+
 	// Keep track of seen requests. Map request to the digest.
 	requests map[string]Request
 	// Keep track of requests queued for execution. Could also be tracked via a single map.

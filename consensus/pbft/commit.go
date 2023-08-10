@@ -34,6 +34,8 @@ func (r *Replica) maybeSendCommit(view uint, sequenceNo uint, digest string) err
 		return fmt.Errorf("could not send commit message: %w", err)
 	}
 
+	log.Info().Msg("commit successfuly broadcast")
+
 	// TODO (pbft): This function does too much, split.
 	if !r.committed(view, sequenceNo, digest) {
 		log.Info().Msg("request is not yet committed")
@@ -42,7 +44,7 @@ func (r *Replica) maybeSendCommit(view uint, sequenceNo uint, digest string) err
 
 	log.Info().Msg("request committed, executing")
 
-	return r.execute(digest)
+	return r.execute(view, sequenceNo, digest)
 }
 
 func (r *Replica) sendCommit(view uint, sequenceNo uint, digest string) error {
@@ -80,32 +82,14 @@ func (r *Replica) processCommit(replica peer.ID, commit Commit) error {
 		return fmt.Errorf("commit has an invalid view value (received: %v, current: %v)", commit.View, r.view)
 	}
 
-	msgID := getMessageID(commit.View, commit.SequenceNumber)
-	commits, ok := r.commits[msgID]
-	if !ok {
-		r.commits[msgID] = newCommitReceipts()
-		commits = r.commits[msgID]
-	}
-
-	commits.Lock()
-	defer commits.Unlock()
-
-	// Have we already seen this commit?
-	_, seen := commits.m[replica]
-	if seen {
-		log.Warn().Msg("ignoring duplicate commit")
-		return nil
-	}
-
-	// Save this commit.
-	commits.m[replica] = commit
+	r.recordCommitReceipt(replica, commit)
 
 	if !r.committed(commit.View, commit.SequenceNumber, commit.Digest) {
 		log.Info().Msg("request is not yet committed")
 		return nil
 	}
 
-	err := r.execute(commit.Digest)
+	err := r.execute(commit.View, commit.SequenceNumber, commit.Digest)
 	if err != nil {
 		return fmt.Errorf("request execution failed: %w", err)
 
@@ -125,5 +109,13 @@ func (r *Replica) recordCommitReceipt(replica peer.ID, commit Commit) {
 
 	commits.Lock()
 	defer commits.Unlock()
+
+	// Have we already seen this commit?
+	_, exists := commits.m[replica]
+	if exists {
+		r.log.Warn().Uint("view", commit.View).Uint("sequence", commit.SequenceNumber).Str("digest", commit.Digest).Msg("ignoring duplicate commit")
+		return
+	}
+
 	commits.m[replica] = commit
 }

@@ -90,6 +90,8 @@ func (r *Replica) processPrePrepare(replica peer.ID, msg PrePrepare) error {
 		return nil
 	}
 
+	log.Info().Msg("processed pre-prepare")
+
 	// Broadcast prepare message.
 	err := r.sendPrepare(msg)
 	if err != nil {
