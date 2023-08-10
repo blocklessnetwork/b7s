@@ -13,13 +13,8 @@ func (r *Replica) startRequestTimer(overrideExisting bool) {
 		return
 	}
 
-	// TODO (pbft): Proper stopping/draining of the timer.
 	r.requestTimer.Stop()
-	r.requestTimer = time.NewTimer(RequestTimeout)
-
-	go func() {
-		<-r.requestTimer.C
-
+	r.requestTimer = time.AfterFunc(RequestTimeout, func() {
 		r.sl.Lock()
 		defer r.sl.Unlock()
 
@@ -27,7 +22,7 @@ func (r *Replica) startRequestTimer(overrideExisting bool) {
 		if err != nil {
 			r.log.Error().Err(err).Msg("could not start view change")
 		}
-	}()
+	})
 
 	r.log.Info().Msg("view change timer started")
 }
@@ -37,7 +32,7 @@ func (r *Replica) stopRequestTimer() {
 	r.log.Info().Msg("stopping view change timer")
 
 	if r.requestTimer == nil {
-		r.log.Info().Msg("no active view change timmer")
+		r.log.Info().Msg("no active view change timer")
 		return
 	}
 

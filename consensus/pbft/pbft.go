@@ -32,7 +32,6 @@ type Replica struct {
 	replicaState
 
 	// Track inactivity period to trigger a view change.
-	// TODO (pbft): Timer fires repeatedly. Not what we want. Perhaps use a time.AfterFunc one?
 	requestTimer *time.Timer
 
 	// Components.
@@ -68,7 +67,7 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []
 		peers: peers,
 	}
 
-	log.Info().Strs("replicas", peerIDList(peers)).Uint("total", total).Msg("created PBFT replica")
+	replica.log.Info().Strs("replicas", peerIDList(peers)).Uint("n", total).Uint("f", replica.f).Msg("created PBFT replica")
 
 	// Set the message handlers.
 
