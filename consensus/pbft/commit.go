@@ -22,8 +22,6 @@ func (r *Replica) maybeSendCommit(view uint, sequenceNo uint, digest string) err
 		return fmt.Errorf("could not send commit message: %w", err)
 	}
 
-	log.Info().Msg("commit successfuly broadcast")
-
 	if !r.committed(view, sequenceNo, digest) {
 		log.Info().Msg("request is not yet committed")
 		return nil

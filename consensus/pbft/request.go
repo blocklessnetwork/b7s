@@ -17,7 +17,7 @@ func (r *Replica) processRequest(from peer.ID, req Request) error {
 	// If we're not the primary, we'll drop the request. We do start a request timer though.
 	if !r.isPrimary() {
 		r.startRequestTimer(false)
-		log.Warn().Str("primary", r.primaryReplicaID().String()).Msg("we are not the primary replica, dropping the request")
+		log.Info().Str("primary", r.primaryReplicaID().String()).Msg("we are not the primary replica, dropping the request")
 
 		// Just to be safe, store the request we've seen.
 		r.requests[digest] = req

@@ -199,11 +199,9 @@ func (r *Replica) setGeneralMessageHandler() {
 
 		err = r.processRequest(from, req)
 		if err != nil {
-			r.log.Error().Err(err).Str("request", req.ID).Str("origin", req.Origin.String()).Msg("could not process request")
+			r.log.Error().Err(err).Str("request", req.ID).Str("client", req.Origin.String()).Msg("could not process request")
 			return
 		}
-
-		r.log.Info().Str("request", req.ID).Str("origin", req.Origin.String()).Msg("request processed ok")
 	})
 }
 
