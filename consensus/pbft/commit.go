@@ -11,7 +11,7 @@ func (r *Replica) maybeSendCommit(view uint, sequenceNo uint, digest string) err
 	log := r.log.With().Uint("view", view).Uint("sequence_number", sequenceNo).Str("digest", digest).Logger()
 
 	if !r.shouldSendCommit(view, sequenceNo, digest) {
-		log.Info().Msg("commit for request not due yet")
+		log.Info().Msg("not sending commit")
 		return nil
 	}
 
