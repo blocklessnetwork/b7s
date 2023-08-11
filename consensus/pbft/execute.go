@@ -19,6 +19,13 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 
 	log := r.log.With().Uint("view", view).Uint("sequence", sequence).Str("digest", digest).Str("request", request.ID).Logger()
 
+	// We don't want to execute a job multiple times.
+	_, havePending := r.pending[digest]
+	if !havePending {
+		log.Warn().Msg("no pending request with matching info - likely already executed")
+		return nil
+	}
+
 	// Requests must be executed in order.
 	if sequence != r.lastExecuted+1 {
 		log.Warn().Msg("requests with lower sequence number have not been executed")
@@ -29,13 +36,6 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 	// Sanity check - should never happen.
 	if sequence < r.lastExecuted {
 		log.Error().Uint("last_executed", r.lastExecuted).Msg("requests executed out of order!")
-	}
-
-	// We don't want to execute a job multiple times.
-	_, havePending := r.pending[digest]
-	if !havePending {
-		log.Warn().Msg("no pending request with matching info - likely already executed")
-		return nil
 	}
 
 	// Remove this request from the list of outstanding requests.
