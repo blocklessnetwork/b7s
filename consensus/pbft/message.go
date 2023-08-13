@@ -10,6 +10,8 @@ import (
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
+// NOTE: JSON encoding related code is in serialization.go
+
 type MessageType uint
 
 const (
@@ -45,51 +47,11 @@ type Request struct {
 	Execute   execute.Request `json:"execute"`
 }
 
-func (r Request) MarshalJSON() ([]byte, error) {
-
-	// Define an alias without the JSON marshaller.
-	type alias Request
-	return json.Marshal(
-		struct {
-			Type MessageType `json:"type"`
-			Data alias       `json:"data"`
-		}{
-			Type: MessageRequest,
-			Data: alias(r),
-		})
-}
-
 type PrePrepare struct {
 	View           uint    `json:"view"`
 	SequenceNumber uint    `json:"sequence_number"`
 	Digest         string  `json:"digest"`
 	Request        Request `json:"request"`
-}
-
-func (p PrePrepare) MarshalJSON() ([]byte, error) {
-
-	// Define aliases without the JSON marshaller.
-	type arequest Request
-	type alias struct {
-		View           uint     `json:"view"`
-		SequenceNumber uint     `json:"sequence_number"`
-		Digest         string   `json:"digest"`
-		Request        arequest `json:"request"`
-	}
-
-	return json.Marshal(
-		struct {
-			Type MessageType `json:"type"`
-			Data alias       `json:"data"`
-		}{
-			Type: MessagePrePrepare,
-			Data: alias{
-				View:           p.View,
-				SequenceNumber: p.SequenceNumber,
-				Digest:         p.Digest,
-				Request:        arequest(p.Request),
-			},
-		})
 }
 
 type Prepare struct {
@@ -98,34 +60,10 @@ type Prepare struct {
 	Digest         string `json:"digest"`
 }
 
-func (p Prepare) MarshalJSON() ([]byte, error) {
-	type alias Prepare
-	return json.Marshal(
-		struct {
-			Type MessageType `json:"type"`
-			Data alias       `json:"data"`
-		}{
-			Type: MessagePrepare,
-			Data: alias(p),
-		})
-}
-
 type Commit struct {
 	View           uint   `json:"view"`
 	SequenceNumber uint   `json:"sequence_number"`
 	Digest         string `json:"digest"`
-}
-
-func (c Commit) MarshalJSON() ([]byte, error) {
-	type alias Commit
-	return json.Marshal(
-		struct {
-			Type MessageType `json:"type"`
-			Data alias       `json:"data"`
-		}{
-			Type: MessageCommit,
-			Data: alias(c),
-		})
 }
 
 type ViewChange struct {
@@ -145,57 +83,10 @@ type PrepareInfo struct {
 	PrePrepare     PrePrepare          `json:"preprepare"`
 	Prepares       map[peer.ID]Prepare `json:"prepares"`
 }
-
-func (v ViewChange) MarshalJSON() ([]byte, error) {
-	type alias ViewChange
-	return json.Marshal(
-		struct {
-			Type MessageType `json:"type"`
-			Data alias       `json:"data"`
-		}{
-			Type: MessageViewChange,
-			Data: alias(v),
-		})
-}
-
 type NewView struct {
 	View        uint                   `json:"view"`
 	Messages    map[peer.ID]ViewChange `json:"messages"`
 	PrePrepares []PrePrepare           `json:"preprepares"`
-}
-
-func (v NewView) MarshalJSON() ([]byte, error) {
-	// To properly handle `peer.ID` serialization, this is a bit more involved.
-	// See documentation for `ResultMap.MarshalJSON` in `models/execute/response.go`.
-	type preprepareAlias PrePrepare
-	type newView struct {
-		View        uint                  `json:"view"`
-		Messages    map[string]ViewChange `json:"messages"`
-		PrePrepares []preprepareAlias     `json:"preprepares"`
-	}
-
-	nv := make(map[string]ViewChange)
-	for replica, vc := range v.Messages {
-		nv[replica.String()] = vc
-	}
-
-	preprepares := make([]preprepareAlias, 0, len(v.PrePrepares))
-	for _, pp := range v.PrePrepares {
-		preprepares = append(preprepares, preprepareAlias(pp))
-	}
-
-	return json.Marshal(
-		struct {
-			Type MessageType `json:"type"`
-			Data newView     `json:"data"`
-		}{
-			Type: MessageNewView,
-			Data: newView{
-				View:        v.View,
-				Messages:    nv,
-				PrePrepares: preprepares,
-			},
-		})
 }
 
 // messageRecord is used as an interim format to supplement the original type with its type.

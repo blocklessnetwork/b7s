@@ -90,11 +90,11 @@ func (r *Replica) generatePreprepares(view uint, vcs map[peer.ID]ViewChange) []P
 
 	log.Info().Uint("max", max).Msg("generating preprepares for new view, determined max sequence number")
 
-	// Phase 2. Go through all sequence numbers from 0 to max. If there is a prepare certificate
+	// Phase 2. Go through all sequence numbers from 1 to max. If there is a prepare certificate
 	// for a sequence number in the view change messages - create a pre-prepare message for m,v+1,n.
 	// If there are multiple prepare certificates with different view numbers - use the highest view number.
 	preprepares := make([]PrePrepare, 0, max)
-	for sequenceNo := uint(0); sequenceNo <= max; sequenceNo++ {
+	for sequenceNo := uint(1); sequenceNo <= max; sequenceNo++ {
 
 		log := log.With().Uint("sequence", sequenceNo).Logger()
 
@@ -226,6 +226,10 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 	r.view = newView.View
 	r.activeView = true
 
+	log.Info().Msg("processed new view message")
+
+	r.log.Info().Str("primary", r.primaryReplicaID().String()).Uint("view", r.view).Msg("entered new view")
+
 	// Start processing preprepares.
 	for _, preprepare := range newView.PrePrepares {
 		err := r.processPrePrepare(replica, preprepare)
@@ -235,7 +239,7 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 		}
 	}
 
-	log.Info().Msg("processed new view message")
+	log.Info().Msg("processed preprepares from the new view")
 
 	return nil
 }
