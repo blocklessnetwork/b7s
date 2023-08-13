@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/blocklessnetworking/b7s/models/execute"
-
 	"github.com/libp2p/go-libp2p/core/peer"
+
+	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
 type MessageType uint
@@ -162,6 +162,40 @@ type NewView struct {
 	View        uint                   `json:"view"`
 	Messages    map[peer.ID]ViewChange `json:"messages"`
 	PrePrepares []PrePrepare           `json:"preprepares"`
+}
+
+func (v NewView) MarshalJSON() ([]byte, error) {
+	// To properly handle `peer.ID` serialization, this is a bit more involved.
+	// See documentation for `ResultMap.MarshalJSON` in `models/execute/response.go`.
+	type preprepareAlias PrePrepare
+	type newView struct {
+		View        uint                  `json:"view"`
+		Messages    map[string]ViewChange `json:"messages"`
+		PrePrepares []preprepareAlias     `json:"preprepares"`
+	}
+
+	nv := make(map[string]ViewChange)
+	for replica, vc := range v.Messages {
+		nv[replica.String()] = vc
+	}
+
+	preprepares := make([]preprepareAlias, 0, len(v.PrePrepares))
+	for _, pp := range v.PrePrepares {
+		preprepares = append(preprepares, preprepareAlias(pp))
+	}
+
+	return json.Marshal(
+		struct {
+			Type MessageType `json:"type"`
+			Data newView     `json:"data"`
+		}{
+			Type: MessageNewView,
+			Data: newView{
+				View:        v.View,
+				Messages:    nv,
+				PrePrepares: preprepares,
+			},
+		})
 }
 
 // messageRecord is used as an interim format to supplement the original type with its type.

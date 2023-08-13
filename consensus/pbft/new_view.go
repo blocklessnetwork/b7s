@@ -22,10 +22,9 @@ func (r *Replica) startNewView(view uint) error {
 		return fmt.Errorf("no view change messages for the specified view (view: %v)", view)
 	}
 
-	vcs.Lock()
-	defer vcs.Unlock()
-
 	// If we don't have our own view change message added yet - do it now.
+	// Don't defer unlock because we invoke viewChangeReady, which locks the same view change slot.
+	vcs.Lock()
 	_, ok = vcs.m[r.id]
 	if !ok {
 
@@ -37,10 +36,14 @@ func (r *Replica) startNewView(view uint) error {
 		vcs.m[r.id] = vc
 	}
 
+	vcs.Unlock()
+
 	// Recheck that we have a valid view change state (quorum).
 	if !r.viewChangeReady(view) {
 		return fmt.Errorf("new view sequence started but not enough view change messages present (view: %v)", view)
 	}
+
+	log.Info().Msg("view change ready, broadcasting new view message")
 
 	preprepares := r.generatePreprepares(view, vcs.m)
 
@@ -54,6 +57,8 @@ func (r *Replica) startNewView(view uint) error {
 	if err != nil {
 		return fmt.Errorf("could not broadcast new-view message (view: %v): %w", view, err)
 	}
+
+	log.Info().Interface("new_view", newView).Msg("new view message successfully broadcast")
 
 	// Now, save any information we did not have previously (e.g. requests), change the current view for the replica and enter the view (set as active).
 	for _, preprepare := range preprepares {
@@ -179,9 +184,9 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 
 	log := r.log.With().Str("replica", replica.String()).Uint("new_view", newView.View).Logger()
 
-	log.Info().Msg("processing new view message")
+	log.Info().Interface("new_view", newView).Msg("processing new view message")
 
-	if newView.View <= r.view {
+	if newView.View < r.view {
 		log.Warn().Uint("current_view", r.view).Msg("received new view message for a view lower or equal to ours, discarding")
 		return nil
 	}
@@ -202,12 +207,8 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 		return fmt.Errorf("new-view message does not have a quorum of view-change messages (sender: %v, count: %v)", replica.String(), count)
 	}
 
-	// Go through ViewChange messages and validate them.
-	for _, vc := range newView.Messages {
-		if vc.View != newView.View {
-			return fmt.Errorf("view change message references a wrong view (view_change: %v, new_view: %v)", vc.View, newView.View)
-		}
-	}
+	// TODO (pbft): Go through ViewChange messages and validate them.
+	// We could check that they come from the previous view, but we could be going from v to v+2 if the v+1 view change fails.
 
 	for i, preprepare := range newView.PrePrepares {
 		if preprepare.View != newView.View {

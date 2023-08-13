@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -43,6 +45,9 @@ type Replica struct {
 	id    peer.ID
 	key   crypto.PrivKey
 	peers []peer.ID
+
+	// TODO (pbft): This is used for testing ATM, remove later.
+	byzantine bool
 }
 
 // NewReplica creates a new PBFT replica.
@@ -65,9 +70,11 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []
 		id:    host.ID(),
 		key:   key,
 		peers: peers,
+
+		byzantine: isByzantine(),
 	}
 
-	replica.log.Info().Strs("replicas", peerIDList(peers)).Uint("n", total).Uint("f", replica.f).Msg("created PBFT replica")
+	replica.log.Info().Strs("replicas", peerIDList(peers)).Uint("n", total).Uint("f", replica.f).Bool("byzantine", replica.byzantine).Msg("created PBFT replica")
 
 	// Set the message handlers.
 
@@ -125,6 +132,12 @@ func (r *Replica) setPBFTMessageHandler() {
 
 func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 
+	// If we're acting as a byzantine replica, just don't do anything.
+	// At this point we're not trying any elaborate sus behavior.
+	if r.byzantine {
+		return errors.New("we're a byzantine replica, ignoring received message")
+	}
+
 	msg, err := unpackMessage(payload)
 	if err != nil {
 		return fmt.Errorf("could not unpack message: %w", err)
@@ -180,6 +193,13 @@ func (r *Replica) setGeneralMessageHandler() {
 		}
 
 		r.log.Debug().Str("peer", from.String()).Msg("received message")
+
+		// If we're acting as a byzantine replica, just don't do anything.
+		// At this point we're not trying any elaborate sus behavior.
+		if r.byzantine {
+			r.log.Info().Msg("we're a byzantine replica, ignoring received message")
+			return
+		}
 
 		msg, err := unpackMessage(payload)
 		if err != nil {
@@ -242,5 +262,16 @@ func (r *Replica) isMessageAllowed(msg interface{}) error {
 		return nil
 	default:
 		return ErrViewChange
+	}
+}
+
+func isByzantine() bool {
+	env := strings.ToLower(os.Getenv(EnvVarByzantine))
+
+	switch env {
+	case "y", "yes", "true", "1":
+		return true
+	default:
+		return false
 	}
 }

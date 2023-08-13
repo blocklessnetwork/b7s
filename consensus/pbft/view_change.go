@@ -26,6 +26,8 @@ func (r *Replica) startViewChange(view uint) error {
 		return fmt.Errorf("could not broadcast view change: %w", err)
 	}
 
+	r.recordViewChangeReceipt(r.id, vc)
+
 	r.log.Info().Uint("pending_view", r.view).Msg("view change successfully broadcast")
 
 	return nil
@@ -63,11 +65,11 @@ func (r *Replica) processViewChange(replica peer.ID, msg ViewChange) error {
 	}
 
 	projectedPrimary := r.peers[r.primary(msg.View)]
-	log.Info().Str("id", projectedPrimary.String()).Msg("expected primary for the view")
+	log.Info().Str("primary", projectedPrimary.String()).Msg("expected primary for the view")
 
 	// If `I` am not the expected primary for this view - I've done all I should.
 	if projectedPrimary != r.id {
-		log.Info().Msg("processed view change message")
+		log.Info().Msg("I am not the expected primary for this view - done")
 		return nil
 	}
 
@@ -107,8 +109,6 @@ func (r *Replica) recordViewChangeReceipt(replica peer.ID, vc ViewChange) {
 func (r *Replica) getPrepareSet() []PrepareInfo {
 
 	r.log.Info().Msg("determining prepare set")
-
-	r.log.Debug().Interface("state", r.replicaState).Msg("current state for the replica")
 
 	var out []PrepareInfo
 

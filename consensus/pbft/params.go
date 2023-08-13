@@ -20,6 +20,8 @@ const (
 
 	// How long is the inactivity period before we trigger a view change.
 	RequestTimeout = 10 * time.Second
+
+	EnvVarByzantine = "B7S_PBFT_BYZANTINE"
 )
 
 var (
