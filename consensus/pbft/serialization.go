@@ -7,122 +7,93 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-func (r Request) MarshalJSON() ([]byte, error) {
+// messageRecord is used as an interim format to supplement the original type with its type.
+// Useful for serialization to automatically include the message type field.
+type messageRecord struct {
+	Type MessageType `json:"type"`
+	Data any         `json:"data"`
+}
 
-	// Define an alias without the JSON marshaller.
+// messageEnvelope is used as an interim format to extract the original type from the `messageRecord` format.
+type messageEnvelope struct {
+	Type MessageType     `json:"type"`
+	Data json.RawMessage `json:"data"`
+}
+
+func (r Request) MarshalJSON() ([]byte, error) {
 	type alias Request
-	return json.Marshal(
-		struct {
-			Type MessageType `json:"type"`
-			Data alias       `json:"data"`
-		}{
-			Type: MessageRequest,
-			Data: alias(r),
-		})
+	rec := messageRecord{
+		Type: MessageRequest,
+		Data: alias(r),
+	}
+	return json.Marshal(rec)
 }
 
 func (r *Request) UnmarshalJSON(data []byte) error {
-
-	request := struct {
-		Type MessageType     `json:"type"`
-		Data json.RawMessage `json:"data"`
-	}{}
-
-	err := json.Unmarshal(data, &request)
+	var rec messageEnvelope
+	err := json.Unmarshal(data, &rec)
 	if err != nil {
 		return err
 	}
-
 	type alias *Request
-	return json.Unmarshal(request.Data, alias(r))
+	return json.Unmarshal(rec.Data, alias(r))
 }
 
 func (p PrePrepare) MarshalJSON() ([]byte, error) {
-
-	// Define aliases without the JSON marshaller.
 	type alias PrePrepare
-	return json.Marshal(
-		struct {
-			Type MessageType `json:"type"`
-			Data alias       `json:"data"`
-		}{
-			Type: MessagePrePrepare,
-			Data: alias(p),
-		})
+	rec := messageRecord{
+		Type: MessagePrePrepare,
+		Data: alias(p),
+	}
+	return json.Marshal(rec)
 }
 
 func (p *PrePrepare) UnmarshalJSON(data []byte) error {
-
-	prePrepare := struct {
-		Type MessageType     `json:"type"`
-		Data json.RawMessage `json:"data"`
-	}{}
-
-	err := json.Unmarshal(data, &prePrepare)
+	var rec messageEnvelope
+	err := json.Unmarshal(data, &rec)
 	if err != nil {
 		return err
 	}
-
 	type alias *PrePrepare
-	return json.Unmarshal(prePrepare.Data, alias(p))
+	return json.Unmarshal(rec.Data, alias(p))
 }
 
 func (p Prepare) MarshalJSON() ([]byte, error) {
 	type alias Prepare
-	return json.Marshal(
-		struct {
-			Type MessageType `json:"type"`
-			Data alias       `json:"data"`
-		}{
-			Type: MessagePrepare,
-			Data: alias(p),
-		})
+	rec := messageRecord{
+		Type: MessagePrepare,
+		Data: alias(p),
+	}
+	return json.Marshal(rec)
 }
 
 func (p *Prepare) UnmarshalJSON(data []byte) error {
-
-	prepare := struct {
-		Type MessageType     `json:"type"`
-		Data json.RawMessage `json:"data"`
-	}{}
-
-	err := json.Unmarshal(data, &prepare)
+	var rec messageEnvelope
+	err := json.Unmarshal(data, &rec)
 	if err != nil {
 		return err
 	}
-
-	// Aliased to prevent recursive call to UnmarshalJSON.
-	type aliased *Prepare
-	return json.Unmarshal(prepare.Data, aliased(p))
+	type alias *Prepare
+	return json.Unmarshal(rec.Data, alias(p))
 }
 
 func (c Commit) MarshalJSON() ([]byte, error) {
 	type alias Commit
-	return json.Marshal(
-		struct {
-			Type MessageType `json:"type"`
-			Data alias       `json:"data"`
-		}{
-			Type: MessageCommit,
-			Data: alias(c),
-		})
+	rec := messageRecord{
+		Type: MessageCommit,
+		Data: alias(c),
+	}
+	return json.Marshal(rec)
 }
 
 func (c *Commit) UnmarshalJSON(data []byte) error {
-
-	commit := struct {
-		Type MessageType     `json:"type"`
-		Data json.RawMessage `json:"data"`
-	}{}
-
-	err := json.Unmarshal(data, &commit)
+	var rec messageEnvelope
+	err := json.Unmarshal(data, &rec)
 	if err != nil {
 		return err
 	}
-
-	// Aliased to prevent recursive call to UnmarshalJSON.
-	type aliased *Commit
-	return json.Unmarshal(commit.Data, aliased(c))
+	type alias *Commit
+	return json.Unmarshal(rec.Data, alias(c))
 }
 
 type prepareInfoEncoded struct {
@@ -181,31 +152,21 @@ func (p *PrepareInfo) UnmarshalJSON(data []byte) error {
 
 func (v ViewChange) MarshalJSON() ([]byte, error) {
 	type alias ViewChange
-	return json.Marshal(
-		struct {
-			Type MessageType `json:"type"`
-			Data alias       `json:"data"`
-		}{
-			Type: MessageViewChange,
-			Data: alias(v),
-		})
+	rec := messageRecord{
+		Type: MessageViewChange,
+		Data: alias(v),
+	}
+	return json.Marshal(rec)
 }
 
 func (v *ViewChange) UnmarshalJSON(data []byte) error {
-
-	vc := struct {
-		Type MessageType     `json:"type"`
-		Data json.RawMessage `json:"data"`
-	}{}
-
-	err := json.Unmarshal(data, &vc)
+	var rec messageEnvelope
+	err := json.Unmarshal(data, &rec)
 	if err != nil {
 		return err
 	}
-
-	// Aliased to prevent recursive call to UnmarshalJSON.
-	type aliased *ViewChange
-	return json.Unmarshal(vc.Data, aliased(v))
+	type alias *ViewChange
+	return json.Unmarshal(rec.Data, alias(v))
 }
 
 type newViewEncode struct {
@@ -215,60 +176,117 @@ type newViewEncode struct {
 }
 
 func (v NewView) MarshalJSON() ([]byte, error) {
+
 	// To properly handle `peer.ID` serialization, this is a bit more involved.
 	// See documentation for `ResultMap.MarshalJSON` in `models/execute/response.go`.
-
-	nv := make(map[string]ViewChange)
+	messages := make(map[string]ViewChange)
 	for replica, vc := range v.Messages {
-		nv[replica.String()] = vc
+		messages[replica.String()] = vc
 	}
 
-	return json.Marshal(
-		struct {
-			Type MessageType   `json:"type"`
-			Data newViewEncode `json:"data"`
-		}{
-			Type: MessageNewView,
-			Data: newViewEncode{
-				View:        v.View,
-				Messages:    nv,
-				PrePrepares: v.PrePrepares,
-			},
-		})
+	nv := newViewEncode{
+		View:        v.View,
+		Messages:    messages,
+		PrePrepares: v.PrePrepares,
+	}
+
+	rec := messageRecord{
+		Type: MessageNewView,
+		Data: nv,
+	}
+
+	return json.Marshal(rec)
 }
 
 func (n *NewView) UnmarshalJSON(data []byte) error {
 
-	newView := struct {
-		Type MessageType     `json:"type"`
-		Data json.RawMessage `json:"data"`
-	}{}
-
-	err := json.Unmarshal(data, &newView)
+	var rec messageEnvelope
+	err := json.Unmarshal(data, &rec)
 	if err != nil {
 		return err
 	}
 
 	var nv newViewEncode
-	err = json.Unmarshal(newView.Data, &nv)
+	err = json.Unmarshal(rec.Data, &nv)
 	if err != nil {
 		return err
 	}
 
-	viewChangeMap := make(map[peer.ID]ViewChange)
+	messages := make(map[peer.ID]ViewChange)
 	for idStr, vc := range nv.Messages {
 		id, err := peer.Decode(idStr)
 		if err != nil {
 			return fmt.Errorf("could not decode peer.ID (str: %s): %w", idStr, err)
 		}
-		viewChangeMap[id] = vc
+		messages[id] = vc
 	}
 
 	*n = NewView{
 		View:        nv.View,
-		Messages:    viewChangeMap,
+		Messages:    messages,
 		PrePrepares: nv.PrePrepares,
 	}
 
 	return nil
+}
+
+func unpackMessage(payload []byte) (any, error) {
+
+	var msg messageEnvelope
+	err := json.Unmarshal(payload, &msg)
+	if err != nil {
+		return nil, fmt.Errorf("could not unpack base message: %w", err)
+	}
+
+	switch msg.Type {
+	case MessageRequest:
+		var request Request
+		err = json.Unmarshal(payload, &request)
+		if err != nil {
+			return nil, fmt.Errorf("could not unpack request: %w", err)
+		}
+		return request, nil
+
+	case MessagePrePrepare:
+		var preprepare PrePrepare
+		err = json.Unmarshal(payload, &preprepare)
+		if err != nil {
+			return nil, fmt.Errorf("could not unpack pre-prepare message: %w", err)
+		}
+		return preprepare, nil
+
+	case MessagePrepare:
+		var prepare Prepare
+		err = json.Unmarshal(payload, &prepare)
+		if err != nil {
+			return nil, fmt.Errorf("could not unpack prepare message: %w", err)
+		}
+		return prepare, nil
+
+	case MessageCommit:
+		var commit Commit
+		err = json.Unmarshal(payload, &commit)
+		if err != nil {
+			return nil, fmt.Errorf("could not unpack commit message: %w", err)
+		}
+		return commit, nil
+
+	case MessageViewChange:
+		var viewChange ViewChange
+		err = json.Unmarshal(payload, &viewChange)
+		if err != nil {
+			return nil, fmt.Errorf("could not unpack view change message: %w", err)
+		}
+		return viewChange, nil
+
+	case MessageNewView:
+		var newView NewView
+		err = json.Unmarshal(payload, &newView)
+		if err != nil {
+			return nil, fmt.Errorf("could not unpack new view message: %w", err)
+		}
+		return newView, nil
+	}
+
+	return nil, fmt.Errorf("unexpected message type (type: %v)", msg.Type)
 }
