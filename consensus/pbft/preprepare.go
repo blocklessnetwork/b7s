@@ -98,7 +98,9 @@ func (r *Replica) processPrePrepare(replica peer.ID, msg PrePrepare) error {
 		return fmt.Errorf("could not send prepare message: %w", err)
 	}
 
-	return nil
+	// There's a possibility our prepare was the one that pushes us into the quorum
+	// and we now have the commit condition achieved.
+	return r.maybeSendCommit(msg.View, msg.SequenceNumber, msg.Digest)
 }
 
 func (r *Replica) conflictingPrePrepare(preprepare PrePrepare) bool {
