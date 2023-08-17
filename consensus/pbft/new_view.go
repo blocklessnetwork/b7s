@@ -60,6 +60,8 @@ func (r *Replica) startNewView(view uint) error {
 
 	log.Info().Interface("new_view", newView).Msg("new view message successfully broadcast")
 
+	r.cleanupState(view)
+
 	// Now, save any information we did not have previously (e.g. requests), change the current view for the replica and enter the view (set as active).
 	for _, preprepare := range preprepares {
 		_, found := r.requests[preprepare.Digest]
@@ -229,6 +231,8 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 	log.Info().Msg("processed new view message")
 
 	r.log.Info().Str("primary", r.primaryReplicaID().String()).Uint("view", r.view).Msg("entered new view")
+
+	r.cleanupState(newView.View)
 
 	// Start processing preprepares.
 	for _, preprepare := range newView.PrePrepares {

@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
+
+	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
 func (r *Replica) processRequest(from peer.ID, req Request) error {
@@ -13,6 +15,19 @@ func (r *Replica) processRequest(from peer.ID, req Request) error {
 	log := r.log.With().Str("client", from.String()).Str("request", req.ID).Str("digest", digest).Logger()
 
 	log.Info().Msg("received a request")
+
+	// Check if we've executed this before. If yes, just return the result.
+	result, ok := r.executions[req.ID]
+	if ok {
+		log.Info().Msg("request already executed, sending result to client")
+
+		err := r.send(req.Origin, result, blockless.ProtocolID)
+		if err != nil {
+			return fmt.Errorf("could not send execution result back to client (request: %s, client: %s): %w", req.ID, req.Origin.String(), err)
+		}
+
+		return nil
+	}
 
 	// If we're not the primary, we'll drop the request. We do start a request timer though.
 	if !r.isPrimary() {

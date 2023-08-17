@@ -2,6 +2,8 @@ package pbft
 
 import (
 	"sync"
+
+	"github.com/blocklessnetworking/b7s/models/response"
 )
 
 type replicaState struct {
@@ -29,6 +31,9 @@ type replicaState struct {
 	commits map[messageID]*commitReceipts
 	// Keep track of view change messages.
 	viewChanges map[uint]*viewChangeReceipts
+
+	// Keep track of past executions. Results are mapped to request IDs, not digests.
+	executions map[string]response.Execute
 }
 
 func newState() replicaState {

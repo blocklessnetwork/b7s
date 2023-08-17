@@ -69,6 +69,9 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 		},
 	}
 
+	// Save this executions in case it's requested again.
+	r.executions[request.ID] = msg
+
 	err = r.send(request.Origin, msg, blockless.ProtocolID)
 	if err != nil {
 		return fmt.Errorf("could not send execution response to node (target: %s, request: %s): %w", request.Origin.String(), request.ID, err)

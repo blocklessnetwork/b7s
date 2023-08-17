@@ -265,6 +265,40 @@ func (r *Replica) isMessageAllowed(msg interface{}) error {
 	}
 }
 
+// cleanupState will discard old preprepares, prepares, commist and pending requests.
+// Call this before updating the list of pending requests since for those we don't know
+// in which view they were scheduled - we remove all of them.
+func (r *Replica) cleanupState(thresholdView uint) {
+
+	r.log.Debug().Uint("threshold_view", thresholdView).Msg("cleaning up replica state")
+
+	// Cleanup pending requests.
+	for id := range r.pending {
+		delete(r.pending, id)
+	}
+
+	// Cleanup old preprepares.
+	for id := range r.preprepares {
+		if id.view < thresholdView {
+			delete(r.preprepares, id)
+		}
+	}
+
+	// Cleanup old prepares.
+	for id := range r.prepares {
+		if id.view < thresholdView {
+			delete(r.prepares, id)
+		}
+	}
+
+	// Cleanup old commits.
+	for id := range r.commits {
+		if id.view < thresholdView {
+			delete(r.commits, id)
+		}
+	}
+}
+
 func isByzantine() bool {
 	env := strings.ToLower(os.Getenv(EnvVarByzantine))
 
