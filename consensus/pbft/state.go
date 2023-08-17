@@ -48,6 +48,7 @@ func newState() replicaState {
 		prepares:    make(map[messageID]*prepareReceipts),
 		commits:     make(map[messageID]*commitReceipts),
 		viewChanges: make(map[uint]*viewChangeReceipts),
+		executions:  make(map[string]response.Execute),
 	}
 
 	return state

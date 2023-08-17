@@ -78,6 +78,18 @@ func (r *Replica) startNewView(view uint) error {
 	r.view = view
 	r.activeView = true
 
+	log.Info().Msg("new view started")
+
+	// See any pending requests you've seen and add them to the pipeline.
+	outstandingRequests := r.outstandingRequests()
+	for _, request := range outstandingRequests {
+		err = r.processRequest(request.Origin, request)
+		if err != nil {
+			r.log.Error().Err(err).Str("request", request.ID).Msg("could not process request")
+			// Log but continue.
+		}
+	}
+
 	return nil
 }
 
@@ -244,6 +256,11 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 	}
 
 	log.Info().Msg("processed preprepares from the new view")
+
+	if len(r.outstandingRequests()) > 0 {
+		r.log.Info().Msg("outstanding requests found, starting a new view change timer")
+		r.startRequestTimer(true)
+	}
 
 	return nil
 }

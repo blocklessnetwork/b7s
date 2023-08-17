@@ -20,11 +20,9 @@ import (
 )
 
 // TODO (pbft): Add signatures to messages and signature verification.
-// TODO (pbft): Resetting timers when an execution is done.
 // TODO (pbft): View change advancing and backoff.
 // TODO (pbft): Request timestamp - execution exactly once, prevent multiple/out of order executions.
 // TODO (pbft): Reply format (view number etc).
-// TODO (pbft): If we advance to a new view, we can clear all old messages for previous views.
 // TODO (pbft): Perhaps instead of an empty digest for a NullRequest - we use an actual digest of such a request?
 
 // Replica is a single PBFT node. Both Primary and Backup nodes are all replicas.
@@ -145,6 +143,8 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 
 	// Access to individual segments (pre-prepares, prepares, commits etc) could be managed on an individual level,
 	// but it's probably not worth it. This way we just do it request by request.
+	// NOTE: Perhaps lock as early as possible or force serialization. For some things we want to force in-order processing of messages,
+	// e.g. `new-view` first, THEN any `preprepares` for that view.
 	r.sl.Lock()
 	defer r.sl.Unlock()
 

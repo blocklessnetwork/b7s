@@ -182,20 +182,6 @@ func (r *Replica) validViewChange(vc ViewChange) error {
 	}
 
 	return nil
-
-	// TODO (pbft): Is this below relevant?
-
-	// Condition:
-	// !(p.View < vc.View && p.SequenceNumber > vc.H && p.SequenceNumber <= vc.H+instance.L)
-	//
-	// Translate to english:
-	// view change is bad if condition is NOT met:
-	// so, view is good if the following is true:
-	// p.View < vc.View && p.SequenceNumber > vc.H && p.SequenceNumber <= vc.H+instance.L
-	//
-	// - prepares have to be for a view lower than one received
-	// - prepares have a sequence number higher than the view change's H value
-	// - prepares have a sequence number lower than the view change's H + L value
 }
 
 // Liveness condition - if we received f+1 valid view change messages from other replicas,

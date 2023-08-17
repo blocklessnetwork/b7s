@@ -41,9 +41,14 @@ func (r *Replica) processRequest(from peer.ID, req Request) error {
 
 	log.Info().Msg("we are the primary, processing the request")
 
-	_, found := r.requests[digest]
-	if found {
-		return fmt.Errorf("already seen this request, dropping (request: %v)", req.ID)
+	_, pending := r.pending[digest]
+	if pending {
+		return fmt.Errorf("this request is already queued, dropping (request: %v)", req.ID)
+	}
+
+	_, seen := r.requests[digest]
+	if seen {
+		log.Info().Msg("already seen this request, resubmitted")
 	}
 
 	// Take a note of this request.
