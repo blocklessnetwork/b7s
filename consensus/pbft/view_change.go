@@ -35,7 +35,7 @@ func (r *Replica) startViewChange(view uint) error {
 
 func (r *Replica) processViewChange(replica peer.ID, msg ViewChange) error {
 
-	log := r.log.With().Str("replica", replica.String()).Uint("view", msg.View).Logger()
+	log := r.log.With().Str("replica", replica.String()).Uint("received_view", msg.View).Logger()
 	log.Info().Msg("processing view change message")
 
 	if msg.View < r.view {
@@ -52,6 +52,12 @@ func (r *Replica) processViewChange(replica peer.ID, msg ViewChange) error {
 	r.recordViewChangeReceipt(replica, msg)
 
 	log.Info().Msg("processed view change message")
+
+	// View change for the current view, but we've already transitioned to it.
+	if msg.View == r.view && r.activeView {
+		log.Info().Msg("received view change for this view, but we're already transitioned to it")
+		return nil
+	}
 
 	nextView, should := r.shouldSendViewChange()
 	if should {

@@ -35,7 +35,6 @@ func (r *Replica) startNewView(view uint) error {
 
 		vcs.m[r.id] = vc
 	}
-
 	vcs.Unlock()
 
 	// Recheck that we have a valid view change state (quorum).
@@ -201,7 +200,7 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 	log.Info().Interface("new_view", newView).Msg("processing new view message")
 
 	if newView.View < r.view {
-		log.Warn().Uint("current_view", r.view).Msg("received new view message for a view lower or equal to ours, discarding")
+		log.Warn().Uint("current_view", r.view).Msg("received new view message for a view lower than ours, discarding")
 		return nil
 	}
 

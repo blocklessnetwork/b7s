@@ -150,7 +150,7 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 
 	err = r.isMessageAllowed(msg)
 	if err != nil {
-		return fmt.Errorf("message not allowed: %w", err)
+		return fmt.Errorf("message not allowed (message: %T): %w", msg, err)
 	}
 
 	switch m := msg.(type) {
