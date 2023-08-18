@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/spf13/pflag"
 
-	"github.com/blocklessnetworking/b7s/config"
-	"github.com/blocklessnetworking/b7s/node"
+	"github.com/blocklessnetwork/b7s/config"
+	"github.com/blocklessnetwork/b7s/node"
 )
 
 // Default values.

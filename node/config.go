@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/raft"
 
-	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 // Option can be used to set Node configuration options.

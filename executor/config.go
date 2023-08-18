@@ -3,7 +3,7 @@ package executor
 import (
 	"github.com/spf13/afero"
 
-	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 // defaultConfig used to create Executor.

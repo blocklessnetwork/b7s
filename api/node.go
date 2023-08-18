@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 
-	"github.com/blocklessnetworking/b7s/models/codes"
-	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/codes"
+	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
 type Node interface {

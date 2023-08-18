@@ -10,7 +10,7 @@ import (
 
 	"github.com/cavaliergopher/grab/v3"
 
-	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 func (h *FStore) getJSON(address string, out interface{}) error {

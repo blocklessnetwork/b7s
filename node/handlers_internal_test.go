@@ -10,12 +10,12 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetworking/b7s/host"
-	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/models/codes"
-	"github.com/blocklessnetworking/b7s/models/request"
-	"github.com/blocklessnetworking/b7s/models/response"
-	"github.com/blocklessnetworking/b7s/testing/mocks"
+	"github.com/blocklessnetwork/b7s/host"
+	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/codes"
+	"github.com/blocklessnetwork/b7s/models/request"
+	"github.com/blocklessnetwork/b7s/models/response"
+	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
 func TestNode_Handlers(t *testing.T) {

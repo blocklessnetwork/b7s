@@ -3,8 +3,8 @@ package executor
 import (
 	"fmt"
 
-	"github.com/blocklessnetworking/b7s/models/codes"
-	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/codes"
+	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
 // ExecuteFunction will run the Blockless function defined by the execution request.

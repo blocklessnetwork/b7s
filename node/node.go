@@ -10,9 +10,9 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 
-	"github.com/blocklessnetworking/b7s/host"
-	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/node/internal/waitmap"
+	"github.com/blocklessnetwork/b7s/host"
+	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/node/internal/waitmap"
 )
 
 // Node is the entity that actually provides the main Blockless node functionality.

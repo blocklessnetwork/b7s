@@ -1,8 +1,8 @@
 package node
 
 import (
-	"github.com/blocklessnetworking/b7s/models/execute"
-	"github.com/blocklessnetworking/b7s/models/request"
+	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/request"
 )
 
 // convert the incoming message format to an execution request.

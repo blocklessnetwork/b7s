@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/store"
-	"github.com/blocklessnetworking/b7s/testing/helpers"
+	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/store"
+	"github.com/blocklessnetwork/b7s/testing/helpers"
 )
 
 func Test_Store(t *testing.T) {

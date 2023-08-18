@@ -22,16 +22,16 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetworking/b7s/executor"
-	"github.com/blocklessnetworking/b7s/fstore"
-	"github.com/blocklessnetworking/b7s/host"
-	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/models/request"
-	"github.com/blocklessnetworking/b7s/node"
-	"github.com/blocklessnetworking/b7s/peerstore"
-	"github.com/blocklessnetworking/b7s/store"
-	"github.com/blocklessnetworking/b7s/testing/helpers"
-	"github.com/blocklessnetworking/b7s/testing/mocks"
+	"github.com/blocklessnetwork/b7s/executor"
+	"github.com/blocklessnetwork/b7s/fstore"
+	"github.com/blocklessnetwork/b7s/host"
+	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/request"
+	"github.com/blocklessnetwork/b7s/node"
+	"github.com/blocklessnetwork/b7s/peerstore"
+	"github.com/blocklessnetwork/b7s/store"
+	"github.com/blocklessnetwork/b7s/testing/helpers"
+	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
 const (
