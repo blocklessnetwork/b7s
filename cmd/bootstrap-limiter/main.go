@@ -18,7 +18,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/pflag"
 
-	"github.com/blocklessnetworking/b7s/executor/limits"
+	"github.com/blocklessnetwork/b7s/executor/limits"
 )
 
 const (

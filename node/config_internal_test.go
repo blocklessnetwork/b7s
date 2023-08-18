@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/testing/mocks"
+	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
 func TestConfig_NodeRole(t *testing.T) {

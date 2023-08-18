@@ -3,7 +3,7 @@ package fstore
 import (
 	"fmt"
 
-	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 // Get retrieves a function manifest for the given function from storage.

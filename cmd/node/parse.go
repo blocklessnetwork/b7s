@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 
-	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 func parseNodeRole(role string) (blockless.NodeRole, error) {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetworking/b7s/models/codes"
+	"github.com/blocklessnetwork/b7s/models/codes"
 )
 
 // Result describes an execution result.

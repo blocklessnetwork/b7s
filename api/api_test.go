@@ -10,15 +10,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/blocklessnetworking/b7s/api"
-	"github.com/blocklessnetworking/b7s/testing/mocks"
+	"github.com/blocklessnetwork/b7s/api"
+	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
 const (
 	executeEndpoint = "/api/v1/functions/execute"
 	installEndpoint = "/api/v1/functions/install"
 	resultEndpoint  = "/api/v1/functions/requests/result"
-	healthEndpoint = "/api/v1/health"
+	healthEndpoint  = "/api/v1/health"
 )
 
 func setupAPI(t *testing.T) *api.API {

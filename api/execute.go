@@ -7,10 +7,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/models/codes"
-	"github.com/blocklessnetworking/b7s/models/execute"
-	"github.com/blocklessnetworking/b7s/node/aggregate"
+	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/codes"
+	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/node/aggregate"
 )
 
 // ExecuteRequest describes the payload for the REST API request for function execution.

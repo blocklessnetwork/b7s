@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetworking/b7s/fstore"
-	"github.com/blocklessnetworking/b7s/testing/mocks"
+	"github.com/blocklessnetwork/b7s/fstore"
+	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
 func TestFunction_GetHandlesErrors(t *testing.T) {

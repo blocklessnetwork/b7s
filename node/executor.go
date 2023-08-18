@@ -1,7 +1,7 @@
 package node
 
 import (
-	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
 type Executor interface {

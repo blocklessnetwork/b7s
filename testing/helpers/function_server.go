@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 type FunctionServer struct {

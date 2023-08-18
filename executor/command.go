@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
 // createCmd will create the command to be executed, prepare working directory, environment, standard input and all else.

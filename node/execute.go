@@ -7,9 +7,9 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetworking/b7s/models/codes"
-	"github.com/blocklessnetworking/b7s/models/execute"
-	"github.com/blocklessnetworking/b7s/models/response"
+	"github.com/blocklessnetwork/b7s/models/codes"
+	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte) error {

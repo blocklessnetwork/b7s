@@ -3,7 +3,7 @@ package node
 import (
 	"sync"
 
-	"github.com/blocklessnetworking/b7s/models/response"
+	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 type rollCallQueue struct {

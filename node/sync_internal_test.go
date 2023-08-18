@@ -3,9 +3,10 @@ package node
 import (
 	"testing"
 
-	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/testing/mocks"
 	"github.com/stretchr/testify/require"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
 func TestNode_Sync(t *testing.T) {
