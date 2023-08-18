@@ -61,8 +61,11 @@ func (r *Replica) startNewView(view uint) error {
 
 	r.cleanupState(view)
 
-	// Now, save any information we did not have previously (e.g. requests), change the current view for the replica and enter the view (set as active).
+	// Now, save any information we did not have previously (e.g. new pre-prepares, requests), change the current view for the replica and enter the view (set as active).
 	for _, preprepare := range preprepares {
+
+		r.preprepares[getMessageID(preprepare.View, preprepare.SequenceNumber)] = preprepare
+
 		_, found := r.requests[preprepare.Digest]
 		if !found {
 			r.requests[preprepare.Digest] = preprepare.Request
@@ -82,6 +85,13 @@ func (r *Replica) startNewView(view uint) error {
 	// See any pending requests you've seen and add them to the pipeline.
 	outstandingRequests := r.outstandingRequests()
 	for _, request := range outstandingRequests {
+
+		_, pending := r.pending[getDigest(request)]
+		if pending {
+			r.log.Debug().Str("request", request.ID).Msg("outstanding request but already pending as part of a new-view payload, skipping")
+			continue
+		}
+
 		err = r.processRequest(request.Origin, request)
 		if err != nil {
 			r.log.Error().Err(err).Str("request", request.ID).Msg("could not process request")
@@ -182,7 +192,7 @@ func getPrepare(vcs map[peer.ID]ViewChange, sequenceNo uint) (PrepareInfo, bool)
 
 			// In case we have multiple prepares for the same sequence number,
 			// keep the one from the highest view.
-			if prepare.View > out.View {
+			if !found || (prepare.View > out.View) {
 				out = prepare
 				// Could also compare with an empty PrepareInfo tbh.
 				found = true
@@ -229,7 +239,7 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 		}
 
 		// Verify sequence numbers are all there, though offset by one.
-		if uint(i) != preprepare.SequenceNumber {
+		if uint(i+1) != preprepare.SequenceNumber {
 			log.Warn().Interface("preprepares", newView.PrePrepares).Msg("preprepares have unexpected sequence number value (possible gap)")
 			return fmt.Errorf("unexpected sequence number list")
 		}
@@ -258,7 +268,7 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 
 	if len(r.outstandingRequests()) > 0 {
 		r.log.Info().Msg("outstanding requests found, starting a new view change timer")
-		r.startRequestTimer(true)
+		r.startRequestTimer(false)
 	}
 
 	return nil

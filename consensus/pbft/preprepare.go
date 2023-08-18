@@ -25,7 +25,6 @@ func (r *Replica) sendPrePrepare(req Request) error {
 
 	log := r.log.With().Uint("view", msg.View).Uint("sequence_number", msg.SequenceNumber).Str("digest", msg.Digest).Logger()
 
-	// TODO (pbft): Check if we had this or other pre-prepares for this request.
 	if r.conflictingPrePrepare(msg) {
 		return fmt.Errorf("dropping pre-prepare as we have a conflicting one")
 	}
