@@ -22,3 +22,12 @@ func (t Type) String() string {
 		return fmt.Sprintf("unknown: %d", t)
 	}
 }
+
+func (t Type) Valid() bool {
+	switch t {
+	case Raft, PBFT:
+		return true
+	default:
+		return false
+	}
+}

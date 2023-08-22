@@ -68,12 +68,3 @@ func determineOverallCode(results map[string]execute.Result) codes.Code {
 
 	return codes.Error
 }
-
-// helper function to to convert a slice of multiaddrs to strings
-func peerIDList(ids []peer.ID) []string {
-	peerIDs := make([]string, 0, len(ids))
-	for _, rp := range ids {
-		peerIDs = append(peerIDs, rp.String())
-	}
-	return peerIDs
-}

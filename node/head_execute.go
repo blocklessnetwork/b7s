@@ -9,6 +9,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/consensus"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
@@ -135,7 +136,7 @@ rollCallResponseLoop:
 		}
 	}
 
-	log.Info().Strs("peers", peerIDList(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
+	log.Info().Strs("peers", blockless.PeerIDsToStr(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
 
 	cluster := execute.Cluster{
 		Peers: reportingPeers,
@@ -148,6 +149,7 @@ rollCallResponseLoop:
 		Type:      blockless.MessageFormCluster,
 		RequestID: requestID,
 		Peers:     reportingPeers,
+		Consensus: consensus.Raft, // TODO: Get this from the request.
 	}
 
 	// Request execution from peers.
@@ -177,11 +179,11 @@ rollCallResponseLoop:
 
 			err = n.sendToMany(ctx, reportingPeers, msgDisband)
 			if err != nil {
-				log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Msg("could not send cluster disband request")
+				log.Error().Err(err).Strs("peers", blockless.PeerIDsToStr(reportingPeers)).Msg("could not send cluster disband request")
 				return
 			}
 
-			log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Msg("sent cluster disband request")
+			log.Error().Err(err).Strs("peers", blockless.PeerIDsToStr(reportingPeers)).Msg("sent cluster disband request")
 		}()
 	}()
 

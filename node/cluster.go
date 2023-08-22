@@ -7,6 +7,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/consensus"
 	"github.com/blocklessnetworking/b7s/consensus/raft"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/execute"
@@ -16,6 +17,12 @@ import (
 
 func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []byte) error {
 
+	// Should never happen.
+	if n.cfg.Role != blockless.WorkerNode {
+		n.log.Warn().Str("peer", from.String()).Msg("only worker nodes participate in consensus clusters")
+		return nil
+	}
+
 	// Unpack the request.
 	var req request.FormCluster
 	err := json.Unmarshal(payload, &req)
@@ -24,52 +31,17 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []b
 	}
 	req.From = from
 
-	n.log.Info().Str("request", req.RequestID).Strs("peers", peerIDList(req.Peers)).Msg("received request to form consensus cluster")
+	n.log.Info().Str("request", req.RequestID).Strs("peers", blockless.PeerIDsToStr(req.Peers)).Str("consensus", req.Consensus.String()).Msg("received request to form consensus cluster")
 
-	// Add a callback function to cache the execution result
-	cacheFn := func(req raft.FSMLogEntry, res execute.Result) {
-		n.executeResponses.Set(req.RequestID, res)
+	switch req.Consensus {
+	case consensus.Raft:
+		return n.createRaftCluster(req)
+
+	case consensus.PBFT:
+		return fmt.Errorf("TBD: PBFT implementation coming soon")
 	}
 
-	// Add a callback function to send the execution result to origin.
-	sendFn := func(req raft.FSMLogEntry, res execute.Result) {
-
-		ctx, cancel := context.WithTimeout(context.Background(), raftClusterSendTimeout)
-		defer cancel()
-
-		msg := response.Execute{
-			Type:      blockless.MessageExecuteResponse,
-			Code:      res.Code,
-			RequestID: req.RequestID,
-			Results: execute.ResultMap{
-				n.host.ID(): res,
-			},
-		}
-
-		err := n.send(ctx, req.Origin, msg)
-		if err != nil {
-			n.log.Error().Err(err).Str("peer", req.Origin.String()).Msg("could not send execution result to node")
-		}
-	}
-
-	raftHandler, err := raft.New(
-		n.log,
-		n.host,
-		n.cfg.Workspace,
-		req.RequestID,
-		n.executor,
-		req.Peers,
-		raft.WithCallbacks(cacheFn, sendFn),
-	)
-	if err != nil {
-		return fmt.Errorf("could not create raft node: %w", err)
-	}
-
-	n.clusterLock.Lock()
-	n.clusters[req.RequestID] = raftHandler
-	n.clusterLock.Unlock()
-
-	return nil
+	return fmt.Errorf("invalid consensus specified (%s %s)", req.Consensus, req.Consensus.String())
 }
 
 // processFormClusterResponse will record the cluster formation response.
@@ -147,4 +119,52 @@ func (n *Node) leaveCluster(requestID string) error {
 
 func consensusResponseKey(requestID string, peer peer.ID) string {
 	return requestID + "/" + peer.String()
+}
+
+func (n *Node) createRaftCluster(fc request.FormCluster) error {
+
+	// Add a callback function to cache the execution result
+	cacheFn := func(req raft.FSMLogEntry, res execute.Result) {
+		n.executeResponses.Set(req.RequestID, res)
+	}
+
+	// Add a callback function to send the execution result to origin.
+	sendFn := func(req raft.FSMLogEntry, res execute.Result) {
+
+		ctx, cancel := context.WithTimeout(context.Background(), raftClusterSendTimeout)
+		defer cancel()
+
+		msg := response.Execute{
+			Type:      blockless.MessageExecuteResponse,
+			Code:      res.Code,
+			RequestID: req.RequestID,
+			Results: execute.ResultMap{
+				n.host.ID(): res,
+			},
+		}
+
+		err := n.send(ctx, req.Origin, msg)
+		if err != nil {
+			n.log.Error().Err(err).Str("peer", req.Origin.String()).Msg("could not send execution result to node")
+		}
+	}
+
+	rh, err := raft.New(
+		n.log,
+		n.host,
+		n.cfg.Workspace,
+		fc.RequestID,
+		n.executor,
+		fc.Peers,
+		raft.WithCallbacks(cacheFn, sendFn),
+	)
+	if err != nil {
+		return fmt.Errorf("could not create raft node: %w", err)
+	}
+
+	n.clusterLock.Lock()
+	n.clusters[fc.RequestID] = rh
+	n.clusterLock.Unlock()
+
+	return nil
 }
