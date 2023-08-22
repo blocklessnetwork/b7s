@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hashicorp/raft"
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/consensus/raft"
 	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/models/codes"
+	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/models/request"
 	"github.com/blocklessnetworking/b7s/models/response"
 )
@@ -26,52 +26,43 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []b
 
 	n.log.Info().Str("request", req.RequestID).Strs("peers", peerIDList(req.Peers)).Msg("received request to form consensus cluster")
 
-	raftHandler, err := n.newRaftHandler(req.RequestID)
-	if err != nil {
-		return fmt.Errorf("could not create raft node: %w", err)
+	// Add a callback function to cache the execution result
+	cacheFn := func(req raft.FSMLogEntry, res execute.Result) {
+		n.executeResponses.Set(req.RequestID, res)
 	}
 
-	// Register an observer to monitor leadership changes. More precisely,
-	// wait on the first leader election, so we know when the cluster is operational.
+	// Add a callback function to send the execution result to origin.
+	sendFn := func(req raft.FSMLogEntry, res execute.Result) {
 
-	obsCh := make(chan raft.Observation, 1)
-	observer := raft.NewObserver(obsCh, false, func(obs *raft.Observation) bool {
-		_, ok := obs.Data.(raft.LeaderObservation)
-		return ok
-	})
+		ctx, cancel := context.WithTimeout(context.Background(), raftClusterSendTimeout)
+		defer cancel()
 
-	go func() {
-		// Wait on leadership observation.
-		obs := <-obsCh
-		leaderObs, ok := obs.Data.(raft.LeaderObservation)
-		if !ok {
-			n.log.Error().Type("type", obs.Data).Msg("invalid observation type received")
-			return
-		}
-
-		// We don't need the observer anymore.
-		raftHandler.DeregisterObserver(observer)
-
-		n.log.Info().Str("peer", from.String()).Str("leader", string(leaderObs.LeaderID)).Msg("observed a leadership event - sending response")
-
-		res := response.FormCluster{
-			Type:      blockless.MessageFormClusterResponse,
+		msg := response.Execute{
+			Type:      blockless.MessageExecuteResponse,
+			Code:      res.Code,
 			RequestID: req.RequestID,
-			Code:      codes.OK,
+			Results: execute.ResultMap{
+				n.host.ID(): res,
+			},
 		}
 
-		err = n.send(ctx, from, res)
+		err := n.send(ctx, req.Origin, msg)
 		if err != nil {
-			n.log.Error().Err(err).Msg("could not send cluster confirmation message")
-			return
+			n.log.Error().Err(err).Str("peer", req.Origin.String()).Msg("could not send execution result to node")
 		}
-	}()
+	}
 
-	raftHandler.RegisterObserver(observer)
-
-	err = bootstrapCluster(raftHandler, req.Peers)
+	raftHandler, err := raft.New(
+		n.log,
+		n.host,
+		n.cfg.Workspace,
+		req.RequestID,
+		n.executor,
+		req.Peers,
+		raft.WithCallbacks(cacheFn, sendFn),
+	)
 	if err != nil {
-		return fmt.Errorf("could not bootstrap cluster: %w", err)
+		return fmt.Errorf("could not create raft node: %w", err)
 	}
 
 	n.clusterLock.Lock()
@@ -131,10 +122,25 @@ func (n *Node) leaveCluster(requestID string) error {
 
 	n.log.Info().Bool("executed_work", ok).Str("request", requestID).Msg("waiting for execution done, leaving raft cluster")
 
-	err := n.shutdownCluster(requestID)
+	log := n.log.With().Str("request", requestID).Logger()
+	log.Info().Msg("shutting down cluster")
+
+	n.clusterLock.RLock()
+	raftHandler, ok := n.clusters[requestID]
+	n.clusterLock.RUnlock()
+
+	if !ok {
+		return nil
+	}
+
+	err := raftHandler.Shutdown()
 	if err != nil {
 		return fmt.Errorf("could not leave raft cluster (request: %v): %w", requestID, err)
 	}
+
+	n.clusterLock.Lock()
+	delete(n.clusters, requestID)
+	n.clusterLock.Unlock()
 
 	return nil
 }

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hashicorp/raft"
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
@@ -101,48 +100,12 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 
 	log.Info().Msg("execution request to be executed as part of a cluster")
 
-	if raftNode.State() != raft.Leader {
-		_, id := raftNode.LeaderWithID()
-
-		log.Info().Str("leader", string(id)).Msg("we are not the cluster leader - dropping the request")
-		return codes.NoContent, execute.Result{}, nil
-	}
-
-	log.Info().Msg("we are the cluster leader, executing the request")
-
-	fsmReq := fsmLogEntry{
-		RequestID: requestID,
-		Origin:    from,
-		Execute:   req,
-	}
-
-	payload, err := json.Marshal(fsmReq)
+	code, value, err := raftNode.Execute(from, requestID, req)
 	if err != nil {
-		return codes.Error, execute.Result{}, fmt.Errorf("could not serialize request for FSM")
-	}
-
-	// Apply Raft log.
-	future := raftNode.Apply(payload, defaultRaftApplyTimeout)
-	err = future.Error()
-	if err != nil {
-		return codes.Error, execute.Result{}, fmt.Errorf("could not apply raft log: %w", err)
-	}
-
-	log.Info().Msg("node applied raft log")
-
-	// Get execution result.
-	response := future.Response()
-	value, ok := response.(execute.Result)
-	if !ok {
-		fsmErr, ok := response.(error)
-		if ok {
-			return codes.Error, execute.Result{}, fmt.Errorf("execution encountered an error: %w", fsmErr)
-		}
-
-		return codes.Error, execute.Result{}, fmt.Errorf("unexpected FSM response format: %T", response)
+		return codes.Error, execute.Result{}, fmt.Errorf("execution failed: %w", err)
 	}
 
 	log.Info().Msg("cluster leader executed the request")
 
-	return codes.OK, value, nil
+	return code, value, nil
 }

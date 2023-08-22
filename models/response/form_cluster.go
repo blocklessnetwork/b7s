@@ -1,8 +1,9 @@
 package response
 
 import (
-	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/libp2p/go-libp2p/core/peer"
+
+	"github.com/blocklessnetworking/b7s/models/codes"
 )
 
 // FormCluster describes the `MessageFormClusteRr` response.
