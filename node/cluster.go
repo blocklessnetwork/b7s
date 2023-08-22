@@ -10,6 +10,7 @@ import (
 	"github.com/blocklessnetworking/b7s/consensus"
 	"github.com/blocklessnetworking/b7s/consensus/raft"
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/models/request"
 	"github.com/blocklessnetworking/b7s/models/response"
@@ -35,7 +36,7 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []b
 
 	switch req.Consensus {
 	case consensus.Raft:
-		return n.createRaftCluster(req)
+		return n.createRaftCluster(ctx, from, req)
 
 	case consensus.PBFT:
 		return fmt.Errorf("TBD: PBFT implementation coming soon")
@@ -121,7 +122,7 @@ func consensusResponseKey(requestID string, peer peer.ID) string {
 	return requestID + "/" + peer.String()
 }
 
-func (n *Node) createRaftCluster(fc request.FormCluster) error {
+func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.FormCluster) error {
 
 	// Add a callback function to cache the execution result
 	cacheFn := func(req raft.FSMLogEntry, res execute.Result) {
@@ -165,6 +166,17 @@ func (n *Node) createRaftCluster(fc request.FormCluster) error {
 	n.clusterLock.Lock()
 	n.clusters[fc.RequestID] = rh
 	n.clusterLock.Unlock()
+
+	res := response.FormCluster{
+		Type:      blockless.MessageFormClusterResponse,
+		RequestID: fc.RequestID,
+		Code:      codes.OK,
+	}
+
+	err = n.send(ctx, from, res)
+	if err != nil {
+		return fmt.Errorf("could not send cluster confirmation message: %w", err)
+	}
 
 	return nil
 }

@@ -72,11 +72,15 @@ func New(log zerolog.Logger, host *host.Host, workspace string, requestID string
 		h.log.Info().Str("request", requestID).Str("leader", string(leaderObs.LeaderID)).Msg("observed a leadership event - ready")
 	}()
 
+	h.RegisterObserver(observer)
+
 	// Step 3: Bootstrap the cluster.
 	err = h.bootstrapCluster()
 	if err != nil {
 		return nil, fmt.Errorf("could not bootstrap cluster: %w", err)
 	}
+
+	wg.Wait()
 
 	return h, nil
 }
@@ -143,6 +147,7 @@ func newHandler(log zerolog.Logger, host *host.Host, workspace string, requestID
 		log:     log.With().Str("module", "raft").Str("cluster", requestID).Logger(),
 		cfg:     cfg,
 		rootDir: rootDir,
+		peers:   peers,
 	}
 
 	rh.log.Info().Strs("peers", blockless.PeerIDsToStr(peers)).Msg("created new raft handler")
