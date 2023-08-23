@@ -67,6 +67,12 @@ func (n *Node) processFormClusterResponse(ctx context.Context, from peer.ID, pay
 // processDisbandCluster will start cluster shutdown command.
 func (n *Node) processDisbandCluster(ctx context.Context, from peer.ID, payload []byte) error {
 
+	// Should never happen.
+	if n.cfg.Role != blockless.WorkerNode {
+		n.log.Warn().Str("peer", from.String()).Msg("only worker nodes participate in consensus clusters")
+		return nil
+	}
+
 	// Unpack the request.
 	var req request.DisbandCluster
 	err := json.Unmarshal(payload, &req)
@@ -75,7 +81,7 @@ func (n *Node) processDisbandCluster(ctx context.Context, from peer.ID, payload 
 	}
 	req.From = from
 
-	n.log.Info().Str("request", req.RequestID).Msg("received request to disband consensus cluster")
+	n.log.Info().Str("peer", from.String()).Str("request", req.RequestID).Msg("received request to disband consensus cluster")
 
 	err = n.leaveCluster(req.RequestID)
 	if err != nil {
@@ -93,21 +99,21 @@ func (n *Node) leaveCluster(requestID string) error {
 	// We know that the request is done executing when we have a result for it.
 	_, ok := n.executeResponses.WaitFor(ctx, requestID)
 
-	n.log.Info().Bool("executed_work", ok).Str("request", requestID).Msg("waiting for execution done, leaving raft cluster")
-
 	log := n.log.With().Str("request", requestID).Logger()
-	log.Info().Msg("shutting down cluster")
+	log.Info().Bool("executed_work", ok).Msg("waiting for execution done, leaving raft cluster")
 
 	n.clusterLock.RLock()
 	raftHandler, ok := n.clusters[requestID]
 	n.clusterLock.RUnlock()
 
 	if !ok {
+		log.Debug().Msg("no raft cluster found for this request, done")
 		return nil
 	}
 
 	err := raftHandler.Shutdown()
 	if err != nil {
+		// NOTE: Not much we can do at this point.
 		return fmt.Errorf("could not leave raft cluster (request: %v): %w", requestID, err)
 	}
 

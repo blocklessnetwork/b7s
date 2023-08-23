@@ -105,7 +105,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 		return codes.Error, execute.Result{}, fmt.Errorf("execution failed: %w", err)
 	}
 
-	log.Info().Msg("cluster leader executed the request")
+	log.Info().Str("code", string(code)).Msg("node processed the execution request")
 
 	return code, value, nil
 }

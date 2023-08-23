@@ -183,7 +183,7 @@ rollCallResponseLoop:
 				return
 			}
 
-			log.Error().Err(err).Strs("peers", blockless.PeerIDsToStr(reportingPeers)).Msg("sent cluster disband request")
+			log.Info().Err(err).Strs("peers", blockless.PeerIDsToStr(reportingPeers)).Msg("sent cluster disband request")
 		}()
 	}()
 

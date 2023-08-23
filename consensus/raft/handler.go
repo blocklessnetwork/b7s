@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/raft"
 	boltdb "github.com/hashicorp/raft-boltdb/v2"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	libp2praft "github.com/libp2p/go-libp2p-raft"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -157,6 +157,8 @@ func newHandler(log zerolog.Logger, host *host.Host, workspace string, requestID
 
 func (h *Handler) Shutdown() error {
 
+	h.log.Info().Msg("shuttting down cluster")
+
 	future := h.Raft.Shutdown()
 	err := future.Error()
 	if err != nil {
@@ -164,27 +166,25 @@ func (h *Handler) Shutdown() error {
 	}
 
 	// We'll log the actual error but return an "umbrella" one if we fail to close any of the two stores.
-	var retErr error
+	var multierr *multierror.Error
+
 	err = h.logStore.Close()
 	if err != nil {
-		log.Error().Err(err).Msg("could not close log store")
-		retErr = fmt.Errorf("could not close raft database")
+		multierr = multierror.Append(multierr, fmt.Errorf("could not close log store: %w", err))
 	}
 
 	err = h.stable.Close()
 	if err != nil {
-		log.Error().Err(err).Msg("could not close stable store")
-		retErr = fmt.Errorf("could not close raft database")
+		multierr = multierror.Append(multierr, fmt.Errorf("could not close stable store: %w", err))
 	}
 
 	// Delete residual files. This may fail if we failed to close the databases above.
 	err = os.RemoveAll(h.rootDir)
 	if err != nil {
-		log.Error().Err(err).Str("path", h.rootDir).Msg("could not delete consensus dir")
-		retErr = fmt.Errorf("could not delete consensus directory")
+		multierr = multierror.Append(multierr, fmt.Errorf("could not delete consensus dir: %w", err))
 	}
 
-	return retErr
+	return multierr.ErrorOrNil()
 }
 
 func (h *Handler) IsLeader() bool {
