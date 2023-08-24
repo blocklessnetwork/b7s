@@ -10,7 +10,6 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 
-	"github.com/blocklessnetworking/b7s/consensus/raft"
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/node/internal/waitmap"
@@ -37,8 +36,8 @@ type Node struct {
 
 	rollCall *rollCallQueue
 
-	// clusters maps request ID to the raft cluster the node belongs to.
-	clusters map[string]*raft.Handler
+	// clusters maps request ID to the cluster the node belongs to.
+	clusters map[string]consensusExecutor
 
 	// clusterLock is used to synchronize access to the `clusters` map.
 	clusterLock sync.RWMutex
@@ -68,7 +67,7 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		sema: make(chan struct{}, cfg.Concurrency),
 
 		rollCall:           newQueue(rollCallQueueBufferSize),
-		clusters:           make(map[string]*raft.Handler),
+		clusters:           make(map[string]consensusExecutor),
 		executeResponses:   waitmap.New(),
 		consensusResponses: waitmap.New(),
 	}

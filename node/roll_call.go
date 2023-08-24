@@ -7,6 +7,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/consensus"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/request"
@@ -33,7 +34,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	log.Debug().Msg("received roll call request")
 
 	// TODO: (raft) temporary measure - at the moment we don't support multiple raft clusters on the same node at the same time.
-	if req.ConsensusNeeded && len(n.clusters) > 0 {
+	if req.Consensus == consensus.Raft && n.haveRaftClusters() {
 		log.Warn().Msg("cannot respond to a roll call as we're already participating in one raft cluster")
 		return nil
 	}
@@ -88,15 +89,15 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 
 // issueRollCall will create a roll call request for executing the given function.
 // On successful issuance of the roll call request, we return the ID of the issued request.
-func (n *Node) issueRollCall(ctx context.Context, requestID string, functionID string, consensusNeeded bool) error {
+func (n *Node) issueRollCall(ctx context.Context, requestID string, functionID string, consensus consensus.Type) error {
 
 	// Create a roll call request.
 	rollCall := request.RollCall{
-		Type:            blockless.MessageRollCall,
-		Origin:          n.host.ID(),
-		FunctionID:      functionID,
-		RequestID:       requestID,
-		ConsensusNeeded: consensusNeeded,
+		Type:       blockless.MessageRollCall,
+		Origin:     n.host.ID(),
+		FunctionID: functionID,
+		RequestID:  requestID,
+		Consensus:  consensus,
 	}
 
 	// Publish the mssage.
@@ -106,4 +107,19 @@ func (n *Node) issueRollCall(ctx context.Context, requestID string, functionID s
 	}
 
 	return nil
+}
+
+// Temporary measure - we can't have multiple Raft clusters at this point. Remove when we remove this limitation.
+func (n *Node) haveRaftClusters() bool {
+
+	n.clusterLock.RLock()
+	defer n.clusterLock.RUnlock()
+
+	for _, cluster := range n.clusters {
+		if cluster.Consensus() == consensus.Raft {
+			return true
+		}
+	}
+
+	return false
 }

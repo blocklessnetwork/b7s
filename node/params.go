@@ -3,6 +3,8 @@ package node
 import (
 	"errors"
 	"time"
+
+	"github.com/blocklessnetworking/b7s/consensus"
 )
 
 const (
@@ -12,6 +14,8 @@ const (
 	DefaultExecutionTimeout        = 10 * time.Second
 	DefaultClusterFormationTimeout = 10 * time.Second
 	DefaultConcurrency             = 10
+
+	DefaultConsensusAlgorithm = consensus.Raft
 
 	rollCallQueueBufferSize = 1000
 

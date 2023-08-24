@@ -17,7 +17,7 @@ func (t Type) String() string {
 	case Raft:
 		return "Raft"
 	case PBFT:
-		return "pBFT"
+		return "PBFT"
 	default:
 		return fmt.Sprintf("unknown: %d", t)
 	}

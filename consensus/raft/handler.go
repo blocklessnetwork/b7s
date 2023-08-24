@@ -15,6 +15,7 @@ import (
 	libp2praft "github.com/libp2p/go-libp2p-raft"
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/consensus"
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
@@ -83,6 +84,10 @@ func New(log zerolog.Logger, host *host.Host, workspace string, requestID string
 	wg.Wait()
 
 	return h, nil
+}
+
+func (r *Handler) Consensus() consensus.Type {
+	return consensus.Raft
 }
 
 func newHandler(log zerolog.Logger, host *host.Host, workspace string, requestID string, executor Executor, peers []peer.ID, options ...Option) (*Handler, error) {

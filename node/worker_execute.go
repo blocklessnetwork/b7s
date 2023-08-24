@@ -82,8 +82,9 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 	}
 
 	// Determine if we should just execute this function, or are we part of the cluster.
+	// TODO: Use the request for this, not the cluster check.
 	n.clusterLock.RLock()
-	raftNode, ok := n.clusters[requestID]
+	cluster, ok := n.clusters[requestID]
 	n.clusterLock.RUnlock()
 
 	// We are not part of a cluster - just execute the request.
@@ -100,7 +101,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 
 	log.Info().Msg("execution request to be executed as part of a cluster")
 
-	code, value, err := raftNode.Execute(from, requestID, req)
+	code, value, err := cluster.Execute(from, requestID, req)
 	if err != nil {
 		return codes.Error, execute.Result{}, fmt.Errorf("execution failed: %w", err)
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/consensus"
 	"github.com/blocklessnetworking/b7s/host"
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
@@ -83,6 +84,10 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []
 	replica.setGeneralMessageHandler()
 
 	return &replica, nil
+}
+
+func (r *Replica) Consensus() consensus.Type {
+	return consensus.PBFT
 }
 
 func (r *Replica) Shutdown() error {

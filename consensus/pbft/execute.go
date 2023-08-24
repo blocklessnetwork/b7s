@@ -2,11 +2,34 @@ package pbft
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/models/response"
 )
+
+// Execute fullfils the consensus interface by inserting the request into the pipeline.
+func (r *Replica) Execute(client peer.ID, requestID string, req execute.Request) (codes.Code, execute.Result, error) {
+
+	request := Request{
+		ID:        requestID,
+		Timestamp: time.Now(),
+		Origin:    client,
+		Execute:   req,
+	}
+
+	err := r.processRequest(client, request)
+	if err != nil {
+		return codes.Error, execute.Result{}, fmt.Errorf("could not process request")
+	}
+
+	// Nothing to return at this point.
+	return codes.NoContent, execute.Result{}, nil
+}
 
 // execute executes the request AND sends the result back to origin.
 func (r *Replica) execute(view uint, sequence uint, digest string) error {
