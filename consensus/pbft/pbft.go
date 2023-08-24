@@ -17,7 +17,6 @@ import (
 
 	"github.com/blocklessnetworking/b7s/consensus"
 	"github.com/blocklessnetworking/b7s/host"
-	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
 // TODO (pbft): Add signatures to messages and signature verification.
@@ -81,7 +80,8 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []
 	replica.setPBFTMessageHandler()
 
 	// Handling messages on the standard B7S protocol. We ONLY support client requests there.
-	replica.setGeneralMessageHandler()
+	// TODO (pbft): Not allowing at the moment, allow via config only.
+	// replica.setGeneralMessageHandler()
 
 	return &replica, nil
 }
@@ -182,53 +182,53 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 	return fmt.Errorf("unexpected message type (from: %s): %T", from, msg)
 }
 
-func (r *Replica) setGeneralMessageHandler() {
+// func (r *Replica) setGeneralMessageHandler() {
 
-	r.host.Host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
-		defer stream.Close()
+// 	r.host.Host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+// 		defer stream.Close()
 
-		from := stream.Conn().RemotePeer()
+// 		from := stream.Conn().RemotePeer()
 
-		buf := bufio.NewReader(stream)
-		payload, err := buf.ReadBytes('\n')
-		if err != nil && !errors.Is(err, io.EOF) {
-			stream.Reset()
-			r.log.Error().Err(err).Msg("error receiving direct message")
-			return
-		}
+// 		buf := bufio.NewReader(stream)
+// 		payload, err := buf.ReadBytes('\n')
+// 		if err != nil && !errors.Is(err, io.EOF) {
+// 			stream.Reset()
+// 			r.log.Error().Err(err).Msg("error receiving direct message")
+// 			return
+// 		}
 
-		r.log.Debug().Str("peer", from.String()).Msg("received message")
+// 		r.log.Debug().Str("peer", from.String()).Msg("received message")
 
-		// If we're acting as a byzantine replica, just don't do anything.
-		// At this point we're not trying any elaborate sus behavior.
-		if r.byzantine {
-			r.log.Info().Msg("we're a byzantine replica, ignoring received message")
-			return
-		}
+// 		// If we're acting as a byzantine replica, just don't do anything.
+// 		// At this point we're not trying any elaborate sus behavior.
+// 		if r.byzantine {
+// 			r.log.Info().Msg("we're a byzantine replica, ignoring received message")
+// 			return
+// 		}
 
-		msg, err := unpackMessage(payload)
-		if err != nil {
-			r.log.Error().Err(err).Msg("could not unpack message")
-			return
-		}
+// 		msg, err := unpackMessage(payload)
+// 		if err != nil {
+// 			r.log.Error().Err(err).Msg("could not unpack message")
+// 			return
+// 		}
 
-		// On the general protocol we ONLY support client requests.
-		req, ok := msg.(Request)
-		if !ok {
-			r.log.Error().Str("peer", from.String()).Type("type", msg).Msg("unexpected message type")
-			return
-		}
+// 		// On the general protocol we ONLY support client requests.
+// 		req, ok := msg.(Request)
+// 		if !ok {
+// 			r.log.Error().Str("peer", from.String()).Type("type", msg).Msg("unexpected message type")
+// 			return
+// 		}
 
-		r.sl.Lock()
-		defer r.sl.Unlock()
+// 		r.sl.Lock()
+// 		defer r.sl.Unlock()
 
-		err = r.processRequest(from, req)
-		if err != nil {
-			r.log.Error().Err(err).Str("request", req.ID).Str("client", req.Origin.String()).Msg("could not process request")
-			return
-		}
-	})
-}
+// 		err = r.processRequest(from, req)
+// 		if err != nil {
+// 			r.log.Error().Err(err).Str("request", req.ID).Str("client", req.Origin.String()).Msg("could not process request")
+// 			return
+// 		}
+// 	})
+// }
 
 func (r *Replica) primaryReplicaID() peer.ID {
 	return r.peers[r.currentPrimary()]
