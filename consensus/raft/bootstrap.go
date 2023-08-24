@@ -7,10 +7,10 @@ import (
 	"github.com/hashicorp/raft"
 )
 
-func (h *Handler) bootstrapCluster() error {
+func (r *Replica) bootstrapCluster() error {
 
-	servers := make([]raft.Server, 0, len(h.peers))
-	for _, id := range h.peers {
+	servers := make([]raft.Server, 0, len(r.peers))
+	for _, id := range r.peers {
 
 		s := raft.Server{
 			Suffrage: raft.Voter,
@@ -27,7 +27,7 @@ func (h *Handler) bootstrapCluster() error {
 
 	// Bootstrapping will only succeed for the first node to start it.
 	// Other attempts will fail with an error that can be ignored.
-	ret := h.BootstrapCluster(cfg)
+	ret := r.BootstrapCluster(cfg)
 	err := ret.Error()
 	if err != nil && !errors.Is(err, raft.ErrCantBootstrap) {
 		return fmt.Errorf("could not bootstrap cluster: %w", err)

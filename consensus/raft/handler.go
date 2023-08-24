@@ -20,9 +20,7 @@ import (
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
-// TODO (raft): Handler logging.
-
-type Handler struct {
+type Replica struct {
 	*raft.Raft
 	logStore *boltdb.BoltStore
 	stable   *boltdb.BoltStore
@@ -34,12 +32,12 @@ type Handler struct {
 	peers   []peer.ID
 }
 
-// New creates a new raft handler, bootstraps the cluster and waits until a first leader is elected. We do this because
+// New creates a new raft replica, bootstraps the cluster and waits until a first leader is elected. We do this because
 // only after the election the cluster is really operational and ready to process requests.
-func New(log zerolog.Logger, host *host.Host, workspace string, requestID string, executor Executor, peers []peer.ID, options ...Option) (*Handler, error) {
+func New(log zerolog.Logger, host *host.Host, workspace string, requestID string, executor Executor, peers []peer.ID, options ...Option) (*Replica, error) {
 
-	// Step 1: Create a new raft handler.
-	h, err := newHandler(log, host, workspace, requestID, executor, peers, options...)
+	// Step 1: Create a new raft replica.
+	replica, err := newReplica(log, host, workspace, requestID, executor, peers, options...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create raft handler: %w", err)
 	}
@@ -63,34 +61,34 @@ func New(log zerolog.Logger, host *host.Host, workspace string, requestID string
 		obs := <-obsCh
 		leaderObs, ok := obs.Data.(raft.LeaderObservation)
 		if !ok {
-			h.log.Error().Type("type", obs.Data).Msg("invalid observation type received")
+			replica.log.Error().Type("type", obs.Data).Msg("invalid observation type received")
 			return
 		}
 
 		// We don't need the observer anymore.
-		h.DeregisterObserver(observer)
+		replica.DeregisterObserver(observer)
 
-		h.log.Info().Str("request", requestID).Str("leader", string(leaderObs.LeaderID)).Msg("observed a leadership event - ready")
+		replica.log.Info().Str("request", requestID).Str("leader", string(leaderObs.LeaderID)).Msg("observed a leadership event - ready")
 	}()
 
-	h.RegisterObserver(observer)
+	replica.RegisterObserver(observer)
 
 	// Step 3: Bootstrap the cluster.
-	err = h.bootstrapCluster()
+	err = replica.bootstrapCluster()
 	if err != nil {
 		return nil, fmt.Errorf("could not bootstrap cluster: %w", err)
 	}
 
 	wg.Wait()
 
-	return h, nil
+	return replica, nil
 }
 
-func (r *Handler) Consensus() consensus.Type {
+func (r *Replica) Consensus() consensus.Type {
 	return consensus.Raft
 }
 
-func newHandler(log zerolog.Logger, host *host.Host, workspace string, requestID string, executor Executor, peers []peer.ID, options ...Option) (*Handler, error) {
+func newReplica(log zerolog.Logger, host *host.Host, workspace string, requestID string, executor Executor, peers []peer.ID, options ...Option) (*Replica, error) {
 
 	if len(peers) == 0 {
 		return nil, errors.New("empty peer list")
@@ -144,7 +142,7 @@ func newHandler(log zerolog.Logger, host *host.Host, workspace string, requestID
 		return nil, fmt.Errorf("could not create a raft node: %w", err)
 	}
 
-	rh := Handler{
+	rh := Replica{
 		Raft:     raftNode,
 		logStore: logStore,
 		stable:   stableStore,
@@ -160,11 +158,11 @@ func newHandler(log zerolog.Logger, host *host.Host, workspace string, requestID
 	return &rh, nil
 }
 
-func (h *Handler) Shutdown() error {
+func (r *Replica) Shutdown() error {
 
-	h.log.Info().Msg("shuttting down cluster")
+	r.log.Info().Msg("shuttting down cluster")
 
-	future := h.Raft.Shutdown()
+	future := r.Raft.Shutdown()
 	err := future.Error()
 	if err != nil {
 		return fmt.Errorf("could not shutdown raft cluster: %w", err)
@@ -173,18 +171,18 @@ func (h *Handler) Shutdown() error {
 	// We'll log the actual error but return an "umbrella" one if we fail to close any of the two stores.
 	var multierr *multierror.Error
 
-	err = h.logStore.Close()
+	err = r.logStore.Close()
 	if err != nil {
 		multierr = multierror.Append(multierr, fmt.Errorf("could not close log store: %w", err))
 	}
 
-	err = h.stable.Close()
+	err = r.stable.Close()
 	if err != nil {
 		multierr = multierror.Append(multierr, fmt.Errorf("could not close stable store: %w", err))
 	}
 
 	// Delete residual files. This may fail if we failed to close the databases above.
-	err = os.RemoveAll(h.rootDir)
+	err = os.RemoveAll(r.rootDir)
 	if err != nil {
 		multierr = multierror.Append(multierr, fmt.Errorf("could not delete consensus dir: %w", err))
 	}
@@ -192,6 +190,6 @@ func (h *Handler) Shutdown() error {
 	return multierr.ErrorOrNil()
 }
 
-func (h *Handler) IsLeader() bool {
-	return h.State() == raft.Leader
+func (r *Replica) isLeader() bool {
+	return r.State() == raft.Leader
 }
