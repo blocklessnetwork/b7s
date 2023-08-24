@@ -154,3 +154,8 @@ func (n *Node) leaveCluster(requestID string) error {
 
 	return nil
 }
+
+// helper function just for the sake of readibility.
+func consensusRequired(c consensus.Type) bool {
+	return c == 0
+}

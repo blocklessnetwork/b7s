@@ -82,19 +82,33 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 	}
 
 	// Determine if we should just execute this function, or are we part of the cluster.
-	// TODO: Use the request for this, not the cluster check.
-	n.clusterLock.RLock()
-	cluster, ok := n.clusters[requestID]
-	n.clusterLock.RUnlock()
+
+	// Here we actually have a bit of a conceptual problem with having the same models for head and worker node.
+	// Head node receives client requests so it can expect _some_ type of inaccuracy there. Worker node receives
+	// execution requests from the head node, so it shouldn't really tolerate errors/ambiguities.
+	consensus, err := parseConsensusAlgorithm(req.Config.ConsensusAlgorithm)
+	if err != nil {
+		return codes.Error, execute.Result{}, fmt.Errorf("could not parse consensus algorithm from the head node request, aborting (value: %s): %w", req.Config.ConsensusAlgorithm, err)
+	}
 
 	// We are not part of a cluster - just execute the request.
-	if !ok {
+	if !consensusRequired(consensus) {
 		res, err := n.executor.ExecuteFunction(requestID, req)
 		if err != nil {
 			return res.Code, res, fmt.Errorf("execution failed: %w", err)
 		}
 
 		return res.Code, res, nil
+	}
+
+	// Now we KNOW we need a consensus. A cluster must already exist.
+
+	n.clusterLock.RLock()
+	cluster, ok := n.clusters[requestID]
+	n.clusterLock.RUnlock()
+
+	if !ok {
+		return codes.Error, execute.Result{}, fmt.Errorf("consensus required but no cluster found; omitted cluster formation message or error forming cluster (request: %s)", requestID)
 	}
 
 	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Logger()

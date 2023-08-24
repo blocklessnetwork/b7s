@@ -148,7 +148,7 @@ rollCallResponseLoop:
 
 	// Phase 2. - Request cluster formation, if we need consensus.
 	// TODO: Move this to a separate function.
-	if consensus != 0 {
+	if consensusRequired(consensus) {
 
 		// Create cluster formation request.
 		reqCluster := request.FormCluster{

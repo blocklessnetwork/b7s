@@ -73,6 +73,10 @@ func determineOverallCode(results map[string]execute.Result) codes.Code {
 
 func parseConsensusAlgorithm(value string) (consensus.Type, error) {
 
+	if value == "" {
+		return 0, nil
+	}
+
 	lv := strings.ToLower(value)
 	switch lv {
 	case "raft":
