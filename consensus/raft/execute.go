@@ -35,7 +35,7 @@ func (r *Replica) Execute(from peer.ID, requestID string, req execute.Request) (
 	}
 
 	// Apply Raft log.
-	future := r.Apply(payload, defaultRaftApplyTimeout)
+	future := r.Apply(payload, defaultApplyTimeout)
 	err = future.Error()
 	if err != nil {
 		return codes.Error, execute.Result{}, fmt.Errorf("could not apply raft log: %w", err)
