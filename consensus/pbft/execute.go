@@ -51,7 +51,7 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 
 	// Requests must be executed in order.
 	if sequence != r.lastExecuted+1 {
-		log.Warn().Msg("requests with lower sequence number have not been executed")
+		log.Error().Msg("requests with lower sequence number have not been executed")
 		// TODO (pbft): Start execution of earlier requests?
 		return nil
 	}
@@ -94,6 +94,11 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 
 	// Save this executions in case it's requested again.
 	r.executions[request.ID] = msg
+
+	// Invoke specified post processor functions.
+	for _, proc := range r.cfg.PostProcessors {
+		proc(request.ID, request.Origin, request.Execute, res)
+	}
 
 	err = r.send(request.Origin, msg, blockless.ProtocolID)
 	if err != nil {

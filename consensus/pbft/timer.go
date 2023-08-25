@@ -17,7 +17,7 @@ func (r *Replica) startRequestTimer(overrideExisting bool) {
 		r.requestTimer.Stop()
 	}
 
-	r.requestTimer = time.AfterFunc(RequestTimeout, func() {
+	r.requestTimer = time.AfterFunc(r.cfg.RequestTimeout, func() {
 		r.sl.Lock()
 		defer r.sl.Unlock()
 

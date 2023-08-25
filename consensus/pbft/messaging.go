@@ -21,7 +21,7 @@ func (r *Replica) send(to peer.ID, msg interface{}, protocol protocol.ID) error 
 	}
 
 	// We don't want to wait indefinitely.
-	ctx, cancel := context.WithTimeout(context.Background(), NetworkTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), r.cfg.NetworkTimeout)
 	defer cancel()
 
 	// Send message.
@@ -42,7 +42,7 @@ func (r *Replica) broadcast(msg interface{}) error {
 		return fmt.Errorf("could not encode record: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), NetworkTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), r.cfg.NetworkTimeout)
 	defer cancel()
 
 	var (
