@@ -66,7 +66,7 @@ func (r *Replica) broadcast(msg interface{}) error {
 			// NOTE: We could potentially retry sending if we fail once. On the other hand, somewhat unlikely they're
 			// back online split second later.
 
-			err := r.host.SendMessageOnProtocol(ctx, peer, payload, Protocol)
+			err := r.host.SendMessageOnProtocol(ctx, peer, payload, r.protocolID)
 			if err != nil {
 
 				lock.Lock()

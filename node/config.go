@@ -60,15 +60,6 @@ func (n *Node) ValidateConfig() error {
 		if n.cfg.Execute == nil {
 			return errors.New("execution component is required")
 		}
-
-		// TODO (raft): Think how to handle this.
-
-		// Make sure we have a valid consensus configuration.
-		// rcfg := n.getRaftConfig(n.host.ID().String())
-		// err := raft.ValidateConfig(&rcfg)
-		// if err != nil {
-		// 	return fmt.Errorf("consensus configuration is not valid: %w", err)
-		// }
 	}
 
 	// Head node specific validation.

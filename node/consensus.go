@@ -88,13 +88,14 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 
 func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.FormCluster) error {
 
-	// TODO (pbft): Use an actual key.
+	// TODO (pbft): Use an actual key, but we don't have signing yet.
 	var dummyKey crypto.PrivKey
 	ph, err := pbft.NewReplica(
 		n.log,
 		n.host,
 		n.executor,
 		fc.Peers,
+		fc.RequestID,
 		dummyKey,
 	)
 	if err != nil {
