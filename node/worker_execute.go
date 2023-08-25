@@ -111,7 +111,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 		return codes.Error, execute.Result{}, fmt.Errorf("consensus required but no cluster found; omitted cluster formation message or error forming cluster (request: %s)", requestID)
 	}
 
-	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Logger()
+	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Str("consensus", consensus.String()).Logger()
 
 	log.Info().Msg("execution request to be executed as part of a cluster")
 

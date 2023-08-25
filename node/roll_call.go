@@ -87,9 +87,70 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	return nil
 }
 
-// issueRollCall will create a roll call request for executing the given function.
+func (n *Node) executeRollCall(ctx context.Context, requestID string, functionID string, quorum int, consensus consensus.Type) ([]peer.ID, error) {
+
+	// Create a logger with relevant context.
+	log := n.log.With().Str("request", requestID).Str("function", functionID).Int("quorum", quorum).Logger()
+
+	log.Info().Msg("performing roll call for request")
+
+	n.rollCall.create(requestID)
+	defer n.rollCall.remove(requestID)
+
+	err := n.publishRollCall(ctx, requestID, functionID, consensus)
+	if err != nil {
+		return nil, fmt.Errorf("could not publish roll call: %w", err)
+	}
+
+	log.Info().Msg("roll call published")
+
+	// Limit for how long we wait for responses.
+	tctx, exCancel := context.WithTimeout(ctx, n.cfg.RollCallTimeout)
+	defer exCancel()
+
+	// Peers that have reported on roll call.
+	var reportingPeers []peer.ID
+rollCallResponseLoop:
+	for {
+		// Wait for responses from nodes who want to work on the request.
+		select {
+		// Request timed out.
+		case <-tctx.Done():
+
+			log.Warn().Msg("roll call timed out")
+			return nil, blockless.ErrRollCallTimeout
+
+		case reply := <-n.rollCall.responses(requestID):
+
+			// Check if this is the reply we want - shouldn't really happen.
+			if reply.FunctionID != functionID {
+				log.Info().Str("peer", reply.From.String()).Str("function_got", reply.FunctionID).Msg("skipping inadequate roll call response - wrong function")
+				continue
+			}
+
+			// Check if we are connected to this peer.
+			// Since we receive responses to roll call via direct messages - should not happen.
+			if !n.haveConnection(reply.From) {
+				n.log.Info().Str("peer", reply.From.String()).Msg("skipping roll call response from unconnected peer")
+				continue
+			}
+
+			log.Info().Str("peer", reply.From.String()).Msg("roll called peer chosen for execution")
+
+			reportingPeers = append(reportingPeers, reply.From)
+			if len(reportingPeers) >= quorum {
+				log.Info().Msg("enough peers reported for roll call")
+				break rollCallResponseLoop
+			}
+		}
+	}
+
+	return reportingPeers, nil
+}
+
+// publishRollCall will create a roll call request for executing the given function.
 // On successful issuance of the roll call request, we return the ID of the issued request.
-func (n *Node) issueRollCall(ctx context.Context, requestID string, functionID string, consensus consensus.Type) error {
+func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID string, consensus consensus.Type) error {
 
 	// Create a roll call request.
 	rollCall := request.RollCall{

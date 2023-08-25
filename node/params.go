@@ -26,9 +26,9 @@ const (
 
 // Raft and consensus related parameters.
 const (
-	raftClusterDisbandTimeout = 5 * time.Minute
+	consensusClusterDisbandTimeout = 5 * time.Minute
 	// Timeout for the context used for sending disband request to cluster nodes.
-	raftClusterSendTimeout = 10 * time.Second
+	consensusClusterSendTimeout = 10 * time.Second
 )
 
 var (

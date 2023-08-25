@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/rs/zerolog/log"
 
 	"github.com/blocklessnetworking/b7s/consensus"
 	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/request"
 	"github.com/blocklessnetworking/b7s/models/response"
 )
@@ -84,6 +87,94 @@ func (n *Node) processDisbandCluster(ctx context.Context, from peer.ID, payload 
 	if err != nil {
 		return fmt.Errorf("could not disband cluster (request: %s): %w", req.RequestID, err)
 	}
+
+	n.log.Info().Str("peer", from.String()).Str("request", req.RequestID).Msg("left consensus cluster")
+
+	return nil
+}
+
+func (n *Node) formCluster(ctx context.Context, requestID string, replicas []peer.ID, consensus consensus.Type) error {
+
+	// Create cluster formation request.
+	reqCluster := request.FormCluster{
+		Type:      blockless.MessageFormCluster,
+		RequestID: requestID,
+		Peers:     replicas,
+		Consensus: consensus,
+	}
+
+	// Request execution from peers.
+	err := n.sendToMany(ctx, replicas, reqCluster)
+	if err != nil {
+		return fmt.Errorf("could not send cluster formation request to peers: %w", err)
+	}
+
+	// Wait for cluster confirmation messages.
+	n.log.Debug().Str("request", requestID).Msg("waiting for cluster to be formed")
+
+	// We're willing to wait for a limited amount of time.
+	clusterCtx, exCancel := context.WithTimeout(ctx, n.cfg.ExecutionTimeout)
+	defer exCancel()
+
+	// Wait for confirmations for cluster forming.
+	bootstrapped := make(map[string]struct{})
+	var rlock sync.Mutex
+	var rw sync.WaitGroup
+	rw.Add(len(replicas))
+
+	// Wait on peers asynchronously.
+	for _, rp := range replicas {
+		rp := rp
+
+		go func() {
+			defer rw.Done()
+			key := consensusResponseKey(requestID, rp)
+			res, ok := n.consensusResponses.WaitFor(clusterCtx, key)
+			if !ok {
+				return
+			}
+
+			n.log.Info().Str("request", requestID).Str("peer", rp.String()).Msg("accounted consensus cluster response from roll called peer")
+
+			fc := res.(response.FormCluster)
+			if fc.Code != codes.OK {
+				log.Warn().Str("peer", rp.String()).Msg("peer failed to join consensus cluster")
+				return
+			}
+
+			rlock.Lock()
+			defer rlock.Unlock()
+			bootstrapped[rp.String()] = struct{}{}
+		}()
+	}
+
+	// Wait for results, whatever they may be.
+	rw.Wait()
+
+	// Err if not all peers joined the cluster successfully.
+	if len(bootstrapped) != len(replicas) {
+		return fmt.Errorf("some peers failed to join consensus cluster (have: %d, want: %d)", len(bootstrapped), len(replicas))
+	}
+
+	return nil
+}
+
+func (n *Node) disbandCluster(requestID string, replicas []peer.ID) error {
+
+	msgDisband := request.DisbandCluster{
+		Type:      blockless.MessageDisbandCluster,
+		RequestID: requestID,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), consensusClusterSendTimeout)
+	defer cancel()
+
+	err := n.sendToMany(ctx, replicas, msgDisband)
+	if err != nil {
+		return fmt.Errorf("could not send cluster disband request (request: %s): %w", requestID, err)
+	}
+
+	log.Info().Err(err).Strs("peers", blockless.PeerIDsToStr(replicas)).Msg("sent cluster disband request")
 
 	return nil
 }

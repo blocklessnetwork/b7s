@@ -36,7 +36,7 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 	// Add a callback function to send the execution result to origin.
 	sendFn := func(req raft.FSMLogEntry, res execute.Result) {
 
-		ctx, cancel := context.WithTimeout(context.Background(), raftClusterSendTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), consensusClusterSendTimeout)
 		defer cancel()
 
 		msg := response.Execute{
@@ -133,7 +133,7 @@ func (n *Node) leaveCluster(requestID string) error {
 
 	n.log.Info().Str("consensus", cluster.Consensus().String()).Str("request", requestID).Msg("leaving consensus cluster")
 
-	ctx, cancel := context.WithTimeout(context.Background(), raftClusterDisbandTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), consensusClusterDisbandTimeout)
 	defer cancel()
 
 	// We know that the request is done executing when we have a result for it.
@@ -157,5 +157,5 @@ func (n *Node) leaveCluster(requestID string) error {
 
 // helper function just for the sake of readibility.
 func consensusRequired(c consensus.Type) bool {
-	return c == 0
+	return c != 0
 }
