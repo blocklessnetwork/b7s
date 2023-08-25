@@ -34,7 +34,7 @@ type Replica struct {
 
 // New creates a new raft replica, bootstraps the cluster and waits until a first leader is elected. We do this because
 // only after the election the cluster is really operational and ready to process requests.
-func New(log zerolog.Logger, host *host.Host, workspace string, requestID string, executor Executor, peers []peer.ID, options ...Option) (*Replica, error) {
+func New(log zerolog.Logger, host *host.Host, workspace string, requestID string, executor blockless.Executor, peers []peer.ID, options ...Option) (*Replica, error) {
 
 	// Step 1: Create a new raft replica.
 	replica, err := newReplica(log, host, workspace, requestID, executor, peers, options...)
@@ -88,7 +88,7 @@ func (r *Replica) Consensus() consensus.Type {
 	return consensus.Raft
 }
 
-func newReplica(log zerolog.Logger, host *host.Host, workspace string, requestID string, executor Executor, peers []peer.ID, options ...Option) (*Replica, error) {
+func newReplica(log zerolog.Logger, host *host.Host, workspace string, requestID string, executor blockless.Executor, peers []peer.ID, options ...Option) (*Replica, error) {
 
 	if len(peers) == 0 {
 		return nil, errors.New("empty peer list")

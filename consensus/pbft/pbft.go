@@ -18,6 +18,7 @@ import (
 
 	"github.com/blocklessnetworking/b7s/consensus"
 	"github.com/blocklessnetworking/b7s/host"
+	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
 // TODO (pbft): Add signatures to messages and signature verification.
@@ -40,7 +41,7 @@ type Replica struct {
 	// Components.
 	log      zerolog.Logger
 	host     *host.Host
-	executor Executor
+	executor blockless.Executor
 
 	// Cluster identity.
 	id         peer.ID
@@ -54,7 +55,7 @@ type Replica struct {
 }
 
 // NewReplica creates a new PBFT replica.
-func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []peer.ID, clusterID string, key crypto.PrivKey, options ...Option) (*Replica, error) {
+func NewReplica(log zerolog.Logger, host *host.Host, executor blockless.Executor, peers []peer.ID, clusterID string, key crypto.PrivKey, options ...Option) (*Replica, error) {
 
 	total := uint(len(peers))
 
