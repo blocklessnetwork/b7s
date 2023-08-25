@@ -10,7 +10,7 @@ import (
 	"github.com/blocklessnetworking/b7s/log/hclog"
 )
 
-// Option can be used to set Node configuration options.
+// Option can be used to set Raft configuration options.
 type Option func(*Config)
 
 // DefaultConfig represents the default settings for the raft handler.

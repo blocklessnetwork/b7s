@@ -26,6 +26,7 @@ const (
 
 // Raft and consensus related parameters.
 const (
+	// When disbanding a cluster, how long do we wait until a potential execution is done.
 	consensusClusterDisbandTimeout = 5 * time.Minute
 	// Timeout for the context used for sending disband request to cluster nodes.
 	consensusClusterSendTimeout = 10 * time.Second
