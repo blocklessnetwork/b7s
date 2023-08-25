@@ -32,6 +32,8 @@ type Replica struct {
 	pbftCore
 	replicaState
 
+	cfg Config
+
 	// Track inactivity period to trigger a view change.
 	requestTimer *time.Timer
 
@@ -52,7 +54,7 @@ type Replica struct {
 }
 
 // NewReplica creates a new PBFT replica.
-func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []peer.ID, clusterID string, key crypto.PrivKey) (*Replica, error) {
+func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []peer.ID, clusterID string, key crypto.PrivKey, options ...Option) (*Replica, error) {
 
 	total := uint(len(peers))
 
@@ -60,9 +62,16 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []
 		return nil, fmt.Errorf("too small cluster for a valid PBFT (have: %v, minimum: %v)", total, MinimumReplicaCount)
 	}
 
+	cfg := DefaultConfig
+	for _, option := range options {
+		option(&cfg)
+	}
+
 	replica := Replica{
 		pbftCore:     newPbftCore(total),
 		replicaState: newState(),
+
+		cfg: cfg,
 
 		log:        log.With().Str("component", "pbft").Str("cluster", clusterID).Logger(),
 		host:       host,
@@ -85,8 +94,6 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor Executor, peers []
 	replica.setPBFTMessageHandler()
 
 	// Handling messages on the standard B7S protocol. We ONLY support client requests there.
-	// TODO (pbft): Not allowing at the moment, allow via config only.
-	// replica.setGeneralMessageHandler()
 
 	return &replica, nil
 }
@@ -186,54 +193,6 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 
 	return fmt.Errorf("unexpected message type (from: %s): %T", from, msg)
 }
-
-// func (r *Replica) setGeneralMessageHandler() {
-
-// 	r.host.Host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
-// 		defer stream.Close()
-
-// 		from := stream.Conn().RemotePeer()
-
-// 		buf := bufio.NewReader(stream)
-// 		payload, err := buf.ReadBytes('\n')
-// 		if err != nil && !errors.Is(err, io.EOF) {
-// 			stream.Reset()
-// 			r.log.Error().Err(err).Msg("error receiving direct message")
-// 			return
-// 		}
-
-// 		r.log.Debug().Str("peer", from.String()).Msg("received message")
-
-// 		// If we're acting as a byzantine replica, just don't do anything.
-// 		// At this point we're not trying any elaborate sus behavior.
-// 		if r.byzantine {
-// 			r.log.Info().Msg("we're a byzantine replica, ignoring received message")
-// 			return
-// 		}
-
-// 		msg, err := unpackMessage(payload)
-// 		if err != nil {
-// 			r.log.Error().Err(err).Msg("could not unpack message")
-// 			return
-// 		}
-
-// 		// On the general protocol we ONLY support client requests.
-// 		req, ok := msg.(Request)
-// 		if !ok {
-// 			r.log.Error().Str("peer", from.String()).Type("type", msg).Msg("unexpected message type")
-// 			return
-// 		}
-
-// 		r.sl.Lock()
-// 		defer r.sl.Unlock()
-
-// 		err = r.processRequest(from, req)
-// 		if err != nil {
-// 			r.log.Error().Err(err).Str("request", req.ID).Str("client", req.Origin.String()).Msg("could not process request")
-// 			return
-// 		}
-// 	})
-// }
 
 func (r *Replica) primaryReplicaID() peer.ID {
 	return r.peers[r.currentPrimary()]

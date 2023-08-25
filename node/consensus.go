@@ -88,6 +88,10 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 
 func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.FormCluster) error {
 
+	cacheFn := func(requestID string, origin peer.ID, request execute.Request, result execute.Result) {
+		n.executeResponses.Set(requestID, result)
+	}
+
 	// TODO (pbft): Use an actual key, but we don't have signing yet.
 	var dummyKey crypto.PrivKey
 	ph, err := pbft.NewReplica(
@@ -97,6 +101,7 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 		fc.Peers,
 		fc.RequestID,
 		dummyKey,
+		pbft.WithPostProcessors(cacheFn),
 	)
 	if err != nil {
 		return fmt.Errorf("could not create PBFT node: %w", err)
@@ -145,7 +150,7 @@ func (n *Node) leaveCluster(requestID string) error {
 
 	err := cluster.Shutdown()
 	if err != nil {
-		// NOTE: Not much we can do at this point.
+		// Not much we can do at this point.
 		return fmt.Errorf("could not leave cluster (request: %v): %w", requestID, err)
 	}
 
