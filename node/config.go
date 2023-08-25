@@ -28,7 +28,7 @@ var DefaultConfig = Config{
 type Config struct {
 	Role                    blockless.NodeRole // Node role.
 	Topic                   string             // Topic to subscribe to.
-	Execute                 Executor           // Executor to use for running functions.
+	Execute                 blockless.Executor // Executor to use for running functions.
 	HealthInterval          time.Duration      // How often should we emit the health ping.
 	RollCallTimeout         time.Duration      // How long do we wait for roll call responses.
 	Concurrency             uint               // How many requests should the node process in parallel.
@@ -89,7 +89,7 @@ func WithTopic(topic string) Option {
 }
 
 // WithExecutor specifies the executor to be used for running Blockless functions
-func WithExecutor(execute Executor) Option {
+func WithExecutor(execute blockless.Executor) Option {
 	return func(cfg *Config) {
 		cfg.Execute = execute
 	}

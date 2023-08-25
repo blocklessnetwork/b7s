@@ -27,7 +27,7 @@ type Node struct {
 
 	log      zerolog.Logger
 	host     *host.Host
-	executor Executor
+	executor blockless.Executor
 	fstore   FStore
 
 	topic *pubsub.Topic
