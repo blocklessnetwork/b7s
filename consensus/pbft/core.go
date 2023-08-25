@@ -35,8 +35,6 @@ func (c pbftCore) currentPrimary() uint {
 }
 
 func (c pbftCore) prepareQuorum() uint {
-	// TODO (pbft): Not sure about this quorum - is it 2f total or 2f prepares from OTHER replicas?
-	// We need 2f+1 for a quorum; but, the primary's `preprepare` message counts as it's vote, so we may need 2f more.
 	return 2 * c.f
 }
 
