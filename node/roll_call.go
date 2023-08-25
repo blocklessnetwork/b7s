@@ -87,10 +87,10 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	return nil
 }
 
-func (n *Node) executeRollCall(ctx context.Context, requestID string, functionID string, quorum int, consensus consensus.Type) ([]peer.ID, error) {
+func (n *Node) executeRollCall(ctx context.Context, requestID string, functionID string, nodeCount int, consensus consensus.Type) ([]peer.ID, error) {
 
 	// Create a logger with relevant context.
-	log := n.log.With().Str("request", requestID).Str("function", functionID).Int("quorum", quorum).Logger()
+	log := n.log.With().Str("request", requestID).Str("function", functionID).Int("node_count", nodeCount).Logger()
 
 	log.Info().Msg("performing roll call for request")
 
@@ -138,7 +138,7 @@ rollCallResponseLoop:
 			log.Info().Str("peer", reply.From.String()).Msg("roll called peer chosen for execution")
 
 			reportingPeers = append(reportingPeers, reply.From)
-			if len(reportingPeers) >= quorum {
+			if len(reportingPeers) >= nodeCount {
 				log.Info().Msg("enough peers reported for roll call")
 				break rollCallResponseLoop
 			}

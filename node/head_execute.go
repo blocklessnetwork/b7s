@@ -69,10 +69,9 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
 func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request) (codes.Code, execute.ResultMap, execute.Cluster, error) {
 
-	// TODO: (raft) if no cluster/consensus is required - request direct execution.
-	quorum := 1
+	nodeCount := 1
 	if req.Config.NodeCount > 1 {
-		quorum = req.Config.NodeCount
+		nodeCount = req.Config.NodeCount
 	}
 
 	consensus, err := parseConsensusAlgorithm(req.Config.ConsensusAlgorithm)
@@ -82,13 +81,12 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 	}
 
 	// Create a logger with relevant context.
-	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Int("quorum", quorum).Str("consenus", consensus.String()).Logger()
+	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Int("node_count", nodeCount).Str("consenus", consensus.String()).Logger()
 
 	log.Info().Msg("processing execution request")
 
 	// Phase 1. - Issue roll call to nodes.
-
-	reportingPeers, err := n.executeRollCall(ctx, requestID, req.FunctionID, quorum, consensus)
+	reportingPeers, err := n.executeRollCall(ctx, requestID, req.FunctionID, nodeCount, consensus)
 	if err != nil {
 		code := codes.Error
 		if errors.Is(err, blockless.ErrRollCallTimeout) {
