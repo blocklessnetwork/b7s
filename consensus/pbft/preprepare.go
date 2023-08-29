@@ -29,9 +29,14 @@ func (r *Replica) sendPrePrepare(req Request) error {
 		return fmt.Errorf("dropping pre-prepare as we have a conflicting one")
 	}
 
+	err := r.sign(&msg)
+	if err != nil {
+		return fmt.Errorf("could not sign pre-prepare message: %w", err)
+	}
+
 	log.Info().Msg("broadcasting pre-prepare message")
 
-	err := r.broadcast(msg)
+	err = r.broadcast(msg)
 	if err != nil {
 		return fmt.Errorf("could not broadcast pre-prepare message: %w", err)
 	}
@@ -65,6 +70,11 @@ func (r *Replica) processPrePrepare(replica peer.ID, msg PrePrepare) error {
 		return fmt.Errorf("pre-prepare for an invalid view (received: %v, current: %v)", msg.View, r.view)
 	}
 
+	err := r.verifySignature(&msg, r.primaryReplicaID())
+	if err != nil {
+		return fmt.Errorf("pre-prepare message signature not valid: %w", err)
+	}
+
 	id := getMessageID(msg.View, msg.SequenceNumber)
 
 	existing, ok := r.preprepares[id]
@@ -92,7 +102,7 @@ func (r *Replica) processPrePrepare(replica peer.ID, msg PrePrepare) error {
 	log.Info().Msg("processed pre-prepare")
 
 	// Broadcast prepare message.
-	err := r.sendPrepare(msg)
+	err = r.sendPrepare(msg)
 	if err != nil {
 		return fmt.Errorf("could not send prepare message: %w", err)
 	}

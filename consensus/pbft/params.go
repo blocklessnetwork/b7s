@@ -27,6 +27,7 @@ var (
 	ErrViewChange            = errors.New("view change in progress")
 	ErrActiveView            = errors.New("replica is currently in an active view")
 	ErrConflictingPreprepare = errors.New("conflicting pre-prepare")
+	ErrInvalidSignature      = errors.New("invalid signature")
 )
 
 var (

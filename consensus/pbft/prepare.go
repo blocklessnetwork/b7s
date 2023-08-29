@@ -20,7 +20,12 @@ func (r *Replica) sendPrepare(preprepare PrePrepare) error {
 
 	log.Info().Msg("broadcasting prepare message")
 
-	err := r.broadcast(msg)
+	err := r.sign(&msg)
+	if err != nil {
+		return fmt.Errorf("could not sign prepare message: %w", err)
+	}
+
+	err = r.broadcast(msg)
 	if err != nil {
 		return fmt.Errorf("could not broadcast prepare message: %w", err)
 	}
@@ -67,6 +72,11 @@ func (r *Replica) processPrepare(replica peer.ID, prepare Prepare) error {
 
 	if prepare.View != r.view {
 		return fmt.Errorf("prepare has an invalid view value (received: %v, current: %v)", prepare.View, r.view)
+	}
+
+	err := r.verifySignature(&prepare, replica)
+	if err != nil {
+		return fmt.Errorf("could not verify signature for the prepare message: %w", err)
 	}
 
 	r.recordPrepareReceipt(replica, prepare)
