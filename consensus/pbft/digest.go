@@ -6,14 +6,9 @@ import (
 	"encoding/json"
 )
 
-func getDigest(req Request) string {
-	payload, _ := json.Marshal(req)
+func getDigest(rec any) string {
+	payload, _ := json.Marshal(rec)
 	hash := sha256.Sum256(payload)
 
 	return hex.EncodeToString(hash[:])
-}
-
-func digestOK(req Request, digest string) bool {
-	d := getDigest(req)
-	return d == digest
 }

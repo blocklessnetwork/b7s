@@ -51,18 +51,27 @@ type PrePrepare struct {
 	SequenceNumber uint    `json:"sequence_number"`
 	Digest         string  `json:"digest"`
 	Request        Request `json:"request"`
+
+	// Signed digest of the pre-prepare message.
+	Signature string `json:"signature,omitempty"`
 }
 
 type Prepare struct {
 	View           uint   `json:"view"`
 	SequenceNumber uint   `json:"sequence_number"`
 	Digest         string `json:"digest"`
+
+	// Signed digest of the prepare message.
+	Signature string `json:"signature,omitempty"`
 }
 
 type Commit struct {
 	View           uint   `json:"view"`
 	SequenceNumber uint   `json:"sequence_number"`
 	Digest         string `json:"digest"`
+
+	// Signed digest of the commit message.
+	Signature string `json:"signature,omitempty"`
 }
 
 type ViewChange struct {

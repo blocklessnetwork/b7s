@@ -11,7 +11,6 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
@@ -45,7 +44,6 @@ type Replica struct {
 
 	// Cluster identity.
 	id         peer.ID
-	key        crypto.PrivKey
 	peers      []peer.ID
 	clusterID  string
 	protocolID protocol.ID
@@ -55,7 +53,7 @@ type Replica struct {
 }
 
 // NewReplica creates a new PBFT replica.
-func NewReplica(log zerolog.Logger, host *host.Host, executor blockless.Executor, peers []peer.ID, clusterID string, key crypto.PrivKey, options ...Option) (*Replica, error) {
+func NewReplica(log zerolog.Logger, host *host.Host, executor blockless.Executor, peers []peer.ID, clusterID string, options ...Option) (*Replica, error) {
 
 	total := uint(len(peers))
 
@@ -81,7 +79,6 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor blockless.Executor
 		protocolID: protocol.ID(fmt.Sprintf("%s/cluster/%s", Protocol, clusterID)),
 
 		id:    host.ID(),
-		key:   key,
 		peers: peers,
 
 		byzantine: isByzantine(),

@@ -113,6 +113,16 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	return &host, nil
 }
 
+// PrivateKey returns the private key of the libp2p host.
+func (h *Host) PrivateKey() crypto.PrivKey {
+	return h.Peerstore().PrivKey(h.ID())
+}
+
+// PublicKey returns the public key of the libp2p host.
+func (h *Host) PublicKey() crypto.PubKey {
+	return h.Peerstore().PubKey(h.ID())
+}
+
 // Addresses returns the list of p2p addresses of the host.
 func (h *Host) Addresses() []string {
 

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetworking/b7s/consensus"
@@ -92,15 +91,12 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 		n.executeResponses.Set(requestID, result)
 	}
 
-	// TODO (pbft): Use an actual key, but we don't have signing yet.
-	var dummyKey crypto.PrivKey
 	ph, err := pbft.NewReplica(
 		n.log,
 		n.host,
 		n.executor,
 		fc.Peers,
 		fc.RequestID,
-		dummyKey,
 		pbft.WithPostProcessors(cacheFn),
 	)
 	if err != nil {
