@@ -67,7 +67,12 @@ func (r *Replica) sendCommit(view uint, sequenceNo uint, digest string) error {
 		Digest:         digest,
 	}
 
-	err := r.broadcast(commit)
+	err := r.sign(&commit)
+	if err != nil {
+		return fmt.Errorf("could not sign commit message: %w", err)
+	}
+
+	err = r.broadcast(commit)
 	if err != nil {
 		return fmt.Errorf("could not broadcast commit message: %w", err)
 	}
@@ -90,6 +95,11 @@ func (r *Replica) processCommit(replica peer.ID, commit Commit) error {
 		return fmt.Errorf("commit has an invalid view value (received: %v, current: %v)", commit.View, r.view)
 	}
 
+	err := r.verifySignature(&commit, replica)
+	if err != nil {
+		return fmt.Errorf("could not validate commit signature: %w", err)
+	}
+
 	r.recordCommitReceipt(replica, commit)
 
 	if !r.committed(commit.View, commit.SequenceNumber, commit.Digest) {
@@ -97,7 +107,7 @@ func (r *Replica) processCommit(replica peer.ID, commit Commit) error {
 		return nil
 	}
 
-	err := r.execute(commit.View, commit.SequenceNumber, commit.Digest)
+	err = r.execute(commit.View, commit.SequenceNumber, commit.Digest)
 	if err != nil {
 		return fmt.Errorf("request execution failed: %w", err)
 
