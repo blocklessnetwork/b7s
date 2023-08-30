@@ -177,6 +177,12 @@ func (r *Replica) validViewChange(vc ViewChange) error {
 			return fmt.Errorf("view change - prepare has an unmatching pre-prepare message (view/sequence number)")
 		}
 
+		// Verify signature of the pre-prepare message.
+		err := r.verifySignature(&prepare.PrePrepare, r.peers[r.primary(prepare.View)])
+		if err != nil {
+			return fmt.Errorf("view change - preprepare is not signed by the expected primary for the view: %w", err)
+		}
+
 		if prepare.Digest == "" {
 			return fmt.Errorf("view change - prepare has an empty digest")
 		}
@@ -189,12 +195,16 @@ func (r *Replica) validViewChange(vc ViewChange) error {
 			return fmt.Errorf("view change - prepare has an insufficient number of prepare messages (have: %v)", len(prepare.Prepares))
 		}
 
-		for _, pp := range prepare.Prepares {
+		for replica, pp := range prepare.Prepares {
 			if pp.View != prepare.View || pp.SequenceNumber != prepare.SequenceNumber || pp.Digest != prepare.Digest {
 				return fmt.Errorf("view change - included prepare message for wrong request")
 			}
-		}
 
+			err = r.verifySignature(&pp, replica)
+			if err != nil {
+				return fmt.Errorf("view change - included prepare message signature invalid: %w", err)
+			}
+		}
 	}
 
 	return nil
