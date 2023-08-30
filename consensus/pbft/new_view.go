@@ -240,8 +240,18 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 		return fmt.Errorf("new-view message does not have a quorum of view-change messages (sender: %v, count: %v)", replica.String(), count)
 	}
 
-	// TODO (pbft): Go through ViewChange messages and validate them.
-	// We could check that they come from the previous view, but we could be going from v to v+2 if the v+1 view change fails.
+	for replica, vc := range newView.Messages {
+
+		err := r.validViewChange(vc)
+		if err != nil {
+			return fmt.Errorf("new-view - included view change message is invalid: %w", err)
+		}
+
+		err = r.verifySignature(&vc, replica)
+		if err != nil {
+			return fmt.Errorf("new-view - included view change message has an invalid signature: %w", err)
+		}
+	}
 
 	for i, preprepare := range newView.PrePrepares {
 		if preprepare.View != newView.View {
