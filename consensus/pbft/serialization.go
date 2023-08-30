@@ -173,6 +173,7 @@ type newViewEncode struct {
 	View        uint                  `json:"view"`
 	Messages    map[string]ViewChange `json:"messages"`
 	PrePrepares []PrePrepare          `json:"preprepares"`
+	Signature   string                `json:"signature"`
 }
 
 func (v NewView) MarshalJSON() ([]byte, error) {
@@ -188,6 +189,7 @@ func (v NewView) MarshalJSON() ([]byte, error) {
 		View:        v.View,
 		Messages:    messages,
 		PrePrepares: v.PrePrepares,
+		Signature:   v.Signature,
 	}
 
 	rec := messageRecord{
@@ -225,6 +227,7 @@ func (n *NewView) UnmarshalJSON(data []byte) error {
 		View:        nv.View,
 		Messages:    messages,
 		PrePrepares: nv.PrePrepares,
+		Signature:   nv.Signature,
 	}
 
 	return nil

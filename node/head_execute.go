@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -128,6 +129,7 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 		Parameters: req.Parameters,
 		Config:     req.Config,
 		RequestID:  requestID,
+		Timestamp:  time.Now().UTC(),
 	}
 	err = n.sendToMany(ctx, reportingPeers, reqExecute)
 	if err != nil {

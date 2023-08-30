@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -33,7 +34,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 
 	// NOTE: In case of an error, we do not return early from this function.
 	// Instead, we send the response back to the caller, whatever it may be.
-	code, result, err := n.workerExecute(ctx, requestID, createExecuteRequest(req), req.From)
+	code, result, err := n.workerExecute(ctx, requestID, req.Timestamp, createExecuteRequest(req), req.From)
 	if err != nil {
 		log.Error().Err(err).Str("peer", from.String()).Msg("execution failed")
 	}
@@ -69,7 +70,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 }
 
 // workerExecute is called on the worker node to use its executor component to invoke the function.
-func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.Request, from peer.ID) (codes.Code, execute.Result, error) {
+func (n *Node) workerExecute(ctx context.Context, requestID string, timestamp time.Time, req execute.Request, from peer.ID) (codes.Code, execute.Result, error) {
 
 	// Check if we have function in store.
 	functionInstalled, err := n.fstore.Installed(req.FunctionID)
@@ -115,7 +116,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 
 	log.Info().Msg("execution request to be executed as part of a cluster")
 
-	code, value, err := cluster.Execute(from, requestID, req)
+	code, value, err := cluster.Execute(from, requestID, timestamp, req)
 	if err != nil {
 		return codes.Error, execute.Result{}, fmt.Errorf("execution failed: %w", err)
 	}

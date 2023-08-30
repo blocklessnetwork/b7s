@@ -6,8 +6,6 @@ type signable interface {
 	getSignature() string
 }
 
-var _ signable = (*PrePrepare)(nil)
-
 // Returns the payload that is eligible to be signed. This means basically the PrePrepare struct, excluding the signature field.
 func (p *PrePrepare) signableRecord() any {
 	cp := *p

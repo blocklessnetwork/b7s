@@ -11,7 +11,7 @@ const (
 	DefaultTopic                   = "blockless/b7s/general"
 	DefaultHealthInterval          = 1 * time.Minute
 	DefaultRollCallTimeout         = 5 * time.Second
-	DefaultExecutionTimeout        = 10 * time.Second
+	DefaultExecutionTimeout        = 20 * time.Second
 	DefaultClusterFormationTimeout = 10 * time.Second
 	DefaultConcurrency             = 10
 
