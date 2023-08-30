@@ -9,6 +9,11 @@ import (
 
 func (r *Replica) startViewChange(view uint) error {
 
+	if view <= r.view {
+		r.log.Debug().Uint("view", view).Uint("current_view", r.view).Msg("ignoring view change start for an old view")
+		return nil
+	}
+
 	r.log.Info().Uint("current_view", r.view).Msg("starting view change")
 
 	r.stopRequestTimer()
