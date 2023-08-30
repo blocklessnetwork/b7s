@@ -17,11 +17,15 @@ func (r *Replica) startRequestTimer(overrideExisting bool) {
 		r.requestTimer.Stop()
 	}
 
+	// Evaluate the view number now. Potentially, we could've already advanced
+	// to the next view before our inactivity timer fires.
+	targetView := r.view + 1
+
 	r.requestTimer = time.AfterFunc(r.cfg.RequestTimeout, func() {
 		r.sl.Lock()
 		defer r.sl.Unlock()
 
-		err := r.startViewChange(r.view + 1)
+		err := r.startViewChange(targetView)
 		if err != nil {
 			r.log.Error().Err(err).Msg("could not start view change")
 		}
