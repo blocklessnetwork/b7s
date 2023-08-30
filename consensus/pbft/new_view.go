@@ -52,7 +52,12 @@ func (r *Replica) startNewView(view uint) error {
 		PrePrepares: preprepares,
 	}
 
-	err := r.broadcast(newView)
+	err := r.sign(&newView)
+	if err != nil {
+		return fmt.Errorf("could not sign the new view message: %w", err)
+	}
+
+	err = r.broadcast(newView)
 	if err != nil {
 		return fmt.Errorf("could not broadcast new-view message (view: %v): %w", view, err)
 	}
@@ -220,6 +225,11 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 		return fmt.Errorf("sender of the new-view message is not the projected primary for the view (sender: %v, projected: %v)",
 			replica.String(),
 			projectedPrimary.String())
+	}
+
+	err := r.verifySignature(&newView, projectedPrimary)
+	if err != nil {
+		return fmt.Errorf("could not verify signature of the new view message: %w", err)
 	}
 
 	// Verify number of messages included.
