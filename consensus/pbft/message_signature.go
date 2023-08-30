@@ -52,3 +52,33 @@ func (c *Commit) setSignature(signature string) {
 func (c Commit) getSignature() string {
 	return c.Signature
 }
+
+// Returns the payload that is eligible to be signed. This means basically the ViewChange struct, excluding the signature field.
+func (v *ViewChange) signableRecord() any {
+	cp := *v
+	cp.setSignature("")
+	return cp
+}
+
+func (v *ViewChange) setSignature(signature string) {
+	v.Signature = signature
+}
+
+func (v ViewChange) getSignature() string {
+	return v.Signature
+}
+
+// Returns the payload that is eligible to be signed. This means basically the NewView struct, excluding the signature field.
+func (v *NewView) signableRecord() any {
+	cp := *v
+	cp.setSignature("")
+	return cp
+}
+
+func (v *NewView) setSignature(signature string) {
+	v.Signature = signature
+}
+
+func (v NewView) getSignature() string {
+	return v.Signature
+}

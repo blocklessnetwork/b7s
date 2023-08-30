@@ -21,7 +21,12 @@ func (r *Replica) startViewChange(view uint) error {
 		Prepares: r.getPrepareSet(),
 	}
 
-	err := r.broadcast(vc)
+	err := r.sign(&vc)
+	if err != nil {
+		return fmt.Errorf("could not sign view change message: %w", err)
+	}
+
+	err = r.broadcast(vc)
 	if err != nil {
 		return fmt.Errorf("could not broadcast view change: %w", err)
 	}
@@ -43,8 +48,13 @@ func (r *Replica) processViewChange(replica peer.ID, msg ViewChange) error {
 		return nil
 	}
 
+	err := r.verifySignature(&msg, replica)
+	if err != nil {
+		return fmt.Errorf("could not verify signature for the view change message: %w", err)
+	}
+
 	// Check if the view change message is valid.
-	err := r.validViewChange(msg)
+	err = r.validViewChange(msg)
 	if err != nil {
 		return fmt.Errorf("view change message is not valid (replica: %s): %w", replica.String(), err)
 	}
