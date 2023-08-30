@@ -101,6 +101,7 @@ func (r *Replica) Consensus() consensus.Type {
 }
 
 func (r *Replica) Shutdown() error {
+	r.host.RemoveStreamHandler(r.protocolID)
 	r.stopRequestTimer()
 	return nil
 }
