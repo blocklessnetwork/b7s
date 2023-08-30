@@ -13,11 +13,11 @@ import (
 )
 
 // Execute fullfils the consensus interface by inserting the request into the pipeline.
-func (r *Replica) Execute(client peer.ID, requestID string, req execute.Request) (codes.Code, execute.Result, error) {
+func (r *Replica) Execute(client peer.ID, requestID string, timestamp time.Time, req execute.Request) (codes.Code, execute.Result, error) {
 
 	request := Request{
 		ID:        requestID,
-		Timestamp: time.Now(),
+		Timestamp: timestamp,
 		Origin:    client,
 		Execute:   req,
 	}

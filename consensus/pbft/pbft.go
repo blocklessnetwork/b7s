@@ -91,8 +91,6 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor blockless.Executor
 	// Handling messages on the PBFT protocol.
 	replica.setPBFTMessageHandler()
 
-	// Handling messages on the standard B7S protocol. We ONLY support client requests there.
-
 	return &replica, nil
 }
 
