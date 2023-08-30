@@ -46,6 +46,13 @@ func (r *Replica) startNewView(view uint) error {
 
 	preprepares := r.generatePreprepares(view, vcs.m)
 
+	for i := 0; i < len(preprepares); i++ {
+		err := r.sign(&preprepares[i])
+		if err != nil {
+			return fmt.Errorf("new-view - could not sign preprepare message: %w", err)
+		}
+	}
+
 	newView := NewView{
 		View:        view,
 		Messages:    vcs.m,

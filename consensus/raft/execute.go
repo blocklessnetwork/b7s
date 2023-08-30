@@ -3,6 +3,7 @@ package raft
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -10,9 +11,9 @@ import (
 	"github.com/blocklessnetworking/b7s/models/execute"
 )
 
-func (r *Replica) Execute(from peer.ID, requestID string, req execute.Request) (codes.Code, execute.Result, error) {
+func (r *Replica) Execute(from peer.ID, requestID string, timestamp time.Time, req execute.Request) (codes.Code, execute.Result, error) {
 
-	r.log.Info().Msg("received an execution request")
+	r.log.Info().Time("timestamp", timestamp).Msg("received an execution request")
 
 	if !r.isLeader() {
 		_, id := r.LeaderWithID()

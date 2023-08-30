@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -21,7 +22,7 @@ import (
 // Execute often does not mean a direct execution but instead just pipelining the request, where execution is done asynchronously.
 type consensusExecutor interface {
 	Consensus() consensus.Type
-	Execute(from peer.ID, id string, request execute.Request) (codes.Code, execute.Result, error)
+	Execute(from peer.ID, id string, timestamp time.Time, request execute.Request) (codes.Code, execute.Result, error)
 	Shutdown() error
 }
 
