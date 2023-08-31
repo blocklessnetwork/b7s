@@ -20,7 +20,6 @@ import (
 	"github.com/blocklessnetworking/b7s/models/blockless"
 )
 
-// TODO (pbft): Add signatures to messages and signature verification.
 // TODO (pbft): View change advancing and backoff.
 // TODO (pbft): Request timestamp - execution exactly once, prevent multiple/out of order executions.
 // TODO (pbft): Reply format (view number etc).
