@@ -28,7 +28,7 @@ type RuntimeOutput struct {
 	Stdout   string `json:"stdout"`
 	Stderr   string `json:"stderr"`
 	ExitCode int    `json:"exit_code"`
-	Log      string `json:"-"` // TODO: Check do we want to send this over the wire too?
+	Log      string `json:"-"`
 }
 
 // Usage represents the resource usage information for a particular execution.

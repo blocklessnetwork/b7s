@@ -42,6 +42,12 @@ func (c pbftCore) commitQuorum() uint {
 	return 2*c.f + 1
 }
 
+// MinClusterResults returns the number of identical results client should expect from the
+// cluster before accepting the result as valid. The number is f+1.
+func MinClusterResults(n uint) uint {
+	return calcByzantineTolerance(n) + 1
+}
+
 // based on the number of replicas, determine how many byzantine replicas we can tolerate.
 func calcByzantineTolerance(n uint) uint {
 

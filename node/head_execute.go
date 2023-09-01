@@ -5,16 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
+	"github.com/blocklessnetworking/b7s/consensus"
+	"github.com/blocklessnetworking/b7s/models/blockless"
+	"github.com/blocklessnetworking/b7s/models/codes"
+	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetworking/b7s/models/request"
+	"github.com/blocklessnetworking/b7s/models/response"
 )
 
 func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []byte) error {
@@ -75,19 +75,19 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 		nodeCount = req.Config.NodeCount
 	}
 
-	consensus, err := parseConsensusAlgorithm(req.Config.ConsensusAlgorithm)
+	consensusAlgo, err := parseConsensusAlgorithm(req.Config.ConsensusAlgorithm)
 	if err != nil {
 		n.log.Error().Str("value", req.Config.ConsensusAlgorithm).Str("default", n.cfg.DefaultConsensus.String()).Err(err).Msg("could not parse consensus algorithm from the user request, using default")
-		consensus = n.cfg.DefaultConsensus
+		consensusAlgo = n.cfg.DefaultConsensus
 	}
 
 	// Create a logger with relevant context.
-	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Int("node_count", nodeCount).Str("consenus", consensus.String()).Logger()
+	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Int("node_count", nodeCount).Str("consenus", consensusAlgo.String()).Logger()
 
 	log.Info().Msg("processing execution request")
 
 	// Phase 1. - Issue roll call to nodes.
-	reportingPeers, err := n.executeRollCall(ctx, requestID, req.FunctionID, nodeCount, consensus)
+	reportingPeers, err := n.executeRollCall(ctx, requestID, req.FunctionID, nodeCount, consensusAlgo)
 	if err != nil {
 		code := codes.Error
 		if errors.Is(err, blockless.ErrRollCallTimeout) {
@@ -104,9 +104,9 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 	}
 
 	// Phase 2. - Request cluster formation, if we need consensus.
-	if consensusRequired(consensus) {
+	if consensusRequired(consensusAlgo) {
 
-		err := n.formCluster(ctx, requestID, reportingPeers, consensus)
+		err := n.formCluster(ctx, requestID, reportingPeers, consensusAlgo)
 		if err != nil {
 			return codes.Error, nil, execute.Cluster{}, fmt.Errorf("could not form cluster (request: %s): %w", requestID, err)
 		}
@@ -138,47 +138,13 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 
 	log.Debug().Msg("waiting for execution responses")
 
-	// We're willing to wait for a limited amount of time.
-	exctx, exCancel := context.WithTimeout(ctx, n.cfg.ExecutionTimeout)
-	defer exCancel()
+	var results execute.ResultMap
+	if consensusAlgo == consensus.PBFT {
+		results = n.gatherExecutionResultsPBFT(ctx, requestID, reportingPeers)
 
-	var (
-		// We're waiting for a single execution result now, as only the cluster leader will return a result.
-		results execute.ResultMap = make(map[peer.ID]execute.Result)
-		reslock sync.Mutex
-		wg      sync.WaitGroup
-	)
-
-	wg.Add(len(reportingPeers))
-
-	// Wait on peers asynchronously.
-	for _, rp := range reportingPeers {
-		rp := rp
-
-		go func() {
-			defer wg.Done()
-			key := executionResultKey(requestID, rp)
-			res, ok := n.executeResponses.WaitFor(exctx, key)
-			if !ok {
-				return
-			}
-
-			log.Info().Str("peer", rp.String()).Msg("accounted execution response from peer")
-
-			er := res.(response.Execute)
-
-			exres, ok := er.Results[rp]
-			if !ok {
-				return
-			}
-
-			reslock.Lock()
-			defer reslock.Unlock()
-			results[rp] = exres
-		}()
 	}
 
-	wg.Wait()
+	results = n.gatherExecutionResults(ctx, requestID, reportingPeers)
 
 	log.Info().Int("cluster_size", len(reportingPeers)).Int("responded", len(results)).Msg("received execution responses")
 
