@@ -90,6 +90,11 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 		Results: execute.ResultMap{
 			r.id: res,
 		},
+		PBFT: response.PBFTResultInfo{
+			View:             r.view,
+			RequestTimestamp: request.Timestamp,
+			Replica:          r.id,
+		},
 	}
 
 	// Save this executions in case it's requested again.
@@ -98,6 +103,11 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 	// Invoke specified post processor functions.
 	for _, proc := range r.cfg.PostProcessors {
 		proc(request.ID, request.Origin, request.Execute, res)
+	}
+
+	err = msg.Sign(r.host.PrivateKey())
+	if err != nil {
+		return fmt.Errorf("could not sign execution request: %w", err)
 	}
 
 	err = r.send(request.Origin, msg, blockless.ProtocolID)
