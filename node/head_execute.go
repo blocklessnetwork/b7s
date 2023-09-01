@@ -41,8 +41,6 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 
 	log.Info().Str("code", code.String()).Msg("execution complete")
 
-	// NOTE: Head node no longer caches execution results because it doesn't have one of its own.
-
 	// Create the execution response from the execution result.
 	res := response.Execute{
 		Type:      blockless.MessageExecuteResponse,
@@ -142,20 +140,30 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 	if consensusAlgo == consensus.PBFT {
 		results = n.gatherExecutionResultsPBFT(ctx, requestID, reportingPeers)
 
+		log.Info().Msg("received PBFT execution responses")
+
+		retcode := codes.OK
+		// Use the return code from the execution as the return code.
+		for _, res := range results {
+			retcode = res.Code
+			break
+		}
+
+		return retcode, results, cluster, nil
 	}
 
 	results = n.gatherExecutionResults(ctx, requestID, reportingPeers)
 
 	log.Info().Int("cluster_size", len(reportingPeers)).Int("responded", len(results)).Msg("received execution responses")
 
-	// TODO: Depending on the consensus, we want to treat results differently. E.g. for PBFT we may only want f+1 response and we're good.
-
 	// How many results do we have, and how many do we expect.
 	respondRatio := float64(len(results)) / float64(len(reportingPeers))
 	threshold := determineThreshold(req)
 
 	retcode := codes.OK
-	if respondRatio < threshold {
+	if respondRatio == 0 {
+		retcode = codes.NoContent
+	} else if respondRatio < threshold {
 		log.Warn().Float64("expected", threshold).Float64("have", respondRatio).Msg("threshold condition not met")
 		retcode = codes.PartialContent
 	}
