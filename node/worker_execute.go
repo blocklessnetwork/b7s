@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hashicorp/raft"
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -83,12 +82,17 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 	}
 
 	// Determine if we should just execute this function, or are we part of the cluster.
-	n.clusterLock.RLock()
-	raftNode, ok := n.clusters[requestID]
-	n.clusterLock.RUnlock()
+
+	// Here we actually have a bit of a conceptual problem with having the same models for head and worker node.
+	// Head node receives client requests so it can expect _some_ type of inaccuracy there. Worker node receives
+	// execution requests from the head node, so it shouldn't really tolerate errors/ambiguities.
+	consensus, err := parseConsensusAlgorithm(req.Config.ConsensusAlgorithm)
+	if err != nil {
+		return codes.Error, execute.Result{}, fmt.Errorf("could not parse consensus algorithm from the head node request, aborting (value: %s): %w", req.Config.ConsensusAlgorithm, err)
+	}
 
 	// We are not part of a cluster - just execute the request.
-	if !ok {
+	if !consensusRequired(consensus) {
 		res, err := n.executor.ExecuteFunction(requestID, req)
 		if err != nil {
 			return res.Code, res, fmt.Errorf("execution failed: %w", err)
@@ -97,52 +101,26 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, req execute.
 		return res.Code, res, nil
 	}
 
-	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Logger()
+	// Now we KNOW we need a consensus. A cluster must already exist.
+
+	n.clusterLock.RLock()
+	cluster, ok := n.clusters[requestID]
+	n.clusterLock.RUnlock()
+
+	if !ok {
+		return codes.Error, execute.Result{}, fmt.Errorf("consensus required but no cluster found; omitted cluster formation message or error forming cluster (request: %s)", requestID)
+	}
+
+	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Str("consensus", consensus.String()).Logger()
 
 	log.Info().Msg("execution request to be executed as part of a cluster")
 
-	if raftNode.State() != raft.Leader {
-		_, id := raftNode.LeaderWithID()
-
-		log.Info().Str("leader", string(id)).Msg("we are not the cluster leader - dropping the request")
-		return codes.NoContent, execute.Result{}, nil
-	}
-
-	log.Info().Msg("we are the cluster leader, executing the request")
-
-	fsmReq := fsmLogEntry{
-		RequestID: requestID,
-		Origin:    from,
-		Execute:   req,
-	}
-
-	payload, err := json.Marshal(fsmReq)
+	code, value, err := cluster.Execute(from, requestID, req)
 	if err != nil {
-		return codes.Error, execute.Result{}, fmt.Errorf("could not serialize request for FSM")
+		return codes.Error, execute.Result{}, fmt.Errorf("execution failed: %w", err)
 	}
 
-	// Apply Raft log.
-	future := raftNode.Apply(payload, defaultRaftApplyTimeout)
-	err = future.Error()
-	if err != nil {
-		return codes.Error, execute.Result{}, fmt.Errorf("could not apply raft log: %w", err)
-	}
+	log.Info().Str("code", string(code)).Msg("node processed the execution request")
 
-	log.Info().Msg("node applied raft log")
-
-	// Get execution result.
-	response := future.Response()
-	value, ok := response.(execute.Result)
-	if !ok {
-		fsmErr, ok := response.(error)
-		if ok {
-			return codes.Error, execute.Result{}, fmt.Errorf("execution encountered an error: %w", fsmErr)
-		}
-
-		return codes.Error, execute.Result{}, fmt.Errorf("unexpected FSM response format: %T", response)
-	}
-
-	log.Info().Msg("cluster leader executed the request")
-
-	return codes.OK, value, nil
+	return code, value, nil
 }

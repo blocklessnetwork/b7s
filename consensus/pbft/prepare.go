@@ -47,7 +47,7 @@ func (r *Replica) recordPrepareReceipt(replica peer.ID, prepare Prepare) {
 
 	_, exists := prepares.m[replica]
 	if exists {
-		r.log.Warn().Uint("view", prepare.View).Uint("sequence_number", prepare.SequenceNumber).Str("digest", prepare.Digest).Str("replica", replica.String()).Msg("ignoring duplicate prepare message")
+		r.log.Warn().Uint("view", prepare.View).Uint("sequence", prepare.SequenceNumber).Str("digest", prepare.Digest).Str("replica", replica.String()).Msg("ignoring duplicate prepare message")
 		return
 	}
 

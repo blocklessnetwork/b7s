@@ -69,164 +69,53 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
 func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request) (codes.Code, execute.ResultMap, execute.Cluster, error) {
 
-	// TODO: (raft) if no cluster/consensus is required - request direct execution.
-	quorum := 1
+	nodeCount := 1
 	if req.Config.NodeCount > 1 {
-		quorum = req.Config.NodeCount
+		nodeCount = req.Config.NodeCount
+	}
+
+	consensus, err := parseConsensusAlgorithm(req.Config.ConsensusAlgorithm)
+	if err != nil {
+		n.log.Error().Str("value", req.Config.ConsensusAlgorithm).Str("default", n.cfg.DefaultConsensus.String()).Err(err).Msg("could not parse consensus algorithm from the user request, using default")
+		consensus = n.cfg.DefaultConsensus
 	}
 
 	// Create a logger with relevant context.
-	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Int("quorum", quorum).Logger()
+	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Int("node_count", nodeCount).Str("consenus", consensus.String()).Logger()
 
 	log.Info().Msg("processing execution request")
 
 	// Phase 1. - Issue roll call to nodes.
-
-	// Create the queue to record roll call respones.
-	n.rollCall.create(requestID)
-	defer n.rollCall.remove(requestID)
-
-	consensusNeeded := quorum > 1
-	err := n.issueRollCall(ctx, requestID, req.FunctionID, consensusNeeded)
+	reportingPeers, err := n.executeRollCall(ctx, requestID, req.FunctionID, nodeCount, consensus)
 	if err != nil {
-		return codes.Error, nil, execute.Cluster{}, fmt.Errorf("could not issue roll call: %w", err)
-	}
-
-	log.Info().Msg("roll call published")
-
-	// Limit for how long we wait for responses.
-	tctx, exCancel := context.WithTimeout(ctx, n.cfg.RollCallTimeout)
-	defer exCancel()
-
-	// Peers that have reported on roll call.
-	var reportingPeers []peer.ID
-rollCallResponseLoop:
-	for {
-		// Wait for responses from nodes who want to work on the request.
-		select {
-		// Request timed out.
-		case <-tctx.Done():
-
-			log.Warn().Msg("roll call timed out")
-			return codes.Timeout, nil, execute.Cluster{}, blockless.ErrRollCallTimeout
-
-		case reply := <-n.rollCall.responses(requestID):
-
-			// Check if this is the reply we want - shouldn't really happen.
-			if reply.FunctionID != req.FunctionID {
-				log.Info().Str("peer", reply.From.String()).Str("function_got", reply.FunctionID).Msg("skipping inadequate roll call response - wrong function")
-				continue
-			}
-
-			// Check if we are connected to this peer.
-			// Since we receive responses to roll call via direct messages - should not happen.
-			if !n.haveConnection(reply.From) {
-				n.log.Info().Str("peer", reply.From.String()).Msg("skipping roll call response from unconnected peer")
-				continue
-			}
-
-			log.Info().Str("peer", reply.From.String()).Msg("roll called peer chosen for execution")
-
-			reportingPeers = append(reportingPeers, reply.From)
-			if len(reportingPeers) >= quorum {
-				log.Info().Msg("enough peers reported for roll call")
-				break rollCallResponseLoop
-			}
+		code := codes.Error
+		if errors.Is(err, blockless.ErrRollCallTimeout) {
+			code = codes.Timeout
 		}
+
+		return code, nil, execute.Cluster{}, fmt.Errorf("could not roll call peers (request: %s): %w", requestID, err)
 	}
 
-	log.Info().Strs("peers", peerIDList(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
+	log.Info().Strs("peers", blockless.PeerIDsToStr(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
 
 	cluster := execute.Cluster{
 		Peers: reportingPeers,
 	}
 
-	// Phase 2. - Request cluster formation.
+	// Phase 2. - Request cluster formation, if we need consensus.
+	if consensusRequired(consensus) {
 
-	// Create cluster formation request.
-	reqCluster := request.FormCluster{
-		Type:      blockless.MessageFormCluster,
-		RequestID: requestID,
-		Peers:     reportingPeers,
-	}
+		err := n.formCluster(ctx, requestID, reportingPeers, consensus)
+		if err != nil {
+			return codes.Error, nil, execute.Cluster{}, fmt.Errorf("could not form cluster (request: %s): %w", requestID, err)
+		}
 
-	// Request execution from peers.
-	err = n.sendToMany(ctx, reportingPeers, reqCluster)
-	if err != nil {
-		return codes.Error, nil, cluster, fmt.Errorf("could not send cluster formation request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)
-	}
-
-	// Wait for cluster confirmation messages.
-	log.Debug().Msg("waiting for cluster to be formed")
-
-	// When we're done, send a message to disband the cluster.
-	// NOTE: We could schedule this on the worker nodes when receiving the execution request.
-	// One variant I tried is waiting on the execution to be done on the leader (using a timed wait on the execution response) and starting raft shutdown after.
-	// However, this can happen too fast and the execution request might not have been propagated to all of the nodes in the cluster, but "only" to a majority.
-	// Doing this here allows for more wiggle room and ~probably~ all nodes will have seen the request so far.
-	defer func() {
-		go func() {
-
-			msgDisband := request.DisbandCluster{
-				Type:      blockless.MessageDisbandCluster,
-				RequestID: requestID,
-			}
-
-			ctx, cancel := context.WithTimeout(context.Background(), raftClusterSendTimeout)
-			defer cancel()
-
-			err = n.sendToMany(ctx, reportingPeers, msgDisband)
-			if err != nil {
-				log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Msg("could not send cluster disband request")
-				return
-			}
-
-			log.Error().Err(err).Strs("peers", peerIDList(reportingPeers)).Msg("sent cluster disband request")
-		}()
-	}()
-
-	// We're willing to wait for a limited amount of time.
-	clusterCtx, exCancel := context.WithTimeout(ctx, n.cfg.ExecutionTimeout)
-	defer exCancel()
-
-	// Wait for confirmations for cluster forming.
-	bootstrapped := make(map[string]struct{})
-	var rlock sync.Mutex
-	var rw sync.WaitGroup
-	rw.Add(len(reportingPeers))
-
-	// Wait on peers asynchronously.
-	for _, rp := range reportingPeers {
-		rp := rp
-
-		go func() {
-			defer rw.Done()
-			key := consensusResponseKey(requestID, rp)
-			res, ok := n.consensusResponses.WaitFor(clusterCtx, key)
-			if !ok {
-				return
-			}
-
-			log.Info().Str("peer", rp.String()).Msg("accounted consensus response from roll called peer")
-
-			fc := res.(response.FormCluster)
-			if fc.Code != codes.OK {
-				log.Warn().Str("peer", rp.String()).Msg("peer failed to join consensus cluster")
-				return
-			}
-
-			rlock.Lock()
-			defer rlock.Unlock()
-			bootstrapped[rp.String()] = struct{}{}
-		}()
-	}
-
-	// Wait for results, whatever they may be.
-	rw.Wait()
-
-	// Bail if not all peers joined the cluster successfully.
-	if len(bootstrapped) != quorum {
-		return codes.NotAvailable, nil, cluster, fmt.Errorf("some peers failed to join consensus cluster (have: %d, want: %d)", len(bootstrapped), quorum)
+		// When we're done, send a message to disband the cluster.
+		// NOTE: We could schedule this on the worker nodes when receiving the execution request.
+		// One variant I tried is waiting on the execution to be done on the leader (using a timed wait on the execution response) and starting raft shutdown after.
+		// However, this can happen too fast and the execution request might not have been propagated to all of the nodes in the cluster, but "only" to a majority.
+		// Doing this here allows for more wiggle room and ~probably~ all nodes will have seen the request so far.
+		defer n.disbandCluster(requestID, reportingPeers)
 	}
 
 	// Phase 3. - Request execution.
@@ -290,6 +179,8 @@ rollCallResponseLoop:
 	wg.Wait()
 
 	log.Info().Int("cluster_size", len(reportingPeers)).Int("responded", len(results)).Msg("received execution responses")
+
+	// TODO: Depending on the consensus, we want to treat results differently. E.g. for PBFT we may only want f+1 response and we're good.
 
 	// How many results do we have, and how many do we expect.
 	respondRatio := float64(len(results)) / float64(len(reportingPeers))

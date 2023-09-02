@@ -36,8 +36,8 @@ type Node struct {
 
 	rollCall *rollCallQueue
 
-	// clusters maps request ID to the raft cluster the node belongs to.
-	clusters map[string]*raftHandler
+	// clusters maps request ID to the cluster the node belongs to.
+	clusters map[string]consensusExecutor
 
 	// clusterLock is used to synchronize access to the `clusters` map.
 	clusterLock sync.RWMutex
@@ -67,7 +67,7 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		sema: make(chan struct{}, cfg.Concurrency),
 
 		rollCall:           newQueue(rollCallQueueBufferSize),
-		clusters:           make(map[string]*raftHandler),
+		clusters:           make(map[string]consensusExecutor),
 		executeResponses:   waitmap.New(),
 		consensusResponses: waitmap.New(),
 	}

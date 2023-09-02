@@ -24,6 +24,8 @@ type Config struct {
 
 	// NodeCount specifies how many nodes should execute this request.
 	NodeCount int `json:"number_of_nodes,omitempty"`
+	// Consensus algorithm to use. Raft and PBFT are supported at this moment.
+	ConsensusAlgorithm string `json:"consensus_algorithm,omitempty"`
 
 	// Threshold (percentage) defines how many nodes should respond with a result to consider this execution successful.
 	Threshold float64 `json:"threshold,omitempty"`

@@ -2,9 +2,7 @@ package pbft
 
 func (r *Replica) prePrepared(view uint, sequenceNo uint, digest string) bool {
 
-	if digest == "" {
-		return false
-	}
+	// NOTE: Digest can be empty (NullRequest).
 
 	// Have we seen this request before?
 	_, seen := r.requests[digest]
@@ -67,11 +65,29 @@ func (r *Replica) committed(view uint, sequenceNo uint, digest string) bool {
 	}
 
 	commitCount := uint(len(commits.m))
-	haveQuorum := commitCount > r.commitQuorum()
+	haveQuorum := commitCount >= r.commitQuorum()
 
 	r.log.Debug().Str("digest", digest).Uint("view", view).Uint("sequence_no", sequenceNo).
 		Uint("quorum", commitCount).Bool("have_quorum", haveQuorum).
 		Msg("number of commits for a request")
+
+	return haveQuorum
+}
+
+func (r *Replica) viewChangeReady(view uint) bool {
+
+	vc, ok := r.viewChanges[view]
+	if !ok {
+		return false
+	}
+
+	vc.Lock()
+	defer vc.Unlock()
+
+	vcCount := uint(len(vc.m))
+	haveQuorum := vcCount >= r.commitQuorum()
+
+	r.log.Debug().Uint("view", view).Uint("quorum", vcCount).Bool("have_quorum", haveQuorum).Msg("number of view change messages for a view")
 
 	return haveQuorum
 }
