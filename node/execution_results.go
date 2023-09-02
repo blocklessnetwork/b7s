@@ -29,7 +29,8 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 		lock  sync.Mutex
 		wg    sync.WaitGroup
 
-		results = make(map[string]aggregatedResult)
+		results                   = make(map[string]aggregatedResult)
+		out     execute.ResultMap = make(map[peer.ID]execute.Result)
 	)
 
 	wg.Add(len(peers))
@@ -85,14 +86,17 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 			if uint(len(result.peers)) >= count {
 				n.log.Info().Str("request", requestID).Int("peers", len(peers)).Uint("matching_results", count).Msg("have enough maching results")
 				exCancel()
-				return
+
+				for _, peer := range result.peers {
+					out[peer] = result.result
+				}
 			}
 		}(rp)
 	}
 
 	wg.Wait()
 
-	return execute.ResultMap{}
+	return out
 }
 
 // gatherExecutionResults collects execution results from direct executions or raft clusters.

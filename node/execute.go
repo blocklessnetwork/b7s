@@ -28,7 +28,7 @@ func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload
 	var res response.Execute
 	err := json.Unmarshal(payload, &res)
 	if err != nil {
-		return fmt.Errorf("could not not unpack execute response: %w", err)
+		return fmt.Errorf("could not unpack execute response: %w", err)
 	}
 	res.From = from
 

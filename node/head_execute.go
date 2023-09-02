@@ -73,14 +73,18 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 		nodeCount = req.Config.NodeCount
 	}
 
+	// Create a logger with relevant context.
+	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Int("node_count", nodeCount).Logger()
+
 	consensusAlgo, err := parseConsensusAlgorithm(req.Config.ConsensusAlgorithm)
 	if err != nil {
-		n.log.Error().Str("value", req.Config.ConsensusAlgorithm).Str("default", n.cfg.DefaultConsensus.String()).Err(err).Msg("could not parse consensus algorithm from the user request, using default")
+		log.Error().Str("value", req.Config.ConsensusAlgorithm).Str("default", n.cfg.DefaultConsensus.String()).Err(err).Msg("could not parse consensus algorithm from the user request, using default")
 		consensusAlgo = n.cfg.DefaultConsensus
 	}
 
-	// Create a logger with relevant context.
-	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Int("node_count", nodeCount).Str("consenus", consensusAlgo.String()).Logger()
+	if consensusRequired(consensusAlgo) {
+		log = log.With().Str("consensus", consensusAlgo.String()).Logger()
+	}
 
 	log.Info().Msg("processing execution request")
 
@@ -95,14 +99,14 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 		return code, nil, execute.Cluster{}, fmt.Errorf("could not roll call peers (request: %s): %w", requestID, err)
 	}
 
-	log.Info().Strs("peers", blockless.PeerIDsToStr(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
-
 	cluster := execute.Cluster{
 		Peers: reportingPeers,
 	}
 
 	// Phase 2. - Request cluster formation, if we need consensus.
 	if consensusRequired(consensusAlgo) {
+
+		log.Info().Strs("peers", blockless.PeerIDsToStr(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
 
 		err := n.formCluster(ctx, requestID, reportingPeers, consensusAlgo)
 		if err != nil {
