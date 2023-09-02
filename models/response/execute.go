@@ -34,7 +34,7 @@ type Execute struct {
 type PBFTResultInfo struct {
 	View             uint      `json:"view"`
 	RequestTimestamp time.Time `json:"request_timestamp,omitempty"`
-	Replica          peer.ID   `json:"replica"`
+	Replica          peer.ID   `json:"replica,omitempty"`
 }
 
 func (e *Execute) Sign(key crypto.PrivKey) error {
