@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetworking/b7s/consensus"
 	"github.com/blocklessnetworking/b7s/models/codes"
 	"github.com/blocklessnetworking/b7s/models/execute"
 	"github.com/blocklessnetworking/b7s/models/response"
@@ -69,11 +71,20 @@ func determineOverallCode(results map[string]execute.Result) codes.Code {
 	return codes.Error
 }
 
-// helper function to to convert a slice of multiaddrs to strings
-func peerIDList(ids []peer.ID) []string {
-	peerIDs := make([]string, 0, len(ids))
-	for _, rp := range ids {
-		peerIDs = append(peerIDs, rp.String())
+func parseConsensusAlgorithm(value string) (consensus.Type, error) {
+
+	if value == "" {
+		return 0, nil
 	}
-	return peerIDs
+
+	lv := strings.ToLower(value)
+	switch lv {
+	case "raft":
+		return consensus.Raft, nil
+
+	case "pbft":
+		return consensus.PBFT, nil
+	}
+
+	return 0, fmt.Errorf("unknown consensus value (%s)", value)
 }
