@@ -43,13 +43,13 @@ jobs:
       
       - name: Install Blockless Runtime
         run: |
-          mkdir -p /app/runtime
+          mkdir -p /tmp/blockless-runtime
           curl -L -o runtime.tar.gz https://github.com/blocklessnetwork/runtime/releases/download/v0.0.13/blockless-runtime.ubuntu-20.04.x86_64.tar.gz
-          tar xzf runtime.tar.gz -C /app/runtime
+          tar xzf runtime.tar.gz -C /tmp/blockless-runtime
           rm runtime.tar.gz
       
       - name: Run integration tests
         run: |
-          export B7S_INTEG_RUNTIME_DIR=/app/runtime
-          go test --integration ./... -covermode=count -coverprofile=coverage.out
+          export B7S_INTEG_RUNTIME_DIR=/tmp/blockless-runtime
+          go test --integration ./...
           go tool cover -func=coverage.out -o=coverage.out
