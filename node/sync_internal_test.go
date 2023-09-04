@@ -22,8 +22,8 @@ func TestNode_Sync(t *testing.T) {
 	)
 
 	fstore := mocks.BaselineFStore(t)
-	fstore.InstalledFunctionsFunc = func() []string {
-		return installed
+	fstore.InstalledFunctionsFunc = func() ([]string, error) {
+		return installed, nil
 	}
 	fstore.SyncFunc = func(cid string) error {
 		synced = append(synced, cid)
