@@ -207,7 +207,9 @@ func Test_Store(t *testing.T) {
 		defer db.Close()
 		store := store.New(db)
 
-		require.Empty(t, store.Keys())
+		readKeys, err := store.Keys()
+		require.NoError(t, err)
+		require.Empty(t, readKeys)
 
 		keys := []string{
 			"key1",
@@ -221,7 +223,8 @@ func Test_Store(t *testing.T) {
 			require.NoError(t, err)
 		}
 
-		readKeys := store.Keys()
+		readKeys, err = store.Keys()
+		require.NoError(t, err)
 		require.Equal(t, keys, readKeys)
 	})
 	t.Run("deleting key", func(t *testing.T) {

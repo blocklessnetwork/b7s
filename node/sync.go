@@ -9,7 +9,11 @@ import (
 // but were previously installed. We do NOT abort on failure.
 func (n *Node) syncFunctions() {
 
-	cids := n.fstore.InstalledFunctions()
+	cids, err := n.fstore.InstalledFunctions()
+	if err != nil {
+		n.log.Error().Err(err).Msg("could not get list of installed functions")
+		return
+	}
 
 	for _, cid := range cids {
 

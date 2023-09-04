@@ -1,6 +1,7 @@
 package fstore
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/cavaliergopher/grab/v3"
@@ -42,6 +43,11 @@ func New(log zerolog.Logger, store Store, workdir string) *FStore {
 }
 
 // InstalledFunctions will return the CIDs of all functions found in local storage.
-func (h *FStore) InstalledFunctions() []string {
-	return h.store.Keys()
+func (h *FStore) InstalledFunctions() ([]string, error) {
+	ids, err := h.store.Keys()
+	if err != nil {
+		return nil, fmt.Errorf("could not list installed functions: %w", err)
+	}
+
+	return ids, nil
 }
