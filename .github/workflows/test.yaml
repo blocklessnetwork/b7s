@@ -4,7 +4,7 @@ on:
       - main
   workflow_dispatch:
 
-name: Test
+name: Tests
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -19,9 +19,37 @@ jobs:
       - name: Setup go
         uses: actions/setup-go@v2
         with:
-          go-version: "1.19.3"
+          go-version: 1.21.0
 
       - name: Run Test
         run: |
           go test ./... -covermode=count -coverprofile=coverage.out
+          go tool cover -func=coverage.out -o=coverage.out
+
+  integration-tests:
+    name: integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
+          fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
+      
+      - name: Set up Go 1.21.0
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.21.0
+      
+      - name: Install Blockless Runtime
+        run: |
+          mkdir -p /app/runtime
+          curl -L -o runtime.tar.gz https://github.com/blocklessnetwork/runtime/releases/download/v0.0.13/blockless-runtime.ubuntu-20.04.x86_64.tar.gz
+          tar xzf runtime.tar.gz -C /app/runtime
+          rm runtime.tar.gz
+      
+      - name: Run integration tests
+        run: |
+          export B7S_INTEG_RUNTIME_DIR=/app/runtime
+          go test --integration ./... -covermode=count -coverprofile=coverage.out
           go tool cover -func=coverage.out -o=coverage.out
