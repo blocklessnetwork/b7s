@@ -104,6 +104,7 @@ func createNode(t *testing.T, dir string, logger zerolog.Logger, host *host.Host
 
 	opts := []node.Option{
 		node.WithRole(role),
+		node.WithWorkspace(workdir),
 	}
 
 	if role == blockless.WorkerNode {

@@ -46,12 +46,13 @@ func TestFunction_InstalledFunctions(t *testing.T) {
 	defer os.RemoveAll(workdir)
 
 	store := mocks.BaselineStore(t)
-	store.KeysFunc = func() []string {
-		return installed
+	store.KeysFunc = func() ([]string, error) {
+		return installed, nil
 	}
 
 	fh := fstore.New(mocks.NoopLogger, store, workdir)
 
-	list := fh.InstalledFunctions()
+	list, err := fh.InstalledFunctions()
+	require.NoError(t, err)
 	require.Equal(t, installed, list)
 }
