@@ -67,7 +67,10 @@ func (p *PeerStore) Remove(id peer.ID) error {
 // Peers returns the list of peers from the peer store.
 func (p *PeerStore) Peers() ([]blockless.Peer, error) {
 
-	ids := p.store.Keys()
+	ids, err := p.store.Keys()
+	if err != nil {
+		return nil, fmt.Errorf("could not list store records: %w", err)
+	}
 
 	var peers []blockless.Peer
 	for _, id := range ids {

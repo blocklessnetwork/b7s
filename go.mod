@@ -9,8 +9,8 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230903225801-a4fe05009372
 	github.com/containerd/cgroups/v3 v3.0.2
 	github.com/fatih/color v1.15.0
-	github.com/hashicorp/go-hclog v1.5.0
-	github.com/hashicorp/raft v1.5.0
+	github.com/hashicorp/go-hclog v1.3.0
+	github.com/hashicorp/raft v1.4.0
 	github.com/hashicorp/raft-boltdb/v2 v2.2.2
 	github.com/labstack/echo/v4 v4.11.1
 	github.com/libp2p/go-libp2p v0.31.0
@@ -139,7 +139,7 @@ require (
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/opencontainers/runtime-spec v1.1.0
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
-	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
+	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/polydawn/refmt v0.89.0 // indirect
 	github.com/prometheus/client_golang v1.16.0 // indirect
