@@ -40,15 +40,18 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.21.0
-      
+
+      - name: Install OpenSSL
+        run: |
+          sudo apt update
+          sudo apt install -y libssl1.1=1.1.0g-2ubuntu4
+
       - name: Install Blockless Runtime
         run: |
           mkdir -p /tmp/blockless-runtime
           curl -L -o runtime.tar.gz https://github.com/blocklessnetwork/runtime/releases/download/v0.0.13/blockless-runtime.ubuntu-20.04.x86_64.tar.gz
           tar xzf runtime.tar.gz -C /tmp/blockless-runtime
           rm runtime.tar.gz
-          curl -o ./libssl.deb -sSL http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
-          dpkg -i ./libssl.deb
       
       - name: Run integration tests
         run: |
