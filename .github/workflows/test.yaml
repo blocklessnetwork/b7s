@@ -44,7 +44,7 @@ jobs:
       - name: Install OpenSSL
         run: |
           sudo apt update
-          sudo apt install -y libssl1.1=1.1.0g-2ubuntu4
+          sudo apt install -y libssl1.1=1.1.0g
 
       - name: Install Blockless Runtime
         run: |
