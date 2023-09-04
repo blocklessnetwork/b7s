@@ -52,4 +52,3 @@ jobs:
         run: |
           export B7S_INTEG_RUNTIME_DIR=/tmp/blockless-runtime
           go test --tags=integration ./...
-          go tool cover -func=coverage.out -o=coverage.out
