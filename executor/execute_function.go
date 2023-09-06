@@ -35,8 +35,7 @@ func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execu
 }
 
 // executeFunction handles the actual execution of the Blockless function. It returns the
-// standard output of the blockless-cli that handled the execution. `Function`
-// typically takes this output and uses it to create the appropriate execution response.
+// execution information like standard output, standard error, exit code and resource usage.
 func (e *Executor) executeFunction(requestID string, req execute.Request) (execute.RuntimeOutput, execute.Usage, error) {
 
 	log := e.log.With().Str("request", requestID).Str("function", req.FunctionID).Logger()
