@@ -42,7 +42,7 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, payload []b
 		return n.createPBFTCluster(ctx, from, req)
 	}
 
-	return fmt.Errorf("invalid consensus specified (%s %s)", req.Consensus, req.Consensus.String())
+	return fmt.Errorf("invalid consensus specified (%v %s)", req.Consensus, req.Consensus.String())
 }
 
 // processFormClusterResponse will record the cluster formation response.

@@ -11,7 +11,6 @@ type Peer struct {
 	AddrInfo  peer.AddrInfo `json:"addrinfo,omitempty"`
 }
 
-// TODO: Use this where applicable.
 // PeerIDsToStr will convert a list of peer.IDs to strings.
 func PeerIDsToStr(ids []peer.ID) []string {
 
