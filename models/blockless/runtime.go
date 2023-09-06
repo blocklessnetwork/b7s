@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	runtimeCLI = "blockless-cli"
+	runtimeCLI = "bls-runtime"
 )
 
 // RuntimeCLI returns the name of the Blockless Runtime executable.

@@ -61,7 +61,7 @@ Database used to persist Node data between runs will be created in the `peer-dat
 On the other hand, Node will persist function data in the default database, in the `function-db` subdirectory.
 
 Blockless Runtime path is given as `~/.local/bin`.
-At startup, node will check if the Blockless Runtime is actually found there, namely the [blockless-cli](https://blockless.network/docs/cli).
+At startup, node will check if the Blockless Runtime is actually found there, namely the [bls-runtime](https://blockless.network/docs/protocol/runtime).
 
 Node Identity will be determined by the private key found in `priv.bin` file in the `keys` subdirectory.
 
