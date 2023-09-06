@@ -20,10 +20,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
-// TODO (pbft): View change advancing and backoff.
 // TODO (pbft): Request timestamp - execution exactly once, prevent multiple/out of order executions.
-// TODO (pbft): Reply format (view number etc).
-// TODO (pbft): Perhaps instead of an empty digest for a NullRequest - we use an actual digest of such a request?
 
 // Replica is a single PBFT node. Both Primary and Backup nodes are all replicas.
 type Replica struct {

@@ -10,6 +10,16 @@ import (
 
 func (r *Replica) processRequest(from peer.ID, req Request) error {
 
+	pub, err := req.Origin.ExtractPublicKey()
+	if err != nil {
+		return fmt.Errorf("could not extract public key from client: %w", err)
+	}
+
+	err = req.Execute.VerifySignature(pub)
+	if err != nil {
+		return fmt.Errorf("request is not properly signed by the client: %w", err)
+	}
+
 	digest := getDigest(req)
 
 	log := r.log.With().Str("client", from.String()).Str("request", req.ID).Str("digest", digest).Logger()
@@ -56,7 +66,7 @@ func (r *Replica) processRequest(from peer.ID, req Request) error {
 	r.pending[digest] = req
 
 	// Broadcast a pre-prepare message.
-	err := r.sendPrePrepare(req)
+	err = r.sendPrePrepare(req)
 	if err != nil {
 		return fmt.Errorf("could not broadcast pre-prepare message (request: %v): %w", req.ID, err)
 	}

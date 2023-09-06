@@ -34,7 +34,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 
 	log := n.log.With().Str("request", req.RequestID).Str("peer", from.String()).Str("function", req.FunctionID).Logger()
 
-	code, results, cluster, err := n.headExecute(ctx, requestID, createExecuteRequest(req))
+	code, results, cluster, err := n.headExecute(ctx, requestID, req.Request)
 	if err != nil {
 		log.Error().Err(err).Msg("execution failed")
 	}
@@ -125,14 +125,20 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 
 	// Send the execution request to peers in the cluster. Non-leaders will drop the request.
 	reqExecute := request.Execute{
-		Type:       blockless.MessageExecute,
-		FunctionID: req.FunctionID,
-		Method:     req.Method,
-		Parameters: req.Parameters,
-		Config:     req.Config,
-		RequestID:  requestID,
-		Timestamp:  time.Now().UTC(),
+		Type:      blockless.MessageExecute,
+		Request:   req,
+		RequestID: requestID,
+		Timestamp: time.Now().UTC(),
 	}
+
+	// If we're working with PBFT, sign the request.
+	if consensusAlgo == consensus.PBFT {
+		err := reqExecute.Request.Sign(n.host.PrivateKey())
+		if err != nil {
+			return codes.Error, nil, cluster, fmt.Errorf("could not sign execution request (function: %s, request: %s): %w", req.FunctionID, requestID, err)
+		}
+	}
+
 	err = n.sendToMany(ctx, reportingPeers, reqExecute)
 	if err != nil {
 		return codes.Error, nil, cluster, fmt.Errorf("could not send execution request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)

@@ -34,7 +34,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 
 	// NOTE: In case of an error, we do not return early from this function.
 	// Instead, we send the response back to the caller, whatever it may be.
-	code, result, err := n.workerExecute(ctx, requestID, req.Timestamp, createExecuteRequest(req), req.From)
+	code, result, err := n.workerExecute(ctx, requestID, req.Timestamp, req.Request, req.From)
 	if err != nil {
 		log.Error().Err(err).Str("peer", from.String()).Msg("execution failed")
 	}

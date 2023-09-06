@@ -3,12 +3,13 @@ package response
 import (
 	"testing"
 
-	"github.com/blocklessnetwork/b7s/host"
+	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/stretchr/testify/require"
+
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/testing/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 func TestExecute_Signing(t *testing.T) {
@@ -29,13 +30,12 @@ func TestExecute_Signing(t *testing.T) {
 	t.Run("nominal case", func(t *testing.T) {
 
 		res := sampleRes
-		host, err := host.New(mocks.NoopLogger, "127.0.0.1", 0)
+		priv, pub := newKey(t)
+
+		err := res.Sign(priv)
 		require.NoError(t, err)
 
-		err = res.Sign(host.PrivateKey())
-		require.NoError(t, err)
-
-		err = res.VerifySignature(host.PublicKey())
+		err = res.VerifySignature(pub)
 		require.NoError(t, err)
 	})
 	t.Run("empty signature verification fails", func(t *testing.T) {
@@ -43,25 +43,30 @@ func TestExecute_Signing(t *testing.T) {
 		res := sampleRes
 		res.Signature = ""
 
-		host, err := host.New(mocks.NoopLogger, "127.0.0.1", 0)
-		require.NoError(t, err)
+		_, pub := newKey(t)
 
-		err = res.VerifySignature(host.PublicKey())
+		err := res.VerifySignature(pub)
 		require.Error(t, err)
 	})
 	t.Run("tampered data signature verification fails", func(t *testing.T) {
 
 		res := sampleRes
-		host, err := host.New(mocks.NoopLogger, "127.0.0.1", 0)
-		require.NoError(t, err)
+		priv, pub := newKey(t)
 
-		err = res.Sign(host.PrivateKey())
+		err := res.Sign(priv)
 		require.NoError(t, err)
 
 		res.RequestID += " "
 
-		err = res.VerifySignature(host.PublicKey())
+		err = res.VerifySignature(pub)
 		require.Error(t, err)
 	})
+}
 
+func newKey(t *testing.T) (crypto.PrivKey, crypto.PubKey) {
+	t.Helper()
+	priv, pub, err := crypto.GenerateKeyPair(crypto.Ed25519, 0)
+	require.NoError(t, err)
+
+	return priv, pub
 }

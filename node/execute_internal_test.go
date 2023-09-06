@@ -29,12 +29,14 @@ func TestNode_WorkerExecute(t *testing.T) {
 	)
 
 	executionRequest := request.Execute{
-		Type:       blockless.MessageExecute,
-		RequestID:  requestID,
-		FunctionID: functionID,
-		Method:     functionMethod,
-		Parameters: []execute.Parameter{},
-		Config:     execute.Config{},
+		Type:      blockless.MessageExecute,
+		RequestID: requestID,
+		Request: execute.Request{
+			FunctionID: functionID,
+			Method:     functionMethod,
+			Parameters: []execute.Parameter{},
+			Config:     execute.Config{},
+		},
 	}
 
 	payload := serialize(t, executionRequest)
@@ -258,11 +260,13 @@ func TestNode_HeadExecute(t *testing.T) {
 	)
 
 	executionRequest := request.Execute{
-		Type:       blockless.MessageExecute,
-		FunctionID: functionID,
-		Method:     functionMethod,
-		Parameters: []execute.Parameter{},
-		Config:     execute.Config{},
+		Type: blockless.MessageExecute,
+		Request: execute.Request{
+			FunctionID: functionID,
+			Method:     functionMethod,
+			Parameters: []execute.Parameter{},
+			Config:     execute.Config{},
+		},
 	}
 
 	payload := serialize(t, executionRequest)

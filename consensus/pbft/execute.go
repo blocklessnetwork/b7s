@@ -24,7 +24,7 @@ func (r *Replica) Execute(client peer.ID, requestID string, timestamp time.Time,
 
 	err := r.processRequest(client, request)
 	if err != nil {
-		return codes.Error, execute.Result{}, fmt.Errorf("could not process request")
+		return codes.Error, execute.Result{}, fmt.Errorf("could not process request: %w", err)
 	}
 
 	// Nothing to return at this point.
