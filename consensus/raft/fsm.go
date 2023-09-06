@@ -1,4 +1,4 @@
-package node
+package raft
 
 import (
 	"encoding/json"
@@ -9,30 +9,31 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 
+	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
-type fsmLogEntry struct {
+type FSMLogEntry struct {
 	RequestID string          `json:"request_id,omitempty"`
 	Origin    peer.ID         `json:"origin,omitempty"`
 	Execute   execute.Request `json:"execute,omitempty"`
 }
 
-type fsmProcessFunc func(req fsmLogEntry, res execute.Result)
+type FSMProcessFunc func(req FSMLogEntry, res execute.Result)
 
 type fsmExecutor struct {
 	log        zerolog.Logger
-	executor   Executor
-	processors []fsmProcessFunc
+	executor   blockless.Executor
+	processors []FSMProcessFunc
 }
 
-func newFsmExecutor(log zerolog.Logger, executor Executor, processors ...fsmProcessFunc) *fsmExecutor {
+func newFsmExecutor(log zerolog.Logger, executor blockless.Executor, processors ...FSMProcessFunc) *fsmExecutor {
 
-	ps := make([]fsmProcessFunc, 0, len(processors))
+	ps := make([]FSMProcessFunc, 0, len(processors))
 	ps = append(ps, processors...)
 
 	fsm := fsmExecutor{
-		log:        log.With().Str("component", "fsm").Logger(),
+		log:        log.With().Str("module", "fsm").Logger(),
 		executor:   executor,
 		processors: ps,
 	}
@@ -47,7 +48,7 @@ func (f fsmExecutor) Apply(log *raft.Log) interface{} {
 	// Unpack the execution request.
 	payload := log.Data
 
-	var logEntry fsmLogEntry
+	var logEntry FSMLogEntry
 	err := json.Unmarshal(payload, &logEntry)
 	if err != nil {
 		return fmt.Errorf("could not unmarshal request: %w", err)

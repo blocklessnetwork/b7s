@@ -6,6 +6,9 @@ type Request struct {
 	Method     string      `json:"method"`
 	Parameters []Parameter `json:"parameters,omitempty"`
 	Config     Config      `json:"config"`
+
+	// Optional signature of the request.
+	Signature string `json:"signature,omitempty"`
 }
 
 // Parameter represents an execution parameter, modeled as a key-value pair.
@@ -24,6 +27,8 @@ type Config struct {
 
 	// NodeCount specifies how many nodes should execute this request.
 	NodeCount int `json:"number_of_nodes,omitempty"`
+	// Consensus algorithm to use. Raft and PBFT are supported at this moment.
+	ConsensusAlgorithm string `json:"consensus_algorithm,omitempty"`
 
 	// Threshold (percentage) defines how many nodes should respond with a result to consider this execution successful.
 	Threshold float64 `json:"threshold,omitempty"`

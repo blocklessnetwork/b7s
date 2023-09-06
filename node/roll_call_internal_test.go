@@ -10,6 +10,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/stretchr/testify/require"
 
+	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
@@ -262,7 +263,7 @@ func TestNode_RollCall(t *testing.T) {
 		requestID, err := newRequestID()
 		require.NoError(t, err)
 
-		err = node.issueRollCall(ctx, requestID, functionID, false)
+		err = node.publishRollCall(ctx, requestID, functionID, consensus.Type(0))
 		require.NoError(t, err)
 
 		deadlineCtx, cancel := context.WithTimeout(ctx, publishTimeout)

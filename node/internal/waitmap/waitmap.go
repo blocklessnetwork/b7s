@@ -5,8 +5,6 @@ import (
 	"sync"
 )
 
-// NOTE: Perhaps enable an option to say how long to wait for?
-
 // WaitMap is a key-value store that enables not only setting and getting
 // values from a map, but also waiting until value for a key becomes available.
 // Important: Since this implementation is tied pretty closely to how it will be used,

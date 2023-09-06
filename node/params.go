@@ -3,15 +3,19 @@ package node
 import (
 	"errors"
 	"time"
+
+	"github.com/blocklessnetwork/b7s/consensus"
 )
 
 const (
 	DefaultTopic                   = "blockless/b7s/general"
 	DefaultHealthInterval          = 1 * time.Minute
 	DefaultRollCallTimeout         = 5 * time.Second
-	DefaultExecutionTimeout        = 10 * time.Second
+	DefaultExecutionTimeout        = 20 * time.Second
 	DefaultClusterFormationTimeout = 10 * time.Second
 	DefaultConcurrency             = 10
+
+	DefaultConsensusAlgorithm = consensus.Raft
 
 	rollCallQueueBufferSize = 1000
 
@@ -22,20 +26,10 @@ const (
 
 // Raft and consensus related parameters.
 const (
-	defaultConsensusDirName = "consensus"
-	defaultLogStoreName     = "logs.dat"
-	defaultStableStoreName  = "stable.dat"
-
-	raftClusterDisbandTimeout = 5 * time.Minute
+	// When disbanding a cluster, how long do we wait until a potential execution is done.
+	consensusClusterDisbandTimeout = 5 * time.Minute
 	// Timeout for the context used for sending disband request to cluster nodes.
-	raftClusterSendTimeout = 10 * time.Second
-
-	defaultRaftApplyTimeout     = 0 // No timeout.
-	DefaultRaftHeartbeatTimeout = 300 * time.Millisecond
-	DefaultRaftElectionTimeout  = 300 * time.Millisecond
-	DefaultRaftLeaderLease      = 200 * time.Millisecond
-
-	consensusTransportTimeout = 1 * time.Minute
+	consensusClusterSendTimeout = 10 * time.Second
 )
 
 var (

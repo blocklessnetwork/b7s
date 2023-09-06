@@ -1,8 +1,5 @@
 package blockless
 
-// TODO: Reconsider the package name - typically I'd use the name of the project - `b7s`.
-// Package `blockless` might be too wide.
-
 // NodeRole is a representation of the node's role.
 type NodeRole uint8
 
