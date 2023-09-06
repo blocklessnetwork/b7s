@@ -5,7 +5,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
 // Option can be used to set PBFT configuration options.

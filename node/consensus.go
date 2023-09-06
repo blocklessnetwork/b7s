@@ -8,14 +8,14 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetworking/b7s/consensus"
-	"github.com/blocklessnetworking/b7s/consensus/pbft"
-	"github.com/blocklessnetworking/b7s/consensus/raft"
-	"github.com/blocklessnetworking/b7s/models/blockless"
-	"github.com/blocklessnetworking/b7s/models/codes"
-	"github.com/blocklessnetworking/b7s/models/execute"
-	"github.com/blocklessnetworking/b7s/models/request"
-	"github.com/blocklessnetworking/b7s/models/response"
+	"github.com/blocklessnetwork/b7s/consensus"
+	"github.com/blocklessnetwork/b7s/consensus/pbft"
+	"github.com/blocklessnetwork/b7s/consensus/raft"
+	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/codes"
+	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/request"
+	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 // consensusExecutor defines the interface we have for managing clustered execution.

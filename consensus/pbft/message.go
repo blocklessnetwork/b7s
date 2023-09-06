@@ -6,7 +6,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetworking/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
 // JSON encoding related code is in serialization.go

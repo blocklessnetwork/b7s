@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetworking/b7s/host"
-	"github.com/blocklessnetworking/b7s/testing/mocks"
+	"github.com/blocklessnetwork/b7s/host"
+	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
 const (

@@ -8,7 +8,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetworking/b7s/testing/mocks"
+	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
 var (

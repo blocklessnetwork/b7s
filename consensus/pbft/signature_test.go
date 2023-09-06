@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetworking/b7s/testing/mocks"
+	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
 func TestSign_PrePrepare(t *testing.T) {
