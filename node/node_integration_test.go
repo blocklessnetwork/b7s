@@ -26,6 +26,7 @@ import (
 	"github.com/blocklessnetwork/b7s/fstore"
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
 	"github.com/blocklessnetwork/b7s/node"
 	"github.com/blocklessnetwork/b7s/peerstore"
@@ -168,9 +169,11 @@ func (c *client) sendInstallMessage(ctx context.Context, to peer.ID, manifestURL
 func (c *client) sendExecutionMessage(ctx context.Context, to peer.ID, cid string, method string) error {
 
 	req := request.Execute{
-		Type:       blockless.MessageExecute,
-		FunctionID: cid,
-		Method:     method,
+		Type: blockless.MessageExecute,
+		Request: execute.Request{
+			FunctionID: cid,
+			Method:     method,
+		},
 	}
 
 	payload, err := json.Marshal(req)
