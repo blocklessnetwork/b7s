@@ -174,7 +174,7 @@ func (n *Node) disbandCluster(requestID string, replicas []peer.ID) error {
 		return fmt.Errorf("could not send cluster disband request (request: %s): %w", requestID, err)
 	}
 
-	log.Info().Err(err).Strs("peers", blockless.PeerIDsToStr(replicas)).Msg("sent cluster disband request")
+	n.log.Info().Err(err).Str("request", requestID).Strs("peers", blockless.PeerIDsToStr(replicas)).Msg("sent cluster disband request")
 
 	return nil
 }

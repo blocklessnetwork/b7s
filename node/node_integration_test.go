@@ -22,10 +22,12 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
+	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/executor"
 	"github.com/blocklessnetwork/b7s/fstore"
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
 	"github.com/blocklessnetwork/b7s/node"
 	"github.com/blocklessnetwork/b7s/peerstore"
@@ -51,10 +53,8 @@ type nodeScaffolding struct {
 	node    *node.Node
 }
 
-func instantiateNode(t *testing.T, dirnamePattern string, role blockless.NodeRole) *nodeScaffolding {
+func instantiateNode(t *testing.T, nodeDir string, role blockless.NodeRole) *nodeScaffolding {
 	t.Helper()
-
-	nodeDir := fmt.Sprintf("%v-%v-", dirnamePattern, role.String())
 
 	// Bootstrap node directory.
 	dir, err := os.MkdirTemp("", nodeDir)
@@ -165,12 +165,20 @@ func (c *client) sendInstallMessage(ctx context.Context, to peer.ID, manifestURL
 	return nil
 }
 
-func (c *client) sendExecutionMessage(ctx context.Context, to peer.ID, cid string, method string) error {
+func (c *client) sendExecutionMessage(ctx context.Context, to peer.ID, cid string, method string, consensus consensus.Type, count int) error {
 
 	req := request.Execute{
-		Type:       blockless.MessageExecute,
-		FunctionID: cid,
-		Method:     method,
+		Type: blockless.MessageExecute,
+		Request: execute.Request{
+			FunctionID: cid,
+			Method:     method,
+			Config: execute.Config{
+				NodeCount: count,
+			},
+		},
+	}
+	if consensus.Valid() {
+		req.Config.ConsensusAlgorithm = consensus.String()
 	}
 
 	payload, err := json.Marshal(req)
