@@ -1,5 +1,5 @@
 .PHONY: all
-all: clean build-node build-keygen build-manager
+all: clean build-node build-keyforge build-manager
 
 .PHONY: test
 test:
@@ -14,10 +14,10 @@ build-node:
 	cd cmd/node && go build -o ../../dist/b7s
 	@echo "\n✅ Done.\n"
 
-.PHONY: build-keygen
-build-keygen:
+.PHONY: build-keyforge
+build-keyforge:
 	@echo "\n🛠 Building node keygen...\n"
-	cd cmd/keygen && go build -o ../../dist/b7s-keygen
+	cd cmd/keyforge && go build -o ../../dist/b7s-keyforge
 	@echo "\n✅ Done.\n"
 
 .PHONY: build-manager
