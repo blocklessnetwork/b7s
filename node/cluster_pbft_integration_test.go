@@ -5,7 +5,6 @@ package node_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -50,19 +49,6 @@ This is the end of my program
 
 	t.Log("starting test")
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// Set a hard limit for test duration.
-	// This looks a bit sketchy as tests can have the time limit
-	// set externally, but as there's a lot of moving pieces here,
-	// include it for better usability.
-	go func() {
-		<-time.After(testTimeLimit)
-		cancel()
-		t.Log("cancelling test")
-	}()
-
 	// Phase 0: Create libp2p hosts, loggers, temporary directories and nodes.
 	nodeDir := fmt.Sprintf("%v-head-", dirPattern)
 	head := instantiateNode(t, nodeDir, blockless.HeadNode)
@@ -85,18 +71,18 @@ This is the end of my program
 
 	// Cleanup everything after test is complete.
 	defer func() {
-		head.db.Close()
-		head.logFile.Close()
-		if !cleanupDisabled {
-			os.RemoveAll(head.dir)
-		}
-
 		for _, worker := range workers {
 			worker.db.Close()
 			worker.logFile.Close()
 			if !cleanupDisabled {
 				os.RemoveAll(worker.dir)
 			}
+		}
+
+		head.db.Close()
+		head.logFile.Close()
+		if !cleanupDisabled {
+			os.RemoveAll(head.dir)
 		}
 	}()
 
@@ -105,6 +91,19 @@ This is the end of my program
 	nodes = append(nodes, workers...)
 
 	t.Log("created nodes")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Set a hard limit for test duration.
+	// This looks a bit sketchy as tests can have the time limit
+	// set externally, but as there's a lot of moving pieces here,
+	// include it for better usability.
+	go func() {
+		<-time.After(testTimeLimit)
+		cancel()
+		t.Log("cancelling test")
+	}()
 
 	// Phase 1: Setup connections.
 
@@ -210,9 +209,6 @@ This is the end of my program
 
 		var res response.Execute
 		getStreamPayload(t, stream, &res)
-
-		payload, _ := json.Marshal(res)
-		fmt.Printf("%s\n", payload)
 
 		require.Equal(t, blockless.MessageExecuteResponse, res.Type)
 		require.Equal(t, codes.OK, res.Code)
