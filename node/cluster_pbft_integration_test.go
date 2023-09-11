@@ -66,6 +66,7 @@ This is the end of my program
 	// Phase 0: Create libp2p hosts, loggers, temporary directories and nodes.
 	nodeDir := fmt.Sprintf("%v-head-", dirPattern)
 	head := instantiateNode(t, nodeDir, blockless.HeadNode)
+	defer head.node.Shutdown()
 	t.Logf("head node workspace: %s", head.dir)
 
 	var workers []*nodeScaffolding
@@ -73,6 +74,7 @@ This is the end of my program
 		nodeDir := fmt.Sprintf("%v-worker-%v-", dirPattern, i)
 
 		worker := instantiateNode(t, nodeDir, blockless.WorkerNode)
+		defer worker.node.Shutdown()
 		t.Logf("worker node #%v workspace: %s", i, worker.dir)
 
 		workers = append(workers, worker)

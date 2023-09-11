@@ -123,7 +123,7 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 	return nil
 }
 
-func (n *Node) leaveCluster(requestID string) error {
+func (n *Node) leaveCluster(requestID string, timeout time.Duration) error {
 
 	// Shutdown can take a while so use short locking intervals.
 	n.clusterLock.RLock()
@@ -136,7 +136,7 @@ func (n *Node) leaveCluster(requestID string) error {
 
 	n.log.Info().Str("consensus", cluster.Consensus().String()).Str("request", requestID).Msg("leaving consensus cluster")
 
-	ctx, cancel := context.WithTimeout(context.Background(), consensusClusterDisbandTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	// We know that the request is done executing when we have a result for it.

@@ -110,6 +110,7 @@ func run() int {
 		log.Error().Err(err).Str("key", cfg.Host.PrivateKey).Msg("could not create host")
 		return failure
 	}
+	defer host.Close()
 
 	log.Info().
 		Str("id", host.ID().String()).
@@ -184,6 +185,12 @@ func run() int {
 		log.Error().Err(err).Msg("could not create node")
 		return failure
 	}
+	defer func() {
+		err := node.Shutdown()
+		if err != nil {
+			log.Error().Err(err).Msg("Blockless node shutdown failed")
+		}
+	}()
 
 	// Create the main context.
 	ctx, cancel := context.WithCancel(context.Background())
