@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-multierror"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
@@ -83,29 +82,6 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 	host.Network().Notify(cn)
 
 	return n, nil
-}
-
-// Shutdown shuts down the node.
-func (n *Node) Shutdown() error {
-
-	n.host.RemoveStreamHandler(blockless.ProtocolID)
-
-	// Only thing we do here is leave all consensus clusters we're part of.
-	n.clusterLock.Lock()
-	defer n.clusterLock.Unlock()
-
-	var (
-		multierr *multierror.Error
-	)
-
-	for request := range n.clusters {
-		err := n.leaveCluster(request, 0)
-		if err != nil {
-			multierr = multierror.Append(multierr, fmt.Errorf("could not shutdown cluster (id: %s): : %w", request, err))
-		}
-	}
-
-	return multierr.ErrorOrNil()
 }
 
 // ID returns the ID of this node.
