@@ -84,7 +84,7 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 
 			result.peers = append(result.peers, sender)
 			if uint(len(result.peers)) >= count {
-				n.log.Info().Str("request", requestID).Int("peers", len(peers)).Uint("matching_results", count).Msg("have enough maching results")
+				n.log.Info().Str("request", requestID).Int("peers", len(peers)).Uint("matching_results", count).Msg("have enough matching results")
 				exCancel()
 
 				for _, peer := range result.peers {

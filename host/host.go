@@ -37,7 +37,7 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 
 	if cfg.Websocket {
 
-		// If the TCP and websocket port are explicitely chosen and set to the same value, one of the two listens will silently fail.
+		// If the TCP and websocket port are explicitly chosen and set to the same value, one of the two listens will silently fail.
 		if port == cfg.WebsocketPort && cfg.WebsocketPort != 0 {
 			return nil, fmt.Errorf("TCP and websocket ports cannot be the same (TCP: %v, Websocket: %v)", port, cfg.WebsocketPort)
 		}
