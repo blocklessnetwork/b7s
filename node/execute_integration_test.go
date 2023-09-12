@@ -104,7 +104,7 @@ This is the end of my program
 	go func() {
 		defer nodesWG.Done()
 
-		err = head.node.Run(ctx)
+		err := head.node.Run(ctx)
 		require.NoError(t, err)
 
 		t.Log("head node stopped")
@@ -113,7 +113,7 @@ This is the end of my program
 	go func() {
 		defer nodesWG.Done()
 
-		err = worker.node.Run(ctx)
+		err := worker.node.Run(ctx)
 		require.NoError(t, err)
 
 		t.Log("worker node stopped")

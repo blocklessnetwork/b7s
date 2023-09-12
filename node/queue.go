@@ -63,14 +63,13 @@ func (q *rollCallQueue) exists(reqID string) bool {
 // responses will return a channel that can be used to iterate through all of the responses.
 func (q *rollCallQueue) responses(reqID string) <-chan response.RollCall {
 	q.Lock()
+	defer q.Unlock()
 
 	_, ok := q.m[reqID]
 	if !ok {
 		// Technically we shouldn't be here since we already called `create`, but there's also no harm in it.
 		q.m[reqID] = make(chan response.RollCall, q.size)
 	}
-
-	q.Unlock()
 
 	return q.m[reqID]
 }

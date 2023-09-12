@@ -78,6 +78,8 @@ func TestNode_Handlers(t *testing.T) {
 			requestID = "dummy-request-id-2"
 		)
 
+		node.rollCall.create(requestID)
+
 		// We only want responses with the code `Accepted`.
 		res := response.RollCall{
 			Type:       blockless.MessageRollCallResponse,
