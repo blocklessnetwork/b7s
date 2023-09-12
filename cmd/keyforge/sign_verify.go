@@ -7,8 +7,8 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/libp2p/go-libp2p-core/crypto"
-	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 // HandleSignAndVerify performs the signing and verification based on the provided keys and flags
@@ -117,6 +117,6 @@ func VerifyGivenSignatureWithPeerID(peerIDStr string, message string, encodedSig
 	// This will give you a base64 string representation of the public key
 	pubKeyBase64 := base64.StdEncoding.EncodeToString(pubKeyBytes)
 	log.Printf("Extracted public key from PeerID (Base64): %s", pubKeyBase64)
-	
+
 	VerifyGivenSignature(pubKeyBase64, message, encodedSignature)
 }
