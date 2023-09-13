@@ -1,4 +1,8 @@
-![Coverage](https://img.shields.io/badge/Coverage-64.5%25-yellow)
+[![Coverage](https://img.shields.io/badge/Coverage-64.5%25-yellow)](https://img.shields.io/badge/Coverage-64.5%25-yellow)
+[![Go Report Card](https://goreportcard.com/badge/github.com/blocklessnetwork/b7s)](https://goreportcard.com/report/github.com/blocklessnetwork/b7s) 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/blocklessnetwork/b7s/blob/main/LICENSE.md) 
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/blocklessnetwork/b7s)](https://img.shields.io/github/v/release/blocklessnetwork/b7s)
+
 
 # b7s daemon
 
