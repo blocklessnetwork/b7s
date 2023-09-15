@@ -77,7 +77,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 
 	log.Info().Str("origin", req.Origin.String()).Msg("reporting for roll call")
 
-	// Send postive response.
+	// Send positive response.
 	res.Code = codes.Accepted
 	err = n.send(ctx, req.Origin, res)
 	if err != nil {

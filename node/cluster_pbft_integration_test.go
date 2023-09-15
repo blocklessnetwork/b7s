@@ -12,19 +12,22 @@ import (
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
+	"github.com/blocklessnetwork/b7s/consensus"
+	"github.com/blocklessnetwork/b7s/consensus/pbft"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
-func TestNode_ExecuteComplete(t *testing.T) {
+func TestNode_PBFT_ExecuteComplete(t *testing.T) {
 
 	const (
 		testTimeLimit = 1 * time.Minute
 
-		dirPattern = "b7s-node-execute-integration-test-"
+		dirPattern = "b7s-node-pbft-execute-integration-test-"
 
 		cid = "whatever-cid"
 
@@ -46,6 +49,49 @@ This is the end of my program
 
 	t.Log("starting test")
 
+	// Phase 0: Create libp2p hosts, loggers, temporary directories and nodes.
+	nodeDir := fmt.Sprintf("%v-head-", dirPattern)
+	head := instantiateNode(t, nodeDir, blockless.HeadNode)
+	t.Logf("head node workspace: %s", head.dir)
+
+	var workers []*nodeScaffolding
+	for i := 0; i < 4; i++ {
+		nodeDir := fmt.Sprintf("%v-worker-%v-", dirPattern, i)
+
+		worker := instantiateNode(t, nodeDir, blockless.WorkerNode)
+		t.Logf("worker node #%v workspace: %s", i, worker.dir)
+
+		workers = append(workers, worker)
+	}
+
+	workerIDs := make([]peer.ID, 0, len(workers))
+	for _, worker := range workers {
+		workerIDs = append(workerIDs, worker.host.ID())
+	}
+
+	// Cleanup everything after test is complete.
+	defer func() {
+		for _, worker := range workers {
+			worker.db.Close()
+			worker.logFile.Close()
+			if !cleanupDisabled {
+				os.RemoveAll(worker.dir)
+			}
+		}
+
+		head.db.Close()
+		head.logFile.Close()
+		if !cleanupDisabled {
+			os.RemoveAll(head.dir)
+		}
+	}()
+
+	var nodes []*nodeScaffolding
+	nodes = append(nodes, head)
+	nodes = append(nodes, workers...)
+
+	t.Log("created nodes")
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -59,65 +105,45 @@ This is the end of my program
 		t.Log("cancelling test")
 	}()
 
-	// Phase 0: Create libp2p hosts, loggers, temporary directories and nodes.
-
-	head := instantiateNode(t, dirPattern, blockless.HeadNode)
-	defer head.db.Close()
-	defer head.logFile.Close()
-	if !cleanupDisabled {
-		defer os.RemoveAll(head.dir)
-	}
-
-	worker := instantiateNode(t, dirPattern, blockless.WorkerNode)
-	defer worker.db.Close()
-	defer worker.logFile.Close()
-	if !cleanupDisabled {
-		defer os.RemoveAll(worker.dir)
-	}
-
-	t.Log("created nodes")
-
-	// Phase 1: Setup connections and start node main loops.
+	// Phase 1: Setup connections.
 
 	// Client that will issue and receive request.
 	client := createClient(t)
 
-	// Add hosts to each others peer stores so that they know how to contact each other.
-	hostAddNewPeer(t, client.host, head.host)
-	hostAddNewPeer(t, client.host, worker.host)
-	hostAddNewPeer(t, head.host, worker.host)
+	// Add hosts to each others peer stores so that they know how to contact each other, and then establish connections.
+	for i := 0; i < len(nodes); i++ {
+		for j := 0; j < len(nodes); j++ {
+			if j == i {
+				continue
+			}
+			hostAddNewPeer(t, client.host, nodes[i].host)
+			hostAddNewPeer(t, nodes[i].host, nodes[j].host)
+			hostAddNewPeer(t, nodes[j].host, nodes[i].host)
 
-	// Establish a connection so that hosts disseminate topic subscription info.
-	headInfo := hostGetAddrInfo(t, head.host)
-	err := worker.host.Connect(ctx, *headInfo)
-	require.NoError(t, err)
-
-	t.Log("setup addressing")
+			// Establish a connection so that hosts disseminate topic subscription info.
+			info := hostGetAddrInfo(t, nodes[j].host)
+			err := nodes[i].host.Connect(ctx, *info)
+			require.NoError(t, err)
+		}
+	}
 
 	// Phase 2: Start nodes.
-
 	t.Log("starting nodes")
 
 	// We start nodes in separate goroutines.
 	var nodesWG sync.WaitGroup
-	nodesWG.Add(1)
-	go func() {
-		defer nodesWG.Done()
+	nodesWG.Add(len(nodes))
 
-		err := head.node.Run(ctx)
-		require.NoError(t, err)
+	for _, node := range nodes {
+		go func(node *nodeScaffolding) {
+			defer nodesWG.Done()
 
-		t.Log("head node stopped")
-	}()
-	nodesWG.Add(1)
-	go func() {
-		defer nodesWG.Done()
+			err := node.node.Run(ctx)
+			require.NoError(t, err)
 
-		err := worker.node.Run(ctx)
-		require.NoError(t, err)
-
-		t.Log("worker node stopped")
-	}()
+			t.Log("node stopped")
+		}(node)
+	}
 
 	// Add a delay for the hosts to subscribe to topics,
 	// diseminate subscription information etc.
@@ -130,18 +156,21 @@ This is the end of my program
 	srv := createFunctionServer(t, manifestEndpoint, archiveEndpoint, testFunctionToServe, cid)
 	defer srv.Close()
 
-	// Phase 4: Have the worker install the function.
+	// Phase 4: Have the worker nodes install the function.
 	// That way, when he receives the execution request - he will have the function needed to execute it.
 
 	t.Log("instructing worker node to install function")
 
 	var installWG sync.WaitGroup
-	installWG.Add(1)
+	installWG.Add(len(workers))
 
 	// Setup verifier for the response we expect.
 	client.host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
 		defer installWG.Done()
 		defer stream.Close()
+
+		from := stream.Conn().RemotePeer()
+		require.Contains(t, workerIDs, from)
 
 		var res response.InstallFunction
 		getStreamPayload(t, stream, &res)
@@ -154,8 +183,10 @@ This is the end of my program
 	})
 
 	manifestURL := fmt.Sprintf("%v%v", srv.URL, manifestEndpoint)
-	err = client.sendInstallMessage(ctx, worker.host.ID(), manifestURL, cid)
-	require.NoError(t, err)
+	for _, worker := range workers {
+		err := client.sendInstallMessage(ctx, worker.host.ID(), manifestURL, cid)
+		require.NoError(t, err)
+	}
 
 	// Wait for the installation request to be processed.
 	installWG.Wait()
@@ -182,14 +213,25 @@ This is the end of my program
 		require.Equal(t, blockless.MessageExecuteResponse, res.Type)
 		require.Equal(t, codes.OK, res.Code)
 		require.NotEmpty(t, res.RequestID)
-		require.Equal(t, expectedExecutionResult, res.Results[worker.host.ID()].Result.Stdout)
+
+		require.Len(t, res.Cluster.Peers, len(workers))
+
+		// Verify cluster nodes are the workers we created.
+		require.ElementsMatch(t, workerIDs, res.Cluster.Peers)
+
+		require.GreaterOrEqual(t, uint(len(res.Results)), pbft.MinClusterResults(uint(len(workers))))
+
+		for peer, exres := range res.Results {
+			require.Contains(t, workerIDs, peer)
+			require.Equal(t, expectedExecutionResult, exres.Result.Stdout)
+		}
 
 		t.Log("client verified execution response")
 
 		verifiedExecution = true
 	})
 
-	err = client.sendExecutionMessage(ctx, head.host.ID(), cid, functionMethod, 0, 1)
+	err := client.sendExecutionMessage(ctx, head.host.ID(), cid, functionMethod, consensus.PBFT, len(workers))
 	require.NoError(t, err)
 
 	executeWG.Wait()

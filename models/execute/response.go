@@ -23,7 +23,7 @@ type Cluster struct {
 	Peers []peer.ID `json:"peers,omitempty"`
 }
 
-// RuntimeOutput describes the output produced by the Blockless Runtime during exection.
+// RuntimeOutput describes the output produced by the Blockless Runtime during execution.
 type RuntimeOutput struct {
 	Stdout   string `json:"stdout"`
 	Stderr   string `json:"stderr"`

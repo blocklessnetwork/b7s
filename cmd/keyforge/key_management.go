@@ -2,13 +2,12 @@ package main
 
 import (
 	"encoding/base64"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/libp2p/go-libp2p-core/crypto"
-	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 // LoadOrCreateKeys loads existing keys or creates new ones if not present
@@ -23,7 +22,7 @@ func LoadOrCreateKeys(privKeyFile string, outputDir string) (crypto.PrivKey, cry
 			return nil, nil, err
 		}
 	} else {
-		privBytes, err := ioutil.ReadFile(privKeyFile)
+		privBytes, err := os.ReadFile(privKeyFile)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -51,33 +50,33 @@ func LoadOrCreateKeys(privKeyFile string, outputDir string) (crypto.PrivKey, cry
 	}
 
 	pubKeyFile := filepath.Join(outputDir, pubKeyName)
-	err = ioutil.WriteFile(pubKeyFile, pubPayload, pubKeyPermissions)
+	err = os.WriteFile(pubKeyFile, pubPayload, pubKeyPermissions)
 	if err != nil {
 		log.Fatalf("Could not write public key to file: %s", err)
 	}
 
 	pubKeyTextFile := filepath.Join(outputDir, pubKeyTxtName)
 	pubKeyBase64 := base64.StdEncoding.EncodeToString(pubPayload)
-	err = ioutil.WriteFile(pubKeyTextFile, []byte(pubKeyBase64), pubKeyPermissions)
+	err = os.WriteFile(pubKeyTextFile, []byte(pubKeyBase64), pubKeyPermissions)
 	if err != nil {
 		log.Fatalf("Could not write public key text to file: %s", err)
 	}
 
 	identityFile := filepath.Join(outputDir, identityName)
-	err = ioutil.WriteFile(identityFile, []byte(identity.Pretty()), pubKeyPermissions)
+	err = os.WriteFile(identityFile, []byte(identity.Pretty()), pubKeyPermissions)
 	if err != nil {
 		log.Fatalf("Could not write identity to file: %s", err)
 	}
 
 	privKeyFile = filepath.Join(outputDir, privKeyName)
-	err = ioutil.WriteFile(privKeyFile, privPayload, privKeyPermissions)
+	err = os.WriteFile(privKeyFile, privPayload, privKeyPermissions)
 	if err != nil {
 		log.Fatalf("Could not write private key to file: %s", err)
 	}
 
 	// Write peer ID to file
 	peerIDFile := filepath.Join(outputDir, peerIDFileName)
-	err = ioutil.WriteFile(peerIDFile, []byte(identity.Pretty()), pubKeyPermissions)
+	err = os.WriteFile(peerIDFile, []byte(identity.Pretty()), pubKeyPermissions)
 	if err != nil {
 		log.Fatalf("Could not write peer ID to file: %s", err)
 	}

@@ -83,7 +83,7 @@ func (h *FStore) Sync(cid string) error {
 }
 
 // checkFunctionFiles checks if the files required by the function are found on local storage.
-// It returns two booleans indicating presense of the archive file, the unpacked files, and a potential error.
+// It returns two booleans indicating presence of the archive file, the unpacked files, and a potential error.
 func (h *FStore) checkFunctionFiles(fn functionRecord) (bool, bool, error) {
 
 	// Check if the archive is found.

@@ -83,7 +83,7 @@ func (n *Node) processDisbandCluster(ctx context.Context, from peer.ID, payload 
 
 	n.log.Info().Str("peer", from.String()).Str("request", req.RequestID).Msg("received request to disband consensus cluster")
 
-	err = n.leaveCluster(req.RequestID)
+	err = n.leaveCluster(req.RequestID, consensusClusterDisbandTimeout)
 	if err != nil {
 		return fmt.Errorf("could not disband cluster (request: %s): %w", req.RequestID, err)
 	}
@@ -174,7 +174,7 @@ func (n *Node) disbandCluster(requestID string, replicas []peer.ID) error {
 		return fmt.Errorf("could not send cluster disband request (request: %s): %w", requestID, err)
 	}
 
-	log.Info().Err(err).Strs("peers", blockless.PeerIDsToStr(replicas)).Msg("sent cluster disband request")
+	n.log.Info().Err(err).Str("request", requestID).Strs("peers", blockless.PeerIDsToStr(replicas)).Msg("sent cluster disband request")
 
 	return nil
 }

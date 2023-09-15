@@ -109,7 +109,7 @@ func run() int {
 		return failure
 	}
 
-	// Chown directory to be owned by the original user runing sudo.
+	// Chown directory to be owned by the original user running sudo.
 	err = chownRecursive(target, int(id), -1)
 	if err != nil {
 		log.Printf("could not set owner for the cgroup: %s", err)

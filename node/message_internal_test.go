@@ -54,7 +54,7 @@ func TestNode_Messaging(t *testing.T) {
 			require.Equal(t, rec, received)
 		})
 
-		err = node.send(context.Background(), client.ID(), rec)
+		err := node.send(context.Background(), client.ID(), rec)
 		require.NoError(t, err)
 
 		wg.Wait()
@@ -66,7 +66,7 @@ func TestNode_Messaging(t *testing.T) {
 
 		// Establish a connection between peers.
 		clientInfo := hostGetAddrInfo(t, client)
-		err = node.host.Connect(ctx, *clientInfo)
+		err := node.host.Connect(ctx, *clientInfo)
 		require.NoError(t, err)
 
 		// Have both client and node subscribe to the same topic.

@@ -16,7 +16,6 @@ const (
 	peerIDFileName     = "peerid.txt"
 	privKeyPermissions = 0600
 	pubKeyPermissions  = 0644
-	
 )
 
 func main() {
@@ -60,7 +59,7 @@ func main() {
 	if flagPublicKey != "" && flagMessage != "" && flagSignature != "" {
 		VerifyGivenSignature(flagPublicKey, flagMessage, flagSignature)
 	}
-	
+
 	if flagPeerID != "" && flagMessage != "" && flagSignature != "" {
 		VerifyGivenSignatureWithPeerID(flagPeerID, flagMessage, flagSignature)
 	}

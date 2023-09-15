@@ -15,6 +15,10 @@ import (
 // Execute fullfils the consensus interface by inserting the request into the pipeline.
 func (r *Replica) Execute(client peer.ID, requestID string, timestamp time.Time, req execute.Request) (codes.Code, execute.Result, error) {
 
+	// Modifying state, so acquire state lock now.
+	r.sl.Lock()
+	defer r.sl.Unlock()
+
 	request := Request{
 		ID:        requestID,
 		Timestamp: timestamp,

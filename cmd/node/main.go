@@ -110,6 +110,7 @@ func run() int {
 		log.Error().Err(err).Str("key", cfg.Host.PrivateKey).Msg("could not create host")
 		return failure
 	}
+	defer host.Close()
 
 	log.Info().
 		Str("id", host.ID().String()).

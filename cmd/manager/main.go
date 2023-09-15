@@ -56,7 +56,6 @@ func main() {
 	<-ctx.Done()
 }
 
-
 func makeBasicHost(listenPort int, insecure bool, privKeyPath string) (host.Host, error) {
 	priv, err := loadPrivateKey(privKeyPath)
 	if err != nil {
@@ -76,20 +75,18 @@ func makeBasicHost(listenPort int, insecure bool, privKeyPath string) (host.Host
 	return libp2p.New(opts...)
 }
 
-
-
 func loadPrivateKey(filePath string) (crypto.PrivKey, error) {
-    keyBytes, err := ioutil.ReadFile(filePath)
-    if err != nil {
-        return nil, err
-    }
+	keyBytes, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
 
-    priv, err := crypto.UnmarshalPrivateKey(keyBytes)
-    if err != nil {
-        return nil, err
-    }
+	priv, err := crypto.UnmarshalPrivateKey(keyBytes)
+	if err != nil {
+		return nil, err
+	}
 
-    return priv, nil
+	return priv, nil
 }
 
 func getHostAddress(ha host.Host) string {
