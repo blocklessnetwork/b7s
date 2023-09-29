@@ -17,7 +17,7 @@ func LoadOrCreateKeys(privKeyFile string, outputDir string) (crypto.PrivKey, cry
 	var err error
 
 	if _, err := os.Stat(privKeyFile); os.IsNotExist(err) {
-		priv, pub, err = crypto.GenerateKeyPair(crypto.Ed25519, 0)
+		priv, pub, err = crypto.GenerateKeyPair(crypto.ECDSA, 0)
 		if err != nil {
 			return nil, nil, err
 		}
