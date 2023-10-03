@@ -17,6 +17,8 @@ const (
 
 	DefaultConsensusAlgorithm = consensus.Raft
 
+	DefaultAttributeLoadingSetting = false
+
 	rollCallQueueBufferSize = 1000
 
 	defaultExecutionThreshold = 0.6

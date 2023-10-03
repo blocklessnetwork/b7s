@@ -123,6 +123,7 @@ func run() int {
 	opts := []node.Option{
 		node.WithRole(role),
 		node.WithConcurrency(cfg.Concurrency),
+		node.WithAttributeLoading(cfg.LoadAttributes),
 	}
 
 	// If this is a worker node, initialize an executor.
