@@ -1,5 +1,7 @@
 package execute
 
+import "github.com/libp2p/go-libp2p/core/peer"
+
 // Request describes an execution request.
 type Request struct {
 	FunctionID string      `json:"function_id"`
@@ -25,6 +27,8 @@ type Config struct {
 	Permissions       []string          `json:"permissions,omitempty"`
 	ResultAggregation ResultAggregation `json:"result_aggregation,omitempty"`
 
+	Attributes *Attributes `json:"attributes,omitempty"`
+
 	// NodeCount specifies how many nodes should execute this request.
 	NodeCount int `json:"number_of_nodes,omitempty"`
 	// Consensus algorithm to use. Raft and PBFT are supported at this moment.
@@ -44,4 +48,16 @@ type ResultAggregation struct {
 	Enable     bool        `json:"enable,omitempty"`
 	Type       string      `json:"type,omitempty"`
 	Parameters []Parameter `json:"parameters,omitempty"`
+}
+
+type Attributes struct {
+	// Values specify which attributes the node in question should have.
+	// At the moment we support strict equality only, so no `if RAM >= 16GB` types of conditions.
+	Values []Parameter `json:"attributes,omitempty"`
+
+	// Should we accept nodes whose attributes are not attested?
+	AttestationRequired bool `json:"attestation_required,omitempty"`
+
+	// Explicitly request specific attestors.
+	Attestors []peer.ID `json:"attestors,omitempty"`
 }

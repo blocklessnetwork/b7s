@@ -10,6 +10,7 @@ import (
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
+	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
 	"github.com/blocklessnetwork/b7s/models/response"
 )
@@ -37,6 +38,20 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	if req.Consensus == consensus.Raft && n.haveRaftClusters() {
 		log.Warn().Msg("cannot respond to a roll call as we're already participating in one raft cluster")
 		return nil
+	}
+
+	if req.Attributes != nil {
+
+		if n.attributes == nil {
+			log.Info().Msg("skipping attributed execution requested")
+			return nil
+		}
+
+		err := haveAttributes(*n.attributes, *req.Attributes)
+		if err != nil {
+			log.Info().Err(err).Msg("skipping attributed execution request - we do not match requested attributes")
+			return nil
+		}
 	}
 
 	// Base response to return.
@@ -87,7 +102,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	return nil
 }
 
-func (n *Node) executeRollCall(ctx context.Context, requestID string, functionID string, nodeCount int, consensus consensus.Type) ([]peer.ID, error) {
+func (n *Node) executeRollCall(ctx context.Context, requestID string, functionID string, nodeCount int, consensus consensus.Type, attributes *execute.Attributes) ([]peer.ID, error) {
 
 	// Create a logger with relevant context.
 	log := n.log.With().Str("request", requestID).Str("function", functionID).Int("node_count", nodeCount).Logger()
@@ -97,7 +112,7 @@ func (n *Node) executeRollCall(ctx context.Context, requestID string, functionID
 	n.rollCall.create(requestID)
 	defer n.rollCall.remove(requestID)
 
-	err := n.publishRollCall(ctx, requestID, functionID, consensus)
+	err := n.publishRollCall(ctx, requestID, functionID, consensus, attributes)
 	if err != nil {
 		return nil, fmt.Errorf("could not publish roll call: %w", err)
 	}
@@ -150,7 +165,7 @@ rollCallResponseLoop:
 
 // publishRollCall will create a roll call request for executing the given function.
 // On successful issuance of the roll call request, we return the ID of the issued request.
-func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID string, consensus consensus.Type) error {
+func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID string, consensus consensus.Type, attributes *execute.Attributes) error {
 
 	// Create a roll call request.
 	rollCall := request.RollCall{
@@ -159,6 +174,7 @@ func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID
 		FunctionID: functionID,
 		RequestID:  requestID,
 		Consensus:  consensus,
+		Attributes: attributes,
 	}
 
 	// Publish the mssage.

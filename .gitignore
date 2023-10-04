@@ -1,5 +1,6 @@
 cmd/node/node
 cmd/keygen/keygen
+cmd/keyforge/keyforge
 cmd/bootstrap-limiter/bootstrap-limiter
 
 dist/

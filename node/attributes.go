@@ -1,6 +1,7 @@
 package node
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetwork/b7s-attributes/attributes"
+	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
 const (
@@ -52,4 +54,52 @@ func getAttributesIPNSName(key crypto.PubKey) (string, error) {
 
 func ipnsGatewayURL(name string) string {
 	return fmt.Sprintf("https://%s.ipns.cf-ipfs.com/%s", name, defaultAttributesFilename)
+}
+
+func haveAttributes(have attributes.Attestation, want execute.Attributes) error {
+
+	if want.AttestationRequired && len(have.Attestors) == 0 {
+		return errors.New("attestors required but none found")
+	}
+
+	// If the client wants specific attestors, check if they're present.
+	if len(want.Attestors) > 0 {
+
+		attestors := make(map[peer.ID]struct{}, len(have.Attestors))
+		for _, attestor := range have.Attestors {
+			attestors[attestor.Signer] = struct{}{}
+		}
+
+		for _, wa := range want.Attestors {
+			_, ok := attestors[wa]
+			if !ok {
+				return fmt.Errorf("attestor %s explicitly requested but not found", wa.String())
+			}
+		}
+	}
+
+	// It doesn't make a lot of sense to require attestors without wanting specific attributes,
+	// but if that's the case, and there's no attributes wanted, we're done now.
+	if len(want.Values) == 0 {
+		return nil
+	}
+
+	attrs := make(map[string]string, len(have.Attributes))
+	for _, attr := range have.Attributes {
+		attrs[attr.Name] = attr.Value
+	}
+
+	for _, wantAttr := range want.Values {
+
+		value, ok := attrs[wantAttr.Name]
+		if !ok {
+			return fmt.Errorf("attribute wanted but not found (attr: %v, value: %v)", wantAttr.Name, wantAttr.Value)
+		}
+
+		if value != wantAttr.Value {
+			return fmt.Errorf("attribute wanted but value doesn't match (attr: %v, want: %v, have: %v)", wantAttr.Name, wantAttr.Value, value)
+		}
+	}
+
+	return nil
 }
