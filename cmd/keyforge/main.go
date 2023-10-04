@@ -17,7 +17,6 @@ const (
 	peerIDFileName     = "peerid.txt"
 	privKeyPermissions = 0600
 	pubKeyPermissions  = 0644
-
 	// ECDSA constants
 	ecdsaPrivKeyName        = "ecdsaPrivKey.bin"
 	ecdsaPubKeyName         = "ecdsaPubKey.bin"
