@@ -53,7 +53,7 @@ type ResultAggregation struct {
 type Attributes struct {
 	// Values specify which attributes the node in question should have.
 	// At the moment we support strict equality only, so no `if RAM >= 16GB` types of conditions.
-	Values []Parameter `json:"attributes,omitempty"`
+	Values []Parameter `json:"values,omitempty"`
 
 	// Should we accept nodes whose attributes are not attested?
 	AttestationRequired bool `json:"attestation_required,omitempty"`

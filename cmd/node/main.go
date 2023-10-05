@@ -70,7 +70,7 @@ func run() int {
 	cfg.Workspace = workspace
 
 	// Open the pebble peer database.
-	pdb, err := pebble.Open(cfg.PeerDatabasePath, &pebble.Options{})
+	pdb, err := pebble.Open(cfg.PeerDatabasePath, &pebble.Options{Logger: &pebbleNoopLogger{}})
 	if err != nil {
 		log.Error().Err(err).Str("db", cfg.PeerDatabasePath).Msg("could not open pebble peer database")
 		return failure
@@ -168,7 +168,7 @@ func run() int {
 	}
 
 	// Open the pebble function database.
-	fdb, err := pebble.Open(cfg.FunctionDatabasePath, &pebble.Options{})
+	fdb, err := pebble.Open(cfg.FunctionDatabasePath, &pebble.Options{Logger: &pebbleNoopLogger{}})
 	if err != nil {
 		log.Error().Err(err).Str("db", cfg.FunctionDatabasePath).Msg("could not open pebble function database")
 		return failure

@@ -81,6 +81,7 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		}
 
 		n.attributes = &attributes
+		n.log.Info().Interface("attributes", n.attributes).Msg("node loaded attributes")
 	}
 
 	err := n.ValidateConfig()
