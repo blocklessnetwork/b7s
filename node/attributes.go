@@ -11,6 +11,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetwork/b7s-attributes/attributes"
+	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
@@ -62,19 +63,37 @@ func haveAttributes(have attributes.Attestation, want execute.Attributes) error 
 		return errors.New("attestors required but none found")
 	}
 
-	// If the client wants specific attestors, check if they're present.
-	if len(want.Attestors) > 0 {
-
-		attestors := make(map[peer.ID]struct{}, len(have.Attestors))
+	// If we need to check attestors, create a map of them now.
+	var attestors map[peer.ID]struct{}
+	if len(want.Attestors.Each) > 0 || len(want.Attestors.OneOf) > 0 {
+		attestors = make(map[peer.ID]struct{}, len(have.Attestors))
 		for _, attestor := range have.Attestors {
 			attestors[attestor.Signer] = struct{}{}
 		}
+	}
 
-		for _, wa := range want.Attestors {
+	// If the client wants specific attestors, check if they're present.
+	if len(want.Attestors.Each) > 0 {
+		for _, wa := range want.Attestors.Each {
 			_, ok := attestors[wa]
 			if !ok {
 				return fmt.Errorf("attestor %s explicitly requested but not found", wa.String())
 			}
+		}
+	}
+
+	// If the client wants some of these attestors, check if at least one if found.
+	if len(want.Attestors.OneOf) > 0 {
+		var found bool
+		for _, wa := range want.Attestors.OneOf {
+			_, ok := attestors[wa]
+			if ok {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("at least one attestor wanted but none found (wanted: %s)", blockless.PeerIDsToStr(want.Attestors.OneOf))
 		}
 	}
 

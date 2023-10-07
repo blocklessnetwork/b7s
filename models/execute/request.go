@@ -1,7 +1,5 @@
 package execute
 
-import "github.com/libp2p/go-libp2p/core/peer"
-
 // Request describes an execution request.
 type Request struct {
 	FunctionID string      `json:"function_id"`
@@ -48,16 +46,4 @@ type ResultAggregation struct {
 	Enable     bool        `json:"enable,omitempty"`
 	Type       string      `json:"type,omitempty"`
 	Parameters []Parameter `json:"parameters,omitempty"`
-}
-
-type Attributes struct {
-	// Values specify which attributes the node in question should have.
-	// At the moment we support strict equality only, so no `if RAM >= 16GB` types of conditions.
-	Values []Parameter `json:"values,omitempty"`
-
-	// Should we accept nodes whose attributes are not attested?
-	AttestationRequired bool `json:"attestation_required,omitempty"`
-
-	// Explicitly request specific attestors.
-	Attestors []peer.ID `json:"attestors,omitempty"`
 }
