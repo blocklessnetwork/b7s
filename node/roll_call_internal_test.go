@@ -263,7 +263,7 @@ func TestNode_RollCall(t *testing.T) {
 		requestID, err := newRequestID()
 		require.NoError(t, err)
 
-		err = node.publishRollCall(ctx, requestID, functionID, consensus.Type(0))
+		err = node.publishRollCall(ctx, requestID, functionID, consensus.Type(0), nil)
 		require.NoError(t, err)
 
 		deadlineCtx, cancel := context.WithTimeout(ctx, publishTimeout)
