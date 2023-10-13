@@ -89,7 +89,7 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 	log.Info().Msg("processing execution request")
 
 	// Phase 1. - Issue roll call to nodes.
-	reportingPeers, err := n.executeRollCall(ctx, requestID, req.FunctionID, nodeCount, consensusAlgo)
+	reportingPeers, err := n.executeRollCall(ctx, requestID, req.FunctionID, nodeCount, consensusAlgo, req.Config.Attributes)
 	if err != nil {
 		code := codes.Error
 		if errors.Is(err, blockless.ErrRollCallTimeout) {

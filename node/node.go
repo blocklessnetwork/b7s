@@ -10,6 +10,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 
+	"github.com/blocklessnetwork/b7s-attributes/attributes"
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node/internal/waitmap"
@@ -30,9 +31,10 @@ type Node struct {
 	executor blockless.Executor
 	fstore   FStore
 
-	topic *pubsub.Topic
-	sema  chan struct{}
-	wg    *sync.WaitGroup
+	topic      *pubsub.Topic
+	sema       chan struct{}
+	wg         *sync.WaitGroup
+	attributes *attributes.Attestation
 
 	rollCall *rollCallQueue
 
@@ -70,6 +72,16 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		clusters:           make(map[string]consensusExecutor),
 		executeResponses:   waitmap.New(),
 		consensusResponses: waitmap.New(),
+	}
+
+	if cfg.LoadAttributes {
+		attributes, err := loadAttributes(host.PublicKey())
+		if err != nil {
+			return nil, fmt.Errorf("could not load attribute data: %w", err)
+		}
+
+		n.attributes = &attributes
+		n.log.Info().Interface("attributes", n.attributes).Msg("node loaded attributes")
 	}
 
 	err := n.ValidateConfig()

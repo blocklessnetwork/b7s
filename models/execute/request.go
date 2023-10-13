@@ -25,6 +25,8 @@ type Config struct {
 	Permissions       []string          `json:"permissions,omitempty"`
 	ResultAggregation ResultAggregation `json:"result_aggregation,omitempty"`
 
+	Attributes *Attributes `json:"attributes,omitempty"`
+
 	// NodeCount specifies how many nodes should execute this request.
 	NodeCount int `json:"number_of_nodes,omitempty"`
 	// Consensus algorithm to use. Raft and PBFT are supported at this moment.

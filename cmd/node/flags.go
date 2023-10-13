@@ -33,6 +33,7 @@ func parseFlags() *config.Config {
 	pflag.StringVar(&cfg.API, "rest-api", "", "address where the head node REST API will listen on")
 	pflag.StringVar(&cfg.Workspace, "workspace", "./workspace", "directory that the node can use for file storage")
 	pflag.StringVar(&cfg.Runtime, "runtime", "", "runtime address (used by the worker node)")
+	pflag.BoolVar(&cfg.LoadAttributes, "attributes", false, "node should try to load its attribute data from IPFS")
 
 	// Host configuration.
 	pflag.StringVar(&cfg.Host.PrivateKey, "private-key", "", "private key that the b7s host will use")

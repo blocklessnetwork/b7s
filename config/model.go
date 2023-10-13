@@ -9,9 +9,10 @@ type Config struct {
 	BootNodes            []string
 	Concurrency          uint
 
-	Host    Host
-	API     string
-	Runtime string
+	Host           Host
+	API            string
+	Runtime        string
+	LoadAttributes bool
 
 	CPUPercentage float64
 	MemoryMaxKB   int64

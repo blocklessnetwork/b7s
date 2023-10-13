@@ -22,6 +22,7 @@ var DefaultConfig = Config{
 	ExecutionTimeout:        DefaultExecutionTimeout,
 	ClusterFormationTimeout: DefaultClusterFormationTimeout,
 	DefaultConsensus:        DefaultConsensusAlgorithm,
+	LoadAttributes:          DefaultAttributeLoadingSetting,
 }
 
 // Config represents the Node configuration.
@@ -36,6 +37,7 @@ type Config struct {
 	ClusterFormationTimeout time.Duration      // How long do we wait for the nodes to form a cluster for an execution.
 	Workspace               string             // Directory where we can store files needed for execution.
 	DefaultConsensus        consensus.Type     // Default consensus algorithm to use.
+	LoadAttributes          bool               // Node should try to load its attributes from IPFS.
 }
 
 // Validate checks if the given configuration is correct.
@@ -141,6 +143,13 @@ func WithWorkspace(path string) Option {
 func WithDefaultConsensus(c consensus.Type) Option {
 	return func(cfg *Config) {
 		cfg.DefaultConsensus = c
+	}
+}
+
+// WithAttributeLoading specifies whether node should try to load its attributes data from IPFS.
+func WithAttributeLoading(b bool) Option {
+	return func(cfg *Config) {
+		cfg.LoadAttributes = b
 	}
 }
 
