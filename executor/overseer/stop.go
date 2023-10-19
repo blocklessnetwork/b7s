@@ -2,6 +2,7 @@ package overseer
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -18,7 +19,14 @@ func (o *Overseer) Kill(id string) (JobState, error) {
 	h.Lock()
 	defer h.Unlock()
 
-	h.cancel()
+	if h.cmd.Process == nil {
+		return JobState{}, errors.New("job is not running")
+	}
+
+	err := h.cmd.Process.Kill()
+	if err != nil {
+		return JobState{}, fmt.Errorf("could not kill process: %w", err)
+	}
 
 	endTime := time.Now()
 

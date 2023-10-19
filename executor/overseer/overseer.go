@@ -13,7 +13,7 @@ type Overseer struct {
 	cfg Config
 
 	*sync.Mutex
-	jobs map[string]*handle
+	jobs map[string]*Handle
 }
 
 func New(log zerolog.Logger, cfg Config) (*Overseer, error) {
@@ -21,7 +21,7 @@ func New(log zerolog.Logger, cfg Config) (*Overseer, error) {
 	overseer := Overseer{
 		log:  log,
 		cfg:  cfg,
-		jobs: make(map[string]*handle),
+		jobs: make(map[string]*Handle),
 
 		Mutex: &sync.Mutex{},
 	}

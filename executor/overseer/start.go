@@ -2,7 +2,6 @@ package overseer
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"os/exec"
 	"path"
@@ -10,13 +9,10 @@ import (
 	"time"
 )
 
-type handle struct {
+type Handle struct {
 	*sync.Mutex
-	id     string
+	ID     string
 	source Job
-
-	ctx    context.Context
-	cancel context.CancelFunc
 
 	stdout *bytes.Buffer
 	stderr *bytes.Buffer
@@ -27,7 +23,7 @@ type handle struct {
 	cmd *exec.Cmd
 }
 
-func (o *Overseer) Start(job Job) (any, error) {
+func (o *Overseer) Start(job Job) (*Handle, error) {
 
 	err := o.prepareJob(job)
 	if err != nil {
@@ -47,16 +43,14 @@ func (o *Overseer) Start(job Job) (any, error) {
 	return h, nil
 }
 
-func (o *Overseer) startJob(job Job) (*handle, error) {
+func (o *Overseer) startJob(job Job) (*Handle, error) {
 
 	var (
 		stdout bytes.Buffer
 		stderr bytes.Buffer
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
-
-	cmd := createCmd(ctx, job)
+	cmd := createCmd(job)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	cmd.Stdin = job.Stdin
@@ -66,16 +60,13 @@ func (o *Overseer) startJob(job Job) (*handle, error) {
 	start := time.Now()
 	err := cmd.Start()
 	if err != nil {
-		cancel() // Cover this code path so the linter doesn't complain.
 		return nil, fmt.Errorf("could not start job: %w", err)
 	}
 
-	handle := handle{
+	handle := Handle{
 		Mutex:  &sync.Mutex{},
-		id:     job.ID,
+		ID:     job.ID,
 		source: job,
-		ctx:    ctx,
-		cancel: cancel,
 
 		stdout: &stdout,
 		stderr: &stderr,
@@ -100,9 +91,9 @@ func (o *Overseer) prepareJob(job Job) error {
 	return nil
 }
 
-func createCmd(ctx context.Context, job Job) *exec.Cmd {
+func createCmd(job Job) *exec.Cmd {
 
-	cmd := exec.CommandContext(ctx, job.Exec.Path, job.Exec.Args...)
+	cmd := exec.Command(job.Exec.Path, job.Exec.Args...)
 	cmd.Env = append(cmd.Env, job.Exec.Env...)
 
 	return cmd

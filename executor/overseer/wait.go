@@ -26,8 +26,6 @@ func (o *Overseer) Wait(id string) (JobState, error) {
 
 	endTime := time.Now()
 
-	o.log.Info().Str("stdout", h.stdout.String()).Msg("### observer read stdout")
-
 	state := JobState{
 		Status:       StatusDone,
 		Stdout:       h.stdout.String(),
