@@ -6,14 +6,15 @@ import (
 )
 
 type Job struct {
-	// TODO: temp, move to struct.
-	Exec struct {
-		Path string
-		Args []string
-		Env  []string
-	}
+	Exec  Command
 	ID    string
 	Stdin io.Reader
+}
+
+type Command struct {
+	Path string
+	Args []string
+	Env  []string
 }
 
 type JobStatus uint

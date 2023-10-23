@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-func (o *Overseer) Observe(id string) (any, error) {
+func (o *Overseer) Stats(id string) (JobState, error) {
 
 	o.Lock()
 	h, ok := o.jobs[id]
 	o.Unlock()
 
 	if !ok {
-		return nil, errors.New("unknown job")
+		return JobState{}, errors.New("unknown job")
 	}
 
 	h.Lock()
@@ -24,6 +24,7 @@ func (o *Overseer) Observe(id string) (any, error) {
 		Stderr:       h.stderr.String(),
 		StartTime:    h.start,
 		ObservedTime: time.Now(),
+		// TODO: Process stats.
 	}
 
 	if h.cmd.ProcessState != nil {
