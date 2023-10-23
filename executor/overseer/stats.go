@@ -27,18 +27,14 @@ func (o *Overseer) Stats(id string) (JobState, error) {
 		// TODO: Process stats.
 	}
 
-	if h.cmd.ProcessState != nil {
-		state.Status = StatusDone
+	exitCode, status := determineProcessStatus(h.cmd.ProcessState)
+	state.ExitCode = exitCode
+	state.Status = status
 
-		// TODO: Wait on process in a goroutine to have accurate end time.
+	if h.cmd.ProcessState != nil {
+		// NOTE: Perhaps wait on process in a goroutine to have accurate end time.
 		endTime := time.Now()
 		state.EndTime = &endTime
-
-		exitCode := h.cmd.ProcessState.ExitCode()
-		state.ExitCode = &exitCode
-		if *state.ExitCode != 0 {
-			state.Status = StatusFailed
-		}
 	}
 
 	return state, nil
