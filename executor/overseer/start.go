@@ -35,6 +35,11 @@ func (o *Overseer) Start(job Job) (*Handle, error) {
 		return nil, fmt.Errorf("could not prepare job: %w", err)
 	}
 
+	err = o.checkPrerequisites(job)
+	if err != nil {
+		return nil, fmt.Errorf("prerequisites not met: %w", err)
+	}
+
 	h, err := o.startJob(job)
 	if err != nil {
 		return nil, fmt.Errorf("could not start job: %w", err)

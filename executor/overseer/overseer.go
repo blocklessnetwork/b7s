@@ -1,6 +1,7 @@
 package overseer
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -16,7 +17,17 @@ type Overseer struct {
 	jobs map[string]*Handle
 }
 
-func New(log zerolog.Logger, cfg Config) (*Overseer, error) {
+func New(log zerolog.Logger, options ...Option) (*Overseer, error) {
+
+	cfg := defaultConfig
+	for _, option := range options {
+		option(&cfg)
+	}
+
+	err := cfg.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("invalid configuration: %w", err)
+	}
 
 	overseer := Overseer{
 		log:  log,
