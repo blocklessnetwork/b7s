@@ -19,6 +19,8 @@ func (o *Overseer) Wait(id string) (JobState, error) {
 	h.Lock()
 	defer h.Unlock()
 
+	defer o.harvest(id)
+
 	err := h.cmd.Wait()
 	if err != nil {
 		return JobState{}, fmt.Errorf("could not wait on job: %w", err)

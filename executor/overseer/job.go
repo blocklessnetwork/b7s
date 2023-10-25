@@ -6,15 +6,17 @@ import (
 )
 
 type Job struct {
-	Exec  Command
-	ID    string
-	Stdin io.Reader
+	ID           string    `json:"id,omitempty"`
+	Exec         Command   `json:"exec,omitempty"`
+	Stdin        io.Reader `json:"stdin,omitempty"`
+	OutputStream string    `json:"output_stream,omitempty"`
+	ErrorStream  string    `json:"error_stream,omitempty"`
 }
 
 type Command struct {
-	Path string
-	Args []string
-	Env  []string
+	Path string   `json:"path,omitempty"`
+	Args []string `json:"args,omitempty"`
+	Env  []string `json:"env,omitempty"`
 }
 
 type JobStatus uint

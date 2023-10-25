@@ -19,6 +19,8 @@ func (o *Overseer) Kill(id string) (JobState, error) {
 	h.Lock()
 	defer h.Unlock()
 
+	defer o.harvest(id)
+
 	if h.cmd.Process == nil {
 		return JobState{}, errors.New("job is not running")
 	}
