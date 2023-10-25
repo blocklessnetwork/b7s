@@ -5,6 +5,7 @@ go 1.21.0
 require (
 	github.com/Microsoft/go-winio v0.6.1
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
+	github.com/blocklessnetwork/b7s-attributes v0.0.0-20231003175355-c87ad3eae97e
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cockroachdb/pebble v0.0.0-20230903225801-a4fe05009372
 	github.com/containerd/cgroups/v3 v3.0.2
@@ -24,11 +25,11 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/ziflex/lecho/v3 v3.5.0
 	gopkg.in/yaml.v2 v2.4.0
+	nhooyr.io/websocket v1.8.9
 )
 
 require (
 	github.com/armon/go-metrics v0.4.1 // indirect
-	github.com/blocklessnetwork/b7s-attributes v0.0.0-20231003175355-c87ad3eae97e // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/cilium/ebpf v0.11.0 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
