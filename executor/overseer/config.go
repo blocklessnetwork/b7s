@@ -16,6 +16,7 @@ type Config struct {
 	Workdir   string
 	FS        afero.Fs
 	Allowlist []string
+	Denylist  []string
 }
 
 type Option func(*Config)
@@ -42,11 +43,25 @@ func WithAllowlist(executables []string) Option {
 	}
 }
 
+// WithDenylist specifies the executables the overseer is not allowed to start.
+// Executables should be listed using their full paths. Denylist overrides allowlist.
+func WithDenylist(executables []string) Option {
+	return func(cfg *Config) {
+		cfg.Denylist = executables
+	}
+}
+
 func (cfg Config) Validate() error {
 
 	for _, path := range cfg.Allowlist {
 		if !filepath.IsAbs(path) {
 			return fmt.Errorf("path from allowlist not absolute: %s", path)
+		}
+	}
+
+	for _, path := range cfg.Denylist {
+		if !filepath.IsAbs(path) {
+			return fmt.Errorf("path from denylist not absolute: %s", path)
 		}
 	}
 
