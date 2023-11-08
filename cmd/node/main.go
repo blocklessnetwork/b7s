@@ -41,7 +41,7 @@ func run() int {
 	signal.Notify(sig, os.Interrupt)
 
 	// Initialize logging.
-	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
+	log := zerolog.New(os.Stdout).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 
 	// Parse CLI flags and validate that the configuration is valid.
 	cfg := parseFlags()
