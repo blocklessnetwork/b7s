@@ -241,7 +241,7 @@ func run() int {
 		// Start API in a separate goroutine.
 		go func() {
 
-			log.Info().Msg("Node API starting")
+			log.Info().Str("port", cfg.API).Msg("Node API starting")
 			err := server.Start(cfg.API)
 			if err != nil && !errors.Is(err, http.ErrServerClosed) {
 				log.Warn().Err(err).Msg("Node API failed")
