@@ -6,16 +6,16 @@ import (
 
 // API provides REST API functionality for the Blockless head node.
 type API struct {
-	log  zerolog.Logger
-	node Node
+	Log  zerolog.Logger
+	Node Node
 }
 
 // New creates a new instance of a Blockless head node REST API. Access to node data is provided by the provided `node`.
 func New(log zerolog.Logger, node Node) *API {
 
 	api := API{
-		log:  log.With().Str("component", "api").Logger(),
-		node: node,
+		Log:  log.With().Str("component", "api").Logger(),
+		Node: node,
 	}
 
 	return &api

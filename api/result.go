@@ -29,7 +29,7 @@ func (a *API) ExecutionResult(ctx echo.Context) error {
 	}
 
 	// Lookup execution result.
-	result, ok := a.node.ExecutionResult(requestID)
+	result, ok := a.Node.ExecutionResult(requestID)
 	if !ok {
 		return ctx.NoContent(http.StatusNotFound)
 	}
