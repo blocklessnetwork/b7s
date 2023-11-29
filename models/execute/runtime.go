@@ -1,11 +1,11 @@
 package execute
 
 const (
-	DefaultRuntimeEntryPoint = "_start"
+	BLSDefaultRuntimeEntryPoint = "_start"
 )
 
 // RuntimeConfig represents the CLI flags supported by the runtime
-type RuntimeConfig struct {
+type BLSRuntimeConfig struct {
 	Entry         string `json:"entry,omitempty"`
 	ExecutionTime uint64 `json:"run_time,omitempty"`
 	DebugInfo     bool   `json:"debug_info,omitempty"`
@@ -19,13 +19,13 @@ type RuntimeConfig struct {
 
 const (
 	// Blockless Runtime flag names.
-	RuntimeFlagEntry         = "entry"
-	RuntimeFlagExecutionTime = "run-time"
-	RuntimeFlagDebug         = "debug-info"
-	RuntimeFlagFuel          = "limited-fuel"
-	RuntimeFlagMemory        = "limited-memory"
-	RuntimeFlagFSRoot        = "fs-root-path"
-	RuntimeFlagLogger        = "runtime-logger"
-	RuntimeFlagPermission    = "permission"
-	RuntimeFlagEnv           = "env"
+	BLSRuntimeFlagEntry         = "entry"
+	BLSRuntimeFlagExecutionTime = "run-time"
+	BLSRuntimeFlagDebug         = "debug-info"
+	BLSRuntimeFlagFuel          = "limited-fuel"
+	BLSRuntimeFlagMemory        = "limited-memory"
+	BLSRuntimeFlagFSRoot        = "fs-root-path"
+	BLSRuntimeFlagLogger        = "runtime-logger"
+	BLSRuntimeFlagPermission    = "permission"
+	BLSRuntimeFlagEnv           = "env"
 )

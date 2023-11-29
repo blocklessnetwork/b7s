@@ -35,7 +35,7 @@ func TestExecute_CreateCMD(t *testing.T) {
 			Config: execute.Config{
 				Stdin:       &stdin,
 				Environment: environment,
-				Runtime: execute.RuntimeConfig{
+				Runtime: execute.BLSRuntimeConfig{
 					Memory: uint64(limitedMemory),
 					Logger: runtimeLogger,
 				},
@@ -67,13 +67,13 @@ func TestExecute_CreateCMD(t *testing.T) {
 	require.Equal(t, executablePath, cmd.Args[0])
 	require.Equal(t, paths.input, cmd.Args[1])
 
-	require.Equal(t, "--"+execute.RuntimeFlagFSRoot, cmd.Args[2])
+	require.Equal(t, "--"+execute.BLSRuntimeFlagFSRoot, cmd.Args[2])
 	require.Equal(t, paths.fsRoot, cmd.Args[3])
 
-	require.Equal(t, "--"+execute.RuntimeFlagMemory, cmd.Args[4])
+	require.Equal(t, "--"+execute.BLSRuntimeFlagMemory, cmd.Args[4])
 	require.Equal(t, fmt.Sprint(limitedMemory), cmd.Args[5])
 
-	require.Equal(t, "--"+execute.RuntimeFlagLogger, cmd.Args[6])
+	require.Equal(t, "--"+execute.BLSRuntimeFlagLogger, cmd.Args[6])
 	require.Equal(t, runtimeLogger, cmd.Args[7])
 
 	require.Equal(t, "--", cmd.Args[8])

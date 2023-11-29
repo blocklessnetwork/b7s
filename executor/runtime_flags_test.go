@@ -13,7 +13,7 @@ func TestRuntimeFlags(t *testing.T) {
 	t.Run("no flags", func(t *testing.T) {
 		t.Parallel()
 
-		cfg := execute.RuntimeConfig{}
+		cfg := execute.BLSRuntimeConfig{}
 		flags := runtimeFlags(cfg, nil)
 		require.Len(t, flags, 0)
 	})
@@ -35,7 +35,7 @@ func TestRuntimeFlags(t *testing.T) {
 			flagCount = 15
 		)
 
-		cfg := execute.RuntimeConfig{
+		cfg := execute.BLSRuntimeConfig{
 			Entry:         entry,
 			Input:         input,
 			ExecutionTime: executionTime,
@@ -54,27 +54,27 @@ func TestRuntimeFlags(t *testing.T) {
 
 		require.Len(t, flags, flagCount)
 
-		require.Equal(t, "--"+execute.RuntimeFlagEntry, flags[0])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagEntry, flags[0])
 		require.Equal(t, entry, flags[1])
 
-		require.Equal(t, "--"+execute.RuntimeFlagExecutionTime, flags[2])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagExecutionTime, flags[2])
 		require.Equal(t, fmt.Sprint(executionTime), flags[3])
 
-		require.Equal(t, "--"+execute.RuntimeFlagDebug, flags[4])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagDebug, flags[4])
 
-		require.Equal(t, "--"+execute.RuntimeFlagFSRoot, flags[5])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagFSRoot, flags[5])
 		require.Equal(t, fsRoot, flags[6])
 
-		require.Equal(t, "--"+execute.RuntimeFlagFuel, flags[7])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagFuel, flags[7])
 		require.Equal(t, fmt.Sprint(fuel), flags[8])
 
-		require.Equal(t, "--"+execute.RuntimeFlagMemory, flags[9])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagMemory, flags[9])
 		require.Equal(t, fmt.Sprint(memory), flags[10])
 
-		require.Equal(t, "--"+execute.RuntimeFlagLogger, flags[11])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagLogger, flags[11])
 		require.Equal(t, logger, flags[12])
 
-		require.Equal(t, "--"+execute.RuntimeFlagPermission, flags[13])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagPermission, flags[13])
 		require.Equal(t, permission, flags[14])
 	})
 	t.Run("some fields set", func(t *testing.T) {
@@ -88,7 +88,7 @@ func TestRuntimeFlags(t *testing.T) {
 			permission2 = "https://whatever.com/"
 		)
 
-		cfg := execute.RuntimeConfig{
+		cfg := execute.BLSRuntimeConfig{
 			Entry:  entry,
 			Memory: memory,
 		}
@@ -102,16 +102,16 @@ func TestRuntimeFlags(t *testing.T) {
 
 		require.Len(t, flags, 8)
 
-		require.Equal(t, "--"+execute.RuntimeFlagEntry, flags[0])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagEntry, flags[0])
 		require.Equal(t, entry, flags[1])
 
-		require.Equal(t, "--"+execute.RuntimeFlagMemory, flags[2])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagMemory, flags[2])
 		require.Equal(t, fmt.Sprint(memory), flags[3])
 
-		require.Equal(t, "--"+execute.RuntimeFlagPermission, flags[4])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagPermission, flags[4])
 		require.Equal(t, permission1, flags[5])
 
-		require.Equal(t, "--"+execute.RuntimeFlagPermission, flags[6])
+		require.Equal(t, "--"+execute.BLSRuntimeFlagPermission, flags[6])
 		require.Equal(t, permission2, flags[7])
 	})
 }
