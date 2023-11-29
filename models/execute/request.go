@@ -19,7 +19,7 @@ type Parameter struct {
 
 // Config represents the configurable options for an execution request.
 type Config struct {
-	Runtime           RuntimeConfig     `json:"runtime,omitempty"`
+	Runtime           BLSRuntimeConfig     `json:"runtime,omitempty"`
 	Environment       []EnvVar          `json:"env_vars,omitempty"`
 	Stdin             *string           `json:"stdin,omitempty"`
 	Permissions       []string          `json:"permissions,omitempty"`
