@@ -32,7 +32,7 @@ func parseFlags() *config.Config {
 	pflag.UintVarP(&cfg.Concurrency, "concurrency", "c", defaultConcurrency, "maximum number of requests node will process in parallel")
 	pflag.StringVar(&cfg.API, "rest-api", "", "address where the head node REST API will listen on")
 	pflag.StringVar(&cfg.Workspace, "workspace", "./workspace", "directory that the node can use for file storage")
-	pflag.StringVar(&cfg.Runtime, "runtime", "", "runtime address (used by the worker node)")
+	pflag.StringVar(&cfg.RuntimePath, "runtime-path", "", "runtime path (used by the worker node)")
 	pflag.BoolVar(&cfg.LoadAttributes, "attributes", false, "node should try to load its attribute data from IPFS")
 
 	// Host configuration.
