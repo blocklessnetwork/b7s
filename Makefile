@@ -5,7 +5,7 @@ all: clean build-node build-keyforge build-manager
 test:
 	@echo "\n🧪 Testing...\n"
 	go clean -testcache
-	go test ./src/...
+	go test ./...
 	@echo "\n✅ Done.\n"
 
 .PHONY: build-node
