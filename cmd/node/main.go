@@ -132,7 +132,7 @@ func run() int {
 		// Executor options.
 		execOptions := []executor.Option{
 			executor.WithWorkDir(cfg.Workspace),
-			executor.WithRuntimeDir(cfg.Runtime),
+			executor.WithRuntimeDir(cfg.RuntimePath),
 		}
 
 		if needLimiter(cfg) {
@@ -158,7 +158,7 @@ func run() int {
 			log.Error().
 				Err(err).
 				Str("workspace", cfg.Workspace).
-				Str("runtime", cfg.Runtime).
+				Str("runtime_path", cfg.RuntimePath).
 				Msg("could not create an executor")
 			return failure
 		}

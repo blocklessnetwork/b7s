@@ -11,7 +11,7 @@ type Config struct {
 
 	Host           Host
 	API            string
-	Runtime        string
+	RuntimePath        string
 	LoadAttributes bool
 
 	CPUPercentage float64
