@@ -20,6 +20,7 @@ func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd 
 	cfg := req.Config.Runtime
 	cfg.Input = paths.input
 	cfg.FSRoot = paths.fsRoot
+	cfg.DriversRootPath = e.cfg.DriversRootPath
 
 	// Prepare CLI arguments.
 	// Append the input argument first first.

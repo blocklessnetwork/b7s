@@ -29,6 +29,10 @@ func runtimeFlags(cfg execute.BLSRuntimeConfig, permissions []string) []string {
 		flags = append(flags, "--"+execute.BLSRuntimeFlagFSRoot, cfg.FSRoot)
 	}
 
+	if cfg.DriversRootPath != "" {
+		flags = append(flags, "--"+execute.BLSRuntimeFlagDrivers, cfg.DriversRootPath)
+	}
+
 	if cfg.Fuel > 0 {
 		flags = append(flags, "--"+execute.BLSRuntimeFlagFuel, fmt.Sprint(cfg.Fuel))
 	}

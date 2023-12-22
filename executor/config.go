@@ -13,6 +13,7 @@ var defaultConfig = Config{
 	ExecutableName: blockless.RuntimeCLI(),
 	FS:             afero.NewOsFs(),
 	Limiter:        &noopLimiter{},
+	DriversRootPath: "",
 }
 
 // Config represents the Executor configuration.
@@ -20,6 +21,7 @@ type Config struct {
 	WorkDir        string   // directory where files needed for the execution are stored
 	RuntimeDir     string   // directory where the executable can be found
 	ExecutableName string   // name for the executable
+	DriversRootPath string // where are cgi drivers stored
 	FS             afero.Fs // FS accessor
 	Limiter        Limiter  // Resource limiter for executed processes
 }
