@@ -39,6 +39,9 @@ func New(log zerolog.Logger, options ...Option) (*Executor, error) {
 	}
 	cfg.RuntimeDir = runtime
 
+	// todo: fix for windows
+	cfg.DriversRootPath = cfg.RuntimeDir + "/extensions"
+
 	// Verify the runtime path is valid.
 	cliPath := filepath.Join(cfg.RuntimeDir, cfg.ExecutableName)
 	_, err = cfg.FS.Stat(cliPath)

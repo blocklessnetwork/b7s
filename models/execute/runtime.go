@@ -12,6 +12,7 @@ type BLSRuntimeConfig struct {
 	Fuel          uint64 `json:"limited_fuel,omitempty"`
 	Memory        uint64 `json:"limited_memory,omitempty"`
 	Logger        string `json:"runtime_logger,omitempty"`
+	DriversRootPath string `json:"drivers_root_path,omitempty"`
 	// Fields not allowed to be set in the request.
 	Input  string `json:"-"`
 	FSRoot string `json:"-"`
@@ -28,4 +29,5 @@ const (
 	BLSRuntimeFlagLogger        = "runtime-logger"
 	BLSRuntimeFlagPermission    = "permission"
 	BLSRuntimeFlagEnv           = "env"
+	BLSRuntimeFlagDrivers 		= "drivers-root-path"
 )
