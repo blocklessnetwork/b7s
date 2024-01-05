@@ -157,7 +157,7 @@ func run() int {
 		executor, err := executor.New(log, execOptions...)
 		if err != nil {
 			log.Error().
-			Err(err).
+				Err(err).
 				Str("workspace", cfg.Workspace).
 				Str("runtime_path", cfg.RuntimePath).
 				Msg("could not create an executor")
@@ -180,6 +180,11 @@ func run() int {
 
 	// Create function store.
 	fstore := fstore.New(log, functionStore, cfg.Workspace)
+
+	// If we have topics specified, use those.
+	if len(cfg.Topics) > 0 {
+		opts = append(opts, node.WithTopics(cfg.Topics))
+	}
 
 	// Instantiate node.
 	node, err := node.New(log, host, peerstore, fstore, opts...)

@@ -35,6 +35,7 @@ func parseFlags() *config.Config {
 	pflag.StringVar(&cfg.RuntimePath, "runtime-path", "", "runtime path (used by the worker node)")
 	pflag.StringVar(&cfg.RuntimeCLI, "runtime-cli", "", "runtime path (used by the worker node)")
 	pflag.BoolVar(&cfg.LoadAttributes, "attributes", false, "node should try to load its attribute data from IPFS")
+	pflag.StringSliceVar(&cfg.Topics, "topic", nil, "topics node should subscribe to")
 
 	// Host configuration.
 	pflag.StringVar(&cfg.Host.PrivateKey, "private-key", "", "private key that the b7s host will use")

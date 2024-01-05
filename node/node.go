@@ -3,10 +3,10 @@ package node
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 
 	"github.com/google/uuid"
-	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 
@@ -31,7 +31,7 @@ type Node struct {
 	executor blockless.Executor
 	fstore   FStore
 
-	topic      *pubsub.Topic
+	topics     map[string]*topicInfo
 	sema       chan struct{}
 	wg         *sync.WaitGroup
 	attributes *attributes.Attestation
@@ -57,6 +57,12 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		option(&cfg)
 	}
 
+	// Ensure default topic is included in the topic list.
+	defaultSubscription := slices.Contains(cfg.Topics, DefaultTopic)
+	if !defaultSubscription {
+		cfg.Topics = append(cfg.Topics, DefaultTopic)
+	}
+
 	n := &Node{
 		cfg: cfg,
 
@@ -68,6 +74,7 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		wg:   &sync.WaitGroup{},
 		sema: make(chan struct{}, cfg.Concurrency),
 
+		topics:             make(map[string]*topicInfo),
 		rollCall:           newQueue(rollCallQueueBufferSize),
 		clusters:           make(map[string]consensusExecutor),
 		executeResponses:   waitmap.New(),

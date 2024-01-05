@@ -17,6 +17,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
+// TODO: Check - head node really accepts execution requests from the REST API. Should this message handling be cognizant of `topics`?
 func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []byte) error {
 
 	// Unpack the request.
@@ -34,7 +35,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 
 	log := n.log.With().Str("request", req.RequestID).Str("peer", from.String()).Str("function", req.FunctionID).Logger()
 
-	code, results, cluster, err := n.headExecute(ctx, requestID, req.Request)
+	code, results, cluster, err := n.headExecute(ctx, requestID, req.Request, "")
 	if err != nil {
 		log.Error().Err(err).Msg("execution failed")
 	}
@@ -66,7 +67,11 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 
 // headExecute is called on the head node. The head node will publish a roll call and delegate an execution request to chosen nodes.
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
-func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request) (codes.Code, execute.ResultMap, execute.Cluster, error) {
+func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request, topic string) (codes.Code, execute.ResultMap, execute.Cluster, error) {
+
+	if topic == "" {
+		topic = DefaultTopic
+	}
 
 	nodeCount := 1
 	if req.Config.NodeCount > 1 {
@@ -89,7 +94,7 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 	log.Info().Msg("processing execution request")
 
 	// Phase 1. - Issue roll call to nodes.
-	reportingPeers, err := n.executeRollCall(ctx, requestID, req.FunctionID, nodeCount, consensusAlgo, req.Config.Attributes)
+	reportingPeers, err := n.executeRollCall(ctx, requestID, req.FunctionID, nodeCount, consensusAlgo, topic, req.Config.Attributes)
 	if err != nil {
 		code := codes.Error
 		if errors.Is(err, blockless.ErrRollCallTimeout) {

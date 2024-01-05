@@ -9,15 +9,30 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-func (n *Node) subscribe(ctx context.Context) (*pubsub.Subscription, error) {
+type topicInfo struct {
+	handle       *pubsub.Topic
+	subscription *pubsub.Subscription
+}
 
-	topic, subscription, err := n.host.Subscribe(ctx, n.cfg.Topic)
-	if err != nil {
-		return nil, fmt.Errorf("could not subscribe to topic: %w", err)
+func (n *Node) subscribeToTopics(ctx context.Context) error {
+
+	// TODO: If some topics/subscriptions failed, cleanup those already subscribed to.
+	for _, topicName := range n.cfg.Topics {
+
+		topic, subscription, err := n.host.Subscribe(ctx, topicName)
+		if err != nil {
+			return fmt.Errorf("could not subscribe to topic (name: %s): %w", topicName, err)
+		}
+
+		ti := &topicInfo{
+			handle:       topic,
+			subscription: subscription,
+		}
+
+		n.topics[topicName] = ti
 	}
-	n.topic = topic
 
-	return subscription, nil
+	return nil
 }
 
 // send serializes the message and sends it to the specified peer.
@@ -59,6 +74,10 @@ func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg interface{})
 }
 
 func (n *Node) publish(ctx context.Context, msg interface{}) error {
+	return n.publishToTopic(ctx, DefaultTopic, msg)
+}
+
+func (n *Node) publishToTopic(ctx context.Context, topic string, msg interface{}) error {
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -66,8 +85,13 @@ func (n *Node) publish(ctx context.Context, msg interface{}) error {
 		return fmt.Errorf("could not encode record: %w", err)
 	}
 
+	topicInfo, ok := n.topics[topic]
+	if !ok {
+		return fmt.Errorf("cannot publish to an unknown topic: %s", topic)
+	}
+
 	// Publish message.
-	err = n.host.Publish(ctx, n.topic, payload)
+	err = n.host.Publish(ctx, topicInfo.handle, payload)
 	if err != nil {
 		return fmt.Errorf("could not publish message: %w", err)
 	}

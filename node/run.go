@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/network"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -15,8 +16,9 @@ import (
 // Run will start the main loop for the node.
 func (n *Node) Run(ctx context.Context) error {
 
-	// Subscribe to the specified topic.
-	subscription, err := n.subscribe(ctx)
+	n.log.Info().Strs("topics", n.cfg.Topics).Msg("topics node will subscribe to")
+
+	err := n.subscribeToTopics(ctx)
 	if err != nil {
 		return fmt.Errorf("could not subscribe to topic: %w", err)
 	}
@@ -31,7 +33,7 @@ func (n *Node) Run(ctx context.Context) error {
 	// NOTE: Potentially signal any error here so that we abort the node
 	// run loop if anything failed.
 	go func() {
-		err = n.host.DiscoverPeers(ctx, n.cfg.Topic)
+		err = n.host.DiscoverPeers(ctx, n.cfg.Topics[0])
 		if err != nil {
 			n.log.Error().Err(err).Msg("could not discover peers")
 		}
@@ -45,38 +47,47 @@ func (n *Node) Run(ctx context.Context) error {
 
 	n.log.Info().Uint("concurrency", n.cfg.Concurrency).Msg("starting node main loop")
 
-	// Message processing loop.
-	for {
+	// Process topic messages.
+	// TODO: Perhaps now using a buffered channel makes more sense, with goroutines filling up the channel
+	// and the main processing loop consumes it.
+	for name, topic := range n.topics {
 
-		// Retrieve next message.
-		msg, err := subscription.Next(ctx)
-		if err != nil {
-			// NOTE: Cancelling the context will lead us here.
-			n.log.Error().Err(err).Msg("could not receive message")
-			break
-		}
+		go func(name string, subscription *pubsub.Subscription) {
 
-		// Skip messages we published.
-		if msg.ReceivedFrom == n.host.ID() {
-			continue
-		}
+			// Message processing loops.
+			for {
 
-		n.log.Trace().Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("received message")
+				// Retrieve next message.
+				msg, err := subscription.Next(ctx)
+				if err != nil {
+					// NOTE: Cancelling the context will lead us here.
+					n.log.Error().Err(err).Msg("could not receive message")
+					break
+				}
 
-		// Try to get a slot for processing the request.
-		n.sema <- struct{}{}
-		n.wg.Add(1)
+				// Skip messages we published.
+				if msg.ReceivedFrom == n.host.ID() {
+					continue
+				}
 
-		go func() {
-			// Free up slot after we're done.
-			defer n.wg.Done()
-			defer func() { <-n.sema }()
+				n.log.Trace().Str("topic", name).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("received message")
 
-			err = n.processMessage(ctx, msg.ReceivedFrom, msg.Data)
-			if err != nil {
-				n.log.Error().Err(err).Str("id", msg.ID).Str("peer_id", msg.ReceivedFrom.String()).Msg("could not process message")
+				// Try to get a slot for processing the request.
+				n.sema <- struct{}{}
+				n.wg.Add(1)
+
+				go func() {
+					// Free up slot after we're done.
+					defer n.wg.Done()
+					defer func() { <-n.sema }()
+
+					err = n.processMessage(ctx, msg.ReceivedFrom, msg.Data)
+					if err != nil {
+						n.log.Error().Err(err).Str("topic", name).Str("id", msg.ID).Str("peer_id", msg.ReceivedFrom.String()).Msg("could not process message")
+					}
+				}()
 			}
-		}()
+		}(name, topic.subscription)
 	}
 
 	n.log.Debug().Msg("waiting for messages being processed")

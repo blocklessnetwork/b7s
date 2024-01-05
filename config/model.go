@@ -8,12 +8,13 @@ type Config struct {
 	Role                 string
 	BootNodes            []string
 	Concurrency          uint
+	Topics               []string
 
-	Host            Host
-	API             string
-	RuntimePath     string
-	RuntimeCLI 		string
-	LoadAttributes  bool
+	Host           Host
+	API            string
+	RuntimePath    string
+	RuntimeCLI     string
+	LoadAttributes bool
 
 	CPUPercentage float64
 	MemoryMaxKB   int64
