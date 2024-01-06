@@ -12,7 +12,7 @@ import (
 )
 
 // ExecuteFunction can be used to start function execution. At the moment this is used by the API server to start execution on the head node.
-func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request, topic string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
+func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request, subgroup string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 
 	if !n.isHead() {
 		return codes.NotAvailable, "", nil, execute.Cluster{}, fmt.Errorf("action not supported on this node type")
@@ -23,7 +23,7 @@ func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request, topic s
 		return codes.Error, "", nil, execute.Cluster{}, fmt.Errorf("could not generate request ID: %w", err)
 	}
 
-	code, results, cluster, err := n.headExecute(ctx, requestID, req, topic)
+	code, results, cluster, err := n.headExecute(ctx, requestID, req, subgroup)
 	if err != nil {
 		n.log.Error().Str("request", requestID).Err(err).Msg("execution failed")
 	}

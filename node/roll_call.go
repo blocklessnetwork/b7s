@@ -185,6 +185,10 @@ func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID
 		Attributes: attributes,
 	}
 
+	if topic == "" {
+		topic = DefaultTopic
+	}
+
 	// Publish the mssage.
 	err := n.publishToTopic(ctx, topic, rollCall)
 	if err != nil {
