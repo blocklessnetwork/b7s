@@ -17,7 +17,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
-// TODO: Check - head node really accepts execution requests from the REST API. Should this message handling be cognizant of `topics`?
+// NOTE: head node typically receives execution requests from the REST API. This message handling is not cognizant of subgroups.
 func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []byte) error {
 
 	// Unpack the request.
