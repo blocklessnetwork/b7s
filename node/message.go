@@ -34,7 +34,8 @@ func (n *Node) subscribeToTopics(ctx context.Context) error {
 			subscription: subscription,
 		}
 
-		n.topics[topicName] = ti
+		// No need for locking since this initialization is done once on start.
+		n.subgroups.topics[topicName] = ti
 	}
 
 	return nil
@@ -90,9 +91,18 @@ func (n *Node) publishToTopic(ctx context.Context, topic string, msg interface{}
 		return fmt.Errorf("could not encode record: %w", err)
 	}
 
-	topicInfo, ok := n.topics[topic]
+	n.subgroups.RLock()
+	topicInfo, ok := n.subgroups.topics[topic]
+	n.subgroups.RUnlock()
+
 	if !ok {
-		return fmt.Errorf("cannot publish to an unknown topic: %s", topic)
+		n.log.Info().Str("topic", topic).Msg("unknown topic, joining now")
+
+		var err error
+		topicInfo, err = n.joinTopic(topic)
+		if err != nil {
+			return fmt.Errorf("could not join topic (topic: %s): %w", topic, err)
+		}
 	}
 
 	// Publish message.

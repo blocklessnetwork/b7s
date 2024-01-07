@@ -2,6 +2,7 @@ package host
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -19,11 +20,26 @@ func (h *Host) InitPubSub(ctx context.Context) error {
 	return nil
 }
 
+func (h *Host) JoinTopic(topic string) (*pubsub.Topic, error) {
+
+	if h.pubsub == nil {
+		return nil, errors.New("pubsub is not initialized")
+	}
+
+	// Join the specified topic.
+	th, err := h.pubsub.Join(topic)
+	if err != nil {
+		return nil, fmt.Errorf("could not join topic: %w", err)
+	}
+
+	return th, nil
+}
+
 // Subscribe will have the host start listening to a specified gossipsub topic.
 func (h *Host) Subscribe(topic string) (*pubsub.Topic, *pubsub.Subscription, error) {
 
 	// Join the specified topic.
-	th, err := h.pubsub.Join(topic)
+	th, err := h.JoinTopic(topic)
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not join topic: %w", err)
 	}

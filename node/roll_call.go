@@ -113,7 +113,7 @@ func (n *Node) executeRollCall(
 ) ([]peer.ID, error) {
 
 	// Create a logger with relevant context.
-	log := n.log.With().Str("request", requestID).Str("function", functionID).Int("node_count", nodeCount).Logger()
+	log := n.log.With().Str("request", requestID).Str("function", functionID).Int("node_count", nodeCount).Str("topic", topic).Logger()
 
 	log.Info().Msg("performing roll call for request")
 

@@ -33,13 +33,15 @@ func (n *Node) Run(ctx context.Context) error {
 	// Discover peers.
 	// NOTE: Potentially signal any error here so that we abort the node
 	// run loop if anything failed.
-	// TODO: SUS1 - DHT stuff inside gets multiplied.
 	for _, topic := range n.cfg.Topics {
 		go func(topic string) {
+
+			// TODO: Check DHT initialization, now that we're working with multiple topics, may not need to repeat ALL work per topic.
 			err = n.host.DiscoverPeers(ctx, topic)
 			if err != nil {
 				n.log.Error().Err(err).Msg("could not discover peers")
 			}
+
 		}(topic)
 	}
 
@@ -55,7 +57,8 @@ func (n *Node) Run(ctx context.Context) error {
 	var topicWorkers sync.WaitGroup
 
 	// Process topic messages - spin up a goroutine for each topic that will feed the main processing loop below.
-	for name, topic := range n.topics {
+	// No need for locking since we're still single threaded here and these (subscribed) topics will not be touched by other code.
+	for name, topic := range n.subgroups.topics {
 
 		topicWorkers.Add(1)
 

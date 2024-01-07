@@ -31,7 +31,7 @@ type Node struct {
 	executor blockless.Executor
 	fstore   FStore
 
-	topics     map[string]*topicInfo
+	subgroups  workSubgroups
 	wg         *sync.WaitGroup
 	attributes *attributes.Attestation
 
@@ -62,6 +62,11 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		cfg.Topics = append(cfg.Topics, DefaultTopic)
 	}
 
+	subgroups := workSubgroups{
+		RWMutex: &sync.RWMutex{},
+		topics:  make(map[string]*topicInfo),
+	}
+
 	n := &Node{
 		cfg: cfg,
 
@@ -70,9 +75,9 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		fstore:   fstore,
 		executor: cfg.Execute,
 
-		wg: &sync.WaitGroup{},
+		wg:        &sync.WaitGroup{},
+		subgroups: subgroups,
 
-		topics:             make(map[string]*topicInfo),
 		rollCall:           newQueue(rollCallQueueBufferSize),
 		clusters:           make(map[string]consensusExecutor),
 		executeResponses:   waitmap.New(),
