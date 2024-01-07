@@ -38,7 +38,7 @@ func (n *Node) ExecutionResult(id string) (execute.Result, bool) {
 }
 
 // PublishFunctionInstall publishes a function install message.
-func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid string, topic string) error {
+func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid string, subgroup string) error {
 
 	var req request.InstallFunction
 	if uri != "" {
@@ -51,13 +51,13 @@ func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid strin
 		req = createInstallMessageFromCID(cid)
 	}
 
-	if topic == "" {
-		topic = DefaultTopic
+	if subgroup == "" {
+		subgroup = DefaultTopic
 	}
 
-	n.log.Debug().Str("topic", topic).Str("url", req.ManifestURL).Str("cid", req.CID).Msg("publishing function install message")
+	n.log.Debug().Str("subgroup", subgroup).Str("url", req.ManifestURL).Str("cid", req.CID).Msg("publishing function install message")
 
-	err := n.publishToTopic(ctx, topic, req)
+	err := n.publishToTopic(ctx, subgroup, req)
 	if err != nil {
 		return fmt.Errorf("could not publish message: %w", err)
 	}

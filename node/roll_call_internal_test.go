@@ -245,6 +245,9 @@ func TestNode_RollCall(t *testing.T) {
 		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
+		err = receiver.InitPubSub(ctx)
+		require.NoError(t, err)
+
 		hostAddNewPeer(t, node.host, receiver)
 
 		info := hostGetAddrInfo(t, receiver)
@@ -252,10 +255,10 @@ func TestNode_RollCall(t *testing.T) {
 		require.NoError(t, err)
 
 		// Have both client and node subscribe to the same topic.
-		_, subscription, err := receiver.Subscribe(ctx, topic)
+		_, subscription, err := receiver.Subscribe(topic)
 		require.NoError(t, err)
 
-		_, err = node.subscribe(ctx)
+		err = node.subscribeToTopics(ctx)
 		require.NoError(t, err)
 
 		time.Sleep(subscriptionDiseminationPause)
@@ -263,7 +266,7 @@ func TestNode_RollCall(t *testing.T) {
 		requestID, err := newRequestID()
 		require.NoError(t, err)
 
-		err = node.publishRollCall(ctx, requestID, functionID, consensus.Type(0), nil)
+		err = node.publishRollCall(ctx, requestID, functionID, consensus.Type(0), "", nil)
 		require.NoError(t, err)
 
 		deadlineCtx, cancel := context.WithTimeout(ctx, publishTimeout)

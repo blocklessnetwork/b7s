@@ -10,16 +10,16 @@ import (
 
 // Node implements the `Node` interface expected by the API.
 type Node struct {
-	ExecuteFunctionFunc        func(context.Context, execute.Request) (codes.Code, string, execute.ResultMap, execute.Cluster, error)
+	ExecuteFunctionFunc        func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error)
 	ExecutionResultFunc        func(id string) (execute.Result, bool)
-	PublishFunctionInstallFunc func(ctx context.Context, uri string, cid string) error
+	PublishFunctionInstallFunc func(ctx context.Context, uri string, cid string, subgroup string) error
 }
 
 func BaselineNode(t *testing.T) *Node {
 	t.Helper()
 
 	node := Node{
-		ExecuteFunctionFunc: func(context.Context, execute.Request) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
+		ExecuteFunctionFunc: func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 
 			results := execute.ResultMap{
 				GenericPeerID: GenericExecutionResult,
@@ -31,7 +31,7 @@ func BaselineNode(t *testing.T) *Node {
 		ExecutionResultFunc: func(id string) (execute.Result, bool) {
 			return GenericExecutionResult, true
 		},
-		PublishFunctionInstallFunc: func(ctx context.Context, uri string, cid string) error {
+		PublishFunctionInstallFunc: func(ctx context.Context, uri string, cid string, subgroup string) error {
 			return nil
 		},
 	}
@@ -39,14 +39,14 @@ func BaselineNode(t *testing.T) *Node {
 	return &node
 }
 
-func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
-	return n.ExecuteFunctionFunc(ctx, req)
+func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request, subgroup string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
+	return n.ExecuteFunctionFunc(ctx, req, subgroup)
 }
 
 func (n *Node) ExecutionResult(id string) (execute.Result, bool) {
 	return n.ExecutionResultFunc(id)
 }
 
-func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid string) error {
-	return n.PublishFunctionInstallFunc(ctx, uri, cid)
+func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid string, subgroup string) error {
+	return n.PublishFunctionInstallFunc(ctx, uri, cid, subgroup)
 }

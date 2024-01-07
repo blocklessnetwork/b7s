@@ -64,16 +64,19 @@ func TestNode_Messaging(t *testing.T) {
 
 		ctx := context.Background()
 
+		err = client.InitPubSub(ctx)
+		require.NoError(t, err)
+
 		// Establish a connection between peers.
 		clientInfo := hostGetAddrInfo(t, client)
-		err := node.host.Connect(ctx, *clientInfo)
+		err = node.host.Connect(ctx, *clientInfo)
 		require.NoError(t, err)
 
 		// Have both client and node subscribe to the same topic.
-		_, subscription, err := client.Subscribe(ctx, topic)
+		_, subscription, err := client.Subscribe(topic)
 		require.NoError(t, err)
 
-		_, err = node.subscribe(ctx)
+		err = node.subscribeToTopics(ctx)
 		require.NoError(t, err)
 
 		time.Sleep(subscriptionDiseminationPause)

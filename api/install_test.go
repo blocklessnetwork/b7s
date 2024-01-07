@@ -67,7 +67,7 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 		)
 
 		node := mocks.BaselineNode(t)
-		node.PublishFunctionInstallFunc = func(context.Context, string, string) error {
+		node.PublishFunctionInstallFunc = func(context.Context, string, string, string) error {
 			time.Sleep(installDuration)
 			return nil
 		}
@@ -99,7 +99,7 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 		t.Parallel()
 
 		node := mocks.BaselineNode(t)
-		node.PublishFunctionInstallFunc = func(context.Context, string, string) error {
+		node.PublishFunctionInstallFunc = func(context.Context, string, string, string) error {
 			return mocks.GenericError
 		}
 
