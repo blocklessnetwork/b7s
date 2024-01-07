@@ -33,7 +33,7 @@ func parseFlags() *config.Config {
 	pflag.StringVar(&cfg.API, "rest-api", "", "address where the head node REST API will listen on")
 	pflag.StringVar(&cfg.Workspace, "workspace", "./workspace", "directory that the node can use for file storage")
 	pflag.StringVar(&cfg.RuntimePath, "runtime-path", "", "runtime path (used by the worker node)")
-	pflag.StringVar(&cfg.RuntimeCLI, "runtime-cli", "", "runtime path (used by the worker node)")
+	pflag.StringVar(&cfg.RuntimeCLI, "runtime-cli", "", "runtime CLI name (used by the worker node)")
 	pflag.BoolVar(&cfg.LoadAttributes, "attributes", false, "node should try to load its attribute data from IPFS")
 	pflag.StringSliceVar(&cfg.Topics, "topic", nil, "topics node should subscribe to")
 

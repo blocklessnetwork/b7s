@@ -32,7 +32,6 @@ type Node struct {
 	fstore   FStore
 
 	topics     map[string]*topicInfo
-	sema       chan struct{}
 	wg         *sync.WaitGroup
 	attributes *attributes.Attestation
 
@@ -71,8 +70,7 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		fstore:   fstore,
 		executor: cfg.Execute,
 
-		wg:   &sync.WaitGroup{},
-		sema: make(chan struct{}, cfg.Concurrency),
+		wg: &sync.WaitGroup{},
 
 		topics:             make(map[string]*topicInfo),
 		rollCall:           newQueue(rollCallQueueBufferSize),

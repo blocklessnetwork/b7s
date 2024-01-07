@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/libp2p/go-libp2p"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	ma "github.com/multiformats/go-multiaddr"
@@ -20,6 +21,8 @@ type Host struct {
 
 	log zerolog.Logger
 	cfg Config
+
+	pubsub *pubsub.PubSub
 }
 
 // New creates a new Host.

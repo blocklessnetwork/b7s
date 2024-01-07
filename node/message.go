@@ -16,10 +16,15 @@ type topicInfo struct {
 
 func (n *Node) subscribeToTopics(ctx context.Context) error {
 
+	err := n.host.InitPubSub(ctx)
+	if err != nil {
+		return fmt.Errorf("could not initialize pubsub: %w", err)
+	}
+
 	// TODO: If some topics/subscriptions failed, cleanup those already subscribed to.
 	for _, topicName := range n.cfg.Topics {
 
-		topic, subscription, err := n.host.Subscribe(ctx, topicName)
+		topic, subscription, err := n.host.Subscribe(topicName)
 		if err != nil {
 			return fmt.Errorf("could not subscribe to topic (name: %s): %w", topicName, err)
 		}
