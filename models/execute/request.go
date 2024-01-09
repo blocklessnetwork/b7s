@@ -6,6 +6,7 @@ type Request struct {
 	Method     string      `json:"method"`
 	Parameters []Parameter `json:"parameters,omitempty"`
 	Config     Config      `json:"config"`
+	Arguments []string 	   `json:"arguments,omitempty"`
 
 	// Optional signature of the request.
 	Signature string `json:"signature,omitempty"`

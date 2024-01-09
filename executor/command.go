@@ -34,10 +34,13 @@ func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd 
 	// Separate runtime arguments from the function arguments.
 	args = append(args, "--")
 
-	// Function arguments.
+	// Append just ordinal Function arguments first
+	args = append(args, req.Arguments...)
+
+	// Append Function parameters with values
 	for _, param := range req.Parameters {
 		if param.Value != "" {
-			args = append(args, param.Value)
+			args = append(args, param.Name + "=" + param.Value)
 		}
 	}
 
