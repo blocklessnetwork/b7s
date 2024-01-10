@@ -31,8 +31,9 @@ type Node struct {
 	executor blockless.Executor
 	fstore   FStore
 
-	subgroups  workSubgroups
+	sema       chan struct{}
 	wg         *sync.WaitGroup
+	subgroups  workSubgroups
 	attributes *attributes.Attestation
 
 	rollCall *rollCallQueue
@@ -76,6 +77,7 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		executor: cfg.Execute,
 
 		wg:        &sync.WaitGroup{},
+		sema:      make(chan struct{}, cfg.Concurrency),
 		subgroups: subgroups,
 
 		rollCall:           newQueue(rollCallQueueBufferSize),

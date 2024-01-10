@@ -21,6 +21,8 @@ func (n *Node) subscribeToTopics(ctx context.Context) error {
 		return fmt.Errorf("could not initialize pubsub: %w", err)
 	}
 
+	n.log.Info().Strs("topics", n.cfg.Topics).Msg("topics node will subscribe to")
+
 	// TODO: If some topics/subscriptions failed, cleanup those already subscribed to.
 	for _, topicName := range n.cfg.Topics {
 
