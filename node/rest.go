@@ -12,7 +12,7 @@ import (
 )
 
 // ExecuteFunction can be used to start function execution. At the moment this is used by the API server to start execution on the head node.
-func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
+func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request, subgroup string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 
 	if !n.isHead() {
 		return codes.NotAvailable, "", nil, execute.Cluster{}, fmt.Errorf("action not supported on this node type")
@@ -23,7 +23,7 @@ func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request) (codes.
 		return codes.Error, "", nil, execute.Cluster{}, fmt.Errorf("could not generate request ID: %w", err)
 	}
 
-	code, results, cluster, err := n.headExecute(ctx, requestID, req)
+	code, results, cluster, err := n.headExecute(ctx, requestID, req, subgroup)
 	if err != nil {
 		n.log.Error().Str("request", requestID).Err(err).Msg("execution failed")
 	}
@@ -38,7 +38,7 @@ func (n *Node) ExecutionResult(id string) (execute.Result, bool) {
 }
 
 // PublishFunctionInstall publishes a function install message.
-func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid string) error {
+func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid string, subgroup string) error {
 
 	var req request.InstallFunction
 	if uri != "" {
@@ -51,9 +51,13 @@ func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid strin
 		req = createInstallMessageFromCID(cid)
 	}
 
-	n.log.Debug().Str("url", req.ManifestURL).Str("cid", req.CID).Msg("publishing function install message")
+	if subgroup == "" {
+		subgroup = DefaultTopic
+	}
 
-	err := n.publish(ctx, req)
+	n.log.Debug().Str("subgroup", subgroup).Str("url", req.ManifestURL).Str("cid", req.CID).Msg("publishing function install message")
+
+	err := n.publishToTopic(ctx, subgroup, req)
 	if err != nil {
 		return fmt.Errorf("could not publish message: %w", err)
 	}

@@ -102,17 +102,25 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 	return nil
 }
 
-func (n *Node) executeRollCall(ctx context.Context, requestID string, functionID string, nodeCount int, consensus consensus.Type, attributes *execute.Attributes) ([]peer.ID, error) {
+func (n *Node) executeRollCall(
+	ctx context.Context,
+	requestID string,
+	functionID string,
+	nodeCount int,
+	consensus consensus.Type,
+	topic string,
+	attributes *execute.Attributes,
+) ([]peer.ID, error) {
 
 	// Create a logger with relevant context.
-	log := n.log.With().Str("request", requestID).Str("function", functionID).Int("node_count", nodeCount).Logger()
+	log := n.log.With().Str("request", requestID).Str("function", functionID).Int("node_count", nodeCount).Str("topic", topic).Logger()
 
 	log.Info().Msg("performing roll call for request")
 
 	n.rollCall.create(requestID)
 	defer n.rollCall.remove(requestID)
 
-	err := n.publishRollCall(ctx, requestID, functionID, consensus, attributes)
+	err := n.publishRollCall(ctx, requestID, functionID, consensus, topic, attributes)
 	if err != nil {
 		return nil, fmt.Errorf("could not publish roll call: %w", err)
 	}
@@ -165,7 +173,7 @@ rollCallResponseLoop:
 
 // publishRollCall will create a roll call request for executing the given function.
 // On successful issuance of the roll call request, we return the ID of the issued request.
-func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID string, consensus consensus.Type, attributes *execute.Attributes) error {
+func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID string, consensus consensus.Type, topic string, attributes *execute.Attributes) error {
 
 	// Create a roll call request.
 	rollCall := request.RollCall{
@@ -177,8 +185,12 @@ func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID
 		Attributes: attributes,
 	}
 
+	if topic == "" {
+		topic = DefaultTopic
+	}
+
 	// Publish the mssage.
-	err := n.publish(ctx, rollCall)
+	err := n.publishToTopic(ctx, topic, rollCall)
 	if err != nil {
 		return fmt.Errorf("could not publish to topic: %w", err)
 	}

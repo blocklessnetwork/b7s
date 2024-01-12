@@ -9,15 +9,38 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-func (n *Node) subscribe(ctx context.Context) (*pubsub.Subscription, error) {
+type topicInfo struct {
+	handle       *pubsub.Topic
+	subscription *pubsub.Subscription
+}
 
-	topic, subscription, err := n.host.Subscribe(ctx, n.cfg.Topic)
+func (n *Node) subscribeToTopics(ctx context.Context) error {
+
+	err := n.host.InitPubSub(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("could not subscribe to topic: %w", err)
+		return fmt.Errorf("could not initialize pubsub: %w", err)
 	}
-	n.topic = topic
 
-	return subscription, nil
+	n.log.Info().Strs("topics", n.cfg.Topics).Msg("topics node will subscribe to")
+
+	// TODO: If some topics/subscriptions failed, cleanup those already subscribed to.
+	for _, topicName := range n.cfg.Topics {
+
+		topic, subscription, err := n.host.Subscribe(topicName)
+		if err != nil {
+			return fmt.Errorf("could not subscribe to topic (name: %s): %w", topicName, err)
+		}
+
+		ti := &topicInfo{
+			handle:       topic,
+			subscription: subscription,
+		}
+
+		// No need for locking since this initialization is done once on start.
+		n.subgroups.topics[topicName] = ti
+	}
+
+	return nil
 }
 
 // send serializes the message and sends it to the specified peer.
@@ -59,6 +82,10 @@ func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg interface{})
 }
 
 func (n *Node) publish(ctx context.Context, msg interface{}) error {
+	return n.publishToTopic(ctx, DefaultTopic, msg)
+}
+
+func (n *Node) publishToTopic(ctx context.Context, topic string, msg interface{}) error {
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -66,8 +93,22 @@ func (n *Node) publish(ctx context.Context, msg interface{}) error {
 		return fmt.Errorf("could not encode record: %w", err)
 	}
 
+	n.subgroups.RLock()
+	topicInfo, ok := n.subgroups.topics[topic]
+	n.subgroups.RUnlock()
+
+	if !ok {
+		n.log.Info().Str("topic", topic).Msg("unknown topic, joining now")
+
+		var err error
+		topicInfo, err = n.joinTopic(topic)
+		if err != nil {
+			return fmt.Errorf("could not join topic (topic: %s): %w", topic, err)
+		}
+	}
+
 	// Publish message.
-	err = n.host.Publish(ctx, n.topic, payload)
+	err = n.host.Publish(ctx, topicInfo.handle, payload)
 	if err != nil {
 		return fmt.Errorf("could not publish message: %w", err)
 	}

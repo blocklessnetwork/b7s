@@ -37,7 +37,7 @@ func TestNode_Health(t *testing.T) {
 	nhost, err := host.New(logger, loopback, 0)
 	require.NoError(t, err)
 
-	node, err := New(logger, nhost, peerstore, functionHandler, WithRole(blockless.HeadNode), WithHealthInterval(healthInterval), WithTopic(topic))
+	node, err := New(logger, nhost, peerstore, functionHandler, WithRole(blockless.HeadNode), WithHealthInterval(healthInterval), WithTopics([]string{topic}))
 	require.NoError(t, err)
 
 	// Create a host that will listen on the the topic to verify health pings
@@ -55,11 +55,14 @@ func TestNode_Health(t *testing.T) {
 	err = node.host.Connect(ctx, *info)
 	require.NoError(t, err)
 
-	// Have both client and node subscribe to the same topic.
-	_, subscription, err := receiver.Subscribe(ctx, topic)
+	err = receiver.InitPubSub(ctx)
 	require.NoError(t, err)
 
-	_, err = node.subscribe(ctx)
+	// Have both client and node subscribe to the same topic.
+	_, subscription, err := receiver.Subscribe(topic)
+	require.NoError(t, err)
+
+	err = node.subscribeToTopics(ctx)
 	require.NoError(t, err)
 
 	go node.HealthPing(ctx)

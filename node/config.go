@@ -15,7 +15,7 @@ type Option func(*Config)
 // DefaultConfig represents the default settings for the node.
 var DefaultConfig = Config{
 	Role:                    blockless.WorkerNode,
-	Topic:                   DefaultTopic,
+	Topics:                  []string{DefaultTopic},
 	HealthInterval:          DefaultHealthInterval,
 	RollCallTimeout:         DefaultRollCallTimeout,
 	Concurrency:             DefaultConcurrency,
@@ -28,7 +28,7 @@ var DefaultConfig = Config{
 // Config represents the Node configuration.
 type Config struct {
 	Role                    blockless.NodeRole // Node role.
-	Topic                   string             // Topic to subscribe to.
+	Topics                  []string           // Topics to subscribe to.
 	Execute                 blockless.Executor // Executor to use for running functions.
 	HealthInterval          time.Duration      // How often should we emit the health ping.
 	RollCallTimeout         time.Duration      // How long do we wait for roll call responses.
@@ -47,8 +47,8 @@ func (n *Node) ValidateConfig() error {
 		return errors.New("node role is not valid")
 	}
 
-	if n.cfg.Topic == "" {
-		return errors.New("topic cannot be empty")
+	if len(n.cfg.Topics) == 0 {
+		return errors.New("topics cannot be empty")
 	}
 
 	// Worker specific validation.
@@ -83,10 +83,10 @@ func WithRole(role blockless.NodeRole) Option {
 	}
 }
 
-// WithTopic specifies the p2p topic to which node should subscribe.
-func WithTopic(topic string) Option {
+// WithTopics specifies the p2p topics to which node should subscribe.
+func WithTopics(topics []string) Option {
 	return func(cfg *Config) {
-		cfg.Topic = topic
+		cfg.Topics = topics
 	}
 }
 

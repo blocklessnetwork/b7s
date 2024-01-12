@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/network"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -15,10 +17,9 @@ import (
 // Run will start the main loop for the node.
 func (n *Node) Run(ctx context.Context) error {
 
-	// Subscribe to the specified topic.
-	subscription, err := n.subscribe(ctx)
+	err := n.subscribeToTopics(ctx)
 	if err != nil {
-		return fmt.Errorf("could not subscribe to topic: %w", err)
+		return fmt.Errorf("could not subscribe to topics: %w", err)
 	}
 
 	// Sync functions now in case they were removed from the storage.
@@ -30,12 +31,17 @@ func (n *Node) Run(ctx context.Context) error {
 	// Discover peers.
 	// NOTE: Potentially signal any error here so that we abort the node
 	// run loop if anything failed.
-	go func() {
-		err = n.host.DiscoverPeers(ctx, n.cfg.Topic)
-		if err != nil {
-			n.log.Error().Err(err).Msg("could not discover peers")
-		}
-	}()
+	for _, topic := range n.cfg.Topics {
+		go func(topic string) {
+
+			// TODO: Check DHT initialization, now that we're working with multiple topics, may not need to repeat ALL work per topic.
+			err = n.host.DiscoverPeers(ctx, topic)
+			if err != nil {
+				n.log.Error().Err(err).Msg("could not discover peers")
+			}
+
+		}(topic)
+	}
 
 	// Start the health signal emitter in a separate goroutine.
 	go n.HealthPing(ctx)
@@ -45,42 +51,58 @@ func (n *Node) Run(ctx context.Context) error {
 
 	n.log.Info().Uint("concurrency", n.cfg.Concurrency).Msg("starting node main loop")
 
-	// Message processing loop.
-	for {
+	var workers sync.WaitGroup
 
-		// Retrieve next message.
-		msg, err := subscription.Next(ctx)
-		if err != nil {
-			// NOTE: Cancelling the context will lead us here.
-			n.log.Error().Err(err).Msg("could not receive message")
-			break
-		}
+	// Process topic messages - spin up a goroutine for each topic that will feed the main processing loop below.
+	// No need for locking since we're still single threaded here and these (subscribed) topics will not be touched by other code.
+	for name, topic := range n.subgroups.topics {
 
-		// Skip messages we published.
-		if msg.ReceivedFrom == n.host.ID() {
-			continue
-		}
+		workers.Add(1)
 
-		n.log.Trace().Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("received message")
+		go func(name string, subscription *pubsub.Subscription) {
+			defer workers.Done()
 
-		// Try to get a slot for processing the request.
-		n.sema <- struct{}{}
-		n.wg.Add(1)
+			// Message processing loops.
+			for {
 
-		go func() {
-			// Free up slot after we're done.
-			defer n.wg.Done()
-			defer func() { <-n.sema }()
+				// Retrieve next message.
+				msg, err := subscription.Next(ctx)
+				if err != nil {
+					// NOTE: Cancelling the context will lead us here.
+					n.log.Error().Err(err).Msg("could not receive message")
+					break
+				}
 
-			err = n.processMessage(ctx, msg.ReceivedFrom, msg.Data)
-			if err != nil {
-				n.log.Error().Err(err).Str("id", msg.ID).Str("peer_id", msg.ReceivedFrom.String()).Msg("could not process message")
+				// Skip messages we published.
+				if msg.ReceivedFrom == n.host.ID() {
+					continue
+				}
+
+				n.log.Trace().Str("topic", name).Str("peer", msg.ReceivedFrom.String()).Str("id", msg.ID).Msg("received message")
+
+				// Try to get a slot for processing the request.
+				n.sema <- struct{}{}
+				n.wg.Add(1)
+
+				go func(msg *pubsub.Message) {
+					// Free up slot after we're done.
+					defer n.wg.Done()
+					defer func() { <-n.sema }()
+
+					err = n.processMessage(ctx, msg.ReceivedFrom, msg.Data)
+					if err != nil {
+						n.log.Error().Err(err).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("could not process message")
+					}
+				}(msg)
 			}
-		}()
+		}(name, topic.subscription)
 	}
 
-	n.log.Debug().Msg("waiting for messages being processed")
+	n.log.Debug().Msg("waiting for workers")
 
+	workers.Wait()
+
+	n.log.Debug().Msg("waiting for messages being processed")
 	n.wg.Wait()
 
 	return nil

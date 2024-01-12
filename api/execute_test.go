@@ -31,7 +31,7 @@ func TestAPI_Execute(t *testing.T) {
 	expectedCode := codes.OK
 
 	node := mocks.BaselineNode(t)
-	node.ExecuteFunctionFunc = func(context.Context, execute.Request) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
+	node.ExecuteFunctionFunc = func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 
 		res := execute.ResultMap{
 			mocks.GenericPeerID: executionResult,
@@ -85,7 +85,7 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 	expectedCode := codes.Error
 
 	node := mocks.BaselineNode(t)
-	node.ExecuteFunctionFunc = func(context.Context, execute.Request) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
+	node.ExecuteFunctionFunc = func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 
 		res := execute.ResultMap{
 			mocks.GenericPeerID: executionResult,

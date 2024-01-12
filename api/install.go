@@ -17,8 +17,9 @@ const (
 
 // InstallFunctionRequest describes the payload for the REST API request for function install.
 type InstallFunctionRequest struct {
-	CID string `json:"cid"`
-	URI string `json:"uri"`
+	CID      string `json:"cid"`
+	URI      string `json:"uri"`
+	Subgroup string `json:"subgroup"`
 }
 
 // InstallFunctionResponse describes the REST API response for the function install.
@@ -46,7 +47,7 @@ func (a *API) Install(ctx echo.Context) error {
 	// Start function install in a separate goroutine and signal when it's done.
 	fnErr := make(chan error)
 	go func() {
-		err = a.Node.PublishFunctionInstall(reqCtx, req.URI, req.CID)
+		err = a.Node.PublishFunctionInstall(reqCtx, req.URI, req.CID, req.Subgroup)
 		fnErr <- err
 	}()
 

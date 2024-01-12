@@ -277,7 +277,7 @@ func TestNode_HeadExecute(t *testing.T) {
 		node := createNode(t, blockless.HeadNode)
 
 		ctx := context.Background()
-		_, err := node.subscribe(ctx)
+		err := node.subscribeToTopics(ctx)
 		require.NoError(t, err)
 
 		// Create a host that will receive the execution response.
@@ -331,7 +331,7 @@ func TestNode_HeadExecute(t *testing.T) {
 		node.listenDirectMessages(ctx)
 
 		defer cancel()
-		_, err := node.subscribe(ctx)
+		err := node.subscribeToTopics(ctx)
 		require.NoError(t, err)
 
 		// Create a host that will simulate a worker.
@@ -340,7 +340,10 @@ func TestNode_HeadExecute(t *testing.T) {
 		mockWorker, err := host.New(mocks.NoopLogger, loopback, 0)
 		require.NoError(t, err)
 
-		_, subscription, err := mockWorker.Subscribe(ctx, topic)
+		err = mockWorker.InitPubSub(ctx)
+		require.NoError(t, err)
+
+		_, subscription, err := mockWorker.Subscribe(topic)
 		require.NoError(t, err)
 
 		hostAddNewPeer(t, node.host, mockWorker)

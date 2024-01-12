@@ -24,14 +24,14 @@ func TestConfig_NodeRole(t *testing.T) {
 
 func TestConfig_Topic(t *testing.T) {
 
-	const topic = "super-secret-topic"
+	topics := []string{"super-secret-topic"}
 
 	cfg := Config{
-		Topic: "",
+		Topics: []string{},
 	}
 
-	WithTopic(topic)(&cfg)
-	require.Equal(t, topic, cfg.Topic)
+	WithTopics(topics)(&cfg)
+	require.Equal(t, topics, cfg.Topics)
 }
 
 func TestConfig_Executor(t *testing.T) {

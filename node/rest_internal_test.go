@@ -12,7 +12,7 @@ import (
 
 func TestNode_RestExecuteNotSupportedOnWorker(t *testing.T) {
 	node := createNode(t, blockless.WorkerNode)
-	_, _, _, _, err := node.ExecuteFunction(context.Background(), mocks.GenericExecutionRequest)
+	_, _, _, _, err := node.ExecuteFunction(context.Background(), mocks.GenericExecutionRequest, "")
 	require.Error(t, err)
 }
 
