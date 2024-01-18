@@ -1,4 +1,6 @@
 cmd/node/node
+cmd/node/.b7s_*
+
 cmd/keygen/keygen
 cmd/keyforge/keyforge
 cmd/bootstrap-limiter/bootstrap-limiter
