@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/blocklessnetwork/b7s/config"
+	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node"
 )
 
@@ -11,6 +12,7 @@ import (
 const (
 	defaultPort         = 0
 	defaultAddress      = "0.0.0.0"
+	defaultWorkspaceDir = "workspace"
 	defaultPeerDB       = "peer-db"
 	defaultFunctionDB   = "function-db"
 	defaultConcurrency  = uint(node.DefaultConcurrency)
@@ -27,13 +29,13 @@ func parseFlags() *config.Config {
 
 	// Node configuration.
 	pflag.StringVarP(&cfg.Role, "role", "r", defaultRole, "role this note will have in the Blockless protocol (head or worker)")
-	pflag.StringVar(&cfg.PeerDatabasePath, "peer-db", defaultPeerDB, "path to the database used for persisting peer data")
-	pflag.StringVar(&cfg.FunctionDatabasePath, "function-db", defaultFunctionDB, "path to the database used for persisting function data")
+	pflag.StringVar(&cfg.PeerDatabasePath, "peer-db", "", "path to the database used for persisting peer data")
+	pflag.StringVar(&cfg.FunctionDatabasePath, "function-db", "", "path to the database used for persisting function data")
 	pflag.UintVarP(&cfg.Concurrency, "concurrency", "c", defaultConcurrency, "maximum number of requests node will process in parallel")
 	pflag.StringVar(&cfg.API, "rest-api", "", "address where the head node REST API will listen on")
-	pflag.StringVar(&cfg.Workspace, "workspace", "./workspace", "directory that the node can use for file storage")
+	pflag.StringVar(&cfg.Workspace, "workspace", "", "directory that the node can use for file storage")
 	pflag.StringVar(&cfg.RuntimePath, "runtime-path", "", "runtime path (used by the worker node)")
-	pflag.StringVar(&cfg.RuntimeCLI, "runtime-cli", "", "runtime CLI name (used by the worker node)")
+	pflag.StringVar(&cfg.RuntimeCLI, "runtime-cli", blockless.RuntimeCLI(), "runtime CLI name (used by the worker node)")
 	pflag.BoolVar(&cfg.LoadAttributes, "attributes", false, "node should try to load its attribute data from IPFS")
 	pflag.StringSliceVar(&cfg.Topics, "topic", nil, "topics node should subscribe to")
 

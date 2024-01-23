@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -22,6 +23,10 @@ func New(log zerolog.Logger, options ...Option) (*Executor, error) {
 	cfg := defaultConfig
 	for _, option := range options {
 		option(&cfg)
+	}
+
+	if cfg.RuntimeDir == "" || cfg.ExecutableName == "" {
+		return nil, errors.New("runtime path and executable name are required")
 	}
 
 	// Convert the working directory to an absolute path too.

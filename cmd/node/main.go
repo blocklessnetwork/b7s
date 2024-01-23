@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -60,6 +61,34 @@ func run() int {
 		log.Error().Err(err).Str("role", cfg.Role).Msg("invalid node role specified")
 		return failure
 	}
+
+	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.
+	nodeDir := ""
+	if cfg.Host.PrivateKey != "" {
+		id, err := peerIDFromKey(cfg.Host.PrivateKey)
+		if err != nil {
+			log.Error().Err(err).Str("key", cfg.Host.PrivateKey).Msg("could not read private key")
+			return failure
+		}
+
+		nodeDir = generateNodeDirName(id)
+	} else {
+		nodeDir, err = os.MkdirTemp("", ".b7s_*")
+		if err != nil {
+			log.Error().Err(err).Msg("could not create node directory")
+			return failure
+		}
+	}
+
+	// Set relevant working paths for workspace, peerDB and functionDB.
+	// If paths were set using the CLI flags, use those. Else, use generated path, e.g. .b7s_<peer-id>/<default-option-for-directory>.
+	updateDirPaths(nodeDir, cfg)
+
+	log.Info().
+		Str("workspace", cfg.Workspace).
+		Str("peer_db", cfg.PeerDatabasePath).
+		Str("function_db", cfg.FunctionDatabasePath).
+		Msg("filepaths used by the node")
 
 	// Convert workspace path to an absolute one.
 	workspace, err := filepath.Abs(cfg.Workspace)
@@ -160,6 +189,7 @@ func run() int {
 				Err(err).
 				Str("workspace", cfg.Workspace).
 				Str("runtime_path", cfg.RuntimePath).
+				Str("runtime_cli", cfg.RuntimeCLI).
 				Msg("could not create an executor")
 			return failure
 		}
@@ -282,4 +312,29 @@ func run() int {
 
 func needLimiter(cfg *config.Config) bool {
 	return cfg.CPUPercentage != 1.0 || cfg.MemoryMaxKB > 0
+}
+
+func updateDirPaths(root string, cfg *config.Config) {
+
+	workspace := cfg.Workspace
+	if workspace == "" {
+		workspace = filepath.Join(root, defaultWorkspaceDir)
+	}
+	cfg.Workspace = workspace
+
+	peerDB := cfg.PeerDatabasePath
+	if peerDB == "" {
+		peerDB = filepath.Join(root, defaultPeerDB)
+	}
+	cfg.PeerDatabasePath = peerDB
+
+	functionDB := cfg.FunctionDatabasePath
+	if functionDB == "" {
+		functionDB = filepath.Join(root, defaultFunctionDB)
+	}
+	cfg.FunctionDatabasePath = functionDB
+}
+
+func generateNodeDirName(id string) string {
+	return fmt.Sprintf(".b7s_%s", id)
 }

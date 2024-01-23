@@ -126,7 +126,7 @@ func (n *Node) gatherExecutionResults(ctx context.Context, requestID string, pee
 				return
 			}
 
-			log.Info().Str("peer", rp.String()).Msg("accounted execution response from peer")
+			n.log.Info().Str("peer", rp.String()).Msg("accounted execution response from peer")
 
 			er := res.(response.Execute)
 
