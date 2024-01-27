@@ -12,4 +12,5 @@ type InstallFunction struct {
 	From    peer.ID    `json:"from,omitempty"`
 	Code    codes.Code `json:"code,omitempty"`
 	Message string     `json:"message,omitempty"`
+	CID     string     `json:"cid,omitempty"`
 }
