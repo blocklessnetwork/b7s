@@ -63,7 +63,7 @@ func LoadOrCreateKeys(privKeyFile string, outputDir string) (crypto.PrivKey, cry
 	}
 
 	identityFile := filepath.Join(outputDir, identityName)
-	err = os.WriteFile(identityFile, []byte(identity.Pretty()), pubKeyPermissions)
+	err = os.WriteFile(identityFile, []byte(identity.String()), pubKeyPermissions)
 	if err != nil {
 		log.Fatalf("Could not write identity to file: %s", err)
 	}
@@ -76,7 +76,7 @@ func LoadOrCreateKeys(privKeyFile string, outputDir string) (crypto.PrivKey, cry
 
 	// Write peer ID to file
 	peerIDFile := filepath.Join(outputDir, peerIDFileName)
-	err = os.WriteFile(peerIDFile, []byte(identity.Pretty()), pubKeyPermissions)
+	err = os.WriteFile(peerIDFile, []byte(identity.String()), pubKeyPermissions)
 	if err != nil {
 		log.Fatalf("Could not write peer ID to file: %s", err)
 	}

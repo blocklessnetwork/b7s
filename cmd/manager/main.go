@@ -90,7 +90,7 @@ func loadPrivateKey(filePath string) (crypto.PrivKey, error) {
 }
 
 func getHostAddress(ha host.Host) string {
-	hostAddr, _ := ma.NewMultiaddr(fmt.Sprintf("/p2p/%s", ha.ID().Pretty()))
+	hostAddr, _ := ma.NewMultiaddr(fmt.Sprintf("/p2p/%s", ha.ID().String()))
 	addr := ha.Addrs()[0]
 	return addr.Encapsulate(hostAddr).String()
 }
@@ -100,7 +100,7 @@ func startListener(ctx context.Context, ha host.Host, listenPort int, insecure b
 	logger.Info().Msgf("I am %s", fullAddr)
 
 	ha.SetStreamHandler("/b7s/manager/1.0.0", func(s network.Stream) {
-		if allowedPeer == "" && s.Conn().RemotePeer().Pretty() != allowedPeer {
+		if allowedPeer == "" && s.Conn().RemotePeer().String() != allowedPeer {
 			logger.Info().Msg("Connection from disallowed peer")
 			s.Reset()
 			return
