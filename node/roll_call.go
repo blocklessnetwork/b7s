@@ -148,7 +148,7 @@ rollCallResponseLoop:
 		case <-tctx.Done():
 
 			// -1 means we'll take any peers reporting
-			if (len(reportingPeers) > 1 && nodeCount == -1) {
+			if (len(reportingPeers) >= 1 && nodeCount == -1) {
 				log.Info().Msg("enough peers reported for roll call")
 				break rollCallResponseLoop
 			}

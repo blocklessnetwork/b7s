@@ -70,7 +70,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request, subgroup string) (codes.Code, execute.ResultMap, execute.Cluster, error) {
 
 	nodeCount := -1
-	if req.Config.NodeCount > 1 {
+	if req.Config.NodeCount >= 1 {
 		nodeCount = req.Config.NodeCount
 	}
 
