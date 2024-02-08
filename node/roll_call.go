@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -110,6 +111,7 @@ func (n *Node) executeRollCall(
 	consensus consensus.Type,
 	topic string,
 	attributes *execute.Attributes,
+	timeout int,
 ) ([]peer.ID, error) {
 
 	// Create a logger with relevant context.
@@ -128,7 +130,12 @@ func (n *Node) executeRollCall(
 	log.Info().Msg("roll call published")
 
 	// Limit for how long we wait for responses.
-	tctx, exCancel := context.WithTimeout(ctx, n.cfg.RollCallTimeout)
+	t := n.cfg.RollCallTimeout
+	if(timeout > 0) {
+		t = time.Duration(timeout) * time.Second
+	}
+
+	tctx, exCancel := context.WithTimeout(ctx, t)
 	defer exCancel()
 
 	// Peers that have reported on roll call.
@@ -139,6 +146,12 @@ rollCallResponseLoop:
 		select {
 		// Request timed out.
 		case <-tctx.Done():
+
+			// -1 means we'll take any peers reporting
+			if (len(reportingPeers) > 1 && nodeCount == -1) {
+				log.Info().Msg("enough peers reported for roll call")
+				break rollCallResponseLoop
+			}
 
 			log.Warn().Msg("roll call timed out")
 			return nil, blockless.ErrRollCallTimeout
@@ -161,7 +174,9 @@ rollCallResponseLoop:
 			log.Info().Str("peer", reply.From.String()).Msg("roll called peer chosen for execution")
 
 			reportingPeers = append(reportingPeers, reply.From)
-			if len(reportingPeers) >= nodeCount {
+
+			// -1 means we'll take any peers reporting
+			if len(reportingPeers) >= nodeCount && nodeCount != -1 {
 				log.Info().Msg("enough peers reported for roll call")
 				break rollCallResponseLoop
 			}

@@ -69,7 +69,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
 func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request, subgroup string) (codes.Code, execute.ResultMap, execute.Cluster, error) {
 
-	nodeCount := 1
+	nodeCount := -1
 	if req.Config.NodeCount > 1 {
 		nodeCount = req.Config.NodeCount
 	}
@@ -90,7 +90,7 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 	log.Info().Msg("processing execution request")
 
 	// Phase 1. - Issue roll call to nodes.
-	reportingPeers, err := n.executeRollCall(ctx, requestID, req.FunctionID, nodeCount, consensusAlgo, subgroup, req.Config.Attributes)
+	reportingPeers, err := n.executeRollCall(ctx, requestID, req.FunctionID, nodeCount, consensusAlgo, subgroup, req.Config.Attributes, req.Config.Timeout)
 	if err != nil {
 		code := codes.Error
 		if errors.Is(err, blockless.ErrRollCallTimeout) {

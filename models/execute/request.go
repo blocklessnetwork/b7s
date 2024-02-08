@@ -29,6 +29,10 @@ type Config struct {
 
 	// NodeCount specifies how many nodes should execute this request.
 	NodeCount int `json:"number_of_nodes,omitempty"`
+
+	// When should the execution timeout
+	Timeout int `json:"timeout,omitempty"`
+
 	// Consensus algorithm to use. Raft and PBFT are supported at this moment.
 	ConsensusAlgorithm string `json:"consensus_algorithm,omitempty"`
 
