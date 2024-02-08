@@ -1,16 +1,9 @@
 package store
 
-import (
-	"fmt"
-)
-
 // Keys returns the list of all keys in the database.
-func (s *Store) Keys() ([]string, error) {
+func (s *Store) Keys() []string {
 
-	it, err := s.db.NewIter(nil)
-	if err != nil {
-		return nil, fmt.Errorf("could not create new iterator: %w", err)
-	}
+	it := s.db.NewIter(nil)
 
 	var keys []string
 	for it.First(); it.Valid(); it.Next() {
@@ -19,5 +12,5 @@ func (s *Store) Keys() ([]string, error) {
 		keys = append(keys, key)
 	}
 
-	return keys, nil
+	return keys
 }

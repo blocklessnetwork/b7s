@@ -140,8 +140,8 @@ func Test_PeerStore_Store(t *testing.T) {
 	})
 	t.Run("handles peer list retrieval error", func(t *testing.T) {
 		store := mocks.BaselineStore(t)
-		store.KeysFunc = func() ([]string, error) {
-			return []string{"dummy-key"}, nil
+		store.KeysFunc = func() []string {
+			return []string{"dummy-key"}
 		}
 		store.GetRecordFunc = func(string, interface{}) error {
 			return mocks.GenericError

@@ -46,8 +46,8 @@ func TestFunction_InstalledFunctions(t *testing.T) {
 	defer os.RemoveAll(workdir)
 
 	store := mocks.BaselineStore(t)
-	store.KeysFunc = func() ([]string, error) {
-		return installed, nil
+	store.KeysFunc = func() []string {
+		return installed
 	}
 
 	fh := fstore.New(mocks.NoopLogger, store, workdir)
