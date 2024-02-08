@@ -13,7 +13,8 @@ type Execute struct {
 	Type string  `json:"type,omitempty"`
 	From peer.ID `json:"from,omitempty"`
 	Code string  `json:"code,omitempty"`
-
+	Topic string `json:"topic,omitempty"`
+	
 	execute.Request // execute request is embedded.
 
 	// RequestID may be set initially, if the execution request is relayed via roll-call.

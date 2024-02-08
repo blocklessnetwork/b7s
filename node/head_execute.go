@@ -35,7 +35,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 
 	log := n.log.With().Str("request", req.RequestID).Str("peer", from.String()).Str("function", req.FunctionID).Logger()
 
-	code, results, cluster, err := n.headExecute(ctx, requestID, req.Request, "")
+	code, results, cluster, err := n.headExecute(ctx, requestID, req.Request, req.Topic)
 	if err != nil {
 		log.Error().Err(err).Msg("execution failed")
 	}

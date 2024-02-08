@@ -16,7 +16,7 @@ import (
 // ExecuteRequest describes the payload for the REST API request for function execution.
 type ExecuteRequest struct {
 	execute.Request
-	Subgroup string `json:"subgroup,omitempty"`
+	Topic string `json:"topic,omitempty"`
 }
 
 // ExecuteResponse describes the REST API response for function execution.
@@ -47,7 +47,7 @@ func (a *API) Execute(ctx echo.Context) error {
 	}
 
 	// Get the execution result.
-	code, id, results, cluster, err := a.Node.ExecuteFunction(ctx.Request().Context(), execute.Request(req.Request), req.Subgroup)
+	code, id, results, cluster, err := a.Node.ExecuteFunction(ctx.Request().Context(), execute.Request(req.Request), req.Topic)
 	if err != nil {
 		a.Log.Warn().Str("function", req.FunctionID).Err(err).Msg("node failed to execute function")
 	}
