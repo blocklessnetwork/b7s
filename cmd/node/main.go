@@ -15,6 +15,7 @@ import (
 	"github.com/ziflex/lecho/v3"
 
 	"github.com/blocklessnetwork/b7s/api"
+	"github.com/blocklessnetwork/b7s/cmd/node/internal/config"
 	"github.com/blocklessnetwork/b7s/executor"
 	"github.com/blocklessnetwork/b7s/executor/limits"
 	"github.com/blocklessnetwork/b7s/fstore"
@@ -44,7 +45,7 @@ func run() int {
 	log := zerolog.New(os.Stdout).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 
 	// Parse CLI flags and validate that the configuration is valid.
-	cfg, err := loadConfig()
+	cfg, err := config.Load()
 	if err != nil {
 		log.Error().Err(err).Msg("could not read configuration")
 		return failure
@@ -313,27 +314,27 @@ func run() int {
 	return success
 }
 
-func needLimiter(cfg *Config) bool {
+func needLimiter(cfg *config.Config) bool {
 	return cfg.Worker.CPUPercentageLimit != 1.0 || cfg.Worker.MemoryLimitKB > 0
 }
 
-func updateDirPaths(root string, cfg *Config) {
+func updateDirPaths(root string, cfg *config.Config) {
 
 	workspace := cfg.Workspace
 	if workspace == "" {
-		workspace = filepath.Join(root, defaultWorkspace)
+		workspace = filepath.Join(root, config.DefaultWorkspace)
 	}
 	cfg.Workspace = workspace
 
 	peerDB := cfg.PeerDatabasePath
 	if peerDB == "" {
-		peerDB = filepath.Join(root, defaultPeerDB)
+		peerDB = filepath.Join(root, config.DefaultPeerDB)
 	}
 	cfg.PeerDatabasePath = peerDB
 
 	functionDB := cfg.FunctionDatabasePath
 	if functionDB == "" {
-		functionDB = filepath.Join(root, defaultFunctionDB)
+		functionDB = filepath.Join(root, config.DefaultFunctionDB)
 	}
 	cfg.FunctionDatabasePath = functionDB
 }
