@@ -15,7 +15,6 @@ import (
 	"github.com/ziflex/lecho/v3"
 
 	"github.com/blocklessnetwork/b7s/api"
-	"github.com/blocklessnetwork/b7s/config"
 	"github.com/blocklessnetwork/b7s/executor"
 	"github.com/blocklessnetwork/b7s/executor/limits"
 	"github.com/blocklessnetwork/b7s/fstore"
@@ -45,7 +44,11 @@ func run() int {
 	log := zerolog.New(os.Stdout).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 
 	// Parse CLI flags and validate that the configuration is valid.
-	cfg := parseFlags()
+	cfg, err := loadConfig()
+	if err != nil {
+		log.Error().Err(err).Msg("could not read configuration")
+		return failure
+	}
 
 	// Set log level.
 	level, err := zerolog.ParseLevel(cfg.Log.Level)
@@ -64,10 +67,10 @@ func run() int {
 
 	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.
 	nodeDir := ""
-	if cfg.Host.PrivateKey != "" {
-		id, err := peerIDFromKey(cfg.Host.PrivateKey)
+	if cfg.Connectivity.PrivateKey != "" {
+		id, err := peerIDFromKey(cfg.Connectivity.PrivateKey)
 		if err != nil {
-			log.Error().Err(err).Str("key", cfg.Host.PrivateKey).Msg("could not read private key")
+			log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not read private key")
 			return failure
 		}
 
@@ -125,18 +128,18 @@ func run() int {
 	}
 
 	// Create libp2p host.
-	host, err := host.New(log, cfg.Host.Address, cfg.Host.Port,
-		host.WithPrivateKey(cfg.Host.PrivateKey),
+	host, err := host.New(log, cfg.Connectivity.Address, cfg.Connectivity.Port,
+		host.WithPrivateKey(cfg.Connectivity.PrivateKey),
 		host.WithBootNodes(bootNodeAddrs),
 		host.WithDialBackPeers(peers),
-		host.WithDialBackAddress(cfg.Host.DialBackAddress),
-		host.WithDialBackPort(cfg.Host.DialBackPort),
-		host.WithDialBackWebsocketPort(cfg.Host.DialBackWebsocketPort),
-		host.WithWebsocket(cfg.Host.Websocket),
-		host.WithWebsocketPort(cfg.Host.WebsocketPort),
+		host.WithDialBackAddress(cfg.Connectivity.DialbackAddress),
+		host.WithDialBackPort(cfg.Connectivity.DialbackPort),
+		host.WithDialBackWebsocketPort(cfg.Connectivity.WebsocketDialbackPort),
+		host.WithWebsocket(cfg.Connectivity.Websocket),
+		host.WithWebsocketPort(cfg.Connectivity.WebsocketPort),
 	)
 	if err != nil {
-		log.Error().Err(err).Str("key", cfg.Host.PrivateKey).Msg("could not create host")
+		log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not create host")
 		return failure
 	}
 	defer host.Close()
@@ -161,12 +164,12 @@ func run() int {
 		// Executor options.
 		execOptions := []executor.Option{
 			executor.WithWorkDir(cfg.Workspace),
-			executor.WithRuntimeDir(cfg.RuntimePath),
-			executor.WithExecutableName(cfg.RuntimeCLI),
+			executor.WithRuntimeDir(cfg.Worker.RuntimePath),
+			executor.WithExecutableName(cfg.Worker.RuntimeCLI),
 		}
 
 		if needLimiter(cfg) {
-			limiter, err := limits.New(limits.WithCPUPercentage(cfg.CPUPercentage), limits.WithMemoryKB(cfg.MemoryMaxKB))
+			limiter, err := limits.New(limits.WithCPUPercentage(cfg.Worker.CPUPercentageLimit), limits.WithMemoryKB(cfg.Worker.MemoryLimitKB))
 			if err != nil {
 				log.Error().Err(err).Msg("could not create resource limiter")
 				return failure
@@ -188,8 +191,8 @@ func run() int {
 			log.Error().
 				Err(err).
 				Str("workspace", cfg.Workspace).
-				Str("runtime_path", cfg.RuntimePath).
-				Str("runtime_cli", cfg.RuntimeCLI).
+				Str("runtime_path", cfg.Worker.RuntimePath).
+				Str("runtime_cli", cfg.Worker.RuntimeCLI).
 				Msg("could not create an executor")
 			return failure
 		}
@@ -251,7 +254,7 @@ func run() int {
 	// If we're a head node - start the REST API.
 	if role == blockless.HeadNode {
 
-		if cfg.API == "" {
+		if cfg.Head.API == "" {
 			log.Error().Err(err).Msg("REST API address is required")
 			return failure
 		}
@@ -277,8 +280,8 @@ func run() int {
 		// Start API in a separate goroutine.
 		go func() {
 
-			log.Info().Str("port", cfg.API).Msg("Node API starting")
-			err := server.Start(cfg.API)
+			log.Info().Str("port", cfg.Head.API).Msg("Node API starting")
+			err := server.Start(cfg.Head.API)
 			if err != nil && !errors.Is(err, http.ErrServerClosed) {
 				log.Warn().Err(err).Msg("Node API failed")
 				close(failed)
@@ -310,15 +313,15 @@ func run() int {
 	return success
 }
 
-func needLimiter(cfg *config.Config) bool {
-	return cfg.CPUPercentage != 1.0 || cfg.MemoryMaxKB > 0
+func needLimiter(cfg *Config) bool {
+	return cfg.Worker.CPUPercentageLimit != 1.0 || cfg.Worker.MemoryLimitKB > 0
 }
 
-func updateDirPaths(root string, cfg *config.Config) {
+func updateDirPaths(root string, cfg *Config) {
 
 	workspace := cfg.Workspace
 	if workspace == "" {
-		workspace = filepath.Join(root, defaultWorkspaceDir)
+		workspace = filepath.Join(root, defaultWorkspace)
 	}
 	cfg.Workspace = workspace
 
