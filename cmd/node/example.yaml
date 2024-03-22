@@ -1,0 +1,66 @@
+# role this node will have in the network
+# role: head
+
+# how many requests should the node process in parallel
+# concurrency: 10
+
+# directory where node will keep files needed for operation
+# workspace: workspace
+
+# directory where node will maintain its peer database
+# peer-db: pdb
+
+# directory where node will maintain its function database
+# function-db: fdb
+
+# multiaddresses of nodes this node will try to connect to on boot
+# boot-nodes: []
+
+# should the node load its attributes from IPFS/IPNS
+# attributes: false
+
+# log information
+# log:
+  # level: debug
+
+# connectivity information
+# connectivity:
+
+  # address: 0.0.0.0
+  # port: 9000
+
+  # private key this node will use for its operation.
+  # this determines how this node is identified on the network
+  # private-key: /path/to/private/key
+
+  # external address that the node will advertise
+  # dialback-address: 10.10.10.10
+
+  # external port that the node will advertise
+  # dialback-port: 9000
+
+  # use websocket protocol for communication
+  # websocket: false
+
+  # port to use for websocket communication
+  # websocket-port: 9010
+
+  # external port the node will advertise for websocket communication
+  # websocket-dialback-port: 9010
+
+
+# head node configuration
+# head:
+  # where will the head node serve the REST API
+  # rest-api: localhost:8888
+
+# worker node configuration
+# worker:
+  # local path to Blockless Runtime
+  # runtime-path: /path/to/blockless/runtime
+
+  # max percentage of CPU time Blockless will use for execution (1.0 for 100%)
+  # cpu-percentage-limit: 0.8
+
+  # max amount of memory (in kB) Blockless will use for execution
+  # memory-limit: 0
