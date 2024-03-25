@@ -24,8 +24,11 @@ You can also use Docker to install b7s. See the [Docker documentation](/docker/R
 
 ## Usage
 
+For a more detailed overview of the configuration options, see the [b7s-node Readme](/cmd/node/README.md#usage).
+
 | Flag                      | Short Form | Default Value           | Description                                                                                   |
 | ------------------------- | ---------- | ----------------------- | --------------------------------------------------------------------------------------------- |
+| config                    | N/A        | N/A                     | Specifies the config file to load.
 | log-level                 | -l         | "info"                  | Specifies the level of logging to use.                                                        |
 | peer-db                   | N/A        | "peer-db"               | Specifies the path to database used for persisting peer data.                                 |
 | function-db               | N/A        | "function-db"           | Specifies the path to database used for persisting function data.                             |

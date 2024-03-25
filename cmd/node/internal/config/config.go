@@ -1,5 +1,15 @@
 package config
 
+// Config type is tightly coupled with the config options defined in flags.go.
+// Flag name should be the same as the value in the `koanf` tag here (flag is `--dialback-address`, the koanf tag is `dialback-address`).
+// This is needed so the two ways of loading config are correctly merged.
+//
+// The `group` of the config option defines in which section of the config file it lives.
+// Examples:
+//		connectivity => address, port, private-key...
+//		worker => runtime-path, runtime-cli, cpu-percentage-limit...
+//
+
 // Config describes the Blockless configuration options.
 type Config struct {
 	Role           string   `koanf:"role"`

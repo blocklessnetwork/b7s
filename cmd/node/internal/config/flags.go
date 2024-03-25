@@ -18,23 +18,13 @@ const (
 )
 
 type configOption struct {
-	flag  string
-	short string
-	group configGroup
-	usage string
+	flag  string      // long flag name - should be the same as the `koanf` tag in the Config type.
+	short string      // shorthand - single letter alternative to the long flag name
+	group configGroup // group - defined in which section of the config file this option lives.
+	usage string      // description
 }
 
 // Config options.
-//
-// Flag names are tightly coupled with the tags in the `Config` type. If a field is renamed here (pflag), the `koanf` tag should also be changed.
-// This is needed so that the two ways of loading config are correctly merged.
-// Writing these config files to a yaml file will typically follow the syntax:
-// ```
-//
-//	group:
-//		flag: value
-//
-// ```
 var (
 	// Root group.
 	roleCfg = configOption{
@@ -173,7 +163,7 @@ type cliFlags struct {
 
 func newCliFlags() *cliFlags {
 
-	fs := pflag.NewFlagSet("config", pflag.ExitOnError)
+	fs := pflag.NewFlagSet("b7s-node", pflag.ExitOnError)
 	fs.SortFlags = false
 
 	return &cliFlags{

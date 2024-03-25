@@ -19,28 +19,69 @@ Head Nodes also serve a REST API that can be used to query or trigger certain ac
 
 ## Usage
 
+There are two ways of specifying configuration options - the CLI flags and a config file.
+CLI flags override any configuration options in the config file.
+
+List of supported CLI flags is listed below.
+
 ```console
-Usage of node:
-  -l, --log-level string               log level to use (default "info")
+Usage of b7s-node:
+      --config string                  path to a config file
   -r, --role string                    role this note will have in the Blockless protocol (head or worker) (default "worker")
+  -c, --concurrency uint               maximum number of requests node will process in parallel (default 10)
+      --boot-nodes strings             list of addresses that this node will connect to on startup, in multiaddr format
+      --workspace string               directory that the node can use for file storage
+      --attributes                     node should try to load its attribute data from IPFS
       --peer-db string                 path to the database used for persisting peer data (default "peer-db")
       --function-db string             path to the database used for persisting function data (default "function-db")
-  -c, --concurrency uint               maximum number of requests node will process in parallel (default 10)
-      --rest-api string                address where the head node REST API will listen on
-      --workspace string               directory that the node can use for file storage (default "./workspace")
-      --runtime string                 runtime address (used by the worker node)
-      --private-key string             private key that the b7s host will use
+      --topics strings                 topics node should subscribe to
+  -l, --log-level string               log level to use (default "info")
   -a, --address string                 address that the b7s host will use (default "0.0.0.0")
   -p, --port uint                      port that the b7s host will use
-      --boot-nodes strings             list of addresses that this node will connect to on startup, in multiaddr format
+      --private-key string             private key that the b7s host will use
+  -w, --websocket                      should the node use websocket protocol for communication
+      --websocket-port uint            port to use for websocket connections
       --dialback-address string        external address that the b7s host will advertise (default "0.0.0.0")
       --dialback-port uint             external port that the b7s host will advertise
       --websocket-dialback-port uint   external port that the b7s host will advertise for websocket connections
-  -w, --websocket                      should the node use websocket protocol for communication
-      --websocket-port uint            port to use for websocket connections
+      --runtime-path string            Blockless Runtime location (used by the worker node)
+      --runtime-cli string             runtime CLI name (used by the worker node) (default "bls-runtime")
       --cpu-percentage-limit float     amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited (default 1)
       --memory-limit int               memory limit (kB) for Blockless Functions
+      --rest-api string                address where the head node REST API will listen on
 ```
+
+Alternatively to the CLI flags, you can create a YAML file and specify the parameters there.
+All of the CLI flags have a corresponding config option in the YAML file.
+In the config file, parameters are grouped based on the functionality they impact.
+
+Example configuration for a worker node:
+
+```yaml
+role: worker
+concurrency: 10
+workspace: /tmp/workspace
+attributes: false
+
+log:
+  level: debug
+
+connectivity:
+  address: 127.0.0.1
+  port: 9000
+  private-key: ~/.b7s/path/to/priv/key.bin
+  websocket: true
+
+
+worker:
+  runtime-path: ~/.local/blockless-runtime/bin
+  cpu-percentage-limit: 0.8
+
+```
+
+You can find a more complete reference in [example.yaml](/cmd/node/example.yaml).
+
+### Configuration Option Details
 
 You can find more information about `multiaddr` format for network addresses [here](https://github.com/multiformats/multiaddr) and [here](https://multiformats.io/multiaddr/).
 
