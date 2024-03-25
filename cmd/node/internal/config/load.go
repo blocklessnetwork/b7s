@@ -14,11 +14,10 @@ import (
 )
 
 func Load(args ...string) (*Config, error) {
+	return load(os.Args[1:])
+}
 
-	// If arguments are not explicitly specified - use arguments we were started with.
-	if len(args) == 0 {
-		args = os.Args[1:]
-	}
+func load(args []string) (*Config, error) {
 
 	var configPath string
 
