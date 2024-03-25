@@ -10,6 +10,7 @@ require (
 	github.com/cockroachdb/pebble v1.0.0
 	github.com/containerd/cgroups/v3 v3.0.3
 	github.com/fatih/color v1.16.0
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hashicorp/go-hclog v1.3.0
 	github.com/hashicorp/raft v1.4.0
 	github.com/hashicorp/raft-boltdb/v2 v2.2.2

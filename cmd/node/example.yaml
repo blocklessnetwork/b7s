@@ -60,7 +60,7 @@
   # runtime-path: /path/to/blockless/runtime
 
   # max percentage of CPU time Blockless will use for execution (1.0 for 100%)
-  # cpu-percentage-limit: 0.8
+  # cpu-percentage-limit: 1.0
 
-  # max amount of memory (in kB) Blockless will use for execution
+  # max amount of memory (in kB) Blockless will use for execution (0 is unlimited)
   # memory-limit: 0

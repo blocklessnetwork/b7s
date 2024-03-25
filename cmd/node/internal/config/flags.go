@@ -25,6 +25,16 @@ type configOption struct {
 }
 
 // Config options.
+//
+// Flag names are tightly coupled with the tags in the `Config` type. If a field is renamed here (pflag), the `koanf` tag should also be changed.
+// This is needed so that the two ways of loading config are correctly merged.
+// Writing these config files to a yaml file will typically follow the syntax:
+// ```
+//
+//	group:
+//		flag: value
+//
+// ```
 var (
 	// Root group.
 	roleCfg = configOption{
