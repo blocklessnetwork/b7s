@@ -1,5 +1,7 @@
 package blockless
 
+// TODO: Remove unused/messages that don't make sense here.
+
 // Message types in the Blockless protocol.
 const (
 	MessageHealthCheck             = "MsgHealthCheck"
@@ -30,3 +32,7 @@ const (
 	MessageFormClusterResponse     = "MsgFormClusterResponse"
 	MessageDisbandCluster          = "MsgDisbandCluster"
 )
+
+type Message interface {
+	Type() string
+}

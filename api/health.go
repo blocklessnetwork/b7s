@@ -11,12 +11,8 @@ import (
 // Execute implements the REST API endpoint for function execution.
 func (a *API) Health(ctx echo.Context) error {
 
-	// respond with health check
-	resp := response.Health{
-		Type: "health",
-		Code: http.StatusOK,
-	}
-
-	// Send the response.
-	return ctx.JSON(http.StatusOK, resp)
+	return ctx.JSON(
+		http.StatusOK,
+		response.Health{Code: http.StatusOK},
+	)
 }

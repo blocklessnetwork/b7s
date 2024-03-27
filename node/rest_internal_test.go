@@ -25,7 +25,6 @@ func TestNode_InstallMessageFromCID(t *testing.T) {
 
 	req := createInstallMessageFromCID(cid)
 
-	require.Equal(t, blockless.MessageInstallFunction, req.Type)
 	require.Equal(t, cid, req.CID)
 	require.Equal(t, expectedManifestURL, req.ManifestURL)
 }

@@ -29,7 +29,6 @@ func TestNode_WorkerExecute(t *testing.T) {
 	)
 
 	executionRequest := request.Execute{
-		Type:      blockless.MessageExecute,
 		RequestID: requestID,
 		Request: execute.Request{
 			FunctionID: functionID,
@@ -86,8 +85,6 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			var received response.Execute
 			getStreamPayload(t, stream, &received)
-
-			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
 
 			// We should receive the response the baseline executor will return.
 			expected := mocks.GenericExecutionResult
@@ -151,7 +148,6 @@ func TestNode_WorkerExecute(t *testing.T) {
 			var received response.Execute
 			getStreamPayload(t, stream, &received)
 
-			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
 			require.Equal(t, received.RequestID, requestID)
 			require.Equal(t, faultyExecutionResult.Code, received.Code)
 			require.Equal(t, faultyExecutionResult.Result, received.Results[node.host.ID()].Result)
@@ -193,8 +189,6 @@ func TestNode_WorkerExecute(t *testing.T) {
 			var received response.Execute
 			getStreamPayload(t, stream, &received)
 
-			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
-
 			require.Equal(t, received.Code, codes.Error)
 		})
 
@@ -220,8 +214,6 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			var received response.Execute
 			getStreamPayload(t, stream, &received)
-
-			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
 
 			require.Equal(t, codes.NotFound, received.Code)
 		})
@@ -260,7 +252,6 @@ func TestNode_HeadExecute(t *testing.T) {
 	)
 
 	executionRequest := request.Execute{
-		Type: blockless.MessageExecute,
 		Request: execute.Request{
 			FunctionID: functionID,
 			Method:     functionMethod,
@@ -299,7 +290,6 @@ func TestNode_HeadExecute(t *testing.T) {
 			var received response.Execute
 			getStreamPayload(t, stream, &received)
 
-			require.Equal(t, blockless.MessageExecuteResponse, received.Type)
 			require.Equal(t, codes.Timeout, received.Code)
 		})
 
@@ -362,10 +352,7 @@ func TestNode_HeadExecute(t *testing.T) {
 			from := stream.Conn().RemotePeer()
 			require.Equal(t, node.host.ID(), from)
 
-			require.Equal(t, blockless.MessageExecute, req.Type)
-
 			res := response.Execute{
-				Type:      blockless.MessageExecuteResponse,
 				Code:      codes.OK,
 				RequestID: requestID,
 				Results: map[peer.ID]execute.Result{
@@ -398,7 +385,6 @@ func TestNode_HeadExecute(t *testing.T) {
 
 			var res response.Execute
 			getStreamPayload(t, stream, &res)
-			require.Equal(t, blockless.MessageExecuteResponse, res.Type)
 
 			require.Equal(t, codes.OK, res.Code)
 			require.Equal(t, requestID, res.RequestID)
@@ -435,7 +421,6 @@ func TestNode_HeadExecute(t *testing.T) {
 		var received request.RollCall
 		err = json.Unmarshal(msg.Data, &received)
 
-		require.Equal(t, blockless.MessageRollCall, received.Type)
 		require.Equal(t, functionID, received.FunctionID)
 
 		requestID = received.RequestID
@@ -443,7 +428,6 @@ func TestNode_HeadExecute(t *testing.T) {
 
 		// Reply to the server that we can do the work.
 		res := response.RollCall{
-			Type:       blockless.MessageRollCallResponse,
 			Code:       codes.Accepted,
 			FunctionID: received.FunctionID,
 			RequestID:  requestID,

@@ -26,7 +26,6 @@ func TestNode_Handlers(t *testing.T) {
 		t.Parallel()
 
 		msg := response.Health{
-			Type: blockless.MessageHealthCheck,
 			Code: http.StatusOK,
 		}
 
@@ -44,7 +43,6 @@ func TestNode_Handlers(t *testing.T) {
 		node.rollCall.create(requestID)
 
 		res := response.RollCall{
-			Type:       blockless.MessageRollCallResponse,
 			Code:       codes.Accepted,
 			Role:       "dummy-role",
 			FunctionID: "dummy-function-id",
@@ -82,7 +80,6 @@ func TestNode_Handlers(t *testing.T) {
 
 		// We only want responses with the code `Accepted`.
 		res := response.RollCall{
-			Type:       blockless.MessageRollCallResponse,
 			Code:       codes.NotFound,
 			RequestID:  requestID,
 			Role:       "dummy-role",
@@ -108,7 +105,6 @@ func TestNode_Handlers(t *testing.T) {
 		t.Parallel()
 
 		msg := response.InstallFunction{
-			Type:    blockless.MessageInstallFunctionResponse,
 			Code:    codes.OK,
 			Message: "dummy-message",
 		}
@@ -167,7 +163,6 @@ func TestNode_InstallFunction(t *testing.T) {
 			var received response.InstallFunction
 			getStreamPayload(t, stream, &received)
 
-			require.Equal(t, blockless.MessageInstallFunctionResponse, received.Type)
 			require.Equal(t, codes.Accepted, received.Code)
 			require.Equal(t, expectedMessage, received.Message)
 		})

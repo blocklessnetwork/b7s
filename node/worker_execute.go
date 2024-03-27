@@ -8,7 +8,6 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
@@ -52,7 +51,6 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 
 	// Create the execution response from the execution result.
 	res := response.Execute{
-		Type:      blockless.MessageExecuteResponse,
 		Code:      code,
 		RequestID: requestID,
 		Results: execute.ResultMap{

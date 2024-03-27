@@ -7,6 +7,8 @@ import (
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 type topicInfo struct {
@@ -44,7 +46,7 @@ func (n *Node) subscribeToTopics(ctx context.Context) error {
 }
 
 // send serializes the message and sends it to the specified peer.
-func (n *Node) send(ctx context.Context, to peer.ID, msg interface{}) error {
+func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) error {
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)

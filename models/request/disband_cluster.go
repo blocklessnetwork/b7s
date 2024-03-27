@@ -1,13 +1,32 @@
 package request
 
 import (
+	"encoding/json"
+
 	"github.com/libp2p/go-libp2p/core/peer"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
+
+var _ (json.Marshaler) = (*DisbandCluster)(nil)
 
 // DisbandCluster describes the `MessageDisbandCluster` request payload.
 // It is sent after head node receives the leaders execution response.
 type DisbandCluster struct {
-	Type      string  `json:"type,omitempty"`
 	From      peer.ID `json:"from,omitempty"`
 	RequestID string  `json:"request_id,omitempty"`
+}
+
+func (DisbandCluster) Type() string { return blockless.MessageDisbandCluster }
+
+func (d DisbandCluster) MarshalJSON() ([]byte, error) {
+	type Alias DisbandCluster
+	rec := struct {
+		Alias
+		Type string `json:"type"`
+	}{
+		Alias: Alias(d),
+		Type:  d.Type(),
+	}
+	return json.Marshal(rec)
 }

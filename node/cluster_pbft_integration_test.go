@@ -175,7 +175,6 @@ This is the end of my program
 		var res response.InstallFunction
 		getStreamPayload(t, stream, &res)
 
-		require.Equal(t, blockless.MessageInstallFunctionResponse, res.Type)
 		require.Equal(t, codes.Accepted, res.Code)
 		require.Equal(t, "installed", res.Message)
 
@@ -210,7 +209,6 @@ This is the end of my program
 		var res response.Execute
 		getStreamPayload(t, stream, &res)
 
-		require.Equal(t, blockless.MessageExecuteResponse, res.Type)
 		require.Equal(t, codes.OK, res.Code)
 		require.NotEmpty(t, res.RequestID)
 

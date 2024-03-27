@@ -44,7 +44,6 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 
 	// Create the execution response from the execution result.
 	res := response.Execute{
-		Type:      blockless.MessageExecuteResponse,
 		Code:      code,
 		RequestID: requestID,
 		Results:   results,
@@ -126,7 +125,6 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 
 	// Send the execution request to peers in the cluster. Non-leaders will drop the request.
 	reqExecute := request.Execute{
-		Type:      blockless.MessageExecute,
 		Request:   req,
 		RequestID: requestID,
 		Timestamp: time.Now().UTC(),

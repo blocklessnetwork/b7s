@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/response"
 	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
@@ -17,7 +16,6 @@ func TestRollCallQueue(t *testing.T) {
 		requestID = "dummy-request-id"
 
 		res = response.RollCall{
-			Type:       blockless.MessageRollCallResponse,
 			From:       mocks.GenericPeerID,
 			RequestID:  requestID,
 			FunctionID: "dummy-function-id",

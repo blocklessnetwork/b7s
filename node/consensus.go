@@ -11,7 +11,6 @@ import (
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/consensus/pbft"
 	"github.com/blocklessnetwork/b7s/consensus/raft"
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
@@ -40,7 +39,6 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 		defer cancel()
 
 		msg := response.Execute{
-			Type:      blockless.MessageExecuteResponse,
 			Code:      res.Code,
 			RequestID: req.RequestID,
 			Results: execute.ResultMap{
@@ -72,7 +70,6 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 	n.clusterLock.Unlock()
 
 	res := response.FormCluster{
-		Type:      blockless.MessageFormClusterResponse,
 		RequestID: fc.RequestID,
 		Code:      codes.OK,
 		Consensus: fc.Consensus,
@@ -109,7 +106,6 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 	n.clusterLock.Unlock()
 
 	res := response.FormCluster{
-		Type:      blockless.MessageFormClusterResponse,
 		RequestID: fc.RequestID,
 		Code:      codes.OK,
 		Consensus: fc.Consensus,

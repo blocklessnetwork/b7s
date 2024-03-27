@@ -107,3 +107,7 @@ type dummyRecord struct {
 	Value       uint64 `json:"value"`
 	Description string `json:"description"`
 }
+
+func (dummyRecord) Type() string {
+	return "MessageDummyRecord"
+}

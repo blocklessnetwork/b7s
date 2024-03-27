@@ -97,7 +97,6 @@ func (n *Node) formCluster(ctx context.Context, requestID string, replicas []pee
 
 	// Create cluster formation request.
 	reqCluster := request.FormCluster{
-		Type:      blockless.MessageFormCluster,
 		RequestID: requestID,
 		Peers:     replicas,
 		Consensus: consensus,
@@ -162,7 +161,6 @@ func (n *Node) formCluster(ctx context.Context, requestID string, replicas []pee
 func (n *Node) disbandCluster(requestID string, replicas []peer.ID) error {
 
 	msgDisband := request.DisbandCluster{
-		Type:      blockless.MessageDisbandCluster,
 		RequestID: requestID,
 	}
 

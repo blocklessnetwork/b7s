@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
@@ -75,7 +74,6 @@ func createInstallMessageFromURI(uri string) (request.InstallFunction, error) {
 	}
 
 	msg := request.InstallFunction{
-		Type:        blockless.MessageInstallFunction,
 		ManifestURL: uri,
 		CID:         cid,
 	}
@@ -87,7 +85,6 @@ func createInstallMessageFromURI(uri string) (request.InstallFunction, error) {
 func createInstallMessageFromCID(cid string) request.InstallFunction {
 
 	req := request.InstallFunction{
-		Type:        blockless.MessageInstallFunction,
 		ManifestURL: manifestURLFromCID(cid),
 		CID:         cid,
 	}

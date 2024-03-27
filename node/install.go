@@ -37,7 +37,6 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, payload
 
 	// Create the response.
 	res := response.InstallFunction{
-		Type:    blockless.MessageInstallFunctionResponse,
 		Code:    codes.Accepted,
 		Message: "installed",
 		CID:     req.CID,
