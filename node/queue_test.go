@@ -15,10 +15,12 @@ func TestRollCallQueue(t *testing.T) {
 	var (
 		requestID = "dummy-request-id"
 
-		res = response.RollCall{
-			From:       mocks.GenericPeerID,
-			RequestID:  requestID,
-			FunctionID: "dummy-function-id",
+		res = rollCallResponse{
+			From: mocks.GenericPeerID,
+			RollCall: response.RollCall{
+				RequestID:  requestID,
+				FunctionID: "dummy-function-id",
+			},
 		}
 	)
 

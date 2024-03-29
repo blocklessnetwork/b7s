@@ -1,13 +1,11 @@
 package node
 
 import (
-	"context"
 	"fmt"
 	"slices"
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 
 	"github.com/blocklessnetwork/b7s-attributes/attributes"
@@ -111,39 +109,6 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 // ID returns the ID of this node.
 func (n *Node) ID() string {
 	return n.host.ID().String()
-}
-
-// getHandler returns the appropriate handler function for the given message.
-func (n *Node) getHandler(msgType string) HandlerFunc {
-
-	switch msgType {
-	case blockless.MessageHealthCheck:
-		return n.processHealthCheck
-	case blockless.MessageExecuteResponse:
-		return n.processExecuteResponse
-	case blockless.MessageRollCall:
-		return n.processRollCall
-	case blockless.MessageRollCallResponse:
-		return n.processRollCallResponse
-	case blockless.MessageInstallFunction:
-		return n.processInstallFunction
-	case blockless.MessageInstallFunctionResponse:
-		return n.processInstallFunctionResponse
-	case blockless.MessageFormCluster:
-		return n.processFormCluster
-	case blockless.MessageFormClusterResponse:
-		return n.processFormClusterResponse
-	case blockless.MessageDisbandCluster:
-		return n.processDisbandCluster
-
-	case blockless.MessageExecute:
-		return n.processExecute
-
-	default:
-		return func(_ context.Context, from peer.ID, _ []byte) error {
-			return ErrUnsupportedMessage
-		}
-	}
 }
 
 func newRequestID() (string, error) {

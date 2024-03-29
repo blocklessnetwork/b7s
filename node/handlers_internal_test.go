@@ -29,8 +29,7 @@ func TestNode_Handlers(t *testing.T) {
 			Code: http.StatusOK,
 		}
 
-		payload := serialize(t, msg)
-		err := node.processHealthCheck(context.Background(), mocks.GenericPeerID, payload)
+		err := node.processHealthCheck(context.Background(), mocks.GenericPeerID, msg)
 		require.NoError(t, err)
 	})
 	t.Run("roll call response", func(t *testing.T) {
@@ -44,14 +43,13 @@ func TestNode_Handlers(t *testing.T) {
 
 		res := response.RollCall{
 			Code:       codes.Accepted,
-			Role:       "dummy-role",
 			FunctionID: "dummy-function-id",
 			RequestID:  requestID,
 		}
 
 		// Record response asynchronously.
 		var wg sync.WaitGroup
-		var recordedResponse response.RollCall
+		var recordedResponse rollCallResponse
 		go func() {
 			defer wg.Done()
 			recordedResponse = <-node.rollCall.responses(requestID)
@@ -59,15 +57,13 @@ func TestNode_Handlers(t *testing.T) {
 
 		wg.Add(1)
 
-		payload := serialize(t, res)
-		err := node.processRollCallResponse(context.Background(), mocks.GenericPeerID, payload)
+		err := node.processRollCallResponse(context.Background(), mocks.GenericPeerID, res)
 		require.NoError(t, err)
 
 		wg.Wait()
 
 		expected := res
-		expected.From = mocks.GenericPeerID
-		require.Equal(t, expected, recordedResponse)
+		require.Equal(t, expected, recordedResponse.RollCall)
 	})
 	t.Run("skipping inadequate roll call responses", func(t *testing.T) {
 		t.Parallel()
@@ -82,12 +78,10 @@ func TestNode_Handlers(t *testing.T) {
 		res := response.RollCall{
 			Code:       codes.NotFound,
 			RequestID:  requestID,
-			Role:       "dummy-role",
 			FunctionID: "dummy-function-id",
 		}
 
-		payload := serialize(t, res)
-		err := node.processRollCallResponse(context.Background(), mocks.GenericPeerID, payload)
+		err := node.processRollCallResponse(context.Background(), mocks.GenericPeerID, res)
 		require.NoError(t, err)
 
 		// Verify roll call response is not found, even though the response has been processed.
@@ -109,8 +103,7 @@ func TestNode_Handlers(t *testing.T) {
 			Message: "dummy-message",
 		}
 
-		payload := serialize(t, msg)
-		err := node.processInstallFunctionResponse(context.Background(), mocks.GenericPeerID, payload)
+		err := node.processInstallFunctionResponse(context.Background(), mocks.GenericPeerID, msg)
 		require.NoError(t, err)
 	})
 }
@@ -127,14 +120,12 @@ func TestNode_InstallFunction(t *testing.T) {
 		CID:         cid,
 	}
 
-	payload := serialize(t, installReq)
-
 	t.Run("head node handles install", func(t *testing.T) {
 		t.Parallel()
 
 		node := createNode(t, blockless.HeadNode)
 
-		err := node.processInstallFunction(context.Background(), mocks.GenericPeerID, payload)
+		err := node.processInstallFunction(context.Background(), mocks.GenericPeerID, installReq)
 		require.NoError(t, err)
 	})
 	t.Run("worker node handles install", func(t *testing.T) {
@@ -167,7 +158,7 @@ func TestNode_InstallFunction(t *testing.T) {
 			require.Equal(t, expectedMessage, received.Message)
 		})
 
-		err = node.processInstallFunction(context.Background(), receiver.ID(), payload)
+		err = node.processInstallFunction(context.Background(), receiver.ID(), installReq)
 		require.NoError(t, err)
 
 		wg.Wait()
@@ -196,31 +187,7 @@ func TestNode_InstallFunction(t *testing.T) {
 			require.Fail(t, "unexpected response")
 		})
 
-		err = node.processInstallFunction(context.Background(), receiver.ID(), payload)
-		require.Error(t, err)
-	})
-	t.Run("worker node handles invalid function install requeset", func(t *testing.T) {
-		t.Parallel()
-
-		const (
-			// JSON without closing brace.
-			brokenPayload = `{
-				"type": "MsgInstallFunction",
-				"manifest_url": "https://example.com/manifest-url",
-				"cid": "dummy-cid"`
-		)
-
-		receiver, err := host.New(mocks.NoopLogger, loopback, 0)
-		require.NoError(t, err)
-
-		node := createNode(t, blockless.WorkerNode)
-		hostAddNewPeer(t, node.host, receiver)
-
-		receiver.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
-			require.Fail(t, "unexpected response")
-		})
-
-		err = node.processInstallFunction(context.Background(), receiver.ID(), []byte(brokenPayload))
+		err = node.processInstallFunction(context.Background(), receiver.ID(), installReq)
 		require.Error(t, err)
 	})
 	t.Run("worker node handles failure to send response", func(t *testing.T) {
@@ -233,7 +200,7 @@ func TestNode_InstallFunction(t *testing.T) {
 
 		node := createNode(t, blockless.WorkerNode)
 
-		err = node.processInstallFunction(context.Background(), receiver.ID(), payload)
+		err = node.processInstallFunction(context.Background(), receiver.ID(), installReq)
 		require.Error(t, err)
 	})
 }

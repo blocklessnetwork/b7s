@@ -2,8 +2,6 @@ package node
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -11,24 +9,12 @@ import (
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
-// TODO: peerID of the sender is a good candidate to move on to the context
-
-type HandlerFunc func(context.Context, peer.ID, []byte) error
-
-func (n *Node) processHealthCheck(ctx context.Context, from peer.ID, payload []byte) error {
+func (n *Node) processHealthCheck(ctx context.Context, from peer.ID, _ response.Health) error {
 	n.log.Trace().Str("from", from.String()).Msg("peer health check received")
 	return nil
 }
 
-func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, payload []byte) error {
-
-	// Unpack the roll call response.
-	var res response.RollCall
-	err := json.Unmarshal(payload, &res)
-	if err != nil {
-		return fmt.Errorf("could not unpack the roll call response: %w", err)
-	}
-	res.From = from
+func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, res response.RollCall) error {
 
 	log := n.log.With().Str("request", res.RequestID).Str("peer", from.String()).Logger()
 
@@ -49,13 +35,18 @@ func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, payloa
 
 	log.Info().Msg("recording roll call response")
 
+	rres := rollCallResponse{
+		From:     from,
+		RollCall: res,
+	}
+
 	// Record the response.
-	n.rollCall.add(res.RequestID, res)
+	n.rollCall.add(res.RequestID, rres)
 
 	return nil
 }
 
-func (n *Node) processInstallFunctionResponse(ctx context.Context, from peer.ID, payload []byte) error {
+func (n *Node) processInstallFunctionResponse(ctx context.Context, from peer.ID, _ response.InstallFunction) error {
 	n.log.Trace().Str("from", from.String()).Msg("function install response received")
 	return nil
 }

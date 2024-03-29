@@ -3,8 +3,6 @@ package response
 import (
 	"encoding/json"
 
-	"github.com/libp2p/go-libp2p/core/peer"
-
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 )
@@ -13,7 +11,6 @@ var _ (json.Marshaler) = (*InstallFunction)(nil)
 
 // InstallFunction describes the response to the `MessageInstallFunction` message.
 type InstallFunction struct {
-	From    peer.ID    `json:"from,omitempty"`
 	Code    codes.Code `json:"code,omitempty"`
 	Message string     `json:"message,omitempty"`
 	CID     string     `json:"cid,omitempty"`

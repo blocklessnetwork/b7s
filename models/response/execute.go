@@ -20,7 +20,6 @@ var _ (json.Marshaler) = (*Execute)(nil)
 // Execute describes the response to the `MessageExecute` message.
 type Execute struct {
 	RequestID string            `json:"request_id,omitempty"`
-	From      peer.ID           `json:"from,omitempty"`
 	Code      codes.Code        `json:"code,omitempty"`
 	Results   execute.ResultMap `json:"results,omitempty"`
 	Cluster   execute.Cluster   `json:"cluster,omitempty"`
@@ -58,7 +57,6 @@ func (e *Execute) Sign(key crypto.PrivKey) error {
 	// Exclude signature and the `from` field from the signature.
 	cp := *e
 	cp.Signature = ""
-	cp.From = ""
 
 	payload, err := json.Marshal(cp)
 	if err != nil {
@@ -79,7 +77,6 @@ func (e Execute) VerifySignature(key crypto.PubKey) error {
 	// Exclude signature and the `from` field from the signature.
 	cp := e
 	cp.Signature = ""
-	cp.From = ""
 
 	payload, err := json.Marshal(cp)
 	if err != nil {

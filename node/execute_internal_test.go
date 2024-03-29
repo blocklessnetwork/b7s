@@ -38,8 +38,6 @@ func TestNode_WorkerExecute(t *testing.T) {
 		},
 	}
 
-	payload := serialize(t, executionRequest)
-
 	t.Run("handles correct execution", func(t *testing.T) {
 		t.Parallel()
 
@@ -94,7 +92,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 			require.Equal(t, expected.Result, received.Results[node.host.ID()].Result)
 		})
 
-		err = node.processExecute(context.Background(), receiver.ID(), payload)
+		err = node.processExecute(context.Background(), receiver.ID(), executionRequest)
 		require.NoError(t, err)
 
 		wg.Wait()
@@ -153,7 +151,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 			require.Equal(t, faultyExecutionResult.Result, received.Results[node.host.ID()].Result)
 		})
 
-		err = node.processExecute(context.Background(), receiver.ID(), payload)
+		err = node.processExecute(context.Background(), receiver.ID(), executionRequest)
 		require.NoError(t, err)
 
 		wg.Wait()
@@ -192,7 +190,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 			require.Equal(t, received.Code, codes.Error)
 		})
 
-		err = node.processExecute(context.Background(), receiver.ID(), payload)
+		err = node.processExecute(context.Background(), receiver.ID(), executionRequest)
 		require.NoError(t, err)
 
 		wg.Wait()
@@ -218,27 +216,10 @@ func TestNode_WorkerExecute(t *testing.T) {
 			require.Equal(t, codes.NotFound, received.Code)
 		})
 
-		err = node.processExecute(context.Background(), receiver.ID(), payload)
+		err = node.processExecute(context.Background(), receiver.ID(), executionRequest)
 		require.NoError(t, err)
 
 		wg.Wait()
-	})
-	t.Run("handles malformed request", func(t *testing.T) {
-		t.Parallel()
-
-		const (
-			// JSON without closing brace.
-			malformedJSON = `{
-						"type": "MsgExecute",
-						"function_id": "dummy-function-id",
-						"method": "dummy-function-method",
-						"config": {}`
-		)
-
-		node := createNode(t, blockless.WorkerNode)
-
-		err := node.processExecute(context.Background(), mocks.GenericPeerID, []byte(malformedJSON))
-		require.Error(t, err)
 	})
 }
 
@@ -259,8 +240,6 @@ func TestNode_HeadExecute(t *testing.T) {
 			Config:     execute.Config{},
 		},
 	}
-
-	payload := serialize(t, executionRequest)
 
 	t.Run("handles roll call timeout", func(t *testing.T) {
 		t.Parallel()
@@ -294,7 +273,7 @@ func TestNode_HeadExecute(t *testing.T) {
 		})
 
 		// Since no one will respond to a roll call, this is bound to time out.
-		err = node.processExecute(ctx, receiver.ID(), payload)
+		err = node.processExecute(ctx, receiver.ID(), executionRequest)
 		require.NoError(t, err)
 
 		wg.Wait()
@@ -402,7 +381,7 @@ func TestNode_HeadExecute(t *testing.T) {
 
 			time.Sleep(subscriptionDiseminationPause)
 
-			err = node.processExecute(ctx, receiver.ID(), payload)
+			err = node.processExecute(ctx, receiver.ID(), executionRequest)
 			require.NoError(t, err)
 		}()
 

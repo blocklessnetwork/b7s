@@ -3,8 +3,6 @@ package request
 import (
 	"encoding/json"
 
-	"github.com/libp2p/go-libp2p/core/peer"
-
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
@@ -13,8 +11,7 @@ var _ (json.Marshaler) = (*DisbandCluster)(nil)
 // DisbandCluster describes the `MessageDisbandCluster` request payload.
 // It is sent after head node receives the leaders execution response.
 type DisbandCluster struct {
-	From      peer.ID `json:"from,omitempty"`
-	RequestID string  `json:"request_id,omitempty"`
+	RequestID string `json:"request_id,omitempty"`
 }
 
 func (DisbandCluster) Type() string { return blockless.MessageDisbandCluster }

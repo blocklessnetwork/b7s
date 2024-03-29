@@ -3,8 +3,6 @@ package response
 import (
 	"encoding/json"
 
-	"github.com/libp2p/go-libp2p/core/peer"
-
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
@@ -15,7 +13,6 @@ var _ (json.Marshaler) = (*FormCluster)(nil)
 // FormCluster describes the `MessageFormClusteRr` response.
 type FormCluster struct {
 	RequestID string         `json:"request_id,omitempty"`
-	From      peer.ID        `json:"from,omitempty"`
 	Code      codes.Code     `json:"code,omitempty"`
 	Consensus consensus.Type `json:"consensus,omitempty"`
 }

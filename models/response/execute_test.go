@@ -15,7 +15,6 @@ func TestExecute_Signing(t *testing.T) {
 
 	sampleRes := Execute{
 		RequestID: mocks.GenericUUID.String(),
-		From:      mocks.GenericPeerID,
 		Code:      codes.OK,
 		Results: execute.ResultMap{
 			mocks.GenericPeerID: mocks.GenericExecutionResult,

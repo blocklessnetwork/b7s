@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -16,21 +15,13 @@ import (
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
-func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte) error {
+func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.RollCall) error {
 
 	// Only workers respond to roll calls at the moment.
 	if n.cfg.Role != blockless.WorkerNode {
 		n.log.Debug().Msg("skipping roll call as a non-worker node")
 		return nil
 	}
-
-	// Unpack the request.
-	var req request.RollCall
-	err := json.Unmarshal(payload, &req)
-	if err != nil {
-		return fmt.Errorf("could not unpack request: %w", err)
-	}
-	req.From = from
 
 	log := n.log.With().Str("request", req.RequestID).Str("origin", req.Origin.String()).Str("function", req.FunctionID).Logger()
 	log.Debug().Msg("received roll call request")
