@@ -11,7 +11,7 @@ import (
 )
 
 // processMessage will determine which message was received and how to process it.
-func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte) error {
+func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline messagePipeline) error {
 
 	// Determine message type.
 	msgType, err := getMessageType(payload)
@@ -19,7 +19,15 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte)
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
-	n.log.Trace().Str("peer", from.String()).Str("type", msgType).Msg("received message from peer")
+	log := n.log.With().Str("peer", from.String()).Str("type", msgType).Str("pipeline", pipeline.String()).Logger()
+
+	err = allowedMessage(msgType, pipeline)
+	if err != nil {
+		log.Warn().Msg("message not allowed on pipeline")
+		return nil
+	}
+
+	log.Debug().Msg("received message from peer")
 
 	switch msgType {
 	case blockless.MessageHealthCheck:
