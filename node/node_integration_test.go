@@ -147,7 +147,6 @@ func createClient(t *testing.T) *client {
 func (c *client) sendInstallMessage(ctx context.Context, to peer.ID, manifestURL string, cid string) error {
 
 	req := request.InstallFunction{
-		Type:        blockless.MessageInstallFunction,
 		ManifestURL: manifestURL,
 		CID:         cid,
 	}
@@ -168,7 +167,6 @@ func (c *client) sendInstallMessage(ctx context.Context, to peer.ID, manifestURL
 func (c *client) sendExecutionMessage(ctx context.Context, to peer.ID, cid string, method string, consensus consensus.Type, count int) error {
 
 	req := request.Execute{
-		Type: blockless.MessageExecute,
 		Request: execute.Request{
 			FunctionID: cid,
 			Method:     method,

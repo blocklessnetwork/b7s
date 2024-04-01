@@ -98,8 +98,6 @@ func (n *Node) Run(ctx context.Context) error {
 		}(name, topic.subscription)
 	}
 
-	n.log.Debug().Msg("waiting for workers")
-
 	workers.Wait()
 
 	n.log.Debug().Msg("waiting for messages being processed")

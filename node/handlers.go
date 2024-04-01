@@ -46,7 +46,7 @@ func (n *Node) processRollCallResponse(ctx context.Context, from peer.ID, res re
 	return nil
 }
 
-func (n *Node) processInstallFunctionResponse(ctx context.Context, from peer.ID, _ response.InstallFunction) error {
-	n.log.Trace().Str("from", from.String()).Msg("function install response received")
+func (n *Node) processInstallFunctionResponse(ctx context.Context, from peer.ID, res response.InstallFunction) error {
+	n.log.Trace().Str("from", from.String()).Str("cid", res.CID).Msg("function install response received")
 	return nil
 }

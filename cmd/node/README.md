@@ -69,12 +69,12 @@ log:
 connectivity:
   address: 127.0.0.1
   port: 9000
-  private-key: ~/.b7s/path/to/priv/key.bin
+  private-key: /home/user/.b7s/path/to/priv/key.bin
   websocket: true
 
 
 worker:
-  runtime-path: ~/.local/blockless-runtime/bin
+  runtime-path: /home/user/.local/blockless-runtime/bin
   cpu-percentage-limit: 0.8
 
 ```
@@ -101,7 +101,7 @@ The created `node` will listen on all addresses on TCP port 9000.
 Database used to persist Node data between runs will be created in the `peer-database` subdirectory.
 On the other hand, Node will persist function data in the default database, in the `function-db` subdirectory.
 
-Blockless Runtime path is given as `~/.local/bin`.
+Blockless Runtime path is given as `/home/user/.local/bin`.
 At startup, node will check if the Blockless Runtime is actually found there, namely the [bls-runtime](https://blockless.network/docs/protocol/runtime).
 
 Node Identity will be determined by the private key found in `priv.bin` file in the `keys` subdirectory.

@@ -8,56 +8,59 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
 )
-
-// TODO: Set up a chain: message ID => model => handler
 
 // processMessage will determine which message was received and how to process it.
 func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte) error {
 
 	// Determine message type.
-	msg, err := unpackMessage(payload)
+	msgType, err := getMessageType(payload)
 	if err != nil {
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
-	msgType := msg.Type()
+	n.log.Trace().Str("peer", from.String()).Str("type", msgType).Msg("received message from peer")
 
-	n.log.Trace().Str("peer", from.String()).Str("message", msgType).Msg("received message from peer")
-
-	// Get the registered handler for the message.
 	switch msgType {
-
 	case blockless.MessageHealthCheck:
-		return n.processHealthCheck(ctx, from, msg.(response.Health))
+		return handleMessage(ctx, from, payload, n.processHealthCheck)
 
 	case blockless.MessageInstallFunction:
-		return n.processInstallFunction(ctx, from, msg.(request.InstallFunction))
+		return handleMessage(ctx, from, payload, n.processInstallFunction)
 	case blockless.MessageInstallFunctionResponse:
-		return n.processInstallFunctionResponse(ctx, from, msg.(response.InstallFunction))
+		return handleMessage(ctx, from, payload, n.processInstallFunctionResponse)
 
 	case blockless.MessageRollCall:
-		return n.processRollCall(ctx, from, msg.(request.RollCall))
+		return handleMessage(ctx, from, payload, n.processRollCall)
 	case blockless.MessageRollCallResponse:
-		return n.processRollCallResponse(ctx, from, msg.(response.RollCall))
+		return handleMessage(ctx, from, payload, n.processRollCallResponse)
 
 	case blockless.MessageExecute:
-		return n.processExecute(ctx, from, msg.(request.Execute))
+		return handleMessage(ctx, from, payload, n.processExecute)
 	case blockless.MessageExecuteResponse:
-		return n.processExecuteResponse(ctx, from, msg.(response.Execute))
+		return handleMessage(ctx, from, payload, n.processExecuteResponse)
 
 	case blockless.MessageFormCluster:
-		return n.processFormCluster(ctx, from, msg.(request.FormCluster))
+		return handleMessage(ctx, from, payload, n.processFormCluster)
 	case blockless.MessageFormClusterResponse:
-		return n.processFormClusterResponse(ctx, from, msg.(response.FormCluster))
+		return handleMessage(ctx, from, payload, n.processFormClusterResponse)
 	case blockless.MessageDisbandCluster:
-		return n.processDisbandCluster(ctx, from, msg.(request.DisbandCluster))
+		return handleMessage(ctx, from, payload, n.processDisbandCluster)
 
 	default:
-		return fmt.Errorf("unsupported message type (from: %s): %s", from.String(), msgType)
+		return fmt.Errorf("unknown message type: %s", msgType)
 	}
+}
+
+func handleMessage[T blockless.Message](ctx context.Context, from peer.ID, payload []byte, processFunc func(ctx context.Context, from peer.ID, msg T) error) error {
+
+	var msg T
+	err := json.Unmarshal(payload, &msg)
+	if err != nil {
+		return fmt.Errorf("could not unmarshal message: %w", err)
+	}
+
+	return processFunc(ctx, from, msg)
 }
 
 // getMessageType will return the `type` string field from the JSON payload.
@@ -73,51 +76,4 @@ func getMessageType(payload []byte) (string, error) {
 	}
 
 	return message.Type, nil
-}
-
-func unpackMessage(payload []byte) (blockless.Message, error) {
-
-	// Determine message type.
-	msgType, err := getMessageType(payload)
-	if err != nil {
-		return nil, fmt.Errorf("could not determine message type: %w", err)
-	}
-
-	switch msgType {
-
-	case blockless.MessageHealthCheck:
-		return unmarshalJSON[response.Health](payload)
-	case blockless.MessageInstallFunction:
-		return unmarshalJSON[request.InstallFunction](payload)
-	case blockless.MessageInstallFunctionResponse:
-		return unmarshalJSON[response.InstallFunction](payload)
-	case blockless.MessageRollCall:
-		return unmarshalJSON[request.RollCall](payload)
-	case blockless.MessageRollCallResponse:
-		return unmarshalJSON[response.RollCall](payload)
-	case blockless.MessageExecute:
-		return unmarshalJSON[request.Execute](payload)
-	case blockless.MessageExecuteResponse:
-		return unmarshalJSON[response.Execute](payload)
-	case blockless.MessageFormCluster:
-		return unmarshalJSON[request.FormCluster](payload)
-	case blockless.MessageFormClusterResponse:
-		return unmarshalJSON[response.FormCluster](payload)
-	case blockless.MessageDisbandCluster:
-		return unmarshalJSON[request.DisbandCluster](payload)
-
-	default:
-		return nil, fmt.Errorf("unknown message type: %w", err)
-	}
-}
-
-func unmarshalJSON[T any](payload []byte) (T, error) {
-
-	var obj T
-	err := json.Unmarshal(payload, &obj)
-	if err != nil {
-		return obj, fmt.Errorf("could not unmarshal message: %w", err)
-	}
-
-	return obj, nil
 }
