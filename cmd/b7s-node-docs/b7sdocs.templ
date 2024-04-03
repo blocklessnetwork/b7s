@@ -1,0 +1,86 @@
+package main
+
+import "fmt"
+import "github.com/blocklessnetwork/b7s/internal/config"
+
+templ page(configs []config.ConfigOption) {
+    <html>
+        <head>
+            <title>Blockless B7S Node Configuration</title>
+            <link rel="icon" href="/assets/favicon/favicon.ico" type="image/x-icon" sizes="16x16"/>
+            <link rel="stylesheet" href="/assets/css/style.css" />
+        </head>
+        <body>
+            <h1>Blockless B7S Node Configuration</h1>
+            <p>
+                This page lists all of the configuration options supported by the b7s daemon.
+                It showcases the configuration structure, as accepted in a YAML config file, environment variables that can be used to set those options and, where applicable, the CLI flags and their default values.
+            </p>
+
+            @b7sdocs(configs)
+        </body>
+    </html>
+}
+
+
+templ b7sdocs(configs []config.ConfigOption) {
+
+    <ul>
+    for _, cfg := range configs {
+        <li class="cfg">
+            @configOption(cfg) 
+        </li>      
+    }
+    </ul>
+}
+
+func formatCLIDefault(def any) string {
+    str := fmt.Sprint(def)
+    if str != "" {
+        return str
+    }
+
+    return "N/A"
+}
+
+templ configOption(cfg config.ConfigOption) {
+
+    <h3 id={cfg.FullPath}>{cfg.Name} <a class="link-icon" href={ templ.URL(fmt.Sprintf("#%s", cfg.FullPath)) }><span >&#128279;</span></a></h3>
+    
+    if cfg.Type() != "" {
+        <p>Type: {cfg.Type()}</p>
+    }
+
+    <p>Path: {cfg.FullPath}</p>
+    if cfg.Env != "" {
+        <p>Environment variable: {cfg.Env}</p>
+    }
+
+    if cfg.CLI.Flag != "" {
+
+        <dl>
+            <dt>CLI flag:</dt>
+            <dd>
+                <ul class="cli-details">
+                    <li class="cli">Flag: <code>--{cfg.CLI.Flag}</code></li>
+                    if cfg.CLI.Shorthand != "" {
+                        <li class="cli">Shorthand: <code>-{cfg.CLI.Shorthand}</code></li>
+                    }
+
+                    <li class="cli">Default: {formatCLIDefault(cfg.CLI.Default)}</li>
+                    <li class="cli">Description: {cfg.CLI.Description}</li>
+                </ul>
+            </dd>
+        </dl>
+    }
+
+    if len(cfg.Children) > 0 {
+        <ul>
+        for _, child := range cfg.Children {
+            <li class="child-cfg">
+                @configOption(child)
+            </li>
+        }
+        </ul>
+    }
+}

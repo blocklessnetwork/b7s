@@ -15,11 +15,11 @@ import (
 	"github.com/ziflex/lecho/v3"
 
 	"github.com/blocklessnetwork/b7s/api"
-	"github.com/blocklessnetwork/b7s/cmd/node/internal/config"
 	"github.com/blocklessnetwork/b7s/executor"
 	"github.com/blocklessnetwork/b7s/executor/limits"
 	"github.com/blocklessnetwork/b7s/fstore"
 	"github.com/blocklessnetwork/b7s/host"
+	"github.com/blocklessnetwork/b7s/internal/config"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node"
 	"github.com/blocklessnetwork/b7s/peerstore"
@@ -90,8 +90,8 @@ func run() int {
 
 	log.Info().
 		Str("workspace", cfg.Workspace).
-		Str("peer_db", cfg.PeerDatabasePath).
-		Str("function_db", cfg.FunctionDatabasePath).
+		Str("peer_db", cfg.PeerDB).
+		Str("function_db", cfg.FunctionDB).
 		Msg("filepaths used by the node")
 
 	// Convert workspace path to an absolute one.
@@ -103,9 +103,9 @@ func run() int {
 	cfg.Workspace = workspace
 
 	// Open the pebble peer database.
-	pdb, err := pebble.Open(cfg.PeerDatabasePath, &pebble.Options{Logger: &pebbleNoopLogger{}})
+	pdb, err := pebble.Open(cfg.PeerDB, &pebble.Options{Logger: &pebbleNoopLogger{}})
 	if err != nil {
-		log.Error().Err(err).Str("db", cfg.PeerDatabasePath).Msg("could not open pebble peer database")
+		log.Error().Err(err).Str("db", cfg.PeerDB).Msg("could not open pebble peer database")
 		return failure
 	}
 	defer pdb.Close()
@@ -203,9 +203,9 @@ func run() int {
 	}
 
 	// Open the pebble function database.
-	fdb, err := pebble.Open(cfg.FunctionDatabasePath, &pebble.Options{Logger: &pebbleNoopLogger{}})
+	fdb, err := pebble.Open(cfg.FunctionDB, &pebble.Options{Logger: &pebbleNoopLogger{}})
 	if err != nil {
-		log.Error().Err(err).Str("db", cfg.FunctionDatabasePath).Msg("could not open pebble function database")
+		log.Error().Err(err).Str("db", cfg.FunctionDB).Msg("could not open pebble function database")
 		return failure
 	}
 	defer fdb.Close()
@@ -255,7 +255,7 @@ func run() int {
 	// If we're a head node - start the REST API.
 	if role == blockless.HeadNode {
 
-		if cfg.Head.API == "" {
+		if cfg.Head.RestAPI == "" {
 			log.Error().Err(err).Msg("REST API address is required")
 			return failure
 		}
@@ -281,8 +281,8 @@ func run() int {
 		// Start API in a separate goroutine.
 		go func() {
 
-			log.Info().Str("port", cfg.Head.API).Msg("Node API starting")
-			err := server.Start(cfg.Head.API)
+			log.Info().Str("port", cfg.Head.RestAPI).Msg("Node API starting")
+			err := server.Start(cfg.Head.RestAPI)
 			if err != nil && !errors.Is(err, http.ErrServerClosed) {
 				log.Warn().Err(err).Msg("Node API failed")
 				close(failed)
@@ -326,17 +326,17 @@ func updateDirPaths(root string, cfg *config.Config) {
 	}
 	cfg.Workspace = workspace
 
-	peerDB := cfg.PeerDatabasePath
+	peerDB := cfg.PeerDB
 	if peerDB == "" {
 		peerDB = filepath.Join(root, config.DefaultPeerDB)
 	}
-	cfg.PeerDatabasePath = peerDB
+	cfg.PeerDB = peerDB
 
-	functionDB := cfg.FunctionDatabasePath
+	functionDB := cfg.FunctionDB
 	if functionDB == "" {
 		functionDB = filepath.Join(root, config.DefaultFunctionDB)
 	}
-	cfg.FunctionDatabasePath = functionDB
+	cfg.FunctionDB = functionDB
 }
 
 func generateNodeDirName(id string) string {
