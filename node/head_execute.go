@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -18,15 +17,7 @@ import (
 )
 
 // NOTE: head node typically receives execution requests from the REST API. This message handling is not cognizant of subgroups.
-func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []byte) error {
-
-	// Unpack the request.
-	var req request.Execute
-	err := json.Unmarshal(payload, &req)
-	if err != nil {
-		return fmt.Errorf("could not unpack the request: %w", err)
-	}
-	req.From = from
+func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
 
 	requestID, err := newRequestID()
 	if err != nil {
@@ -44,7 +35,6 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 
 	// Create the execution response from the execution result.
 	res := response.Execute{
-		Type:      blockless.MessageExecuteResponse,
 		Code:      code,
 		RequestID: requestID,
 		Results:   results,
@@ -57,7 +47,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, payload []b
 	}
 
 	// Send the response, whatever it may be (success or failure).
-	err = n.send(ctx, req.From, res)
+	err = n.send(ctx, from, res)
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)
 	}
@@ -126,7 +116,6 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 
 	// Send the execution request to peers in the cluster. Non-leaders will drop the request.
 	reqExecute := request.Execute{
-		Type:      blockless.MessageExecute,
 		Request:   req,
 		RequestID: requestID,
 		Timestamp: time.Now().UTC(),

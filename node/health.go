@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
@@ -20,7 +19,6 @@ func (n *Node) HealthPing(ctx context.Context) {
 		case <-ticker.C:
 
 			msg := response.Health{
-				Type: blockless.MessageHealthCheck,
 				Code: http.StatusOK,
 			}
 

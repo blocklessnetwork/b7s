@@ -25,13 +25,12 @@ func TestNode_RollCall(t *testing.T) {
 		t.Parallel()
 
 		rollCallReq := request.RollCall{
-			Type:       blockless.MessageRollCall,
 			FunctionID: "dummy-function-id",
 			RequestID:  mocks.GenericUUID.String(),
 		}
 
 		node := createNode(t, blockless.HeadNode)
-		err := node.processRollCall(context.Background(), mocks.GenericPeerID, serialize(t, rollCallReq))
+		err := node.processRollCall(context.Background(), mocks.GenericPeerID, rollCallReq)
 		require.NoError(t, err)
 	})
 
@@ -44,7 +43,6 @@ func TestNode_RollCall(t *testing.T) {
 		require.NoError(t, err)
 
 		rollCallReq := request.RollCall{
-			Type:       blockless.MessageRollCall,
 			FunctionID: "dummy-function-id",
 			RequestID:  mocks.GenericUUID.String(),
 			Origin:     receiver.ID(),
@@ -65,14 +63,12 @@ func TestNode_RollCall(t *testing.T) {
 			from := stream.Conn().RemotePeer()
 			require.Equal(t, node.host.ID(), from)
 
-			require.Equal(t, blockless.MessageRollCallResponse, received.Type)
-
 			require.Equal(t, rollCallReq.FunctionID, received.FunctionID)
 			require.Equal(t, rollCallReq.RequestID, received.RequestID)
 			require.Equal(t, codes.Accepted, received.Code)
 		})
 
-		err = node.processRollCall(context.Background(), receiver.ID(), serialize(t, rollCallReq))
+		err = node.processRollCall(context.Background(), receiver.ID(), rollCallReq)
 		require.NoError(t, err)
 
 		wg.Wait()
@@ -86,7 +82,6 @@ func TestNode_RollCall(t *testing.T) {
 		require.NoError(t, err)
 
 		rollCallReq := request.RollCall{
-			Type:       blockless.MessageRollCall,
 			FunctionID: "dummy-function-id",
 			RequestID:  mocks.GenericUUID.String(),
 			Origin:     receiver.ID(),
@@ -114,14 +109,12 @@ func TestNode_RollCall(t *testing.T) {
 			from := stream.Conn().RemotePeer()
 			require.Equal(t, node.host.ID(), from)
 
-			require.Equal(t, blockless.MessageRollCallResponse, received.Type)
-
 			require.Equal(t, rollCallReq.FunctionID, received.FunctionID)
 			require.Equal(t, rollCallReq.RequestID, received.RequestID)
 			require.Equal(t, codes.Error, received.Code)
 		})
 
-		err = node.processRollCall(context.Background(), receiver.ID(), serialize(t, rollCallReq))
+		err = node.processRollCall(context.Background(), receiver.ID(), rollCallReq)
 		require.Error(t, err)
 
 		wg.Wait()
@@ -135,7 +128,6 @@ func TestNode_RollCall(t *testing.T) {
 		require.NoError(t, err)
 
 		rollCallReq := request.RollCall{
-			Type:       blockless.MessageRollCall,
 			FunctionID: "dummy-function-id",
 			RequestID:  mocks.GenericUUID.String(),
 			Origin:     receiver.ID(),
@@ -166,14 +158,12 @@ func TestNode_RollCall(t *testing.T) {
 			from := stream.Conn().RemotePeer()
 			require.Equal(t, node.host.ID(), from)
 
-			require.Equal(t, blockless.MessageRollCallResponse, received.Type)
-
 			require.Equal(t, rollCallReq.FunctionID, received.FunctionID)
 			require.Equal(t, rollCallReq.RequestID, received.RequestID)
 			require.Equal(t, codes.Accepted, received.Code)
 		})
 
-		err = node.processRollCall(context.Background(), receiver.ID(), serialize(t, rollCallReq))
+		err = node.processRollCall(context.Background(), receiver.ID(), rollCallReq)
 		require.NoError(t, err)
 
 		wg.Wait()
@@ -187,7 +177,6 @@ func TestNode_RollCall(t *testing.T) {
 		require.NoError(t, err)
 
 		rollCallReq := request.RollCall{
-			Type:       blockless.MessageRollCall,
 			FunctionID: "dummy-function-id",
 			RequestID:  mocks.GenericUUID.String(),
 			Origin:     receiver.ID(),
@@ -218,14 +207,12 @@ func TestNode_RollCall(t *testing.T) {
 			from := stream.Conn().RemotePeer()
 			require.Equal(t, node.host.ID(), from)
 
-			require.Equal(t, blockless.MessageRollCallResponse, received.Type)
-
 			require.Equal(t, rollCallReq.FunctionID, received.FunctionID)
 			require.Equal(t, rollCallReq.RequestID, received.RequestID)
 			require.Equal(t, codes.Error, received.Code)
 		})
 
-		err = node.processRollCall(context.Background(), receiver.ID(), serialize(t, rollCallReq))
+		err = node.processRollCall(context.Background(), receiver.ID(), rollCallReq)
 		require.Error(t, err)
 
 		wg.Wait()
@@ -284,7 +271,6 @@ func TestNode_RollCall(t *testing.T) {
 		err = json.Unmarshal(msg.Data, &received)
 		require.NoError(t, err)
 
-		require.Equal(t, blockless.MessageRollCall, received.Type)
 		require.Equal(t, functionID, received.FunctionID)
 		require.Equal(t, requestID, received.RequestID)
 	})

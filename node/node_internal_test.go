@@ -2,7 +2,6 @@ package node
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
 	"io"
 	"testing"
@@ -67,25 +66,6 @@ func TestNode_New(t *testing.T) {
 		// Creating a worker node without executor fails.
 		_, err = New(logger, host, peerstore, functionHandler, WithRole(blockless.WorkerNode))
 		require.Error(t, err)
-	})
-}
-
-func TestNode_MessageHandler(t *testing.T) {
-	t.Run("unsupported messages should fail", func(t *testing.T) {
-		t.Parallel()
-
-		const (
-			msgType = "jibberish"
-		)
-
-		node := createNode(t, blockless.HeadNode)
-
-		handlerFunc := node.getHandler(msgType)
-
-		err := handlerFunc(context.Background(), mocks.GenericPeerID, []byte{})
-		require.Error(t, err)
-
-		require.ErrorIs(t, err, ErrUnsupportedMessage)
 	})
 }
 

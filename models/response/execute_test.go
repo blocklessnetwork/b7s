@@ -6,7 +6,6 @@ import (
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/testing/mocks"
@@ -15,9 +14,7 @@ import (
 func TestExecute_Signing(t *testing.T) {
 
 	sampleRes := Execute{
-		Type:      blockless.MessageExecuteResponse,
 		RequestID: mocks.GenericUUID.String(),
-		From:      mocks.GenericPeerID,
 		Code:      codes.OK,
 		Results: execute.ResultMap{
 			mocks.GenericPeerID: mocks.GenericExecutionResult,

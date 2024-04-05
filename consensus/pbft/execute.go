@@ -88,7 +88,6 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 	r.lastExecuted = sequence
 
 	msg := response.Execute{
-		Type:      blockless.MessageExecuteResponse,
 		Code:      res.Code,
 		RequestID: request.ID,
 		Results: execute.ResultMap{

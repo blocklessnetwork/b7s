@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -11,26 +10,19 @@ import (
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/request"
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
-func (n *Node) processExecute(ctx context.Context, from peer.ID, payload []byte) error {
+func (n *Node) processExecute(ctx context.Context, from peer.ID, req request.Execute) error {
 	// We execute functions differently depending on the node role.
 	if n.isHead() {
-		return n.headProcessExecute(ctx, from, payload)
+		return n.headProcessExecute(ctx, from, req)
 	}
-	return n.workerProcessExecute(ctx, from, payload)
+	return n.workerProcessExecute(ctx, from, req)
 }
 
-func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, payload []byte) error {
-
-	// Unpack the message.
-	var res response.Execute
-	err := json.Unmarshal(payload, &res)
-	if err != nil {
-		return fmt.Errorf("could not unpack execute response: %w", err)
-	}
-	res.From = from
+func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, res response.Execute) error {
 
 	n.log.Debug().Str("request", res.RequestID).Str("from", from.String()).Msg("received execution response")
 

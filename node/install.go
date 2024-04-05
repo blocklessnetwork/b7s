@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -13,7 +12,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
-func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, payload []byte) error {
+func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, req request.InstallFunction) error {
 
 	// Only workers should respond to function install requests.
 	if n.cfg.Role != blockless.WorkerNode {
@@ -21,23 +20,14 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, payload
 		return nil
 	}
 
-	// Unpack the request.
-	var req request.InstallFunction
-	err := json.Unmarshal(payload, &req)
-	if err != nil {
-		return fmt.Errorf("could not unpack request: %w", err)
-	}
-	req.From = from
-
 	// Install function.
-	err = n.installFunction(req.CID, req.ManifestURL)
+	err := n.installFunction(req.CID, req.ManifestURL)
 	if err != nil {
 		return fmt.Errorf("could not install function: %w", err)
 	}
 
 	// Create the response.
 	res := response.InstallFunction{
-		Type:    blockless.MessageInstallFunctionResponse,
 		Code:    codes.Accepted,
 		Message: "installed",
 		CID:     req.CID,

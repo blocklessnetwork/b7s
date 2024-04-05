@@ -1,17 +1,32 @@
 package response
 
 import (
-	"github.com/libp2p/go-libp2p/core/peer"
+	"encoding/json"
 
 	"github.com/blocklessnetwork/b7s/consensus"
+	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 )
 
+var _ (json.Marshaler) = (*FormCluster)(nil)
+
 // FormCluster describes the `MessageFormClusteRr` response.
 type FormCluster struct {
-	Type      string         `json:"type,omitempty"`
 	RequestID string         `json:"request_id,omitempty"`
-	From      peer.ID        `json:"from,omitempty"`
 	Code      codes.Code     `json:"code,omitempty"`
 	Consensus consensus.Type `json:"consensus,omitempty"`
+}
+
+func (FormCluster) Type() string { return blockless.MessageFormClusterResponse }
+
+func (f FormCluster) MarshalJSON() ([]byte, error) {
+	type Alias FormCluster
+	rec := struct {
+		Alias
+		Type string `json:"type"`
+	}{
+		Alias: Alias(f),
+		Type:  f.Type(),
+	}
+	return json.Marshal(rec)
 }

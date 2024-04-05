@@ -14,7 +14,7 @@ const (
 	DefaultFunctionDB   = "function-db"
 	DefaultConcurrency  = uint(node.DefaultConcurrency)
 	DefaultUseWebsocket = false
-	DefaultWorkspace    = ""
+	DefaultWorkspace    = "workspace"
 )
 
 type configOption struct {

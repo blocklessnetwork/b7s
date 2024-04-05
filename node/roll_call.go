@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -16,21 +15,13 @@ import (
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
-func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte) error {
+func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.RollCall) error {
 
 	// Only workers respond to roll calls at the moment.
 	if n.cfg.Role != blockless.WorkerNode {
 		n.log.Debug().Msg("skipping roll call as a non-worker node")
 		return nil
 	}
-
-	// Unpack the request.
-	var req request.RollCall
-	err := json.Unmarshal(payload, &req)
-	if err != nil {
-		return fmt.Errorf("could not unpack request: %w", err)
-	}
-	req.From = from
 
 	log := n.log.With().Str("request", req.RequestID).Str("origin", req.Origin.String()).Str("function", req.FunctionID).Logger()
 	log.Debug().Msg("received roll call request")
@@ -57,7 +48,6 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, payload []byte
 
 	// Base response to return.
 	res := response.RollCall{
-		Type:       blockless.MessageRollCallResponse,
 		FunctionID: req.FunctionID,
 		RequestID:  req.RequestID,
 		Code:       codes.Error, // CodeError by default, changed if everything goes well.
@@ -131,7 +121,7 @@ func (n *Node) executeRollCall(
 
 	// Limit for how long we wait for responses.
 	t := n.cfg.RollCallTimeout
-	if(timeout > 0) {
+	if timeout > 0 {
 		t = time.Duration(timeout) * time.Second
 	}
 
@@ -148,7 +138,7 @@ rollCallResponseLoop:
 		case <-tctx.Done():
 
 			// -1 means we'll take any peers reporting
-			if (len(reportingPeers) >= 1 && nodeCount == -1) {
+			if len(reportingPeers) >= 1 && nodeCount == -1 {
 				log.Info().Msg("enough peers reported for roll call")
 				break rollCallResponseLoop
 			}
@@ -192,7 +182,6 @@ func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID
 
 	// Create a roll call request.
 	rollCall := request.RollCall{
-		Type:       blockless.MessageRollCall,
 		Origin:     n.host.ID(),
 		FunctionID: functionID,
 		RequestID:  requestID,

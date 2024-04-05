@@ -7,6 +7,8 @@ import (
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 type topicInfo struct {
@@ -44,7 +46,7 @@ func (n *Node) subscribeToTopics(ctx context.Context) error {
 }
 
 // send serializes the message and sends it to the specified peer.
-func (n *Node) send(ctx context.Context, to peer.ID, msg interface{}) error {
+func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) error {
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -62,7 +64,7 @@ func (n *Node) send(ctx context.Context, to peer.ID, msg interface{}) error {
 }
 
 // sendToMany serializes the message and sends it to a number of peers. It aborts on any error.
-func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg interface{}) error {
+func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Message) error {
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -81,11 +83,11 @@ func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg interface{})
 	return nil
 }
 
-func (n *Node) publish(ctx context.Context, msg interface{}) error {
+func (n *Node) publish(ctx context.Context, msg blockless.Message) error {
 	return n.publishToTopic(ctx, DefaultTopic, msg)
 }
 
-func (n *Node) publishToTopic(ctx context.Context, topic string, msg interface{}) error {
+func (n *Node) publishToTopic(ctx context.Context, topic string, msg blockless.Message) error {
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)

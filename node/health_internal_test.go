@@ -80,7 +80,6 @@ func TestNode_Health(t *testing.T) {
 		err = json.Unmarshal(msg.Data, &received)
 		require.NoError(t, err)
 
-		require.Equal(t, blockless.MessageHealthCheck, received.Type)
 		require.Equal(t, http.StatusOK, received.Code)
 	}
 

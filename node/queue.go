@@ -3,6 +3,8 @@ package node
 import (
 	"sync"
 
+	"github.com/libp2p/go-libp2p/core/peer"
+
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
@@ -10,7 +12,12 @@ type rollCallQueue struct {
 	sync.Mutex
 
 	size uint
-	m    map[string]chan response.RollCall
+	m    map[string]chan rollCallResponse
+}
+
+type rollCallResponse struct {
+	From peer.ID
+	response.RollCall
 }
 
 // newQueue is used to record per-request roll call responses.
@@ -18,7 +25,7 @@ func newQueue(bufSize uint) *rollCallQueue {
 
 	q := rollCallQueue{
 		size: bufSize,
-		m:    make(map[string]chan response.RollCall),
+		m:    make(map[string]chan rollCallResponse),
 	}
 
 	return &q
@@ -35,11 +42,11 @@ func (q *rollCallQueue) create(reqID string) {
 		return
 	}
 
-	q.m[reqID] = make(chan response.RollCall, q.size)
+	q.m[reqID] = make(chan rollCallResponse, q.size)
 }
 
 // add records a new response to a roll call.
-func (q *rollCallQueue) add(id string, res response.RollCall) {
+func (q *rollCallQueue) add(id string, res rollCallResponse) {
 	q.Lock()
 	defer q.Unlock()
 
@@ -61,14 +68,14 @@ func (q *rollCallQueue) exists(reqID string) bool {
 }
 
 // responses will return a channel that can be used to iterate through all of the responses.
-func (q *rollCallQueue) responses(reqID string) <-chan response.RollCall {
+func (q *rollCallQueue) responses(reqID string) <-chan rollCallResponse {
 	q.Lock()
 	defer q.Unlock()
 
 	_, ok := q.m[reqID]
 	if !ok {
 		// Technically we shouldn't be here since we already called `create`, but there's also no harm in it.
-		q.m[reqID] = make(chan response.RollCall, q.size)
+		q.m[reqID] = make(chan rollCallResponse, q.size)
 	}
 
 	return q.m[reqID]

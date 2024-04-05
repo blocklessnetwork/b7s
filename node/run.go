@@ -89,7 +89,7 @@ func (n *Node) Run(ctx context.Context) error {
 					defer n.wg.Done()
 					defer func() { <-n.sema }()
 
-					err = n.processMessage(ctx, msg.ReceivedFrom, msg.Data)
+					err = n.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), subscriptionPipeline)
 					if err != nil {
 						n.log.Error().Err(err).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("could not process message")
 					}
@@ -97,8 +97,6 @@ func (n *Node) Run(ctx context.Context) error {
 			}
 		}(name, topic.subscription)
 	}
-
-	n.log.Debug().Msg("waiting for workers")
 
 	workers.Wait()
 
@@ -124,9 +122,9 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 			return
 		}
 
-		n.log.Debug().Str("peer", from.String()).Msg("received direct message")
+		n.log.Trace().Str("peer", from.String()).Msg("received direct message")
 
-		err = n.processMessage(ctx, from, msg)
+		err = n.processMessage(ctx, from, msg, directMessagePipeline)
 		if err != nil {
 			n.log.Error().Err(err).Str("peer", from.String()).Msg("could not process direct message")
 		}

@@ -10,15 +10,16 @@ import (
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
+var _ (json.Marshaler) = (*Execute)(nil)
+
 // Execute describes the response to the `MessageExecute` message.
 type Execute struct {
-	Type      string            `json:"type,omitempty"`
 	RequestID string            `json:"request_id,omitempty"`
-	From      peer.ID           `json:"from,omitempty"`
 	Code      codes.Code        `json:"code,omitempty"`
 	Results   execute.ResultMap `json:"results,omitempty"`
 	Cluster   execute.Cluster   `json:"cluster,omitempty"`
@@ -29,6 +30,20 @@ type Execute struct {
 
 	// Used to communicate the reason for failure to the user.
 	Message string `json:"message,omitempty"`
+}
+
+func (Execute) Type() string { return blockless.MessageExecuteResponse }
+
+func (e Execute) MarshalJSON() ([]byte, error) {
+	type Alias Execute
+	rec := struct {
+		Alias
+		Type string `json:"type"`
+	}{
+		Alias: Alias(e),
+		Type:  e.Type(),
+	}
+	return json.Marshal(rec)
 }
 
 type PBFTResultInfo struct {
@@ -42,7 +57,6 @@ func (e *Execute) Sign(key crypto.PrivKey) error {
 	// Exclude signature and the `from` field from the signature.
 	cp := *e
 	cp.Signature = ""
-	cp.From = ""
 
 	payload, err := json.Marshal(cp)
 	if err != nil {
@@ -63,7 +77,6 @@ func (e Execute) VerifySignature(key crypto.PubKey) error {
 	// Exclude signature and the `from` field from the signature.
 	cp := e
 	cp.Signature = ""
-	cp.From = ""
 
 	payload, err := json.Marshal(cp)
 	if err != nil {

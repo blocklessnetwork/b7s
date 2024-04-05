@@ -28,10 +28,10 @@ func load(args []string) (*Config, error) {
 	flags.stringFlag(roleCfg, DefaultRole)
 	flags.uintFlag(concurrencyCfg, DefaultConcurrency)
 	flags.stringSliceFlag(bootNodesCfg, nil)
-	flags.stringFlag(workspaceCfg, DefaultWorkspace)
+	flags.stringFlag(workspaceCfg, "")
 	flags.boolFlag(attributesCfg, false)
-	flags.stringFlag(peerDBCfg, DefaultPeerDB)
-	flags.stringFlag(functionDBCfg, DefaultFunctionDB)
+	flags.stringFlag(peerDBCfg, "")
+	flags.stringFlag(functionDBCfg, "")
 	flags.stringSliceFlag(topicsCfg, nil)
 
 	// Log.

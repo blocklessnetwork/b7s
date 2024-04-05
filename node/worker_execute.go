@@ -2,28 +2,18 @@ package node
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
-func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload []byte) error {
-
-	// Unpack the request.
-	var req request.Execute
-	err := json.Unmarshal(payload, &req)
-	if err != nil {
-		return fmt.Errorf("could not unpack the request: %w", err)
-	}
-	req.From = from
+func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
 
 	requestID := req.RequestID
 	if requestID == "" {
@@ -34,7 +24,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 
 	// NOTE: In case of an error, we do not return early from this function.
 	// Instead, we send the response back to the caller, whatever it may be.
-	code, result, err := n.workerExecute(ctx, requestID, req.Timestamp, req.Request, req.From)
+	code, result, err := n.workerExecute(ctx, requestID, req.Timestamp, req.Request, from)
 	if err != nil {
 		log.Error().Err(err).Str("peer", from.String()).Msg("execution failed")
 	}
@@ -52,7 +42,6 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 
 	// Create the execution response from the execution result.
 	res := response.Execute{
-		Type:      blockless.MessageExecuteResponse,
 		Code:      code,
 		RequestID: requestID,
 		Results: execute.ResultMap{
@@ -61,7 +50,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, payload [
 	}
 
 	// Send the response, whatever it may be (success or failure).
-	err = n.send(ctx, req.From, res)
+	err = n.send(ctx, from, res)
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)
 	}
