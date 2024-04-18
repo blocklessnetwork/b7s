@@ -1,0 +1,318 @@
+openapi: 3.0.3
+
+namespace: test-test-api
+
+info:
+  title: B7S Node Rest API - OpenAPI 3.0
+  description: |-
+    This is B7S Head Node Server based on the OpenAPI 3.0 specification.
+  version: 0.4.9
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://petstore3.swagger.io/api/v3
+tags:
+  - name: functions
+    description: Everything about Blockless Functions
+    externalDocs:
+      description: Find out more
+      url: https://blockless.network/docs/network
+  - name: health
+    description: Verify node health and availability
+    
+paths:
+  /api/v1/health:
+    get:
+      tags:
+        - health
+      summary: Check Node health
+      description: Check Node health
+      operationId: health
+      responses:
+        '200':
+          description: Node is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/v1/functions/execute:
+    post:
+      tags:
+        - functions
+      summary: Execute a Blockless Function
+      description: Execute a Blockless Function
+      operationId: executeFunction
+      requestBody:
+        description: Execute a Blockless Function
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/ExecutionRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful execution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionResponse'
+        '400':
+          description: Invalid execution request
+        '500':
+          description: Internal server error
+
+  /api/v1/functions/requests/result:
+    post:
+      tags:
+        - functions
+      summary: Get the result of an Execution Request
+      description: Get the result of an Execution Request
+      operationId: executionResult
+      requestBody:
+        description: Get the result of an Execution Request, identified by the request ID
+        content:
+          application/json:
+            schema:
+              properties:
+                id:
+                  type: string
+                  description: ID of the Execution Request
+        required: true
+      responses:
+        '200':
+          description: Execution result retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionResponse'
+        '400':
+          description: Invalid request
+        '500':
+          description: Internal server error
+
+
+  /api/v1/functions/install:
+    post:
+      tags:
+        - functions
+      summary: Install a Blockless Function
+      description: Install a Blockless Function
+      operationId: installFunction
+      requestBody:
+        description: Install a Blockless Function
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstallRequest'
+        required: true
+      responses:
+        '200': 
+          description: Installation request acknowledged
+
+components:
+  schemas:
+    ExecutionRequest:
+      required:
+        - function_id
+        - method
+      type: object
+      properties:
+        function_id:
+          description: CID of the function
+          type: string
+          example: "bafybeia24v4czavtpjv2co3j54o4a5ztduqcpyyinerjgncx7s2s22s7ea" 
+        method:
+          type: string
+          example: hello-world.wasm
+          description: Name of the WASM file to execute
+        parameters:
+          type: array
+          description: CLI arguments for the Blockless Function
+          items:
+            $ref: '#/components/schemas/ExecutionParameter'
+          example: 
+            - value: --cli-flag1
+            - value: value1
+            - value: --cli-flag2
+            - value: value2
+        config:
+          description: Configuration options for the Execution Request
+          $ref: '#/components/schemas/ExecutionConfig'
+        topic:
+          description: In the scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier
+          type: string
+          example: ""
+
+    ExecutionParameter:
+      type: object
+      properties:
+        value:
+          type: string
+
+    ExecutionConfig:
+      type: object
+      properties:
+        runtime:
+          description: Configuration options for the Blockless Runtime
+          $ref: '#/components/schemas/RuntimeConfig'
+        env_vars:
+          description: Environment variables for the Blockless Function
+          type: array
+          items:
+            $ref: '#/components/schemas/NamedValue'
+        stdin:
+          description: Standard Input for the Blockless Function
+          type: string
+          example: STDIO for the executed Blockless Function
+        permissions:
+          description: Permissions for the Execution
+          type: array
+          items:
+            type: string
+            example: "https://api.example.com"
+        result_aggregation:
+          $ref: '#/components/schemas/ResultAggregation'
+        attributes:
+          description: Attributes that the executing Node should have
+          $ref: '#/components/schemas/NodeAttributes'
+        number_of_nodes:
+          description: Number of nodes that should execute the Blockless Function
+          type: integer
+          example: 1
+        timeout:
+          description: How long should the execution take
+          type: integer
+        consensus_algorithm:
+          description: Which consensus algorithm should be formed for this execution
+          type: string
+          example: pbft
+        threshold:
+          description: Portion of the nodes that should respond with a result to consider this execution successful
+          type: number
+          example: 1.0
+
+    RuntimeConfig:
+      type: object
+      properties:
+        entry:
+          type: string
+          example: hello-world.wasm
+        run_time:
+          description: How long should the execution take
+          type: integer
+        debug_info:
+          type: boolean
+        fuel:
+          type: integer
+        memory:
+          description: Memory limit for this execution
+          type: integer
+        logger:
+          type: string
+        drivers_root_path:
+          type: string
+
+    NodeAttributes:
+      type: object
+      properties:
+        attestation_required:
+          description: Is it necessary that the Node attributes are vouched for by an attestor
+          type: boolean
+          example: false
+        values:
+          description: Attributes that the Node should have
+          $ref: '#/components/schemas/NamedValue'
+        attestors:
+          description: Require specific attestors as vouchers
+          $ref: '#/components/schemas/AttributeAttestors'
+
+    AttributeAttestors:
+      type: object
+      properties:
+        each:
+          description: LibP2p Peer IDs of each mandatory attestor
+          type: array
+          items:
+            type: string
+            example:
+              - mandatory-attestor-1
+              - mandatory-attestor-2
+        one_of:
+          description: LibP2p Peer IDs of attestors where we require at least one
+          type: array
+          items:
+            type: string
+          example:
+            - attestor-1
+            - attestor-2
+
+    ResultAggregation:
+      type: object
+      properties:
+        enable:
+          type: boolean
+        type:
+          type: string
+        parameters:
+          $ref: '#/components/schemas/NamedValue'
+
+    ExecutionResponse:
+      type: object
+      properties:
+        code:
+          description: Status of the execution
+          type: string
+          example: "200"
+
+    NamedValue:
+      description: A key-value pair
+      type: object
+      properties:
+        name:
+          type: string
+          example: name
+        value:
+          type: string
+          example: value
+
+    InstallRequest:
+      type: object
+      properties:
+        cid:
+          description: CID of the function 
+          type: string
+          example: "bafybeia24v4czavtpjv2co3j54o4a5ztduqcpyyinerjgncx7s2s22s7ea"
+        uri:
+          type: string
+          example: ""
+        topic:
+          description: In a scneario where workers form subgroups, you can target a specific subgroup by specifying its identifier
+          type: string
+          example: ""
+    InstallResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "200"
+
+    ExecutionResultRequest:
+      type: object
+      properties:
+        id:
+          description: ID of the Execution Request
+          type: string
+          example: "b6fbbc5e-1d16-4ea9-b557-51f4a6ab565c"
+    ExecutionResultResponse:
+      type: object
+        
+    HealthResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "200"
+
+
