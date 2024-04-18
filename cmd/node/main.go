@@ -15,11 +15,11 @@ import (
 	"github.com/ziflex/lecho/v3"
 
 	"github.com/blocklessnetwork/b7s/api"
+	"github.com/blocklessnetwork/b7s/config"
 	"github.com/blocklessnetwork/b7s/executor"
 	"github.com/blocklessnetwork/b7s/executor/limits"
 	"github.com/blocklessnetwork/b7s/fstore"
 	"github.com/blocklessnetwork/b7s/host"
-	"github.com/blocklessnetwork/b7s/internal/config"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node"
 	"github.com/blocklessnetwork/b7s/peerstore"

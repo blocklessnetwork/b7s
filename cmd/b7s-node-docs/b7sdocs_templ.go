@@ -11,7 +11,7 @@ import "io"
 import "bytes"
 
 import "fmt"
-import "github.com/blocklessnetwork/b7s/internal/config"
+import "github.com/blocklessnetwork/b7s/config"
 
 func page(configs []config.ConfigOption) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
