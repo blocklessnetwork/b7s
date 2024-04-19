@@ -28,14 +28,6 @@ type ExecuteResponse struct {
 	Cluster   execute.Cluster   `json:"cluster,omitempty"`
 }
 
-// ExecuteResult represents the API representation of a single execution response.
-// It is similar to the model in `execute.Result`, except it omits the usage information for now.
-type ExecuteResult struct {
-	Code      codes.Code            `json:"code,omitempty"`
-	Result    execute.RuntimeOutput `json:"result,omitempty"`
-	RequestID string                `json:"request_id,omitempty"`
-}
-
 // Execute implements the REST API endpoint for function execution.
 func (a *API) Execute(ctx echo.Context) error {
 
