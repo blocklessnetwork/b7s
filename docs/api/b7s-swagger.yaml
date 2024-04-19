@@ -1,7 +1,5 @@
 openapi: 3.0.3
 
-namespace: test-test-api
-
 info:
   title: B7S Node Rest API - OpenAPI 3.0
   description: |-
@@ -71,14 +69,10 @@ paths:
       description: Get the result of an Execution Request
       operationId: executionResult
       requestBody:
-        description: Get the result of an Execution Request, identified by the request ID
         content:
           application/json:
             schema:
-              properties:
-                id:
-                  type: string
-                  description: ID of the Execution Request
+              $ref: '#/components/schemas/ExecutionResultRequest'
         required: true
       responses:
         '200':
@@ -86,7 +80,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExecutionResponse'
+                $ref: '#/components/schemas/ExecutionResultResponse'
         '400':
           description: Invalid request
         '500':
@@ -110,6 +104,7 @@ paths:
       responses:
         '200': 
           description: Installation request acknowledged
+          $ref: '#/components/schemas/InstallResponse'
 
 components:
   schemas:
@@ -138,7 +133,6 @@ components:
             - value: --cli-flag2
             - value: value2
         config:
-          description: Configuration options for the Execution Request
           $ref: '#/components/schemas/ExecutionConfig'
         topic:
           description: In the scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier
@@ -152,10 +146,10 @@ components:
           type: string
 
     ExecutionConfig:
+      description: Configuration options for the Execution Request
       type: object
       properties:
         runtime:
-          description: Configuration options for the Blockless Runtime
           $ref: '#/components/schemas/RuntimeConfig'
         env_vars:
           description: Environment variables for the Blockless Function
@@ -165,7 +159,7 @@ components:
         stdin:
           description: Standard Input for the Blockless Function
           type: string
-          example: STDIO for the executed Blockless Function
+          example: Standard Input for the Blockless Function
         permissions:
           description: Permissions for the Execution
           type: array
@@ -175,7 +169,6 @@ components:
         result_aggregation:
           $ref: '#/components/schemas/ResultAggregation'
         attributes:
-          description: Attributes that the executing Node should have
           $ref: '#/components/schemas/NodeAttributes'
         number_of_nodes:
           description: Number of nodes that should execute the Blockless Function
@@ -194,6 +187,7 @@ components:
           example: 1.0
 
     RuntimeConfig:
+      description: Configuration options for the Blockless Runtime
       type: object
       properties:
         entry:
@@ -215,6 +209,7 @@ components:
           type: string
 
     NodeAttributes:
+      description: Attributes that the executing Node should have
       type: object
       properties:
         attestation_required:
@@ -222,11 +217,13 @@ components:
           type: boolean
           example: false
         values:
-          description: Attributes that the Node should have
-          $ref: '#/components/schemas/NamedValue'
+          allOf:
+            - description: Attributes that the Node should have
+            - $ref: '#/components/schemas/NamedValue'
         attestors:
-          description: Require specific attestors as vouchers
-          $ref: '#/components/schemas/AttributeAttestors'
+          allOf:
+            - description: Require specific attestors as vouchers
+            - $ref: '#/components/schemas/AttributeAttestors'
 
     AttributeAttestors:
       type: object
@@ -333,9 +330,6 @@ components:
              - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
              - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCob
              - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoc
-        
-
-
 
     NamedValue:
       description: A key-value pair
@@ -370,14 +364,16 @@ components:
           example: "200"
 
     ExecutionResultRequest:
+      description: Get the result of an Execution Request, identified by the request ID
       type: object
       properties:
         id:
           description: ID of the Execution Request
           type: string
           example: b6fbbc5e-1d16-4ea9-b557-51f4a6ab565c
+          
     ExecutionResultResponse:
-      type: object
+      $ref: '#/components/schemas/ExecutionResponse'
         
     HealthResponse:
       type: object
@@ -385,5 +381,3 @@ components:
         code:
           type: string
           example: "200"
-
-
