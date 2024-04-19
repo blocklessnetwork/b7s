@@ -232,21 +232,21 @@ components:
       type: object
       properties:
         each:
-          description: LibP2p Peer IDs of each mandatory attestor
+          description: LibP2P Peer IDs of each mandatory attestor
           type: array
           items:
             type: string
             example:
-              - mandatory-attestor-1
-              - mandatory-attestor-2
+              - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
+              - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCob
         one_of:
-          description: LibP2p Peer IDs of attestors where we require at least one
+          description: LibP2P Peer IDs of attestors where we require at least one
           type: array
           items:
             type: string
           example:
-            - attestor-1
-            - attestor-2
+            - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
+            - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCob
 
     ResultAggregation:
       type: object
@@ -265,6 +265,77 @@ components:
           description: Status of the execution
           type: string
           example: "200"
+        request_id:
+          description: ID of the Execution Request
+          type: string
+          example: b6fbbc5e-1d16-4ea9-b557-51f4a6ab565c
+        message:
+          description: If the Execution Request failed, this message might have more info about the error
+          type: string
+        results:
+          $ref: '#/components/schemas/AggregatedResults'
+        cluster:
+          $ref: '#/components/schemas/NodeCluster'
+
+    AggregatedResults:
+      description: List of unique results of the Execution Request
+      type: array
+      items:
+        $ref: '#/components/schemas/AggregatedResult'
+
+    AggregatedResult:
+      description: Result of an Execution Request
+      type: object
+      properties:
+        result:
+          $ref: '#/components/schemas/ExecutionResult'
+        frequency:
+          description: Frequency of this result among all nodes that executed the request
+          type: number
+          example: 0.66
+        peers:
+          description: Libp2p IDs of the Nodes that got this result
+          type: array
+          items:
+            type: string
+          example:
+            - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
+            - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCob
+
+    ExecutionResult:
+      description: Actual outputs of the execution, like Standard Output, Standard Error, Exit Code etc..
+      type: object
+      properties:
+        stdout:
+          description: Standard Output of the execution
+          type: string
+        stderr:
+          description: Standard Error of the execution
+          type: string
+        exit_code:
+          description: Exit code of the execution
+          type: string
+
+    NodeCluster:
+      description: Information about the cluster of nodes that executed this request
+      type: object
+      properties:
+        main:
+          description: LibP2P ID of the Primary node for the cluster
+          type: string
+          example: 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
+        peers:
+          description: LibP2P IDs of the Nodes in this cluster
+          type: array
+          items:
+            type: string
+            example:
+             - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
+             - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCob
+             - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoc
+        
+
+
 
     NamedValue:
       description: A key-value pair
@@ -304,7 +375,7 @@ components:
         id:
           description: ID of the Execution Request
           type: string
-          example: "b6fbbc5e-1d16-4ea9-b557-51f4a6ab565c"
+          example: b6fbbc5e-1d16-4ea9-b557-51f4a6ab565c
     ExecutionResultResponse:
       type: object
         
