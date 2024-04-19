@@ -8,25 +8,9 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/node/aggregate"
 )
-
-// ExecuteRequest describes the payload for the REST API request for function execution.
-type ExecuteRequest struct {
-	execute.Request
-	Topic string `json:"topic,omitempty"`
-}
-
-// ExecuteResponse describes the REST API response for function execution.
-type ExecuteResponse struct {
-	Code      codes.Code        `json:"code,omitempty"`
-	RequestID string            `json:"request_id,omitempty"`
-	Message   string            `json:"message,omitempty"`
-	Results   aggregate.Results `json:"results,omitempty"`
-	Cluster   execute.Cluster   `json:"cluster,omitempty"`
-}
 
 // Execute implements the REST API endpoint for function execution.
 func (a *API) Execute(ctx echo.Context) error {

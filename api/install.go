@@ -15,18 +15,6 @@ const (
 	functionInstallTimeout = 10 * time.Second
 )
 
-// InstallFunctionRequest describes the payload for the REST API request for function install.
-type InstallFunctionRequest struct {
-	CID      string `json:"cid"`
-	URI      string `json:"uri"`
-	Subgroup string `json:"subgroup"`
-}
-
-// InstallFunctionResponse describes the REST API response for the function install.
-type InstallFunctionResponse struct {
-	Code string `json:"code"`
-}
-
 func (a *API) Install(ctx echo.Context) error {
 
 	// Unpack the API request.
