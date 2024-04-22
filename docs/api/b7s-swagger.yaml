@@ -104,7 +104,10 @@ paths:
       responses:
         '200': 
           description: Installation request acknowledged
-          $ref: '#/components/schemas/InstallResponse'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstallResponse'
 
 components:
   schemas:
@@ -141,6 +144,8 @@ components:
 
     ExecutionParameter:
       type: object
+      required:
+        - value
       properties:
         value:
           type: string
@@ -334,6 +339,9 @@ components:
     NamedValue:
       description: A key-value pair
       type: object
+      required:
+        - name
+        - value
       properties:
         name:
           type: string
@@ -344,6 +352,8 @@ components:
 
     InstallRequest:
       type: object
+      required:
+        - cid
       properties:
         cid:
           description: CID of the function 
@@ -356,6 +366,7 @@ components:
           description: In a scneario where workers form subgroups, you can target a specific subgroup by specifying its identifier
           type: string
           example: ""
+
     InstallResponse:
       type: object
       properties:
@@ -366,6 +377,8 @@ components:
     ExecutionResultRequest:
       description: Get the result of an Execution Request, identified by the request ID
       type: object
+      required:
+        - id
       properties:
         id:
           description: ID of the Execution Request
