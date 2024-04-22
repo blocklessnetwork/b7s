@@ -1,0 +1,29 @@
+output: models_gen.go
+
+package: api
+
+generate:
+  # Generate Echo server boilerplate
+  echo-server: true
+
+  # Generate strict server wrapper - this will parse request bodies and encode responses
+  strict-server: false
+
+  # Generate client boilerplate
+  client: true
+
+  # Generate models
+  models: true
+
+  # Embed swagger spec in the generated code
+  embedded-spec: true
+
+
+output-options:
+  # Generate nullable types for nullable fields
+  nullable-type: true
+
+
+# Mapping Golang package path to external references
+# import-mapping:
+
