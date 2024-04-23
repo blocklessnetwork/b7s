@@ -1,0 +1,15 @@
+output: server.gen.go
+
+package: api
+
+generate:
+  # Generate Echo server boilerplate
+  echo-server: true
+
+  # Generate strict server wrapper - this will parse request bodies and encode responses
+  strict-server: false
+
+  # Embed swagger spec in the generated code
+  embedded-spec: true
+
+

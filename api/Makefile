@@ -1,7 +1,14 @@
 
 
-all: generate
+all: server client models
 
 
-generate:
-	oapi-codegen --config ./oapi-config.yaml ./b7s-swagger.yaml
+server:
+	oapi-codegen --config ./server.yaml ./b7s-swagger.yaml
+
+client:
+	oapi-codegen --config ./client.yaml ./b7s-swagger.yaml
+
+models:
+	oapi-codegen --config ./models.yaml ./b7s-swagger.yaml
+
