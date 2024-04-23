@@ -33,7 +33,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
+                $ref: '#/components/schemas/HealthStatus'
 
   /api/v1/functions/execute:
     post:
@@ -72,7 +72,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExecutionResultRequest'
+              $ref: '#/components/schemas/FunctionResultRequest'
         required: true
       responses:
         '200':
@@ -80,7 +80,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExecutionResultResponse'
+                $ref: '#/components/schemas/FunctionResultResponse'
         '400':
           description: Invalid request
         '500':
@@ -99,7 +99,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InstallRequest'
+              $ref: '#/components/schemas/FunctionInstallRequest'
         required: true
       responses:
         '200': 
@@ -107,7 +107,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstallResponse'
+                $ref: '#/components/schemas/FunctionInstallResponse'
 
 
 # Schema notes:
@@ -157,6 +157,9 @@ components:
       required:
         - value
       x-go-type-skip-optional-pointer: true
+      x-go-type: execute.Parameter
+      x-go-type-import:
+        path: github.com/blocklessnetwork/b7s/models/execute
       properties:
         value:
           type: string
@@ -166,6 +169,9 @@ components:
       description: Configuration options for the Execution Request
       type: object
       x-go-type-skip-optional-pointer: true
+      x-go-type: execute.Config
+      x-go-type-import:
+        path: github.com/blocklessnetwork/b7s/models/execute
       properties:
         runtime:
           $ref: '#/components/schemas/RuntimeConfig'
@@ -215,6 +221,9 @@ components:
       description: Configuration options for the Blockless Runtime
       type: object
       x-go-type-skip-optional-pointer: true
+      x-go-type: execute.BLSRuntimeConfig
+      x-go-type-import:
+        path: github.com/blocklessnetwork/b7s/models/execute
       properties:
         entry:
           type: string
@@ -245,6 +254,9 @@ components:
       description: Attributes that the executing Node should have
       type: object
       x-go-type-skip-optional-pointer: true
+      x-go-type: execute.Attributes
+      x-go-type-import:
+        path: github.com/blocklessnetwork/b7s/models/execute
       properties:
         attestation_required:
           description: Is it necessary that the Node attributes are vouched for by an attestor
@@ -263,6 +275,9 @@ components:
       type: object
       description: Require specific attestors as vouchers
       x-go-type-skip-optional-pointer: true
+      x-go-type: execute.AttributeAttestors
+      x-go-type-import:
+        path: github.com/blocklessnetwork/b7s/models/execute
       properties:
         each:
           description: LibP2P Peer IDs of each mandatory attestor
@@ -286,6 +301,9 @@ components:
     ResultAggregation:
       type: object
       x-go-type-skip-optional-pointer: true
+      x-go-type: execute.ResultAggregation
+      x-go-type-import:
+        path: github.com/blocklessnetwork/b7s/models/execute
       properties:
         enable:
           type: boolean
@@ -323,6 +341,9 @@ components:
       description: List of unique results of the Execution Request
       type: array
       x-go-type-skip-optional-pointer: true
+      x-go-type: aggregate.Results
+      x-go-type-import:
+        path: github.com/blocklessnetwork/b7s/node/aggregate
       items:
         $ref: '#/components/schemas/AggregatedResult'
 
@@ -330,6 +351,9 @@ components:
       description: Result of an Execution Request
       type: object
       x-go-type-skip-optional-pointer: true
+      x-go-type: aggregate.Result
+      x-go-type-import:
+        path: github.com/blocklessnetwork/b7s/node/aggregate
       properties:
         result:
           $ref: '#/components/schemas/ExecutionResult'
@@ -353,6 +377,9 @@ components:
       description: Actual outputs of the execution, like Standard Output, Standard Error, Exit Code etc..
       type: object
       x-go-type-skip-optional-pointer: true
+      x-go-type: execute.RuntimeOutput
+      x-go-type-import:
+        path: github.com/blocklessnetwork/b7s/models/execute
       properties:
         stdout:
           description: Standard Output of the execution
@@ -371,6 +398,9 @@ components:
       description: Information about the cluster of nodes that executed this request
       type: object
       x-go-type-skip-optional-pointer: true
+      x-go-type: execute.Cluster
+      x-go-type-import:
+        path: github.com/blocklessnetwork/b7s/models/execute
       properties:
         main:
           description: LibP2P ID of the Primary node for the cluster
@@ -392,6 +422,9 @@ components:
       description: A key-value pair
       type: object
       x-go-type-skip-optional-pointer: true
+      x-go-type: execute.EnvVar
+      x-go-type-import:
+        path: github.com/blocklessnetwork/b7s/models/execute
       required:
         - name
         - value
@@ -405,7 +438,7 @@ components:
           example: value
           x-go-type-skip-optional-pointer: true
 
-    InstallRequest:
+    FunctionInstallRequest:
       type: object
       required:
         - cid
@@ -421,12 +454,12 @@ components:
           example: ""
           x-go-type-skip-optional-pointer: true
         topic:
-          description: In a scneario where workers form subgroups, you can target a specific subgroup by specifying its identifier
+          description: In a scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier
           type: string
           example: ""
           x-go-type-skip-optional-pointer: true
 
-    InstallResponse:
+    FunctionInstallResponse:
       type: object
       x-go-type-skip-optional-pointer: true
       properties:
@@ -435,7 +468,7 @@ components:
           example: "200"
           x-go-type-skip-optional-pointer: true
 
-    ExecutionResultRequest:
+    FunctionResultRequest:
       description: Get the result of an Execution Request, identified by the request ID
       type: object
       required:
@@ -448,12 +481,14 @@ components:
           example: b6fbbc5e-1d16-4ea9-b557-51f4a6ab565c
           x-go-type-skip-optional-pointer: true
           
-    ExecutionResultResponse:
+    FunctionResultResponse:
+      description: Result of a past Execution
       x-go-type: ExecutionResultResponse
       $ref: '#/components/schemas/ExecutionResponse'
         
-    HealthResponse:
+    HealthStatus:
       type: object
+      description: Node status
       x-go-type-skip-optional-pointer: true
       properties:
         code:

@@ -424,7 +424,7 @@ func (r ExecuteFunctionResponse) StatusCode() int {
 type InstallFunctionResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *InstallResponse
+	JSON200      *FunctionInstallResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -446,7 +446,7 @@ func (r InstallFunctionResponse) StatusCode() int {
 type ExecutionResultResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ExecutionResultResponse
+	JSON200      *FunctionResultResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -468,7 +468,7 @@ func (r ExecutionResultResponse) StatusCode() int {
 type HealthResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *HealthResponse
+	JSON200      *HealthStatus
 }
 
 // Status returns HTTPResponse.Status
@@ -588,7 +588,7 @@ func ParseInstallFunctionResponse(rsp *http.Response) (*InstallFunctionResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InstallResponse
+		var dest FunctionInstallResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -614,7 +614,7 @@ func ParseExecutionResultResponse(rsp *http.Response) (*ExecutionResultResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ExecutionResultResponse
+		var dest FunctionResultResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -640,7 +640,7 @@ func ParseHealthResponse(rsp *http.Response) (*HealthResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest HealthResponse
+		var dest HealthStatus
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
