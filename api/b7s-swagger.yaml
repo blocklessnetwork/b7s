@@ -109,6 +109,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/InstallResponse'
 
+
+# Schema notes:
+# - all fields have a x-go-type-skip-optional-pointer - this is because otherwise all fields which arent required are generated as *string instead of a string
+# - all types have a Go name explicitly set - this is to avoid inlined structs in certain scenarios
+
 components:
   schemas:
     ExecutionRequest:
@@ -116,15 +121,18 @@ components:
         - function_id
         - method
       type: object
+      x-go-name: ExecutionRequest
       properties:
         function_id:
           description: CID of the function
           type: string
           example: "bafybeia24v4czavtpjv2co3j54o4a5ztduqcpyyinerjgncx7s2s22s7ea" 
+          x-go-type-skip-optional-pointer: true
         method:
           type: string
           example: hello-world.wasm
           description: Name of the WASM file to execute
+          x-go-type-skip-optional-pointer: true
         parameters:
           type: array
           description: CLI arguments for the Blockless Function
@@ -135,39 +143,48 @@ components:
             - value: value1
             - value: --cli-flag2
             - value: value2
+          x-go-type-skip-optional-pointer: true
         config:
           $ref: '#/components/schemas/ExecutionConfig'
+          
         topic:
           description: In the scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier
           type: string
           example: ""
+          x-go-type-skip-optional-pointer: true
 
     ExecutionParameter:
       type: object
+      x-go-name: ExecutionParameter
       required:
         - value
       properties:
         value:
           type: string
+          x-go-type-skip-optional-pointer: true
 
     ExecutionConfig:
       description: Configuration options for the Execution Request
       type: object
+      x-go-name: ExecutionConfig
       properties:
         runtime:
           $ref: '#/components/schemas/RuntimeConfig'
         env_vars:
           description: Environment variables for the Blockless Function
           type: array
+          x-go-type-skip-optional-pointer: true
           items:
             $ref: '#/components/schemas/NamedValue'
         stdin:
           description: Standard Input for the Blockless Function
           type: string
           example: Standard Input for the Blockless Function
+          x-go-type-skip-optional-pointer: true
         permissions:
           description: Permissions for the Execution
           type: array
+          x-go-type-skip-optional-pointer: true
           items:
             type: string
             example: "https://api.example.com"
@@ -179,59 +196,74 @@ components:
           description: Number of nodes that should execute the Blockless Function
           type: integer
           example: 1
+          x-go-type-skip-optional-pointer: true
         timeout:
           description: How long should the execution take
           type: integer
+          x-go-type-skip-optional-pointer: true
         consensus_algorithm:
           description: Which consensus algorithm should be formed for this execution
           type: string
           example: pbft
+          x-go-type-skip-optional-pointer: true
         threshold:
           description: Portion of the nodes that should respond with a result to consider this execution successful
           type: number
           example: 1.0
+          x-go-type-skip-optional-pointer: true
 
     RuntimeConfig:
       description: Configuration options for the Blockless Runtime
       type: object
+      x-go-name: RuntimeConfig
       properties:
         entry:
           type: string
           example: hello-world.wasm
+          x-go-type-skip-optional-pointer: true
         run_time:
           description: How long should the execution take
           type: integer
+          x-go-type-skip-optional-pointer: true
         debug_info:
           type: boolean
+          x-go-type-skip-optional-pointer: true
         fuel:
           type: integer
+          x-go-type-skip-optional-pointer: true
         memory:
           description: Memory limit for this execution
           type: integer
+          x-go-type-skip-optional-pointer: true
         logger:
           type: string
+          x-go-type-skip-optional-pointer: true
         drivers_root_path:
           type: string
+          x-go-type-skip-optional-pointer: true
 
     NodeAttributes:
       description: Attributes that the executing Node should have
       type: object
+      x-go-name: NodeAttributes
       properties:
         attestation_required:
           description: Is it necessary that the Node attributes are vouched for by an attestor
           type: boolean
           example: false
+          x-go-type-skip-optional-pointer: true
         values:
           allOf:
             - description: Attributes that the Node should have
             - $ref: '#/components/schemas/NamedValue'
+            - x-go-type-skip-optional-pointer: true
         attestors:
-          allOf:
-            - description: Require specific attestors as vouchers
-            - $ref: '#/components/schemas/AttributeAttestors'
+            $ref: '#/components/schemas/AttributeAttestors'
 
     AttributeAttestors:
       type: object
+      description: Require specific attestors as vouchers
+      x-go-name: AttributeAttestors
       properties:
         each:
           description: LibP2P Peer IDs of each mandatory attestor
@@ -241,6 +273,7 @@ components:
             example:
               - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
               - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCob
+          x-go-type-skip-optional-pointer: true
         one_of:
           description: LibP2P Peer IDs of attestors where we require at least one
           type: array
@@ -249,31 +282,41 @@ components:
           example:
             - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
             - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCob
+          x-go-type-skip-optional-pointer: true
 
     ResultAggregation:
       type: object
+      x-go-name: ResultAggregation
       properties:
         enable:
           type: boolean
+          x-go-type-skip-optional-pointer: true
         type:
           type: string
+          x-go-type-skip-optional-pointer: true
         parameters:
-          $ref: '#/components/schemas/NamedValue'
+          allOf:
+            - $ref: '#/components/schemas/NamedValue'
+            - x-go-type-skip-optional-pointer: true
 
     ExecutionResponse:
       type: object
+      x-go-name: ExecutionResponse
       properties:
         code:
           description: Status of the execution
           type: string
           example: "200"
+          x-go-type-skip-optional-pointer: true
         request_id:
           description: ID of the Execution Request
           type: string
           example: b6fbbc5e-1d16-4ea9-b557-51f4a6ab565c
+          x-go-type-skip-optional-pointer: true
         message:
           description: If the Execution Request failed, this message might have more info about the error
           type: string
+          x-go-type-skip-optional-pointer: true
         results:
           $ref: '#/components/schemas/AggregatedResults'
         cluster:
@@ -282,12 +325,14 @@ components:
     AggregatedResults:
       description: List of unique results of the Execution Request
       type: array
+      x-go-name: AggregatedResults
       items:
         $ref: '#/components/schemas/AggregatedResult'
 
     AggregatedResult:
       description: Result of an Execution Request
       type: object
+      x-go-name: AggregatedResult
       properties:
         result:
           $ref: '#/components/schemas/ExecutionResult'
@@ -295,6 +340,7 @@ components:
           description: Frequency of this result among all nodes that executed the request
           type: number
           example: 0.66
+          x-go-type-skip-optional-pointer: true
         peers:
           description: Libp2p IDs of the Nodes that got this result
           type: array
@@ -303,29 +349,36 @@ components:
           example:
             - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
             - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCob
+          x-go-type-skip-optional-pointer: true
 
     ExecutionResult:
       description: Actual outputs of the execution, like Standard Output, Standard Error, Exit Code etc..
       type: object
+      x-go-name: ExecutionResult
       properties:
         stdout:
           description: Standard Output of the execution
           type: string
+          x-go-type-skip-optional-pointer: true
         stderr:
           description: Standard Error of the execution
           type: string
+          x-go-type-skip-optional-pointer: true
         exit_code:
           description: Exit code of the execution
           type: string
+          x-go-type-skip-optional-pointer: true
 
     NodeCluster:
       description: Information about the cluster of nodes that executed this request
       type: object
+      x-go-name: NodeCluster
       properties:
         main:
           description: LibP2P ID of the Primary node for the cluster
           type: string
           example: 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
+          x-go-type-skip-optional-pointer: true
         peers:
           description: LibP2P IDs of the Nodes in this cluster
           type: array
@@ -335,10 +388,12 @@ components:
              - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
              - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCob
              - 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoc
+          x-go-type-skip-optional-pointer: true
 
     NamedValue:
       description: A key-value pair
       type: object
+      x-go-type: NamedValue
       required:
         - name
         - value
@@ -346,37 +401,46 @@ components:
         name:
           type: string
           example: name
+          x-go-type-skip-optional-pointer: true
         value:
           type: string
           example: value
+          x-go-type-skip-optional-pointer: true
 
     InstallRequest:
       type: object
       required:
         - cid
+      x-go-type: InstallRequest
       properties:
         cid:
           description: CID of the function 
           type: string
           example: "bafybeia24v4czavtpjv2co3j54o4a5ztduqcpyyinerjgncx7s2s22s7ea"
+          x-go-type-skip-optional-pointer: true
         uri:
           type: string
           example: ""
+          x-go-type-skip-optional-pointer: true
         topic:
           description: In a scneario where workers form subgroups, you can target a specific subgroup by specifying its identifier
           type: string
           example: ""
+          x-go-type-skip-optional-pointer: true
 
     InstallResponse:
       type: object
+      x-go-type: InstallResponse
       properties:
         code:
           type: string
           example: "200"
+          x-go-type-skip-optional-pointer: true
 
     ExecutionResultRequest:
       description: Get the result of an Execution Request, identified by the request ID
       type: object
+      x-go-type: ExecutionResultRequest
       required:
         - id
       properties:
@@ -384,13 +448,17 @@ components:
           description: ID of the Execution Request
           type: string
           example: b6fbbc5e-1d16-4ea9-b557-51f4a6ab565c
+          x-go-type-skip-optional-pointer: true
           
     ExecutionResultResponse:
+      x-go-type: ExecutionResultResponse
       $ref: '#/components/schemas/ExecutionResponse'
         
     HealthResponse:
       type: object
+      x-go-type: HealthResponse
       properties:
         code:
           type: string
           example: "200"
+          x-go-type-skip-optional-pointer: true

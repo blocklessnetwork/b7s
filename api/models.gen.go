@@ -6,56 +6,56 @@ package api
 // AggregatedResult Result of an Execution Request
 type AggregatedResult struct {
 	// Frequency Frequency of this result among all nodes that executed the request
-	Frequency *float32 `json:"frequency,omitempty"`
+	Frequency float32 `json:"frequency,omitempty"`
 
 	// Peers Libp2p IDs of the Nodes that got this result
-	Peers *[]string `json:"peers,omitempty"`
+	Peers []string `json:"peers,omitempty"`
 
 	// Result Actual outputs of the execution, like Standard Output, Standard Error, Exit Code etc..
-	Result *ExecutionResult `json:"result,omitempty"`
+	ExecutionResult *ExecutionResult `json:"result,omitempty"`
 }
 
 // AggregatedResults List of unique results of the Execution Request
 type AggregatedResults = []AggregatedResult
 
-// AttributeAttestors defines model for AttributeAttestors.
+// AttributeAttestors Require specific attestors as vouchers
 type AttributeAttestors struct {
 	// Each LibP2P Peer IDs of each mandatory attestor
-	Each *[]string `json:"each,omitempty"`
+	Each []string `json:"each,omitempty"`
 
 	// OneOf LibP2P Peer IDs of attestors where we require at least one
-	OneOf *[]string `json:"one_of,omitempty"`
+	OneOf []string `json:"one_of,omitempty"`
 }
 
 // ExecutionConfig Configuration options for the Execution Request
 type ExecutionConfig struct {
 	// Attributes Attributes that the executing Node should have
-	Attributes *NodeAttributes `json:"attributes,omitempty"`
+	NodeAttributes *NodeAttributes `json:"attributes,omitempty"`
 
 	// ConsensusAlgorithm Which consensus algorithm should be formed for this execution
-	ConsensusAlgorithm *string `json:"consensus_algorithm,omitempty"`
+	ConsensusAlgorithm string `json:"consensus_algorithm,omitempty"`
 
 	// EnvVars Environment variables for the Blockless Function
-	EnvVars *[]NamedValue `json:"env_vars,omitempty"`
+	EnvVars []NamedValue `json:"env_vars,omitempty"`
 
 	// NumberOfNodes Number of nodes that should execute the Blockless Function
-	NumberOfNodes *int `json:"number_of_nodes,omitempty"`
+	NumberOfNodes int `json:"number_of_nodes,omitempty"`
 
 	// Permissions Permissions for the Execution
-	Permissions       *[]string          `json:"permissions,omitempty"`
+	Permissions       []string           `json:"permissions,omitempty"`
 	ResultAggregation *ResultAggregation `json:"result_aggregation,omitempty"`
 
 	// Runtime Configuration options for the Blockless Runtime
-	Runtime *RuntimeConfig `json:"runtime,omitempty"`
+	RuntimeConfig *RuntimeConfig `json:"runtime,omitempty"`
 
 	// Stdin Standard Input for the Blockless Function
-	Stdin *string `json:"stdin,omitempty"`
+	Stdin string `json:"stdin,omitempty"`
 
 	// Threshold Portion of the nodes that should respond with a result to consider this execution successful
-	Threshold *float32 `json:"threshold,omitempty"`
+	Threshold float32 `json:"threshold,omitempty"`
 
 	// Timeout How long should the execution take
-	Timeout *int `json:"timeout,omitempty"`
+	Timeout int `json:"timeout,omitempty"`
 }
 
 // ExecutionParameter defines model for ExecutionParameter.
@@ -66,7 +66,7 @@ type ExecutionParameter struct {
 // ExecutionRequest defines model for ExecutionRequest.
 type ExecutionRequest struct {
 	// Config Configuration options for the Execution Request
-	Config *ExecutionConfig `json:"config,omitempty"`
+	ExecutionConfig *ExecutionConfig `json:"config,omitempty"`
 
 	// FunctionId CID of the function
 	FunctionId string `json:"function_id"`
@@ -75,125 +75,99 @@ type ExecutionRequest struct {
 	Method string `json:"method"`
 
 	// Parameters CLI arguments for the Blockless Function
-	Parameters *[]ExecutionParameter `json:"parameters,omitempty"`
+	Parameters []ExecutionParameter `json:"parameters,omitempty"`
 
 	// Topic In the scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier
-	Topic *string `json:"topic,omitempty"`
+	Topic string `json:"topic,omitempty"`
 }
 
 // ExecutionResponse defines model for ExecutionResponse.
 type ExecutionResponse struct {
 	// Cluster Information about the cluster of nodes that executed this request
-	Cluster *NodeCluster `json:"cluster,omitempty"`
+	NodeCluster *NodeCluster `json:"cluster,omitempty"`
 
 	// Code Status of the execution
-	Code *string `json:"code,omitempty"`
+	Code string `json:"code,omitempty"`
 
 	// Message If the Execution Request failed, this message might have more info about the error
-	Message *string `json:"message,omitempty"`
+	Message string `json:"message,omitempty"`
 
 	// RequestId ID of the Execution Request
-	RequestId *string `json:"request_id,omitempty"`
+	RequestId string `json:"request_id,omitempty"`
 
 	// Results List of unique results of the Execution Request
-	Results *AggregatedResults `json:"results,omitempty"`
+	AggregatedResults *AggregatedResults `json:"results,omitempty"`
 }
 
 // ExecutionResult Actual outputs of the execution, like Standard Output, Standard Error, Exit Code etc..
 type ExecutionResult struct {
 	// ExitCode Exit code of the execution
-	ExitCode *string `json:"exit_code,omitempty"`
+	ExitCode string `json:"exit_code,omitempty"`
 
 	// Stderr Standard Error of the execution
-	Stderr *string `json:"stderr,omitempty"`
+	Stderr string `json:"stderr,omitempty"`
 
 	// Stdout Standard Output of the execution
-	Stdout *string `json:"stdout,omitempty"`
+	Stdout string `json:"stdout,omitempty"`
 }
 
 // ExecutionResultRequest Get the result of an Execution Request, identified by the request ID
-type ExecutionResultRequest struct {
-	// Id ID of the Execution Request
-	Id string `json:"id"`
-}
+type ExecutionResultRequest = ExecutionResultRequest
 
 // ExecutionResultResponse defines model for ExecutionResultResponse.
 type ExecutionResultResponse = ExecutionResponse
 
 // HealthResponse defines model for HealthResponse.
-type HealthResponse struct {
-	Code *string `json:"code,omitempty"`
-}
+type HealthResponse = HealthResponse
 
 // InstallRequest defines model for InstallRequest.
-type InstallRequest struct {
-	// Cid CID of the function
-	Cid string `json:"cid"`
-
-	// Topic In a scneario where workers form subgroups, you can target a specific subgroup by specifying its identifier
-	Topic *string `json:"topic,omitempty"`
-	Uri   *string `json:"uri,omitempty"`
-}
+type InstallRequest = InstallRequest
 
 // InstallResponse defines model for InstallResponse.
-type InstallResponse struct {
-	Code *string `json:"code,omitempty"`
-}
+type InstallResponse = InstallResponse
 
 // NamedValue A key-value pair
-type NamedValue struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
+type NamedValue = NamedValue
 
 // NodeAttributes Attributes that the executing Node should have
 type NodeAttributes struct {
 	// AttestationRequired Is it necessary that the Node attributes are vouched for by an attestor
-	AttestationRequired *bool `json:"attestation_required,omitempty"`
-	Attestors           *struct {
-		// Each LibP2P Peer IDs of each mandatory attestor
-		Each *[]string `json:"each,omitempty"`
+	AttestationRequired bool `json:"attestation_required,omitempty"`
 
-		// OneOf LibP2P Peer IDs of attestors where we require at least one
-		OneOf *[]string `json:"one_of,omitempty"`
-	} `json:"attestors,omitempty"`
-	Values *struct {
-		Name  string `json:"name"`
-		Value string `json:"value"`
-	} `json:"values,omitempty"`
+	// Attestors Require specific attestors as vouchers
+	AttributeAttestors *AttributeAttestors `json:"attestors,omitempty"`
+	Values             *NamedValue         `json:"values,omitempty"`
 }
 
 // NodeCluster Information about the cluster of nodes that executed this request
 type NodeCluster struct {
 	// Main LibP2P ID of the Primary node for the cluster
-	Main *string `json:"main,omitempty"`
+	Main string `json:"main,omitempty"`
 
 	// Peers LibP2P IDs of the Nodes in this cluster
-	Peers *[]string `json:"peers,omitempty"`
+	Peers []string `json:"peers,omitempty"`
 }
 
 // ResultAggregation defines model for ResultAggregation.
 type ResultAggregation struct {
-	Enable *bool `json:"enable,omitempty"`
-
-	// Parameters A key-value pair
+	Enable     bool        `json:"enable,omitempty"`
 	Parameters *NamedValue `json:"parameters,omitempty"`
-	Type       *string     `json:"type,omitempty"`
+	Type       string      `json:"type,omitempty"`
 }
 
 // RuntimeConfig Configuration options for the Blockless Runtime
 type RuntimeConfig struct {
-	DebugInfo       *bool   `json:"debug_info,omitempty"`
-	DriversRootPath *string `json:"drivers_root_path,omitempty"`
-	Entry           *string `json:"entry,omitempty"`
-	Fuel            *int    `json:"fuel,omitempty"`
-	Logger          *string `json:"logger,omitempty"`
+	DebugInfo       bool   `json:"debug_info,omitempty"`
+	DriversRootPath string `json:"drivers_root_path,omitempty"`
+	Entry           string `json:"entry,omitempty"`
+	Fuel            int    `json:"fuel,omitempty"`
+	Logger          string `json:"logger,omitempty"`
 
 	// Memory Memory limit for this execution
-	Memory *int `json:"memory,omitempty"`
+	Memory int `json:"memory,omitempty"`
 
 	// RunTime How long should the execution take
-	RunTime *int `json:"run_time,omitempty"`
+	RunTime int `json:"run_time,omitempty"`
 }
 
 // ExecuteFunctionJSONRequestBody defines body for ExecuteFunction for application/json ContentType.
