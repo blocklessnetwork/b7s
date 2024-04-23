@@ -6,13 +6,13 @@ package api
 // AggregatedResult Result of an Execution Request
 type AggregatedResult struct {
 	// Frequency Frequency of this result among all nodes that executed the request
-	Frequency float32 `json:"frequency,omitempty"`
+	Frequency float64 `json:"frequency,omitempty"`
 
 	// Peers Libp2p IDs of the Nodes that got this result
 	Peers []string `json:"peers,omitempty"`
 
 	// Result Actual outputs of the execution, like Standard Output, Standard Error, Exit Code etc..
-	ExecutionResult *ExecutionResult `json:"result,omitempty"`
+	Result ExecutionResult `json:"result,omitempty"`
 }
 
 // AggregatedResults List of unique results of the Execution Request
@@ -30,7 +30,7 @@ type AttributeAttestors struct {
 // ExecutionConfig Configuration options for the Execution Request
 type ExecutionConfig struct {
 	// Attributes Attributes that the executing Node should have
-	NodeAttributes *NodeAttributes `json:"attributes,omitempty"`
+	Attributes NodeAttributes `json:"attributes,omitempty"`
 
 	// ConsensusAlgorithm Which consensus algorithm should be formed for this execution
 	ConsensusAlgorithm string `json:"consensus_algorithm,omitempty"`
@@ -42,11 +42,11 @@ type ExecutionConfig struct {
 	NumberOfNodes int `json:"number_of_nodes,omitempty"`
 
 	// Permissions Permissions for the Execution
-	Permissions       []string           `json:"permissions,omitempty"`
-	ResultAggregation *ResultAggregation `json:"result_aggregation,omitempty"`
+	Permissions       []string          `json:"permissions,omitempty"`
+	ResultAggregation ResultAggregation `json:"result_aggregation,omitempty"`
 
 	// Runtime Configuration options for the Blockless Runtime
-	RuntimeConfig *RuntimeConfig `json:"runtime,omitempty"`
+	Runtime RuntimeConfig `json:"runtime,omitempty"`
 
 	// Stdin Standard Input for the Blockless Function
 	Stdin string `json:"stdin,omitempty"`
@@ -66,7 +66,7 @@ type ExecutionParameter struct {
 // ExecutionRequest defines model for ExecutionRequest.
 type ExecutionRequest struct {
 	// Config Configuration options for the Execution Request
-	ExecutionConfig *ExecutionConfig `json:"config,omitempty"`
+	Config ExecutionConfig `json:"config,omitempty"`
 
 	// FunctionId CID of the function
 	FunctionId string `json:"function_id"`
@@ -84,7 +84,7 @@ type ExecutionRequest struct {
 // ExecutionResponse defines model for ExecutionResponse.
 type ExecutionResponse struct {
 	// Cluster Information about the cluster of nodes that executed this request
-	NodeCluster *NodeCluster `json:"cluster,omitempty"`
+	Cluster NodeCluster `json:"cluster,omitempty"`
 
 	// Code Status of the execution
 	Code string `json:"code,omitempty"`
@@ -96,7 +96,7 @@ type ExecutionResponse struct {
 	RequestId string `json:"request_id,omitempty"`
 
 	// Results List of unique results of the Execution Request
-	AggregatedResults *AggregatedResults `json:"results,omitempty"`
+	Results AggregatedResults `json:"results,omitempty"`
 }
 
 // ExecutionResult Actual outputs of the execution, like Standard Output, Standard Error, Exit Code etc..
@@ -112,22 +112,39 @@ type ExecutionResult struct {
 }
 
 // ExecutionResultRequest Get the result of an Execution Request, identified by the request ID
-type ExecutionResultRequest = ExecutionResultRequest
+type ExecutionResultRequest struct {
+	// Id ID of the Execution Request
+	Id string `json:"id"`
+}
 
 // ExecutionResultResponse defines model for ExecutionResultResponse.
 type ExecutionResultResponse = ExecutionResponse
 
 // HealthResponse defines model for HealthResponse.
-type HealthResponse = HealthResponse
+type HealthResponse struct {
+	Code string `json:"code,omitempty"`
+}
 
 // InstallRequest defines model for InstallRequest.
-type InstallRequest = InstallRequest
+type InstallRequest struct {
+	// Cid CID of the function
+	Cid string `json:"cid"`
+
+	// Topic In a scneario where workers form subgroups, you can target a specific subgroup by specifying its identifier
+	Topic string `json:"topic,omitempty"`
+	Uri   string `json:"uri,omitempty"`
+}
 
 // InstallResponse defines model for InstallResponse.
-type InstallResponse = InstallResponse
+type InstallResponse struct {
+	Code string `json:"code,omitempty"`
+}
 
 // NamedValue A key-value pair
-type NamedValue = NamedValue
+type NamedValue struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
 
 // NodeAttributes Attributes that the executing Node should have
 type NodeAttributes struct {
@@ -135,8 +152,11 @@ type NodeAttributes struct {
 	AttestationRequired bool `json:"attestation_required,omitempty"`
 
 	// Attestors Require specific attestors as vouchers
-	AttributeAttestors *AttributeAttestors `json:"attestors,omitempty"`
-	Values             *NamedValue         `json:"values,omitempty"`
+	Attestors AttributeAttestors `json:"attestors,omitempty"`
+	Values    struct {
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	} `json:"values,omitempty"`
 }
 
 // NodeCluster Information about the cluster of nodes that executed this request
@@ -150,9 +170,11 @@ type NodeCluster struct {
 
 // ResultAggregation defines model for ResultAggregation.
 type ResultAggregation struct {
-	Enable     bool        `json:"enable,omitempty"`
-	Parameters *NamedValue `json:"parameters,omitempty"`
-	Type       string      `json:"type,omitempty"`
+	Enable bool `json:"enable,omitempty"`
+
+	// Parameters A key-value pair
+	Parameters NamedValue `json:"parameters,omitempty"`
+	Type       string     `json:"type,omitempty"`
 }
 
 // RuntimeConfig Configuration options for the Blockless Runtime

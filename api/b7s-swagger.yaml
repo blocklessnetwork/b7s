@@ -121,7 +121,7 @@ components:
         - function_id
         - method
       type: object
-      x-go-name: ExecutionRequest
+      x-go-type-skip-optional-pointer: true
       properties:
         function_id:
           description: CID of the function
@@ -146,7 +146,6 @@ components:
           x-go-type-skip-optional-pointer: true
         config:
           $ref: '#/components/schemas/ExecutionConfig'
-          
         topic:
           description: In the scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier
           type: string
@@ -155,9 +154,9 @@ components:
 
     ExecutionParameter:
       type: object
-      x-go-name: ExecutionParameter
       required:
         - value
+      x-go-type-skip-optional-pointer: true
       properties:
         value:
           type: string
@@ -166,7 +165,7 @@ components:
     ExecutionConfig:
       description: Configuration options for the Execution Request
       type: object
-      x-go-name: ExecutionConfig
+      x-go-type-skip-optional-pointer: true
       properties:
         runtime:
           $ref: '#/components/schemas/RuntimeConfig'
@@ -215,7 +214,7 @@ components:
     RuntimeConfig:
       description: Configuration options for the Blockless Runtime
       type: object
-      x-go-name: RuntimeConfig
+      x-go-type-skip-optional-pointer: true
       properties:
         entry:
           type: string
@@ -245,7 +244,7 @@ components:
     NodeAttributes:
       description: Attributes that the executing Node should have
       type: object
-      x-go-name: NodeAttributes
+      x-go-type-skip-optional-pointer: true
       properties:
         attestation_required:
           description: Is it necessary that the Node attributes are vouched for by an attestor
@@ -255,15 +254,15 @@ components:
         values:
           allOf:
             - description: Attributes that the Node should have
-            - $ref: '#/components/schemas/NamedValue'
             - x-go-type-skip-optional-pointer: true
+            - $ref: '#/components/schemas/NamedValue'
         attestors:
             $ref: '#/components/schemas/AttributeAttestors'
 
     AttributeAttestors:
       type: object
       description: Require specific attestors as vouchers
-      x-go-name: AttributeAttestors
+      x-go-type-skip-optional-pointer: true
       properties:
         each:
           description: LibP2P Peer IDs of each mandatory attestor
@@ -286,7 +285,7 @@ components:
 
     ResultAggregation:
       type: object
-      x-go-name: ResultAggregation
+      x-go-type-skip-optional-pointer: true
       properties:
         enable:
           type: boolean
@@ -295,13 +294,11 @@ components:
           type: string
           x-go-type-skip-optional-pointer: true
         parameters:
-          allOf:
-            - $ref: '#/components/schemas/NamedValue'
-            - x-go-type-skip-optional-pointer: true
+          $ref: '#/components/schemas/NamedValue'
 
     ExecutionResponse:
       type: object
-      x-go-name: ExecutionResponse
+      x-go-type-skip-optional-pointer: true
       properties:
         code:
           description: Status of the execution
@@ -325,14 +322,14 @@ components:
     AggregatedResults:
       description: List of unique results of the Execution Request
       type: array
-      x-go-name: AggregatedResults
+      x-go-type-skip-optional-pointer: true
       items:
         $ref: '#/components/schemas/AggregatedResult'
 
     AggregatedResult:
       description: Result of an Execution Request
       type: object
-      x-go-name: AggregatedResult
+      x-go-type-skip-optional-pointer: true
       properties:
         result:
           $ref: '#/components/schemas/ExecutionResult'
@@ -341,6 +338,7 @@ components:
           type: number
           example: 0.66
           x-go-type-skip-optional-pointer: true
+          x-go-type: float64
         peers:
           description: Libp2p IDs of the Nodes that got this result
           type: array
@@ -354,7 +352,7 @@ components:
     ExecutionResult:
       description: Actual outputs of the execution, like Standard Output, Standard Error, Exit Code etc..
       type: object
-      x-go-name: ExecutionResult
+      x-go-type-skip-optional-pointer: true
       properties:
         stdout:
           description: Standard Output of the execution
@@ -372,7 +370,7 @@ components:
     NodeCluster:
       description: Information about the cluster of nodes that executed this request
       type: object
-      x-go-name: NodeCluster
+      x-go-type-skip-optional-pointer: true
       properties:
         main:
           description: LibP2P ID of the Primary node for the cluster
@@ -393,7 +391,7 @@ components:
     NamedValue:
       description: A key-value pair
       type: object
-      x-go-type: NamedValue
+      x-go-type-skip-optional-pointer: true
       required:
         - name
         - value
@@ -411,7 +409,7 @@ components:
       type: object
       required:
         - cid
-      x-go-type: InstallRequest
+      x-go-type-skip-optional-pointer: true
       properties:
         cid:
           description: CID of the function 
@@ -430,7 +428,7 @@ components:
 
     InstallResponse:
       type: object
-      x-go-type: InstallResponse
+      x-go-type-skip-optional-pointer: true
       properties:
         code:
           type: string
@@ -440,9 +438,9 @@ components:
     ExecutionResultRequest:
       description: Get the result of an Execution Request, identified by the request ID
       type: object
-      x-go-type: ExecutionResultRequest
       required:
         - id
+      x-go-type-skip-optional-pointer: true
       properties:
         id:
           description: ID of the Execution Request
@@ -456,7 +454,7 @@ components:
         
     HealthResponse:
       type: object
-      x-go-type: HealthResponse
+      x-go-type-skip-optional-pointer: true
       properties:
         code:
           type: string
