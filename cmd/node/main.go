@@ -261,22 +261,11 @@ func run() int {
 		}
 
 		// Create echo server and iniialize logging.
-		server := echo.New()
-		server.HideBanner = true
-		server.HidePort = true
-
-		elog := lecho.From(log)
-		server.Logger = elog
-		server.Use(lecho.Middleware(lecho.Config{Logger: elog}))
+		server := createEchoServer(log)
 
 		// Create an API handler.
-		api := api.New(log, node)
-
-		// Set endpoint handlers.
-		server.GET("/api/v1/health", api.Health)
-		server.POST("/api/v1/functions/execute", api.Execute)
-		server.POST("/api/v1/functions/install", api.Install)
-		server.POST("/api/v1/functions/requests/result", api.ExecutionResult)
+		apiHandler := api.New(log, node)
+		api.RegisterHandlers(server, apiHandler)
 
 		// Start API in a separate goroutine.
 		go func() {
@@ -312,6 +301,18 @@ func run() int {
 	}()
 
 	return success
+}
+
+func createEchoServer(log zerolog.Logger) *echo.Echo {
+	server := echo.New()
+	server.HideBanner = true
+	server.HidePort = true
+
+	elog := lecho.From(log)
+	server.Logger = elog
+	server.Use(lecho.Middleware(lecho.Config{Logger: elog}))
+
+	return server
 }
 
 func needLimiter(cfg *config.Config) bool {

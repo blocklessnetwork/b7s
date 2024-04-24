@@ -29,7 +29,7 @@ func TestAPI_FunctionInstall(t *testing.T) {
 		rec, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = srv.Install(ctx)
+		err = srv.InstallFunction(ctx)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, rec.Result().StatusCode)
@@ -50,7 +50,7 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 		_, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = srv.Install(ctx)
+		err = srv.InstallFunction(ctx)
 		require.Error(t, err)
 
 		echoErr, ok := err.(*echo.HTTPError)
@@ -82,7 +82,7 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 		rec, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = srv.Install(ctx)
+		err = srv.InstallFunction(ctx)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, rec.Result().StatusCode)
@@ -113,7 +113,7 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 		_, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = srv.Install(ctx)
+		err = srv.InstallFunction(ctx)
 		require.Error(t, err)
 
 		echoErr, ok := err.(*echo.HTTPError)
@@ -181,7 +181,7 @@ func TestAPI_InstallFunction_HandlesMalformedRequests(t *testing.T) {
 			_, ctx, err := setupRecorder(installEndpoint, test.payload, prepare)
 			require.NoError(t, err)
 
-			err = srv.Install(ctx)
+			err = srv.InstallFunction(ctx)
 			require.Error(t, err)
 
 			echoErr, ok := err.(*echo.HTTPError)

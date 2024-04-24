@@ -12,8 +12,8 @@ import (
 	"github.com/blocklessnetwork/b7s/node/aggregate"
 )
 
-// Execute implements the REST API endpoint for function execution.
-func (a *API) Execute(ctx echo.Context) error {
+// ExecuteFunction implements the REST API endpoint for function execution.
+func (a *API) ExecuteFunction(ctx echo.Context) error {
 
 	// Unpack the API request.
 	var req ExecutionRequest

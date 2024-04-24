@@ -15,7 +15,7 @@ const (
 	functionInstallTimeout = 10 * time.Second
 )
 
-func (a *API) Install(ctx echo.Context) error {
+func (a *API) InstallFunction(ctx echo.Context) error {
 
 	// Unpack the API request.
 	var req FunctionInstallRequest

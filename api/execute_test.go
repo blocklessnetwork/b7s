@@ -51,7 +51,7 @@ func TestAPI_Execute(t *testing.T) {
 	rec, ctx, err := setupRecorder(executeEndpoint, req)
 	require.NoError(t, err)
 
-	err = srv.Execute(ctx)
+	err = srv.ExecuteFunction(ctx)
 	require.NoError(t, err)
 
 	var res api.ExecutionResponse
@@ -101,7 +101,7 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 	rec, ctx, err := setupRecorder(executeEndpoint, req)
 	require.NoError(t, err)
 
-	err = srv.Execute(ctx)
+	err = srv.ExecuteFunction(ctx)
 	require.NoError(t, err)
 
 	var res api.ExecutionResponse
@@ -121,7 +121,6 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 func TestAPI_Execute_HandlesMalformedRequests(t *testing.T) {
 
 	api := setupAPI(t)
-	_ = api
 
 	const (
 		wrongFieldType = `
@@ -180,7 +179,7 @@ func TestAPI_Execute_HandlesMalformedRequests(t *testing.T) {
 			_, ctx, err := setupRecorder(executeEndpoint, test.payload, prepare)
 			require.NoError(t, err)
 
-			err = api.Execute(ctx)
+			err = api.ExecuteFunction(ctx)
 			require.Error(t, err)
 
 			echoErr, ok := err.(*echo.HTTPError)
