@@ -27,7 +27,7 @@ List of supported CLI flags is listed below.
 ```console
 Usage of b7s-node:
       --config string                  path to a config file
-  -r, --role string                    role this note will have in the Blockless protocol (head or worker) (default "worker")
+  -r, --role string                    role this node will have in the Blockless protocol (head or worker) (default "worker")
   -c, --concurrency uint               maximum number of requests node will process in parallel (default 10)
       --boot-nodes strings             list of addresses that this node will connect to on startup, in multiaddr format
       --workspace string               directory that the node can use for file storage

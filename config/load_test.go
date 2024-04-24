@@ -173,8 +173,9 @@ func TestConfig_CLIArgsWithConfigFile(t *testing.T) {
 
 	filepath := writeConfigFile(t, cfgMap)
 
+	// NOTE: For compatiblity with Windows we will manually append config param later because `shlex.Split` doesn't jive with Windows paths.
 	cmdline := fmt.Sprintf(
-		"--role %v --runtime-path %v --concurrency %v --workspace %v --boot-nodes %v --log-level %v --address %v --port %v --cpu-percentage-limit %v --rest-api %v --config %v",
+		"--role %v --runtime-path %v --concurrency %v --workspace %v --boot-nodes %v --log-level %v --address %v --port %v --cpu-percentage-limit %v --rest-api %v",
 		role,
 		runtimePathCLI,
 		concurrencyCLI,
@@ -185,11 +186,12 @@ func TestConfig_CLIArgsWithConfigFile(t *testing.T) {
 		portCLI,
 		cpuPercentageLimitCLI,
 		restAPICLI,
-		filepath,
 	)
 
 	args, err := shlex.Split(cmdline)
 	require.NoError(t, err)
+
+	args = append(args, "--config", fmt.Sprintf("%v", filepath))
 
 	cfg, err := load(args)
 	require.NoError(t, err)
@@ -210,7 +212,153 @@ func TestConfig_CLIArgsWithConfigFile(t *testing.T) {
 	require.Equal(t, runtimePathCLI, cfg.Worker.RuntimePath)
 	require.Equal(t, websocketFile, cfg.Connectivity.Websocket)
 	require.Equal(t, websocketPortFile, cfg.Connectivity.WebsocketPort)
-	require.Equal(t, restAPICLI, cfg.Head.API)
+	require.Equal(t, restAPICLI, cfg.Head.RestAPI)
+}
+
+func TestConfig_Environment(t *testing.T) {
+
+	const (
+		role        = "worker"
+		concurrency = uint(45)
+		bootNodes   = "a,b,c,d"
+		topics      = "topic1,topic2,topic3"
+
+		peerDB     = "/tmp/db/peer-db"
+		functionDB = "/tmp/db/function-db"
+
+		logLevel = "trace"
+
+		address               = "127.0.0.1"
+		port                  = uint(9000)
+		dialbackPort          = uint(9001)
+		websocket             = true
+		websocketPort         = uint(10000)
+		websocketDialbackPort = uint(10001)
+
+		runtimePath        = "/tmp/runtime"
+		cpuPercentageLimit = float64(0.97)
+		memoryLimit        = int64(512_000)
+	)
+
+	t.Setenv("B7S_Role", role)
+	t.Setenv("B7S_Concurrency", fmt.Sprint(concurrency))
+	t.Setenv("B7S_BootNodes", bootNodes)
+	t.Setenv("B7S_Topics", topics)
+	t.Setenv("B7S_PeerDB", peerDB)
+	t.Setenv("B7S_FunctionDB", functionDB)
+	t.Setenv("B7S_Log_Level", logLevel)
+	t.Setenv("B7S_Connectivity_Address", address)
+	t.Setenv("B7S_Connectivity_Port", fmt.Sprint(port))
+	t.Setenv("B7S_Connectivity_DialbackPort", fmt.Sprint(dialbackPort))
+	t.Setenv("B7S_Connectivity_Websocket", fmt.Sprint(websocket))
+	t.Setenv("B7S_Connectivity_WebsocketPort", fmt.Sprint(websocketPort))
+	t.Setenv("B7S_Connectivity_WebsocketDialbackPort", fmt.Sprint(websocketDialbackPort))
+	t.Setenv("B7S_Worker_RuntimePath", runtimePath)
+	t.Setenv("B7S_Worker_CPUPercentageLimit", fmt.Sprint(cpuPercentageLimit))
+	t.Setenv("B7S_Worker_MemoryLimit", fmt.Sprint(memoryLimit))
+
+	cfg, err := Load()
+	require.NoError(t, err)
+
+	require.Equal(t, role, cfg.Role)
+	require.Equal(t, concurrency, cfg.Concurrency)
+
+	nodeList := strings.Split(bootNodes, ",")
+	require.Equal(t, nodeList, cfg.BootNodes)
+
+	topicList := strings.Split(topics, ",")
+	require.Equal(t, topicList, cfg.Topics)
+
+	require.Equal(t, peerDB, cfg.PeerDB)
+	require.Equal(t, functionDB, cfg.FunctionDB)
+	require.Equal(t, logLevel, cfg.Log.Level)
+	require.Equal(t, address, cfg.Connectivity.Address)
+	require.Equal(t, port, cfg.Connectivity.Port)
+	require.Equal(t, dialbackPort, cfg.Connectivity.DialbackPort)
+	require.Equal(t, websocket, cfg.Connectivity.Websocket)
+	require.Equal(t, websocketPort, cfg.Connectivity.WebsocketPort)
+	require.Equal(t, websocketDialbackPort, cfg.Connectivity.WebsocketDialbackPort)
+
+	require.Equal(t, runtimePath, cfg.Worker.RuntimePath)
+	require.Equal(t, cpuPercentageLimit, cfg.Worker.CPUPercentageLimit)
+	require.Equal(t, memoryLimit, cfg.Worker.MemoryLimitKB)
+}
+
+func TestConfig_Priority(t *testing.T) {
+
+	const (
+		envWorkspace   = "/tmp/env/workspace"
+		envAddress     = "1.1.1.1"
+		envPort        = uint(1)
+		envRuntimePath = "/tmp/env/runtime/path"
+		envLogLevel    = "error"
+
+		cfgWorkspace    = "/tmp/cfg/workspace"
+		cfgAddress      = "2.2.2.2"
+		cfgPort         = uint(2)
+		cfgDialbackPort = uint(12)
+
+		cliWorkspace = "/tmp/cli/workspace"
+		cliAddress   = "3.3.3.3"
+		cliLogLevel  = "debug"
+	)
+
+	var (
+		cfgMap = map[string]any{
+			"workspace": cfgWorkspace,
+			"connectivity": map[string]any{
+				"address":       cfgAddress,
+				"port":          cfgPort,
+				"dialback-port": cfgDialbackPort,
+			},
+		}
+	)
+
+	filepath := writeConfigFile(t, cfgMap)
+
+	t.Setenv("B7S_Workspace", envWorkspace)
+	t.Setenv("B7S_Connectivity_Address", envAddress)
+	t.Setenv("B7S_Connectivity_Port", fmt.Sprint(envPort))
+	t.Setenv("B7S_Worker_RuntimePath", envRuntimePath)
+	t.Setenv("B7S_Log_Level", envLogLevel)
+
+	// NOTE: For compatiblity with Windows we will manually append config param later because `shlex.Split` doesn't jive with Windows paths.
+	cmdline := fmt.Sprintf(
+		"--workspace %v --address %v --log-level %v",
+		cliWorkspace,
+		cliAddress,
+		cliLogLevel,
+	)
+
+	args, err := shlex.Split(cmdline)
+	require.NoError(t, err)
+
+	args = append(args, "--config", fmt.Sprintf("%v", filepath))
+
+	cfg, err := load(args)
+	require.NoError(t, err)
+
+	// Verify resulting config.
+	//
+	// 1. CLI flags override everything
+	// 2. Config file overrides environment variables
+	// 3. Environment variables
+	//
+	// Any config option set via lower priority methods persists if it's not overwritten.
+
+	// This is set only via env.
+	require.Equal(t, envRuntimePath, cfg.Worker.RuntimePath)
+
+	// This is set in config file and not overwritten by CLI flags, so it should remain active.
+	require.Equal(t, cfgPort, cfg.Connectivity.Port)
+	// This is only set in config file.
+	require.Equal(t, cfgDialbackPort, cfg.Connectivity.DialbackPort)
+
+	// CLI flags rule everything.
+	require.Equal(t, cliWorkspace, cfg.Workspace)
+	require.Equal(t, cliAddress, cfg.Connectivity.Address)
+	require.Equal(t, cliLogLevel, cfg.Log.Level)
+
 }
 
 func writeConfigFile(t *testing.T, m map[string]any) string {

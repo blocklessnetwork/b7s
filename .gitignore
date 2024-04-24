@@ -1,6 +1,7 @@
 cmd/node/node
 cmd/node/.b7s_*
 cmd/node/*.yaml
+cmd/b7s-node-docs/b7s-node-docs
 
 cmd/keygen/keygen
 cmd/keyforge/keyforge
