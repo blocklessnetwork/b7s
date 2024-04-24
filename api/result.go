@@ -12,13 +12,13 @@ import (
 func (a *API) ExecutionResult(ctx echo.Context) error {
 
 	// Get the request ID.
-	var request ExecutionResultRequest
+	var request FunctionResultRequest
 	err := ctx.Bind(&request)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("could not unpack request: %w", err))
 	}
 
-	requestID := request.ID
+	requestID := request.Id
 	if requestID == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, errors.New("missing request ID"))
 	}

@@ -18,13 +18,13 @@ const (
 func (a *API) Install(ctx echo.Context) error {
 
 	// Unpack the API request.
-	var req InstallFunctionRequest
+	var req FunctionInstallRequest
 	err := ctx.Bind(&req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("could not unpack request: %w", err))
 	}
 
-	if req.URI == "" && req.CID == "" {
+	if req.Uri == "" && req.Cid == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, errors.New("URI or CID are required"))
 	}
 
@@ -35,7 +35,7 @@ func (a *API) Install(ctx echo.Context) error {
 	// Start function install in a separate goroutine and signal when it's done.
 	fnErr := make(chan error)
 	go func() {
-		err = a.Node.PublishFunctionInstall(reqCtx, req.URI, req.CID, req.Subgroup)
+		err = a.Node.PublishFunctionInstall(reqCtx, req.Uri, req.Cid, req.Topic)
 		fnErr <- err
 	}()
 

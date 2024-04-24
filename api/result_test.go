@@ -19,8 +19,8 @@ func TestAPI_ExecutionResult(t *testing.T) {
 
 		srv := setupAPI(t)
 
-		req := api.ExecutionResultRequest{
-			ID: mocks.GenericString,
+		req := api.FunctionResultRequest{
+			Id: mocks.GenericString,
 		}
 
 		rec, ctx, err := setupRecorder(resultEndpoint, req)
@@ -44,8 +44,8 @@ func TestAPI_ExecutionResult(t *testing.T) {
 
 		srv := api.New(mocks.NoopLogger, node)
 
-		req := api.ExecutionResultRequest{
-			ID: "dummy-request-id",
+		req := api.FunctionResultRequest{
+			Id: "dummy-request-id",
 		}
 
 		rec, ctx, err := setupRecorder(resultEndpoint, req)
