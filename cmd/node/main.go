@@ -315,7 +315,7 @@ func run() int {
 }
 
 func needLimiter(cfg *config.Config) bool {
-	return cfg.Worker.CPUPercentageLimit != 1.0 || cfg.Worker.MemoryLimitKB > 0
+	return (cfg.Worker.CPUPercentageLimit > 0 && cfg.Worker.CPUPercentageLimit < 1.0) || cfg.Worker.MemoryLimitKB > 0
 }
 
 func updateDirPaths(root string, cfg *config.Config) {
