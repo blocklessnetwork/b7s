@@ -315,26 +315,26 @@ func run() int {
 }
 
 func needLimiter(cfg *config.Config) bool {
-	return cfg.Worker.CPUPercentageLimit != 1.0 || cfg.Worker.MemoryLimitKB > 0
+	return (cfg.Worker.CPUPercentageLimit > 0 && cfg.Worker.CPUPercentageLimit < 1.0) || cfg.Worker.MemoryLimitKB > 0
 }
 
 func updateDirPaths(root string, cfg *config.Config) {
 
 	workspace := cfg.Workspace
 	if workspace == "" {
-		workspace = filepath.Join(root, config.DefaultWorkspace)
+		workspace = filepath.Join(root, config.DefaultWorkspaceName)
 	}
 	cfg.Workspace = workspace
 
 	peerDB := cfg.PeerDB
 	if peerDB == "" {
-		peerDB = filepath.Join(root, config.DefaultPeerDB)
+		peerDB = filepath.Join(root, config.DefaultPeerDBName)
 	}
 	cfg.PeerDB = peerDB
 
 	functionDB := cfg.FunctionDB
 	if functionDB == "" {
-		functionDB = filepath.Join(root, config.DefaultFunctionDB)
+		functionDB = filepath.Join(root, config.DefaultFunctionDBName)
 	}
 	cfg.FunctionDB = functionDB
 }
