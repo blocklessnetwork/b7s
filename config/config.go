@@ -9,20 +9,21 @@ const (
 	DefaultPort         = uint(0)
 	DefaultAddress      = "0.0.0.0"
 	DefaultRole         = "worker"
-	DefaultPeerDB       = "peer-db"
-	DefaultFunctionDB   = "function-db"
 	DefaultConcurrency  = uint(node.DefaultConcurrency)
 	DefaultUseWebsocket = false
-	DefaultWorkspace    = ""
 	DefaultLogLevel     = "info"
+)
+
+// Default names for storage directories.
+const (
+	DefaultPeerDBName     = "peer-db"
+	DefaultFunctionDBName = "function-db"
+	DefaultWorkspaceName  = "workspace"
 )
 
 var DefaultConfig = Config{
 	Role:        DefaultRole,
 	Concurrency: DefaultConcurrency,
-	PeerDB:      DefaultPeerDB,
-	FunctionDB:  DefaultFunctionDB,
-	Workspace:   DefaultWorkspace,
 	Log: Log{
 		Level: DefaultLogLevel,
 	},
