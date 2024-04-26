@@ -51,15 +51,15 @@ func TestAPI_Execute(t *testing.T) {
 	rec, ctx, err := setupRecorder(executeEndpoint, req)
 	require.NoError(t, err)
 
-	err = srv.Execute(ctx)
+	err = srv.ExecuteFunction(ctx)
 	require.NoError(t, err)
 
-	var res api.ExecuteResponse
+	var res api.ExecutionResponse
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 
 	require.Equal(t, http.StatusOK, rec.Result().StatusCode)
 
-	require.Equal(t, expectedCode, res.Code)
+	require.Equal(t, expectedCode.String(), res.Code)
 
 	require.Len(t, res.Cluster.Peers, 1)
 	require.Equal(t, res.Cluster.Peers, peerIDs)
@@ -69,7 +69,7 @@ func TestAPI_Execute(t *testing.T) {
 	require.Equal(t, float64(100), res.Results[0].Frequency)
 	require.Equal(t, peerIDs, res.Results[0].Peers)
 
-	require.Equal(t, mocks.GenericUUID.String(), res.RequestID)
+	require.Equal(t, mocks.GenericUUID.String(), res.RequestId)
 }
 
 func TestAPI_Execute_HandlesErrors(t *testing.T) {
@@ -101,15 +101,15 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 	rec, ctx, err := setupRecorder(executeEndpoint, req)
 	require.NoError(t, err)
 
-	err = srv.Execute(ctx)
+	err = srv.ExecuteFunction(ctx)
 	require.NoError(t, err)
 
-	var res api.ExecuteResponse
+	var res api.ExecutionResponse
 	err = json.Unmarshal(rec.Body.Bytes(), &res)
 	require.NoError(t, err)
 
 	require.Equal(t, http.StatusOK, rec.Result().StatusCode)
-	require.Equal(t, expectedCode, res.Code)
+	require.Equal(t, expectedCode.String(), res.Code)
 
 	require.Len(t, res.Results, 1)
 	require.Equal(t, executionResult.Result, res.Results[0].Result)
@@ -121,7 +121,6 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 func TestAPI_Execute_HandlesMalformedRequests(t *testing.T) {
 
 	api := setupAPI(t)
-	_ = api
 
 	const (
 		wrongFieldType = `
@@ -180,7 +179,7 @@ func TestAPI_Execute_HandlesMalformedRequests(t *testing.T) {
 			_, ctx, err := setupRecorder(executeEndpoint, test.payload, prepare)
 			require.NoError(t, err)
 
-			err = api.Execute(ctx)
+			err = api.ExecuteFunction(ctx)
 			require.Error(t, err)
 
 			echoErr, ok := err.(*echo.HTTPError)

@@ -15,28 +15,16 @@ const (
 	functionInstallTimeout = 10 * time.Second
 )
 
-// InstallFunctionRequest describes the payload for the REST API request for function install.
-type InstallFunctionRequest struct {
-	CID      string `json:"cid"`
-	URI      string `json:"uri"`
-	Subgroup string `json:"subgroup"`
-}
-
-// InstallFunctionResponse describes the REST API response for the function install.
-type InstallFunctionResponse struct {
-	Code string `json:"code"`
-}
-
-func (a *API) Install(ctx echo.Context) error {
+func (a *API) InstallFunction(ctx echo.Context) error {
 
 	// Unpack the API request.
-	var req InstallFunctionRequest
+	var req FunctionInstallRequest
 	err := ctx.Bind(&req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("could not unpack request: %w", err))
 	}
 
-	if req.URI == "" && req.CID == "" {
+	if req.Uri == "" && req.Cid == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, errors.New("URI or CID are required"))
 	}
 
@@ -47,7 +35,7 @@ func (a *API) Install(ctx echo.Context) error {
 	// Start function install in a separate goroutine and signal when it's done.
 	fnErr := make(chan error)
 	go func() {
-		err = a.Node.PublishFunctionInstall(reqCtx, req.URI, req.CID, req.Subgroup)
+		err = a.Node.PublishFunctionInstall(reqCtx, req.Uri, req.Cid, req.Topic)
 		fnErr <- err
 	}()
 

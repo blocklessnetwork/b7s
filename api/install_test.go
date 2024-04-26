@@ -19,9 +19,9 @@ func TestAPI_FunctionInstall(t *testing.T) {
 	t.Run("nominal case", func(t *testing.T) {
 		t.Parallel()
 
-		req := api.InstallFunctionRequest{
-			URI: "dummy-function-id",
-			CID: "dummy-cid",
+		req := api.FunctionInstallRequest{
+			Uri: "dummy-function-id",
+			Cid: "dummy-cid",
 		}
 
 		srv := setupAPI(t)
@@ -29,7 +29,7 @@ func TestAPI_FunctionInstall(t *testing.T) {
 		rec, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = srv.Install(ctx)
+		err = srv.InstallFunction(ctx)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, rec.Result().StatusCode)
@@ -40,9 +40,9 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 	t.Run("missing URI and CID", func(t *testing.T) {
 		t.Parallel()
 
-		req := api.InstallFunctionRequest{
-			URI: "",
-			CID: "",
+		req := api.FunctionInstallRequest{
+			Uri: "",
+			Cid: "",
 		}
 
 		srv := setupAPI(t)
@@ -50,7 +50,7 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 		_, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = srv.Install(ctx)
+		err = srv.InstallFunction(ctx)
 		require.Error(t, err)
 
 		echoErr, ok := err.(*echo.HTTPError)
@@ -72,9 +72,9 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 			return nil
 		}
 
-		req := api.InstallFunctionRequest{
-			URI: "dummy-uri",
-			CID: "dummy-cid",
+		req := api.FunctionInstallRequest{
+			Uri: "dummy-uri",
+			Cid: "dummy-cid",
 		}
 
 		srv := api.New(mocks.NoopLogger, node)
@@ -82,12 +82,12 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 		rec, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = srv.Install(ctx)
+		err = srv.InstallFunction(ctx)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, rec.Result().StatusCode)
 
-		var res api.InstallFunctionResponse
+		var res api.FunctionInstallResponse
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 
 		num, err := strconv.Atoi(res.Code)
@@ -105,15 +105,15 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 
 		srv := api.New(mocks.NoopLogger, node)
 
-		req := api.InstallFunctionRequest{
-			URI: "dummy-uri",
-			CID: "dummy-cid",
+		req := api.FunctionInstallRequest{
+			Uri: "dummy-uri",
+			Cid: "dummy-cid",
 		}
 
 		_, ctx, err := setupRecorder(installEndpoint, req)
 		require.NoError(t, err)
 
-		err = srv.Install(ctx)
+		err = srv.InstallFunction(ctx)
 		require.Error(t, err)
 
 		echoErr, ok := err.(*echo.HTTPError)
@@ -181,7 +181,7 @@ func TestAPI_InstallFunction_HandlesMalformedRequests(t *testing.T) {
 			_, ctx, err := setupRecorder(installEndpoint, test.payload, prepare)
 			require.NoError(t, err)
 
-			err = srv.Install(ctx)
+			err = srv.InstallFunction(ctx)
 			require.Error(t, err)
 
 			echoErr, ok := err.(*echo.HTTPError)
