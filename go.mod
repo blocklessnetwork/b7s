@@ -4,10 +4,11 @@ go 1.21.0
 
 require (
 	github.com/Microsoft/go-winio v0.6.1
+	github.com/a-h/templ v0.2.648
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/blocklessnetwork/b7s-attributes v0.0.0
 	github.com/cavaliergopher/grab/v3 v3.0.1
-	github.com/cockroachdb/pebble v1.0.0
+	github.com/cockroachdb/pebble v1.1.0
 	github.com/containerd/cgroups/v3 v3.0.3
 	github.com/fatih/camelcase v1.0.0
 	github.com/fatih/color v1.16.0
@@ -36,10 +37,10 @@ require (
 )
 
 require (
-	github.com/a-h/templ v0.2.648 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/cilium/ebpf v0.12.3 // indirect
+	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
