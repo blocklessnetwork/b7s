@@ -50,7 +50,7 @@ func (h *FStore) Install(address string, cid string) error {
 	manifest.Deployment.File = functionPath
 
 	// Store the function record.
-	fn := functionRecord{
+	fn := blockless.FunctionRecord{
 		CID:      cid,
 		URL:      address,
 		Manifest: manifest,

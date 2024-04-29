@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
@@ -25,7 +26,7 @@ func TestFstore_CheckFunctionFiles(t *testing.T) {
 		functionFileName = "function-file"
 	)
 
-	rec := functionRecord{
+	rec := blockless.FunctionRecord{
 		Archive: archiveName,
 		Files:   functionFileName,
 	}

@@ -7,21 +7,10 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
-type functionRecord struct {
-	CID      string                     `json:"cid"`
-	URL      string                     `json:"url"`
-	Manifest blockless.FunctionManifest `json:"manifest"`
-	Archive  string                     `json:"archive"`
-	Files    string                     `json:"files"`
-
-	UpdatedAt     time.Time `json:"updated_at"`
-	LastRetrieved time.Time `json:"last_retrieved"`
-}
-
-func (h *FStore) getFunction(cid string) (*functionRecord, error) {
+func (h *FStore) getFunction(cid string) (*blockless.FunctionRecord, error) {
 
 	// Retrieve function.
-	var fn functionRecord
+	var fn blockless.FunctionRecord
 	err := h.store.GetRecord(cid, &fn)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve function record: %w", err)
@@ -37,7 +26,7 @@ func (h *FStore) getFunction(cid string) (*functionRecord, error) {
 	return &fn, nil
 }
 
-func (h *FStore) saveFunction(fn functionRecord) error {
+func (h *FStore) saveFunction(fn blockless.FunctionRecord) error {
 
 	// Clean paths - make them relative to the current working directory.
 	fn.Archive = h.cleanPath(fn.Archive)

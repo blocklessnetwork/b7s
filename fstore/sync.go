@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 // Sync will verify that the function identified by `cid` is still found on the local filesystem.
@@ -14,7 +16,7 @@ func (h *FStore) Sync(cid string) error {
 
 	// Read the function directly from storage - we don't want to update the timestamp
 	// since this is a 'maintenance' access.
-	var fn functionRecord
+	var fn blockless.FunctionRecord
 	err := h.store.GetRecord(cid, &fn)
 	if err != nil {
 		return fmt.Errorf("could not get function record: %w", err)
@@ -84,7 +86,7 @@ func (h *FStore) Sync(cid string) error {
 
 // checkFunctionFiles checks if the files required by the function are found on local storage.
 // It returns two booleans indicating presence of the archive file, the unpacked files, and a potential error.
-func (h *FStore) checkFunctionFiles(fn functionRecord) (bool, bool, error) {
+func (h *FStore) checkFunctionFiles(fn blockless.FunctionRecord) (bool, bool, error) {
 
 	// Check if the archive is found.
 	archiveFound := true
