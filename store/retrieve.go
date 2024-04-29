@@ -47,18 +47,37 @@ func (s *Store) RetrievePeers() ([]blockless.Peer, error) {
 	return peers, nil
 }
 
-// TODO: Define a function record.
-func (s *Store) RetrieveFunction(cid string) (any, error) {
+func (s *Store) RetrieveFunction(cid string) (blockless.FunctionRecord, error) {
 
 	key := EncodeKey(PrefixFunction, cid)
 
-	var function any
+	var function blockless.FunctionRecord
 	err := s.retrieve(key, &function)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve function record: %w", err)
+		return blockless.FunctionRecord{}, fmt.Errorf("could not retrieve function record: %w", err)
 	}
 
 	return function, nil
+}
+
+func (s *Store) RetrieveFunctions() ([]blockless.FunctionRecord, error) {
+
+	functions := make([]blockless.FunctionRecord, 0)
+
+	opts := prefixIterOptions([]byte{PrefixFunction})
+	it := s.db.NewIter(opts)
+	for it.First(); it.Valid(); it.Next() {
+
+		var function blockless.FunctionRecord
+		err := s.retrieve(it.Key(), &function)
+		if err != nil {
+			return nil, fmt.Errorf("could not retrieve functioN (key: %x): %w", it.Key(), err)
+		}
+
+		functions = append(functions, function)
+	}
+
+	return functions, nil
 }
 
 func (s *Store) retrieve(key []byte, out any) error {
