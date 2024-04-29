@@ -10,37 +10,6 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
-// TODO: Implement - RetrievePeers
-// TODO: Implement - RetrieveFunctions
-
-func (s *Store) SavePeer(peer blockless.Peer) error {
-
-	id, err := peer.ID.MarshalBinary()
-	if err != nil {
-		return fmt.Errorf("could not serialize peer ID: %w", err)
-	}
-
-	key := EncodeKey(PrefixPeer, id)
-	err = s.save(key, peer)
-	if err != nil {
-		return fmt.Errorf("could not save peer: %w", err)
-	}
-
-	return nil
-}
-
-// TODO: Define a function record
-func (s *Store) SaveFunction(cid string, record any) error {
-
-	key := EncodeKey(PrefixFunction, cid)
-	err := s.save(key, record)
-	if err != nil {
-		return fmt.Errorf("could not save function: %w", err)
-	}
-
-	return nil
-}
-
 func (s *Store) RetrievePeer(id peer.ID) (blockless.Peer, error) {
 
 	peerID, err := id.MarshalBinary()
@@ -60,12 +29,22 @@ func (s *Store) RetrievePeer(id peer.ID) (blockless.Peer, error) {
 
 func (s *Store) RetrievePeers() ([]blockless.Peer, error) {
 
+	peers := make([]blockless.Peer, 0)
+
 	opts := prefixIterOptions([]byte{PrefixPeer})
 	it := s.db.NewIter(opts)
-
 	for it.First(); it.Valid(); it.Next() {
 
+		var peer blockless.Peer
+		err := s.retrieve(it.Key(), &peer)
+		if err != nil {
+			return nil, fmt.Errorf("could not retrieve peer (key: %x): %w", it.Key(), err)
+		}
+
+		peers = append(peers, peer)
 	}
+
+	return peers, nil
 }
 
 // TODO: Define a function record.
@@ -80,25 +59,6 @@ func (s *Store) RetrieveFunction(cid string) (any, error) {
 	}
 
 	return function, nil
-}
-
-func (s *Store) RemovePeer(id peer.ID) error {
-	return errors.New("TBD: Not implemented")
-}
-
-func (s *Store) save(key []byte, value any) error {
-
-	encoded, err := s.codec.Marshal(value)
-	if err != nil {
-		return fmt.Errorf("could not encode value: %w", err)
-	}
-
-	err = s.db.Set(key, encoded, pebble.Sync)
-	if err != nil {
-		return fmt.Errorf("could not store value: %w", err)
-	}
-
-	return nil
 }
 
 func (s *Store) retrieve(key []byte, out any) error {

@@ -2,13 +2,12 @@ package blockless
 
 import (
 	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/multiformats/go-multiaddr"
 )
 
 // Peer identifies another node in the Blockless network.
 type Peer struct {
 	ID        peer.ID             `json:"id,omitempty"`
-	MultiAddr multiaddr.Multiaddr `json:"multiaddress,omitempty"`
+	MultiAddr string `json:"multiaddress,omitempty"`
 	AddrInfo  peer.AddrInfo       `json:"addrinfo,omitempty"`
 }
 

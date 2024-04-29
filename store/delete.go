@@ -1,18 +1,14 @@
 package store
 
 import (
-	"fmt"
+	"errors"
 
-	"github.com/cockroachdb/pebble"
+	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-// Delete removes the key from the database.
-func (s *Store) Delete(key string) error {
+// TODO: Implement - RetrievePeers
+// TODO: Implement - RetrieveFunctions
 
-	err := s.db.Delete([]byte(key), pebble.Sync)
-	if err != nil {
-		return fmt.Errorf("could not delete value: %w", err)
-	}
-
-	return nil
+func (s *Store) RemovePeer(id peer.ID) error {
+	return errors.New("TBD: Not implemented")
 }
