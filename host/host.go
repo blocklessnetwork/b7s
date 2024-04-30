@@ -1,6 +1,7 @@
 package host
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"os"
@@ -12,6 +13,10 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
+	quic "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
+	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
+	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	ma "github.com/multiformats/go-multiaddr"
 )
 
@@ -27,17 +32,43 @@ type Host struct {
 
 // New creates a new Host.
 func New(log zerolog.Logger, address string, port uint, options ...func(*Config)) (*Host, error) {
-
 	cfg := defaultConfig
 	for _, option := range options {
 		option(&cfg)
 	}
 
 	hostAddress := fmt.Sprintf("/ip4/%v/tcp/%v", address, port)
-	addresses := []string{
-		hostAddress,
+	addresses := []string{hostAddress}
+
+	// define a subset of the default transports, so that we can offer a x509 certificate for the websocket transport
+	DefaultTransports := libp2p.ChainOptions(
+		libp2p.Transport(tcp.NewTCPTransport),
+		libp2p.Transport(quic.NewTransport),
+		libp2p.Transport(webtransport.New),
+	)
+
+	opts := []libp2p.Option{
+		libp2p.ListenAddrStrings(addresses...),
+		DefaultTransports,
+		libp2p.DefaultMuxers,
+		libp2p.DefaultSecurity,
+		libp2p.NATPortMap(),
 	}
 
+	// Read private key, if provided.
+	var key crypto.PrivKey
+	var err error
+
+	if cfg.PrivateKey != "" {
+		key, err = readPrivateKey(cfg.PrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("could not read private key: %w", err)
+		}
+
+		opts = append(opts, libp2p.Identity(key))
+	}
+
+	var tlsConfig *tls.Config
 	if cfg.Websocket {
 
 		// If the TCP and websocket port are explicitly chosen and set to the same value, one of the two listens will silently fail.
@@ -45,26 +76,29 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 			return nil, fmt.Errorf("TCP and websocket ports cannot be the same (TCP: %v, Websocket: %v)", port, cfg.WebsocketPort)
 		}
 
+		// Convert libp2p private key to crypto.PrivateKey
+		cryptoPrivKey, err := convertLibp2pPrivKeyToCryptoPrivKey(key)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert libp2p private key: %v", err)
+		}
+
+		// Generate the X.509 certificate
+		tlsCert, err := generateX509Certificate(cryptoPrivKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate TLS certificate: %v", err)
+		}
+
+		tlsConfig = &tls.Config{
+			Certificates: []tls.Certificate{tlsCert},
+			MinVersion:   tls.VersionTLS12,
+		}
+
 		wsAddr := fmt.Sprintf("/ip4/%v/tcp/%v/ws", address, cfg.WebsocketPort)
 		addresses = append(addresses, wsAddr)
 	}
 
-	opts := []libp2p.Option{
-		libp2p.ListenAddrStrings(addresses...),
-		libp2p.DefaultTransports,
-		libp2p.DefaultMuxers,
-		libp2p.DefaultSecurity,
-		libp2p.NATPortMap(),
-	}
-
-	// Read private key, if provided.
-	if cfg.PrivateKey != "" {
-		key, err := readPrivateKey(cfg.PrivateKey)
-		if err != nil {
-			return nil, fmt.Errorf("could not read private key: %w", err)
-		}
-
-		opts = append(opts, libp2p.Identity(key))
+	if cfg.Websocket {
+		opts = append(opts, libp2p.Transport(ws.New, ws.WithTLSConfig(tlsConfig)))
 	}
 
 	if cfg.DialBackAddress != "" && cfg.DialBackPort != 0 {
