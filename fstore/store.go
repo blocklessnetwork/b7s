@@ -1,7 +1,11 @@
 package fstore
 
+import (
+	"github.com/blocklessnetwork/b7s/models/blockless"
+)
+
 type Store interface {
-	GetRecord(string, interface{}) error
-	SetRecord(string, interface{}) error
-	Keys() []string
+	RetrieveFunction(cid string) (blockless.FunctionRecord, error)
+	SaveFunction(cid string, function blockless.FunctionRecord) error
+	RetrieveFunctions() ([]blockless.FunctionRecord, error)
 }

@@ -9,16 +9,14 @@ import (
 
 func (h *FStore) getFunction(cid string) (*blockless.FunctionRecord, error) {
 
-	// Retrieve function.
-	var fn blockless.FunctionRecord
-	err := h.store.GetRecord(cid, &fn)
+	fn, err := h.store.RetrieveFunction(cid)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve function record: %w", err)
 	}
 
 	// Update the "last retrieved" timestamp.
 	fn.LastRetrieved = time.Now().UTC()
-	err = h.store.SetRecord(cid, fn)
+	err = h.store.SaveFunction(cid, fn)
 	if err != nil {
 		h.log.Warn().Err(err).Str("cid", cid).Msg("could not update function record timestamp")
 	}
@@ -33,5 +31,5 @@ func (h *FStore) saveFunction(fn blockless.FunctionRecord) error {
 	fn.Files = h.cleanPath(fn.Files)
 
 	fn.UpdatedAt = time.Now().UTC()
-	return h.store.SetRecord(fn.CID, fn)
+	return h.store.SaveFunction(fn.CID, fn)
 }

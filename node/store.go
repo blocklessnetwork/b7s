@@ -1,6 +1,9 @@
 package node
 
+import (
+	"github.com/blocklessnetwork/b7s/models/blockless"
+)
+
 type Store interface {
-	GetRecord(string, interface{}) error
-	SetRecord(string, interface{}) error
+	SavePeer(blockless.Peer) error
 }

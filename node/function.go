@@ -8,9 +8,6 @@ type FStore interface {
 	// Installed returns info if the function is installed or not.
 	Installed(cid string) (bool, error)
 
-	// InstalledFunction returns the list of CIDs of installed functions.
-	InstalledFunctions() ([]string, error)
-
-	// Sync will recheck if function installation is found in local storage, and redownload it if it isn't.
-	Sync(cid string) error
+	// Sync will ensure function installations are correct, redownloading functions if needed.
+	Sync(haltOnError bool) error
 }

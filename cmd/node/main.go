@@ -22,8 +22,8 @@ import (
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node"
-	"github.com/blocklessnetwork/b7s/peerstore"
 	"github.com/blocklessnetwork/b7s/store"
+	"github.com/blocklessnetwork/b7s/store/codec"
 )
 
 const (
@@ -111,11 +111,10 @@ func run() int {
 	defer pdb.Close()
 
 	// Create a new store.
-	pstore := store.New(pdb)
-	peerstore := peerstore.New(pstore)
+	store := store.New(pdb, codec.NewJSONCodec())
 
 	// Get the list of dial back peers.
-	peers, err := peerstore.Peers()
+	peers, err := store.RetrievePeers()
 	if err != nil {
 		log.Error().Err(err).Msg("could not get list of dial-back peers")
 		return failure
@@ -210,10 +209,8 @@ func run() int {
 	}
 	defer fdb.Close()
 
-	functionStore := store.New(fdb)
-
 	// Create function store.
-	fstore := fstore.New(log, functionStore, cfg.Workspace)
+	fstore := fstore.New(log, store, cfg.Workspace)
 
 	// If we have topics specified, use those.
 	if len(cfg.Topics) > 0 {
@@ -221,7 +218,7 @@ func run() int {
 	}
 
 	// Instantiate node.
-	node, err := node.New(log, host, peerstore, fstore, opts...)
+	node, err := node.New(log, host, store, fstore, opts...)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure

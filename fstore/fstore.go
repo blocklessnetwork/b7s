@@ -40,9 +40,3 @@ func New(log zerolog.Logger, store Store, workdir string) *FStore {
 
 	return &h
 }
-
-// InstalledFunctions will return the CIDs of all functions found in local storage.
-func (h *FStore) InstalledFunctions() ([]string, error) {
-	ids := h.store.Keys()
-	return ids, nil
-}
