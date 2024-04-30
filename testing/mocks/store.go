@@ -2,64 +2,77 @@ package mocks
 
 import (
 	"testing"
+
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/multiformats/go-multiaddr"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 type Store struct {
-	GetFunc       func(key string) (string, error)
-	SetFunc       func(key string, value string) error
-	GetRecordFunc func(key string, value interface{}) error
-	SetRecordFunc func(key string, value interface{}) error
-	DeleteFunc    func(key string) error
-	KeysFunc      func() []string
+	SavePeerFunc          func(blockless.Peer) error
+	SaveFunctionFunc      func(string, blockless.FunctionRecord) error
+	RetrievePeerFunc      func(peer.ID) (blockless.Peer, error)
+	RetrievePeersFunc     func() ([]blockless.Peer, error)
+	RetrieveFunctionFunc  func(string) (blockless.FunctionRecord, error)
+	RetrieveFunctionsFunc func() ([]blockless.FunctionRecord, error)
 }
 
 func BaselineStore(t *testing.T) *Store {
 	t.Helper()
 
+	parsed, _ := multiaddr.NewMultiaddr(GenericAddress)
+	samplePeer := blockless.Peer{
+		ID:        GenericPeerID,
+		MultiAddr: GenericAddress,
+		AddrInfo: peer.AddrInfo{
+			ID:    GenericPeerID,
+			Addrs: []multiaddr.Multiaddr{parsed},
+		},
+	}
+
+	// TODO: Fill this in.
+	var sampleFunction blockless.FunctionRecord
+
 	store := Store{
-		GetFunc: func(string) (string, error) {
-			return GenericString, nil
-		},
-		SetFunc: func(string, string) error {
+		SavePeerFunc: func(blockless.Peer) error {
 			return nil
 		},
-		GetRecordFunc: func(string, interface{}) error {
+		SaveFunctionFunc: func(string, blockless.FunctionRecord) error {
 			return nil
 		},
-		SetRecordFunc: func(string, interface{}) error {
-			return nil
+		RetrievePeerFunc: func(peer.ID) (blockless.Peer, error) {
+			return samplePeer, nil
 		},
-		DeleteFunc: func(string) error {
-			return nil
+		RetrievePeersFunc: func() ([]blockless.Peer, error) {
+			return []blockless.Peer{samplePeer}, nil
 		},
-		KeysFunc: func() []string {
-			return []string{}
+		RetrieveFunctionFunc: func(string) (blockless.FunctionRecord, error) {
+			return sampleFunction, nil
+		},
+		RetrieveFunctionsFunc: func() ([]blockless.FunctionRecord, error) {
+			return []blockless.FunctionRecord{sampleFunction}, nil
 		},
 	}
 
 	return &store
 }
 
-func (s *Store) Get(key string) (string, error) {
-	return s.GetFunc(key)
+func (s *Store) SavePeer(peer blockless.Peer) error {
+	return s.SavePeerFunc(peer)
 }
-
-func (s *Store) Set(key string, value string) error {
-	return s.SetFunc(key, value)
+func (s *Store) SaveFunction(cid string, function blockless.FunctionRecord) error {
+	return s.SaveFunctionFunc(cid, function)
 }
-
-func (s *Store) GetRecord(key string, value interface{}) error {
-	return s.GetRecordFunc(key, value)
+func (s *Store) RetrievePeer(id peer.ID) (blockless.Peer, error) {
+	return s.RetrievePeerFunc(id)
 }
-
-func (s *Store) SetRecord(key string, value interface{}) error {
-	return s.SetRecordFunc(key, value)
+func (s *Store) RetrievePeers() ([]blockless.Peer, error) {
+	return s.RetrievePeersFunc()
 }
-
-func (s *Store) Delete(key string) error {
-	return s.DeleteFunc(key)
+func (s *Store) RetrieveFunction(cid string) (blockless.FunctionRecord, error) {
+	return s.RetrieveFunctionFunc(cid)
 }
-
-func (s *Store) Keys() []string {
-	return s.KeysFunc()
+func (s *Store) RetrieveFunctions() ([]blockless.FunctionRecord, error) {
+	return s.RetrieveFunctionsFunc()
 }

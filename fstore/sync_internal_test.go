@@ -18,8 +18,7 @@ func TestFstore_CheckFunctionFiles(t *testing.T) {
 
 	defer os.RemoveAll(workdir)
 
-	store := mocks.BaselineStore(t)
-	fh := New(mocks.NoopLogger, store, workdir)
+	fh := New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 	var (
 		archiveName      = "archive.tar.gz"

@@ -16,6 +16,7 @@ import (
 	"github.com/blocklessnetwork/b7s/fstore"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/store"
+	"github.com/blocklessnetwork/b7s/store/codec"
 	"github.com/blocklessnetwork/b7s/testing/helpers"
 	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
@@ -45,8 +46,7 @@ func TestFunction_Install(t *testing.T) {
 	defer fsrv.Close()
 	defer msrv.Close()
 
-	store := store.New(helpers.InMemoryDB(t))
-	fh := fstore.New(mocks.NoopLogger, store, workdir)
+	fh := fstore.New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 	t.Run("function install works", func(t *testing.T) {
 
@@ -111,7 +111,7 @@ func TestFunction_InstallHandlesErrors(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := mocks.BaselineStore(t)
-		store.SetRecordFunc = func(string, interface{}) error {
+		store.SaveFunctionFunc = func(string, blockless.FunctionRecord) error {
 			return mocks.GenericError
 		}
 
@@ -131,8 +131,7 @@ func TestFunction_InstallHandlesErrors(t *testing.T) {
 
 		defer os.RemoveAll(workdir)
 
-		store := store.New(helpers.InMemoryDB(t))
-		fh := fstore.New(mocks.NoopLogger, store, workdir)
+		fh := fstore.New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
 		err = fh.Install(address, testCID)
@@ -148,8 +147,7 @@ func TestFunction_InstallHandlesErrors(t *testing.T) {
 
 		defer os.RemoveAll(workdir)
 
-		store := store.New(helpers.InMemoryDB(t))
-		fh := fstore.New(mocks.NoopLogger, store, workdir)
+		fh := fstore.New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
 		err = fh.Install(address, testCID)
@@ -172,8 +170,8 @@ func TestFunction_InstalledHandlesError(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := mocks.BaselineStore(t)
-		store.GetRecordFunc = func(string, interface{}) error {
-			return mocks.GenericError
+		store.RetrieveFunctionFunc = func(string) (blockless.FunctionRecord, error) {
+			return blockless.FunctionRecord{}, mocks.GenericError
 		}
 
 		fh := fstore.New(mocks.NoopLogger, store, workdir)
@@ -194,8 +192,8 @@ func TestFunction_InstalledHandlesError(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := mocks.BaselineStore(t)
-		store.GetRecordFunc = func(string, interface{}) error {
-			return blockless.ErrNotFound
+		store.RetrieveFunctionFunc = func(string) (blockless.FunctionRecord, error) {
+			return blockless.FunctionRecord{}, blockless.ErrNotFound
 		}
 
 		fh := fstore.New(mocks.NoopLogger, store, workdir)
@@ -259,4 +257,9 @@ func verifyFileHash(t *testing.T, filename string, checksum [32]byte) bool {
 	h := sha256.Sum256(data)
 
 	return bytes.Equal(checksum[:], h[:])
+}
+
+func newInMemoryStore(t *testing.T) *store.Store {
+	t.Helper()
+	return store.New(helpers.InMemoryDB(t), codec.NewJSONCodec())
 }

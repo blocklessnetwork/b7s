@@ -3,8 +3,9 @@ package store
 import (
 	"fmt"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/cockroachdb/pebble"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 func (s *Store) SavePeer(peer blockless.Peer) error {
@@ -23,6 +24,7 @@ func (s *Store) SavePeer(peer blockless.Peer) error {
 	return nil
 }
 
+// TODO: Just use cid from the record.
 func (s *Store) SaveFunction(cid string, function blockless.FunctionRecord) error {
 
 	key := EncodeKey(PrefixFunction, cid)

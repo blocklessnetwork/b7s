@@ -16,6 +16,7 @@ import (
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/store"
+	"github.com/blocklessnetwork/b7s/store/codec"
 	"github.com/blocklessnetwork/b7s/testing/helpers"
 	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
@@ -35,7 +36,7 @@ func TestFunction_GetJSON(t *testing.T) {
 		}))
 	defer srv.Close()
 
-	store := store.New(helpers.InMemoryDB(t))
+	store := store.New(helpers.InMemoryDB(t), codec.NewJSONCodec())
 	fh := New(mocks.NoopLogger, store, workdir)
 
 	var downloaded blockless.FunctionManifest
@@ -124,8 +125,7 @@ func TestFunction_GetJSONHandlesErrors(t *testing.T) {
 				}))
 			defer srv.Close()
 
-			store := store.New(helpers.InMemoryDB(t))
-			fh := New(mocks.NoopLogger, store, workdir)
+			fh := New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 			var response blockless.FunctionManifest
 			err := fh.getJSON(srv.URL, &response)
@@ -153,8 +153,7 @@ func TestFunction_Download(t *testing.T) {
 
 	defer os.RemoveAll(workdir)
 
-	store := store.New(helpers.InMemoryDB(t))
-	fh := New(mocks.NoopLogger, store, workdir)
+	fh := New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 	address := fmt.Sprintf("%s/test-file", srv.URL)
 	hash := sha256.Sum256(payload)
@@ -201,8 +200,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 
 		defer os.RemoveAll(workdir)
 
-		store := store.New(helpers.InMemoryDB(t))
-		fh := New(mocks.NoopLogger, store, workdir)
+		fh := New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 		address := fmt.Sprintf("%s/test-file", srv.URL)
 		hash := sha256.Sum256(payload)
@@ -226,8 +224,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 
 		defer os.RemoveAll(workdir)
 
-		store := store.New(helpers.InMemoryDB(t))
-		fh := New(mocks.NoopLogger, store, workdir)
+		fh := New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 		address := fmt.Sprintf("%s/test-file", srv.URL) + "\n"
 		hash := sha256.Sum256(payload)
@@ -251,8 +248,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 
 		defer os.RemoveAll(workdir)
 
-		store := store.New(helpers.InMemoryDB(t))
-		fh := New(mocks.NoopLogger, store, workdir)
+		fh := New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 		address := fmt.Sprintf("%s/test-file", srv.URL)
 		hash := sha256.Sum256(payload)
@@ -279,4 +275,9 @@ func getRandomPayload(t *testing.T, len int) []byte {
 	require.NoError(t, err)
 
 	return buf
+}
+
+func newInMemoryStore(t *testing.T) *store.Store {
+	t.Helper()
+	return store.New(helpers.InMemoryDB(t), codec.NewJSONCodec())
 }
