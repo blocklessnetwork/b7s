@@ -24,10 +24,9 @@ func (s *Store) SavePeer(peer blockless.Peer) error {
 	return nil
 }
 
-// TODO: Just use cid from the record.
-func (s *Store) SaveFunction(cid string, function blockless.FunctionRecord) error {
+func (s *Store) SaveFunction(function blockless.FunctionRecord) error {
 
-	key := EncodeKey(PrefixFunction, cid)
+	key := EncodeKey(PrefixFunction, function.CID)
 	err := s.save(key, function)
 	if err != nil {
 		return fmt.Errorf("could not save function: %w", err)

@@ -16,7 +16,7 @@ func (h *FStore) getFunction(cid string) (*blockless.FunctionRecord, error) {
 
 	// Update the "last retrieved" timestamp.
 	fn.LastRetrieved = time.Now().UTC()
-	err = h.store.SaveFunction(cid, fn)
+	err = h.store.SaveFunction(fn)
 	if err != nil {
 		h.log.Warn().Err(err).Str("cid", cid).Msg("could not update function record timestamp")
 	}
@@ -31,5 +31,5 @@ func (h *FStore) saveFunction(fn blockless.FunctionRecord) error {
 	fn.Files = h.cleanPath(fn.Files)
 
 	fn.UpdatedAt = time.Now().UTC()
-	return h.store.SaveFunction(fn.CID, fn)
+	return h.store.SaveFunction(fn)
 }

@@ -111,7 +111,7 @@ func TestFunction_InstallHandlesErrors(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := mocks.BaselineStore(t)
-		store.SaveFunctionFunc = func(string, blockless.FunctionRecord) error {
+		store.SaveFunctionFunc = func(blockless.FunctionRecord) error {
 			return mocks.GenericError
 		}
 

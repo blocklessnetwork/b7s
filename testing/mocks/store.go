@@ -11,7 +11,7 @@ import (
 
 type Store struct {
 	SavePeerFunc          func(blockless.Peer) error
-	SaveFunctionFunc      func(string, blockless.FunctionRecord) error
+	SaveFunctionFunc      func(blockless.FunctionRecord) error
 	RetrievePeerFunc      func(peer.ID) (blockless.Peer, error)
 	RetrievePeersFunc     func() ([]blockless.Peer, error)
 	RetrieveFunctionFunc  func(string) (blockless.FunctionRecord, error)
@@ -38,7 +38,7 @@ func BaselineStore(t *testing.T) *Store {
 		SavePeerFunc: func(blockless.Peer) error {
 			return nil
 		},
-		SaveFunctionFunc: func(string, blockless.FunctionRecord) error {
+		SaveFunctionFunc: func(blockless.FunctionRecord) error {
 			return nil
 		},
 		RetrievePeerFunc: func(peer.ID) (blockless.Peer, error) {
@@ -61,8 +61,8 @@ func BaselineStore(t *testing.T) *Store {
 func (s *Store) SavePeer(peer blockless.Peer) error {
 	return s.SavePeerFunc(peer)
 }
-func (s *Store) SaveFunction(cid string, function blockless.FunctionRecord) error {
-	return s.SaveFunctionFunc(cid, function)
+func (s *Store) SaveFunction(function blockless.FunctionRecord) error {
+	return s.SaveFunctionFunc(function)
 }
 func (s *Store) RetrievePeer(id peer.ID) (blockless.Peer, error) {
 	return s.RetrievePeerFunc(id)
