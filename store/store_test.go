@@ -3,6 +3,7 @@ package store_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -40,11 +41,10 @@ func TestStore_RetrievePeers(t *testing.T) {
 	store := store.New(db, codec.NewJSONCodec())
 
 	count := 10
-	// Generate peers
 	peers := make(map[peer.ID]blockless.Peer)
 	for i := 0; i < count; i++ {
 
-		id := helpers.RandPeerIDFatal(t)
+		id := helpers.RandPeerID(t)
 		addrs := helpers.GenerateTestAddrs(t, 1)
 
 		p := blockless.Peer{
@@ -56,7 +56,7 @@ func TestStore_RetrievePeers(t *testing.T) {
 			},
 		}
 
-		peers[id] = p
+		peers[p.ID] = p
 	}
 
 	// Save peers.
@@ -71,9 +71,8 @@ func TestStore_RetrievePeers(t *testing.T) {
 
 	// Verify peers.
 	for _, peer := range retrieved {
-		require.Equal(t, peer, peers[peer.ID])
+		require.Equal(t, peers[peer.ID], peer)
 	}
-
 }
 
 func TestStore_SaveAndRetrieveFunction(t *testing.T) {
@@ -93,6 +92,42 @@ func TestStore_SaveAndRetrieveFunction(t *testing.T) {
 
 		require.Equal(t, function, retrieved)
 	})
+}
+
+func TestStore_RetrieveFunctions(t *testing.T) {
+	db := helpers.InMemoryDB(t)
+	defer db.Close()
+	store := store.New(db, codec.NewJSONCodec())
+
+	count := 10
+	functions := make(map[string]blockless.FunctionRecord)
+	for i := 0; i < count; i++ {
+
+		fn := blockless.FunctionRecord{
+			CID:      fmt.Sprintf("dummy-cid-%v", i),
+			URL:      fmt.Sprintf("https://example.com/dummy-url-%v", i),
+			Manifest: mocks.GenericManifest,
+			Archive:  fmt.Sprintf("/var/tmp/archive-%v.tar.gz", i),
+			Files:    fmt.Sprintf("/var/tmp/files/%v", i),
+		}
+
+		functions[fn.CID] = fn
+	}
+
+	// Save functions.
+	for _, fn := range functions {
+		err := store.SaveFunction(fn)
+		require.NoError(t, err)
+	}
+
+	retrieved, err := store.RetrieveFunctions()
+	require.NoError(t, err)
+	require.Len(t, retrieved, count)
+
+	// Verify functions.
+	for _, fn := range retrieved {
+		require.Equal(t, functions[fn.CID], fn)
+	}
 }
 
 func TestStore_HandlesFailures(t *testing.T) {
