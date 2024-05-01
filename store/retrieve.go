@@ -12,10 +12,12 @@ import (
 
 func (s *Store) RetrievePeer(id peer.ID) (blockless.Peer, error) {
 
-	key, err := encodeKey(PrefixPeer, id)
+	idBytes, err := id.MarshalBinary()
 	if err != nil {
-		return blockless.Peer{}, fmt.Errorf("could not encode key: %w", err)
+		return blockless.Peer{}, fmt.Errorf("could not serialize peer ID: %w", err)
 	}
+
+	key := encodeKey(PrefixPeer, idBytes)
 	var peer blockless.Peer
 	err = s.retrieve(key, &peer)
 	if err != nil {
@@ -47,13 +49,9 @@ func (s *Store) RetrievePeers() ([]blockless.Peer, error) {
 
 func (s *Store) RetrieveFunction(cid string) (blockless.FunctionRecord, error) {
 
-	key, err := encodeKey(PrefixFunction, cid)
-	if err != nil {
-		return blockless.FunctionRecord{}, fmt.Errorf("could not encode key: %w", err)
-	}
-
+	key := encodeKey(PrefixFunction, cid)
 	var function blockless.FunctionRecord
-	err = s.retrieve(key, &function)
+	err := s.retrieve(key, &function)
 	if err != nil {
 		return blockless.FunctionRecord{}, fmt.Errorf("could not retrieve function record: %w", err)
 	}
