@@ -9,8 +9,13 @@ import (
 
 func (s *Store) RemovePeer(id peer.ID) error {
 
-	key := encodeKey(PrefixPeer, id)
-	err := s.remove(key)
+	idBytes, err := id.MarshalBinary()
+	if err != nil {
+		return fmt.Errorf("could not encode peer ID: %w", err)
+	}
+
+	key := encodeKey(PrefixPeer, idBytes)
+	err = s.remove(key)
 	if err != nil {
 		return fmt.Errorf("could not remove peer: %w", err)
 	}

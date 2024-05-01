@@ -16,7 +16,7 @@ import (
 	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
-func TestStore_SaveAndRetrievePeer(t *testing.T) {
+func TestStore_PeerOperations(t *testing.T) {
 	db := helpers.InMemoryDB(t)
 	defer db.Close()
 
@@ -32,6 +32,14 @@ func TestStore_SaveAndRetrievePeer(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, peer, retrieved)
+	})
+	t.Run("remove peer", func(t *testing.T) {
+		err := store.RemovePeer(mocks.GenericPeerID)
+		require.NoError(t, err)
+
+		// Verify peer is gone.
+		_, err = store.RetrievePeer(mocks.GenericPeerID)
+		require.ErrorIs(t, err, blockless.ErrNotFound)
 	})
 }
 
@@ -75,7 +83,7 @@ func TestStore_RetrievePeers(t *testing.T) {
 	}
 }
 
-func TestStore_SaveAndRetrieveFunction(t *testing.T) {
+func TestStore_FunctionOperations(t *testing.T) {
 	db := helpers.InMemoryDB(t)
 	defer db.Close()
 
@@ -91,6 +99,15 @@ func TestStore_SaveAndRetrieveFunction(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, function, retrieved)
+	})
+
+	t.Run("remove function", func(t *testing.T) {
+		err := store.RemoveFunction(function.CID)
+		require.NoError(t, err)
+
+		// Verify function is gone.
+		_, err = store.RetrieveFunction(function.CID)
+		require.ErrorIs(t, err, blockless.ErrNotFound)
 	})
 }
 
