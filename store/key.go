@@ -2,18 +2,26 @@ package store
 
 import (
 	"fmt"
+
+	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-func encodeKey(prefix uint8, segments ...any) []byte {
+func encodeKey(prefix uint8, segments ...any) ([]byte, error) {
 
 	key := []byte{prefix}
 
 	for _, segment := range segments {
 		switch s := segment.(type) {
 
-		case []byte: // e.g. peer.ID
+		case peer.ID:
+
+			id, err := s.MarshalBinary()
+			if err != nil {
+				return nil, err
+			}
+
 			key = append(key, Separator)
-			key = append(key, s...)
+			key = append(key, id...)
 
 		case string:
 			key = append(key, Separator)
@@ -24,5 +32,5 @@ func encodeKey(prefix uint8, segments ...any) []byte {
 		}
 	}
 
-	return key
+	return key, nil
 }
