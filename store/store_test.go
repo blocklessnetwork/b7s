@@ -5,8 +5,10 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
+	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/store"
 	"github.com/blocklessnetwork/b7s/store/codec"
 	"github.com/blocklessnetwork/b7s/testing/helpers"
@@ -30,6 +32,48 @@ func TestStore_SaveAndRetrievePeer(t *testing.T) {
 
 		require.Equal(t, peer, retrieved)
 	})
+}
+
+func TestStore_RetrievePeers(t *testing.T) {
+	db := helpers.InMemoryDB(t)
+	defer db.Close()
+	store := store.New(db, codec.NewJSONCodec())
+
+	count := 10
+	// Generate peers
+	peers := make(map[peer.ID]blockless.Peer)
+	for i := 0; i < count; i++ {
+
+		id := helpers.RandPeerIDFatal(t)
+		addrs := helpers.GenerateTestAddrs(t, 1)
+
+		p := blockless.Peer{
+			ID:        id,
+			MultiAddr: addrs[0].String(),
+			AddrInfo: peer.AddrInfo{
+				ID:    id,
+				Addrs: addrs,
+			},
+		}
+
+		peers[id] = p
+	}
+
+	// Save peers.
+	for _, peer := range peers {
+		err := store.SavePeer(peer)
+		require.NoError(t, err)
+	}
+
+	retrieved, err := store.RetrievePeers()
+	require.NoError(t, err)
+	require.Len(t, retrieved, count)
+
+	// Verify peers.
+	for _, peer := range retrieved {
+		require.Equal(t, peer, peers[peer.ID])
+	}
+
 }
 
 func TestStore_SaveAndRetrieveFunction(t *testing.T) {
