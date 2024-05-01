@@ -9,7 +9,7 @@ import (
 
 func (s *Store) RemovePeer(id peer.ID) error {
 
-	key := EncodeKey(PrefixPeer, id)
+	key := encodeKey(PrefixPeer, id)
 	err := s.remove(key)
 	if err != nil {
 		return fmt.Errorf("could not remove peer: %w", err)
@@ -20,7 +20,7 @@ func (s *Store) RemovePeer(id peer.ID) error {
 
 func (s *Store) RemoveFunction(cid string) error {
 
-	key := EncodeKey(PrefixFunction, cid)
+	key := encodeKey(PrefixFunction, cid)
 	err := s.remove(key)
 	if err != nil {
 		return fmt.Errorf("could not remove function: %w", err)

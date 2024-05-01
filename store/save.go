@@ -15,7 +15,7 @@ func (s *Store) SavePeer(peer blockless.Peer) error {
 		return fmt.Errorf("could not serialize peer ID: %w", err)
 	}
 
-	key := EncodeKey(PrefixPeer, id)
+	key := encodeKey(PrefixPeer, id)
 	err = s.save(key, peer)
 	if err != nil {
 		return fmt.Errorf("could not save peer: %w", err)
@@ -26,7 +26,7 @@ func (s *Store) SavePeer(peer blockless.Peer) error {
 
 func (s *Store) SaveFunction(function blockless.FunctionRecord) error {
 
-	key := EncodeKey(PrefixFunction, function.CID)
+	key := encodeKey(PrefixFunction, function.CID)
 	err := s.save(key, function)
 	if err != nil {
 		return fmt.Errorf("could not save function: %w", err)

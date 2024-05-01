@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/multiformats/go-multiaddr"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
@@ -21,19 +20,6 @@ type Store struct {
 func BaselineStore(t *testing.T) *Store {
 	t.Helper()
 
-	parsed, _ := multiaddr.NewMultiaddr(GenericAddress)
-	samplePeer := blockless.Peer{
-		ID:        GenericPeerID,
-		MultiAddr: GenericAddress,
-		AddrInfo: peer.AddrInfo{
-			ID:    GenericPeerID,
-			Addrs: []multiaddr.Multiaddr{parsed},
-		},
-	}
-
-	// TODO: Fill this in.
-	var sampleFunction blockless.FunctionRecord
-
 	store := Store{
 		SavePeerFunc: func(blockless.Peer) error {
 			return nil
@@ -42,16 +28,16 @@ func BaselineStore(t *testing.T) *Store {
 			return nil
 		},
 		RetrievePeerFunc: func(peer.ID) (blockless.Peer, error) {
-			return samplePeer, nil
+			return GenericPeer, nil
 		},
 		RetrievePeersFunc: func() ([]blockless.Peer, error) {
-			return []blockless.Peer{samplePeer}, nil
+			return []blockless.Peer{GenericPeer}, nil
 		},
 		RetrieveFunctionFunc: func(string) (blockless.FunctionRecord, error) {
-			return sampleFunction, nil
+			return GenericFunctionRecord, nil
 		},
 		RetrieveFunctionsFunc: func() ([]blockless.FunctionRecord, error) {
-			return []blockless.FunctionRecord{sampleFunction}, nil
+			return []blockless.FunctionRecord{GenericFunctionRecord}, nil
 		},
 	}
 

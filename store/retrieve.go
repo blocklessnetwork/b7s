@@ -17,7 +17,7 @@ func (s *Store) RetrievePeer(id peer.ID) (blockless.Peer, error) {
 		return blockless.Peer{}, fmt.Errorf("could not serialize peer ID: %w", err)
 	}
 
-	key := EncodeKey(PrefixPeer, peerID)
+	key := encodeKey(PrefixPeer, peerID)
 	var peer blockless.Peer
 	err = s.retrieve(key, &peer)
 	if err != nil {
@@ -49,7 +49,7 @@ func (s *Store) RetrievePeers() ([]blockless.Peer, error) {
 
 func (s *Store) RetrieveFunction(cid string) (blockless.FunctionRecord, error) {
 
-	key := EncodeKey(PrefixFunction, cid)
+	key := encodeKey(PrefixFunction, cid)
 
 	var function blockless.FunctionRecord
 	err := s.retrieve(key, &function)

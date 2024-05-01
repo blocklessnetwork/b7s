@@ -4,9 +4,7 @@ import (
 	"fmt"
 )
 
-// TODO: We could use generics and `MarshalBinary()` type.
-
-func EncodeKey(prefix uint8, segments ...any) []byte {
+func encodeKey(prefix uint8, segments ...any) []byte {
 
 	key := []byte{prefix}
 
