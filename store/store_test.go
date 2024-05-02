@@ -20,7 +20,7 @@ func TestStore_PeerOperations(t *testing.T) {
 	db := helpers.InMemoryDB(t)
 	defer db.Close()
 
-	peer := createRandomPeers(t, 1)[0]
+	peer := helpers.CreateRandomPeers(t, 1)[0]
 	store := store.New(db, codec.NewJSONCodec())
 
 	t.Run("save peer", func(t *testing.T) {
@@ -50,7 +50,7 @@ func TestStore_RetrievePeers(t *testing.T) {
 
 	count := 10
 	peers := make(map[peer.ID]blockless.Peer)
-	generated := createRandomPeers(t, count)
+	generated := helpers.CreateRandomPeers(t, count)
 	for _, peer := range generated {
 		peers[peer.ID] = peer
 	}
@@ -187,7 +187,7 @@ func TestStore_HandlesFailures(t *testing.T) {
 		store := store.New(db, codec)
 
 		// First, save the peer so we don't end up with a "not found" error.
-		peer := createRandomPeers(t, 1)[0]
+		peer := helpers.CreateRandomPeers(t, 1)[0]
 		err := store.SavePeer(peer)
 		require.NoError(t, err)
 
@@ -215,27 +215,4 @@ func TestStore_HandlesFailures(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorIs(t, err, unmarshalErr)
 	})
-}
-
-func createRandomPeers(t *testing.T, count int) []blockless.Peer {
-
-	peers := make([]blockless.Peer, count)
-	for i := 0; i < count; i++ {
-
-		id := helpers.RandPeerID(t)
-		addrs := helpers.GenerateTestAddrs(t, 1)
-
-		p := blockless.Peer{
-			ID:        id,
-			MultiAddr: addrs[0].String(),
-			AddrInfo: peer.AddrInfo{
-				ID:    id,
-				Addrs: addrs,
-			},
-		}
-
-		peers[i] = p
-	}
-
-	return peers
 }
