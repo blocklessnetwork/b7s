@@ -20,7 +20,7 @@ func TestStore_PeerOperations(t *testing.T) {
 	db := helpers.InMemoryDB(t)
 	defer db.Close()
 
-	peer := mocks.GenericPeer
+	peer := createRandomPeers(t, 1)[0]
 	store := store.New(db, codec.NewJSONCodec())
 
 	t.Run("save peer", func(t *testing.T) {
@@ -28,17 +28,17 @@ func TestStore_PeerOperations(t *testing.T) {
 		require.NoError(t, err)
 	})
 	t.Run("retrieve peer", func(t *testing.T) {
-		retrieved, err := store.RetrievePeer(mocks.GenericPeerID)
+		retrieved, err := store.RetrievePeer(peer.ID)
 		require.NoError(t, err)
 
 		require.Equal(t, peer, retrieved)
 	})
 	t.Run("remove peer", func(t *testing.T) {
-		err := store.RemovePeer(mocks.GenericPeerID)
+		err := store.RemovePeer(peer.ID)
 		require.NoError(t, err)
 
 		// Verify peer is gone.
-		_, err = store.RetrievePeer(mocks.GenericPeerID)
+		_, err = store.RetrievePeer(peer.ID)
 		require.ErrorIs(t, err, blockless.ErrNotFound)
 	})
 }
@@ -50,21 +50,9 @@ func TestStore_RetrievePeers(t *testing.T) {
 
 	count := 10
 	peers := make(map[peer.ID]blockless.Peer)
-	for i := 0; i < count; i++ {
-
-		id := helpers.RandPeerID(t)
-		addrs := helpers.GenerateTestAddrs(t, 1)
-
-		p := blockless.Peer{
-			ID:        id,
-			MultiAddr: addrs[0].String(),
-			AddrInfo: peer.AddrInfo{
-				ID:    id,
-				Addrs: addrs,
-			},
-		}
-
-		peers[p.ID] = p
+	generated := createRandomPeers(t, count)
+	for _, peer := range generated {
+		peers[peer.ID] = peer
 	}
 
 	// Save peers.
@@ -199,10 +187,11 @@ func TestStore_HandlesFailures(t *testing.T) {
 		store := store.New(db, codec)
 
 		// First, save the peer so we don't end up with a "not found" error.
-		err := store.SavePeer(mocks.GenericPeer)
+		peer := createRandomPeers(t, 1)[0]
+		err := store.SavePeer(peer)
 		require.NoError(t, err)
 
-		_, err = store.RetrievePeer(mocks.GenericPeerID)
+		_, err = store.RetrievePeer(peer.ID)
 		require.Error(t, err)
 		require.ErrorIs(t, err, unmarshalErr)
 	})
@@ -226,4 +215,27 @@ func TestStore_HandlesFailures(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorIs(t, err, unmarshalErr)
 	})
+}
+
+func createRandomPeers(t *testing.T, count int) []blockless.Peer {
+
+	peers := make([]blockless.Peer, count)
+	for i := 0; i < count; i++ {
+
+		id := helpers.RandPeerID(t)
+		addrs := helpers.GenerateTestAddrs(t, 1)
+
+		p := blockless.Peer{
+			ID:        id,
+			MultiAddr: addrs[0].String(),
+			AddrInfo: peer.AddrInfo{
+				ID:    id,
+				Addrs: addrs,
+			},
+		}
+
+		peers[i] = p
+	}
+
+	return peers
 }
