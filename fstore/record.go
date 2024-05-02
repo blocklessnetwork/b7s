@@ -7,21 +7,32 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
-func (h *FStore) getFunction(cid string) (*blockless.FunctionRecord, error) {
+// Get retrieves a function manifest for the given function from storage.
+func (h *FStore) Get(cid string) (blockless.FunctionRecord, error) {
 
-	fn, err := h.store.RetrieveFunction(cid)
+	fn, err := h.getFunction(cid)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve function record: %w", err)
+		return blockless.FunctionRecord{}, fmt.Errorf("could not get function from store: %w", err)
+	}
+
+	return fn, nil
+}
+
+func (h *FStore) getFunction(cid string) (blockless.FunctionRecord, error) {
+
+	function, err := h.store.RetrieveFunction(cid)
+	if err != nil {
+		return blockless.FunctionRecord{}, fmt.Errorf("could not retrieve function record: %w", err)
 	}
 
 	// Update the "last retrieved" timestamp.
-	fn.LastRetrieved = time.Now().UTC()
-	err = h.store.SaveFunction(fn)
+	function.LastRetrieved = time.Now().UTC()
+	err = h.store.SaveFunction(function)
 	if err != nil {
 		h.log.Warn().Err(err).Str("cid", cid).Msg("could not update function record timestamp")
 	}
 
-	return &fn, nil
+	return function, nil
 }
 
 func (h *FStore) saveFunction(fn blockless.FunctionRecord) error {

@@ -57,11 +57,11 @@ func TestFunction_Install(t *testing.T) {
 		err = fh.Install(address, testCID)
 		require.NoError(t, err)
 
-		manifest, err := fh.Get(testCID)
+		function, err := fh.Get(testCID)
 		require.NoError(t, err)
 
 		// Verify downloaded file.
-		archive := manifest.Deployment.File
+		archive := function.Manifest.Deployment.File
 		require.FileExists(t, archive)
 
 		ok := verifyFileHash(t, archive, hash)

@@ -84,7 +84,7 @@ func (h *FStore) Installed(cid string) (bool, error) {
 		return false, fmt.Errorf("could not get function from store: %w", err)
 	}
 
-	haveArchive, haveFiles, err := h.checkFunctionFiles(*fn)
+	haveArchive, haveFiles, err := h.checkFunctionFiles(fn)
 	if err != nil {
 		return false, fmt.Errorf("could not verify function cache: %w", err)
 	}
