@@ -48,7 +48,6 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	)
 
 	opts := []libp2p.Option{
-		libp2p.ListenAddrStrings(addresses...),
 		DefaultTransports,
 		libp2p.DefaultMuxers,
 		libp2p.DefaultSecurity,
@@ -93,13 +92,12 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 			MinVersion:   tls.VersionTLS12,
 		}
 
-		wsAddr := fmt.Sprintf("/ip4/%v/tcp/%v/ws", address, cfg.WebsocketPort)
+		wsAddr := fmt.Sprintf("/ip4/%v/tcp/%v/wss", address, cfg.WebsocketPort)
 		addresses = append(addresses, wsAddr)
-	}
-
-	if cfg.Websocket {
 		opts = append(opts, libp2p.Transport(ws.New, ws.WithTLSConfig(tlsConfig)))
 	}
+
+	opts = append(opts, libp2p.ListenAddrStrings(addresses...))
 
 	if cfg.DialBackAddress != "" && cfg.DialBackPort != 0 {
 
