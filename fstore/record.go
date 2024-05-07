@@ -40,6 +40,7 @@ func (h *FStore) saveFunction(fn blockless.FunctionRecord) error {
 	// Clean paths - make them relative to the current working directory.
 	fn.Archive = h.cleanPath(fn.Archive)
 	fn.Files = h.cleanPath(fn.Files)
+	fn.Manifest.Deployment.File = h.cleanPath(fn.Manifest.Deployment.File)
 
 	fn.UpdatedAt = time.Now().UTC()
 	return h.store.SaveFunction(fn)
