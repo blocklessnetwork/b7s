@@ -90,8 +90,7 @@ func run() int {
 
 	log.Info().
 		Str("workspace", cfg.Workspace).
-		Str("peer_db", cfg.PeerDB).
-		Str("function_db", cfg.FunctionDB).
+		Str("db", cfg.DB).
 		Msg("filepaths used by the node")
 
 	// Convert workspace path to an absolute one.
@@ -103,15 +102,15 @@ func run() int {
 	cfg.Workspace = workspace
 
 	// Open the pebble peer database.
-	pdb, err := pebble.Open(cfg.PeerDB, &pebble.Options{Logger: &pebbleNoopLogger{}})
+	db, err := pebble.Open(cfg.DB, &pebble.Options{Logger: &pebbleNoopLogger{}})
 	if err != nil {
-		log.Error().Err(err).Str("db", cfg.PeerDB).Msg("could not open pebble peer database")
+		log.Error().Err(err).Str("db", cfg.DB).Msg("could not open pebble database")
 		return failure
 	}
-	defer pdb.Close()
+	defer db.Close()
 
 	// Create a new store.
-	store := store.New(pdb, codec.NewJSONCodec())
+	store := store.New(db, codec.NewJSONCodec())
 
 	// Get the list of dial back peers.
 	peers, err := store.RetrievePeers()
@@ -200,14 +199,6 @@ func run() int {
 		opts = append(opts, node.WithExecutor(executor))
 		opts = append(opts, node.WithWorkspace(cfg.Workspace))
 	}
-
-	// Open the pebble function database.
-	fdb, err := pebble.Open(cfg.FunctionDB, &pebble.Options{Logger: &pebbleNoopLogger{}})
-	if err != nil {
-		log.Error().Err(err).Str("db", cfg.FunctionDB).Msg("could not open pebble function database")
-		return failure
-	}
-	defer fdb.Close()
 
 	// Create function store.
 	fstore := fstore.New(log, store, cfg.Workspace)
@@ -324,17 +315,11 @@ func updateDirPaths(root string, cfg *config.Config) {
 	}
 	cfg.Workspace = workspace
 
-	peerDB := cfg.PeerDB
-	if peerDB == "" {
-		peerDB = filepath.Join(root, config.DefaultPeerDBName)
+	db := cfg.DB
+	if db == "" {
+		db = filepath.Join(root, config.DefaultDBName)
 	}
-	cfg.PeerDB = peerDB
-
-	functionDB := cfg.FunctionDB
-	if functionDB == "" {
-		functionDB = filepath.Join(root, config.DefaultFunctionDBName)
-	}
-	cfg.FunctionDB = functionDB
+	cfg.DB = db
 }
 
 func generateNodeDirName(id string) string {
