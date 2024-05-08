@@ -208,6 +208,14 @@ func run() int {
 		opts = append(opts, node.WithWorkspace(cfg.Workspace))
 	}
 
+	if cfg.Worker.PurgeFunctions {
+		err = purgeFunctions(store, cfg.Workspace)
+		if err != nil {
+			log.Error().Err(err).Msg("could not purge installed functions")
+			return failure
+		}
+	}
+
 	// Create function store.
 	fstore := fstore.New(log, store, cfg.Workspace)
 

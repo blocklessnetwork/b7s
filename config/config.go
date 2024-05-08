@@ -79,6 +79,7 @@ type Worker struct {
 	RuntimeCLI         string  `koanf:"runtime-cli"          flag:"runtime-cli"`
 	CPUPercentageLimit float64 `koanf:"cpu-percentage-limit" flag:"cpu-percentage-limit"`
 	MemoryLimitKB      int64   `koanf:"memory-limit"         flag:"memory-limit"`
+	PurgeFunctions     bool    `koanf:"purge-functions"      flag:"purge-functions"`
 }
 
 // ConfigOptionInfo describes a specific configuration option, it's location in the config file and
@@ -137,6 +138,10 @@ func getFlagDescription(flag string) string {
 		return "amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited"
 	case "memory-limit":
 		return "memory limit (kB) for Blockless Functions"
+	case "purge-dialback-peers":
+		return "purge peers known from previous runs"
+	case "purge-functions":
+		return "purge installed functions"
 	default:
 		return ""
 	}
