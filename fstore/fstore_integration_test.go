@@ -87,8 +87,8 @@ func TestStore_InstallFunction(t *testing.T) {
 	require.Equal(t, functionCID, function.CID)
 	require.Equal(t, manifestURL, function.URL)
 
-	// TODO: Fix manifest handling
-	// require.Equal(t, manifest, function.Manifest)
+	// We're not validating manifest because we store a tweaked version.
+
 	// Record has the workdir prefix trimmed.
 	require.Contains(t, archive, function.Archive)
 	require.Contains(t, file, function.Files)

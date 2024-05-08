@@ -32,7 +32,10 @@ func (s *Store) RetrievePeers() ([]blockless.Peer, error) {
 	peers := make([]blockless.Peer, 0)
 
 	opts := prefixIterOptions([]byte{PrefixPeer})
-	it := s.db.NewIter(opts)
+	it, err := s.db.NewIter(opts)
+	if err != nil {
+		return nil, fmt.Errorf("could not create iterator: %w", err)
+	}
 	for it.First(); it.Valid(); it.Next() {
 
 		var peer blockless.Peer
@@ -64,7 +67,10 @@ func (s *Store) RetrieveFunctions() ([]blockless.FunctionRecord, error) {
 	functions := make([]blockless.FunctionRecord, 0)
 
 	opts := prefixIterOptions([]byte{PrefixFunction})
-	it := s.db.NewIter(opts)
+	it, err := s.db.NewIter(opts)
+	if err != nil {
+		return nil, fmt.Errorf("could not create iterator: %w", err)
+	}
 	for it.First(); it.Valid(); it.Next() {
 
 		var function blockless.FunctionRecord

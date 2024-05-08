@@ -4,8 +4,6 @@ import (
 	"github.com/cockroachdb/pebble"
 )
 
-// TODO: Consider passing in marshaller/unmarshaller.
-
 // Store enables interaction with a database.
 type Store struct {
 	db    *pebble.DB
