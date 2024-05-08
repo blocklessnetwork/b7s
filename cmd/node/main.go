@@ -112,6 +112,14 @@ func run() int {
 	// Create a new store.
 	store := store.New(db, codec.NewJSONCodec())
 
+	if cfg.Connectivity.PurgeDialbackPeers {
+		err = purgeDialbackPeers(store)
+		if err != nil {
+			log.Error().Err(err).Msg("could not purge dialback peers")
+			return failure
+		}
+	}
+
 	// Get the list of dial back peers.
 	peers, err := store.RetrievePeers()
 	if err != nil {

@@ -67,6 +67,7 @@ type Connectivity struct {
 	Websocket             bool   `koanf:"websocket"         flag:"websocket,w"`
 	WebsocketPort         uint   `koanf:"websocket-port"    flag:"websocket-port"`
 	WebsocketDialbackPort uint   `koanf:"websocket-dialback-port" flag:"websocket-dialback-port"`
+	PurgeDialbackPeers    bool   `koanf:"purge-dialback-peers" flag:"purge-dialback-peers"`
 }
 
 type Head struct {

@@ -15,6 +15,8 @@ type Store struct {
 	RetrievePeersFunc     func() ([]blockless.Peer, error)
 	RetrieveFunctionFunc  func(string) (blockless.FunctionRecord, error)
 	RetrieveFunctionsFunc func() ([]blockless.FunctionRecord, error)
+	RemovePeerFunc        func(string) error
+	RemoveFunctionFunc    func(string) error
 }
 
 func BaselineStore(t *testing.T) *Store {
@@ -39,6 +41,12 @@ func BaselineStore(t *testing.T) *Store {
 		RetrieveFunctionsFunc: func() ([]blockless.FunctionRecord, error) {
 			return []blockless.FunctionRecord{GenericFunctionRecord}, nil
 		},
+		RemovePeerFunc: func(string) error {
+			return nil
+		},
+		RemoveFunctionFunc: func(string) error {
+			return nil
+		},
 	}
 
 	return &store
@@ -61,4 +69,10 @@ func (s *Store) RetrieveFunction(cid string) (blockless.FunctionRecord, error) {
 }
 func (s *Store) RetrieveFunctions() ([]blockless.FunctionRecord, error) {
 	return s.RetrieveFunctionsFunc()
+}
+func (s *Store) RemovePeer(id string) error {
+	return s.RemovePeerFunc(id)
+}
+func (s *Store) RemoveFunction(id string) error {
+	return s.RemoveFunctionFunc(id)
 }
