@@ -84,7 +84,7 @@ func run() int {
 		}
 	}
 
-	// Set relevant working paths for workspace, peerDB and functionDB.
+	// Set relevant working paths for workspace and DB.
 	// If paths were set using the CLI flags, use those. Else, use generated path, e.g. .b7s_<peer-id>/<default-option-for-directory>.
 	updateDirPaths(nodeDir, cfg)
 
