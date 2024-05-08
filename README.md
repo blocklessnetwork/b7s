@@ -46,6 +46,8 @@ For a more detailed overview of the configuration options, see the [b7s-node Rea
 | websocket-dialback-port   | N/A        | 0                       | Specifies the advertised dialback port for Websocket connections.                                     |
 | cpu-percentage-limit      | N/A        | 1.0                     | Specifies the amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited. |
 | memory-limit              | N/A        | N/A                     | Specifies the memory limit for Blockless Functions, in kB.                                            |
+| purge-functions           | N/A        | false                   | Specifies if the node should purge installed Functions.                                               |
+| purge-dialback-peers      | N/A        | false                   | Specifies if the node should purge past known peers.                                                  |
 
 ## Dependencies
 
