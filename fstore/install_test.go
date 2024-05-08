@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -61,7 +62,7 @@ func TestFunction_Install(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify downloaded file.
-		archive := function.Manifest.Deployment.File
+		archive := filepath.Join(workdir, function.Manifest.Deployment.File)
 		require.FileExists(t, archive)
 
 		ok := verifyFileHash(t, archive, hash)
