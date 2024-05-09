@@ -4,7 +4,6 @@ import (
 	"fmt"
 )
 
-// It's annoying having this function return an error,
 func encodeKey(prefix uint8, segments ...any) []byte {
 
 	key := []byte{prefix}

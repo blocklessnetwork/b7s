@@ -47,7 +47,7 @@ type Node struct {
 }
 
 // New creates a new Node.
-func New(log zerolog.Logger, host *host.Host, store Store, fstore FStore, options ...Option) (*Node, error) {
+func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore FStore, options ...Option) (*Node, error) {
 
 	// Initialize config.
 	cfg := DefaultConfig

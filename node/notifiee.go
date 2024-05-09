@@ -10,10 +10,10 @@ import (
 
 type connectionNotifiee struct {
 	log   zerolog.Logger
-	store Store
+	store blockless.PeerStore
 }
 
-func newConnectionNotifee(log zerolog.Logger, store Store) *connectionNotifiee {
+func newConnectionNotifee(log zerolog.Logger, store blockless.PeerStore) *connectionNotifiee {
 
 	cn := connectionNotifiee{
 		log:   log.With().Str("component", "notifiee").Logger(),
