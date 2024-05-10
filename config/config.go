@@ -67,7 +67,7 @@ type Connectivity struct {
 	Websocket             bool   `koanf:"websocket"         flag:"websocket,w"`
 	WebsocketPort         uint   `koanf:"websocket-port"    flag:"websocket-port"`
 	WebsocketDialbackPort uint   `koanf:"websocket-dialback-port" flag:"websocket-dialback-port"`
-	PurgeDialbackPeers    bool   `koanf:"purge-dialback-peers" flag:"purge-dialback-peers"`
+	NoDialbackPeers       bool   `koanf:"no-dialback-peers" flag:"no-dialback-peers"`
 }
 
 type Head struct {
@@ -79,7 +79,6 @@ type Worker struct {
 	RuntimeCLI         string  `koanf:"runtime-cli"          flag:"runtime-cli"`
 	CPUPercentageLimit float64 `koanf:"cpu-percentage-limit" flag:"cpu-percentage-limit"`
 	MemoryLimitKB      int64   `koanf:"memory-limit"         flag:"memory-limit"`
-	PurgeFunctions     bool    `koanf:"purge-functions"      flag:"purge-functions"`
 }
 
 // ConfigOptionInfo describes a specific configuration option, it's location in the config file and
@@ -138,10 +137,8 @@ func getFlagDescription(flag string) string {
 		return "amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited"
 	case "memory-limit":
 		return "memory limit (kB) for Blockless Functions"
-	case "purge-dialback-peers":
-		return "purge peers known from previous runs"
-	case "purge-functions":
-		return "purge installed functions"
+	case "no-dialback-peers":
+		return "start without dialing back peers from previous runs"
 	default:
 		return ""
 	}

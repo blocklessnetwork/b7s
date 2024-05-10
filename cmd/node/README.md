@@ -42,13 +42,12 @@ Usage of b7s-node:
   -w, --websocket                      should the node use websocket protocol for communication
       --websocket-port uint            port to use for websocket connections
       --websocket-dialback-port uint   external port that the b7s host will advertise for websocket connections
-      --purge-dialback-peers           purge peers known from previous runs
+      --no-dialback-peers              start without dialing back peers from previous runs
       --rest-api string                address where the head node REST API will listen on
       --runtime-path string            Blockless Runtime location (used by the worker node)
       --runtime-cli string             runtime CLI name (used by the worker node)
       --cpu-percentage-limit float     amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited
       --memory-limit int               memory limit (kB) for Blockless Functions
-      --purge-functions                purge installed functions
       --config string                  path to a config file
 ```
 

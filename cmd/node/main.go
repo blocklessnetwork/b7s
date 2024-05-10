@@ -112,21 +112,6 @@ func run() int {
 	// Create a new store.
 	store := store.New(db, codec.NewJSONCodec())
 
-	if cfg.Connectivity.PurgeDialbackPeers {
-		err = purgeDialbackPeers(store)
-		if err != nil {
-			log.Error().Err(err).Msg("could not purge dialback peers")
-			return failure
-		}
-	}
-
-	// Get the list of dial back peers.
-	peers, err := store.RetrievePeers()
-	if err != nil {
-		log.Error().Err(err).Msg("could not get list of dial-back peers")
-		return failure
-	}
-
 	// Get the list of boot nodes addresses.
 	bootNodeAddrs, err := getBootNodeAddresses(cfg.BootNodes)
 	if err != nil {
@@ -134,17 +119,29 @@ func run() int {
 		return failure
 	}
 
-	// Create libp2p host.
-	host, err := host.New(log, cfg.Connectivity.Address, cfg.Connectivity.Port,
+	hostOpts := []func(*host.Config){
 		host.WithPrivateKey(cfg.Connectivity.PrivateKey),
 		host.WithBootNodes(bootNodeAddrs),
-		host.WithDialBackPeers(peers),
 		host.WithDialBackAddress(cfg.Connectivity.DialbackAddress),
 		host.WithDialBackPort(cfg.Connectivity.DialbackPort),
 		host.WithDialBackWebsocketPort(cfg.Connectivity.WebsocketDialbackPort),
 		host.WithWebsocket(cfg.Connectivity.Websocket),
 		host.WithWebsocketPort(cfg.Connectivity.WebsocketPort),
-	)
+	}
+
+	if !cfg.Connectivity.NoDialbackPeers {
+		// Get the list of dial back peers.
+		peers, err := store.RetrievePeers()
+		if err != nil {
+			log.Error().Err(err).Msg("could not get list of dial-back peers")
+			return failure
+		}
+
+		hostOpts = append(hostOpts, host.WithDialBackPeers(peers))
+	}
+
+	// Create libp2p host.
+	host, err := host.New(log, cfg.Connectivity.Address, cfg.Connectivity.Port, hostOpts...)
 	if err != nil {
 		log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not create host")
 		return failure
@@ -155,7 +152,6 @@ func run() int {
 		Str("id", host.ID().String()).
 		Strs("addresses", host.Addresses()).
 		Int("boot_nodes", len(bootNodeAddrs)).
-		Int("dial_back_peers", len(peers)).
 		Msg("created host")
 
 	// Set node options.
@@ -206,14 +202,6 @@ func run() int {
 
 		opts = append(opts, node.WithExecutor(executor))
 		opts = append(opts, node.WithWorkspace(cfg.Workspace))
-	}
-
-	if cfg.Worker.PurgeFunctions {
-		err = purgeFunctions(store, cfg.Workspace)
-		if err != nil {
-			log.Error().Err(err).Msg("could not purge installed functions")
-			return failure
-		}
 	}
 
 	// Create function store.
