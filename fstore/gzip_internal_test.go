@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/store"
-	"github.com/blocklessnetwork/b7s/testing/helpers"
 	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
@@ -22,8 +20,7 @@ func TestFunction_UnpackArchive(t *testing.T) {
 
 	defer os.RemoveAll(workdir)
 
-	store := store.New(helpers.InMemoryDB(t))
-	fh := New(mocks.NoopLogger, store, workdir)
+	fh := New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 	err = fh.unpackArchive(filename, workdir)
 	require.NoError(t, err)
@@ -41,8 +38,7 @@ func TestFunction_UnpackArchiveHandlesErrors(t *testing.T) {
 
 		defer os.RemoveAll(workdir)
 
-		store := store.New(helpers.InMemoryDB(t))
-		fh := New(mocks.NoopLogger, store, workdir)
+		fh := New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 		err = fh.unpackArchive(filename, workdir)
 		require.Error(t, err)

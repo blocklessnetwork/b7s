@@ -7,11 +7,8 @@
 # directory where node will keep files needed for operation
 # workspace: workspace
 
-# directory where node will maintain its peer database
-# peer-db: pdb
-
-# directory where node will maintain its function database
-# function-db: fdb
+# directory where node will maintain its database
+# db: db
 
 # multiaddresses of nodes this node will try to connect to on boot
 # boot-nodes: []

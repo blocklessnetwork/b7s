@@ -26,29 +26,29 @@ List of supported CLI flags is listed below.
 
 ```console
 Usage of b7s-node:
-      --config string                  path to a config file
   -r, --role string                    role this node will have in the Blockless protocol (head or worker) (default "worker")
   -c, --concurrency uint               maximum number of requests node will process in parallel (default 10)
       --boot-nodes strings             list of addresses that this node will connect to on startup, in multiaddr format
       --workspace string               directory that the node can use for file storage
-      --attributes                     node should try to load its attribute data from IPFS
-      --peer-db string                 path to the database used for persisting peer data (default "peer-db")
-      --function-db string             path to the database used for persisting function data (default "function-db")
+      --load-attributes                node should try to load its attribute data from IPFS
       --topics strings                 topics node should subscribe to
+      --db string                      path to the database used for persisting peer and function data
   -l, --log-level string               log level to use (default "info")
   -a, --address string                 address that the b7s host will use (default "0.0.0.0")
   -p, --port uint                      port that the b7s host will use
       --private-key string             private key that the b7s host will use
+      --dialback-address string        external address that the b7s host will advertise
+      --dialback-port uint             external port that the b7s host will advertise
   -w, --websocket                      should the node use websocket protocol for communication
       --websocket-port uint            port to use for websocket connections
-      --dialback-address string        external address that the b7s host will advertise (default "0.0.0.0")
-      --dialback-port uint             external port that the b7s host will advertise
       --websocket-dialback-port uint   external port that the b7s host will advertise for websocket connections
-      --runtime-path string            Blockless Runtime location (used by the worker node)
-      --runtime-cli string             runtime CLI name (used by the worker node) (default "bls-runtime")
-      --cpu-percentage-limit float     amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited (default 1)
-      --memory-limit int               memory limit (kB) for Blockless Functions
+      --no-dialback-peers              start without dialing back peers from previous runs
       --rest-api string                address where the head node REST API will listen on
+      --runtime-path string            Blockless Runtime location (used by the worker node)
+      --runtime-cli string             runtime CLI name (used by the worker node)
+      --cpu-percentage-limit float     amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited
+      --memory-limit int               memory limit (kB) for Blockless Functions
+      --config string                  path to a config file
 ```
 
 Alternatively to the CLI flags, you can create a YAML file and specify the parameters there.
@@ -94,12 +94,11 @@ If a private key is not specified the node will start with a randomly generated 
 ### Starting a Worker Node
 
 ```console
-$ ./node --peer-db peer-database --log-level debug --port 9000 --role worker --runtime ~/.local/bin --workspace workspace --private-key ./keys/priv.bin
+$ ./node --db /tmp/db --log-level debug --port 9000 --role worker --runtime ~/.local/bin --workspace workspace --private-key ./keys/priv.bin
 ```
 
 The created `node` will listen on all addresses on TCP port 9000.
-Database used to persist Node data between runs will be created in the `peer-database` subdirectory.
-On the other hand, Node will persist function data in the default database, in the `function-db` subdirectory.
+Database used to persist Node data between runs will be created in the `/tmp/db` subdirectory.
 
 Blockless Runtime path is given as `/home/user/.local/bin`.
 At startup, node will check if the Blockless Runtime is actually found there, namely the [bls-runtime](https://blockless.network/docs/protocol/runtime).
@@ -111,12 +110,11 @@ Any transient files needed for node operation will be created in the `workspace`
 ### Starting a Head Node
 
 ```console
-$ ./node --peer-db /var/tmp/b7s/peerdb --function-db /var/tmp/b7s/fdb --log-level debug --port 9002 -r head --workspace /var/tmp/b7s/workspace --private-key ~/keys/priv.bin --rest-api ':8080'
+$ ./node --db /var/tmp/b7s/db --log-level debug --port 9002 -r head --workspace /var/tmp/b7s/workspace --private-key ~/keys/priv.bin --rest-api ':8080'
 ```
 
 The created `node` will listen on all addresses on TCP port 9002.
-Database used to persist Node peer data between runs will be created at `/var/tmp/b7s/peerdb`.
-Database used to persist Node function data will be created at `/var/tmp/b7s/fdb`.
+Database used to persist Node peer and function data between runs will be created at `/var/tmp/b7s/db`.
 
 Any transient files needed for node operation will be created in the `/var/tmp/b7s/workspace` directory.
 

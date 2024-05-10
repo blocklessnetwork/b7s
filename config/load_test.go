@@ -222,9 +222,7 @@ func TestConfig_Environment(t *testing.T) {
 		concurrency = uint(45)
 		bootNodes   = "a,b,c,d"
 		topics      = "topic1,topic2,topic3"
-
-		peerDB     = "/tmp/db/peer-db"
-		functionDB = "/tmp/db/function-db"
+		db          = "/tmp/db"
 
 		logLevel = "trace"
 
@@ -244,8 +242,7 @@ func TestConfig_Environment(t *testing.T) {
 	t.Setenv("B7S_Concurrency", fmt.Sprint(concurrency))
 	t.Setenv("B7S_BootNodes", bootNodes)
 	t.Setenv("B7S_Topics", topics)
-	t.Setenv("B7S_PeerDB", peerDB)
-	t.Setenv("B7S_FunctionDB", functionDB)
+	t.Setenv("B7S_DB", db)
 	t.Setenv("B7S_Log_Level", logLevel)
 	t.Setenv("B7S_Connectivity_Address", address)
 	t.Setenv("B7S_Connectivity_Port", fmt.Sprint(port))
@@ -269,8 +266,7 @@ func TestConfig_Environment(t *testing.T) {
 	topicList := strings.Split(topics, ",")
 	require.Equal(t, topicList, cfg.Topics)
 
-	require.Equal(t, peerDB, cfg.PeerDB)
-	require.Equal(t, functionDB, cfg.FunctionDB)
+	require.Equal(t, db, cfg.DB)
 	require.Equal(t, logLevel, cfg.Log.Level)
 	require.Equal(t, address, cfg.Connectivity.Address)
 	require.Equal(t, port, cfg.Connectivity.Port)

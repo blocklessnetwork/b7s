@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
@@ -17,15 +18,14 @@ func TestFstore_CheckFunctionFiles(t *testing.T) {
 
 	defer os.RemoveAll(workdir)
 
-	store := mocks.BaselineStore(t)
-	fh := New(mocks.NoopLogger, store, workdir)
+	fh := New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 	var (
 		archiveName      = "archive.tar.gz"
 		functionFileName = "function-file"
 	)
 
-	rec := functionRecord{
+	rec := blockless.FunctionRecord{
 		Archive: archiveName,
 		Files:   functionFileName,
 	}

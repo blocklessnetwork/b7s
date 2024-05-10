@@ -1,251 +1,218 @@
 package store_test
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"testing"
 
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/store"
+	"github.com/blocklessnetwork/b7s/store/codec"
 	"github.com/blocklessnetwork/b7s/testing/helpers"
+	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
-func Test_Store(t *testing.T) {
-	t.Run("setting value", func(t *testing.T) {
-		t.Parallel()
+func TestStore_PeerOperations(t *testing.T) {
+	db := helpers.InMemoryDB(t)
+	defer db.Close()
 
-		db := helpers.InMemoryDB(t)
-		defer db.Close()
-		store := store.New(db)
+	peer := helpers.CreateRandomPeers(t, 1)[0]
+	store := store.New(db, codec.NewJSONCodec())
 
-		const (
-			key   = "some-key"
-			value = "some-value"
-		)
-
-		err := store.Set(key, value)
+	t.Run("save peer", func(t *testing.T) {
+		err := store.SavePeer(peer)
 		require.NoError(t, err)
-
-		read, err := store.Get(key)
-		require.NoError(t, err)
-
-		require.Equal(t, value, read)
 	})
-	t.Run("missing value correctly reported", func(t *testing.T) {
-		t.Parallel()
+	t.Run("retrieve peer", func(t *testing.T) {
+		retrieved, err := store.RetrievePeer(peer.ID)
+		require.NoError(t, err)
 
-		db := helpers.InMemoryDB(t)
-		defer db.Close()
-		store := store.New(db)
+		require.Equal(t, peer, retrieved)
+	})
+	t.Run("remove peer", func(t *testing.T) {
+		err := store.RemovePeer(peer.ID)
+		require.NoError(t, err)
 
-		read, err := store.Get("missing-key")
-		require.Equal(t, "", read)
+		// Verify peer is gone.
+		_, err = store.RetrievePeer(peer.ID)
 		require.ErrorIs(t, err, blockless.ErrNotFound)
 	})
-	t.Run("overwriting value", func(t *testing.T) {
-		t.Parallel()
+}
 
-		db := helpers.InMemoryDB(t)
-		defer db.Close()
-		store := store.New(db)
+func TestStore_RetrievePeers(t *testing.T) {
+	db := helpers.InMemoryDB(t)
+	defer db.Close()
+	store := store.New(db, codec.NewJSONCodec())
 
-		const (
-			key     = "some-key"
-			valueV1 = "some-value-v1"
-			valueV2 = "some-value-v2"
-		)
+	count := 10
+	peers := make(map[peer.ID]blockless.Peer)
+	generated := helpers.CreateRandomPeers(t, count)
+	for _, peer := range generated {
+		peers[peer.ID] = peer
+	}
 
-		// Set value V1.
-		err := store.Set(key, valueV1)
+	// Save peers.
+	for _, peer := range peers {
+		err := store.SavePeer(peer)
 		require.NoError(t, err)
+	}
 
-		read, err := store.Get(key)
+	retrieved, err := store.RetrievePeers()
+	require.NoError(t, err)
+	require.Len(t, retrieved, count)
+
+	// Verify peers.
+	for _, peer := range retrieved {
+		require.Equal(t, peers[peer.ID], peer)
+	}
+}
+
+func TestStore_FunctionOperations(t *testing.T) {
+	db := helpers.InMemoryDB(t)
+	defer db.Close()
+
+	function := mocks.GenericFunctionRecord
+	store := store.New(db, codec.NewJSONCodec())
+
+	t.Run("save function", func(t *testing.T) {
+		err := store.SaveFunction(function)
 		require.NoError(t, err)
-
-		require.Equal(t, valueV1, read)
-
-		// Set value V2.
-		err = store.Set(key, valueV2)
-		require.NoError(t, err)
-
-		read, err = store.Get(key)
-		require.NoError(t, err)
-
-		require.Equal(t, read, valueV2)
 	})
-	t.Run("setting record", func(t *testing.T) {
-		t.Parallel()
-
-		db := helpers.InMemoryDB(t)
-		defer db.Close()
-		store := store.New(db)
-
-		const (
-			key = "some-key"
-		)
-
-		type person struct {
-			Name string
-			Age  uint
-		}
-
-		var value = person{
-			Name: "John",
-			Age:  30,
-		}
-
-		err := store.SetRecord(key, value)
+	t.Run("retrieve function", func(t *testing.T) {
+		retrieved, err := store.RetrieveFunction(function.CID)
 		require.NoError(t, err)
 
-		var read person
-		err = store.GetRecord(key, &read)
-		require.NoError(t, err)
-
-		require.Equal(t, value, read)
+		require.Equal(t, function, retrieved)
 	})
-	t.Run("handling missing record", func(t *testing.T) {
-		t.Parallel()
 
-		db := helpers.InMemoryDB(t)
-		defer db.Close()
-		store := store.New(db)
+	t.Run("remove function", func(t *testing.T) {
+		err := store.RemoveFunction(function.CID)
+		require.NoError(t, err)
 
-		const (
-			key = "some-key"
-		)
-
-		type person struct {
-			Name string
-			Age  uint
-		}
-
-		var read person
-		err := store.GetRecord(key, &read)
-		require.Equal(t, person{}, read)
+		// Verify function is gone.
+		_, err = store.RetrieveFunction(function.CID)
 		require.ErrorIs(t, err, blockless.ErrNotFound)
 	})
-	t.Run("overwriting record", func(t *testing.T) {
-		t.Parallel()
+}
 
-		db := helpers.InMemoryDB(t)
-		defer db.Close()
-		store := store.New(db)
+func TestStore_RetrieveFunctions(t *testing.T) {
+	db := helpers.InMemoryDB(t)
+	defer db.Close()
+	store := store.New(db, codec.NewJSONCodec())
 
-		const (
-			key = "some-key"
-		)
+	count := 10
+	functions := make(map[string]blockless.FunctionRecord)
+	for i := 0; i < count; i++ {
 
-		type person struct {
-			Name string
-			Age  uint
+		fn := blockless.FunctionRecord{
+			CID:      fmt.Sprintf("dummy-cid-%v", i),
+			URL:      fmt.Sprintf("https://example.com/dummy-url-%v", i),
+			Manifest: mocks.GenericManifest,
+			Archive:  fmt.Sprintf("/var/tmp/archive-%v.tar.gz", i),
+			Files:    fmt.Sprintf("/var/tmp/files/%v", i),
 		}
 
-		var value = person{
-			Name: "John",
-			Age:  30,
-		}
+		functions[fn.CID] = fn
+	}
 
-		err := store.SetRecord(key, value)
+	// Save functions.
+	for _, fn := range functions {
+		err := store.SaveFunction(fn)
 		require.NoError(t, err)
+	}
 
-		var read person
-		err = store.GetRecord(key, &read)
-		require.NoError(t, err)
+	retrieved, err := store.RetrieveFunctions()
+	require.NoError(t, err)
+	require.Len(t, retrieved, count)
 
-		require.Equal(t, value, read)
+	// Verify functions.
+	for _, fn := range retrieved {
+		require.Equal(t, functions[fn.CID], fn)
+	}
+}
 
-		// Change record values.
-		valueV2 := person{
-			Name: "Paul",
-			Age:  20,
-		}
+func TestStore_HandlesFailures(t *testing.T) {
 
-		err = store.SetRecord(key, valueV2)
-		require.NoError(t, err)
+	db := helpers.InMemoryDB(t)
+	defer db.Close()
 
-		err = store.GetRecord(key, &read)
-		require.NoError(t, err)
-		require.Equal(t, valueV2, read)
-	})
-	t.Run("handle invalid output type", func(t *testing.T) {
-		t.Parallel()
+	t.Run("retrieving missing peer fails", func(t *testing.T) {
+		store := store.New(db, codec.NewJSONCodec())
 
-		db := helpers.InMemoryDB(t)
-		defer db.Close()
-		store := store.New(db)
-
-		const (
-			key = "some-key"
-		)
-
-		type person struct {
-			Name string
-			Age  uint
-		}
-
-		var value = person{
-			Name: "John",
-			Age:  30,
-		}
-
-		err := store.SetRecord(key, value)
-		require.NoError(t, err)
-
-		type invalidModel struct {
-			Name float64
-			Age  string
-		}
-
-		var rec invalidModel
-		err = store.GetRecord(key, &rec)
+		_, err := store.RetrievePeer(mocks.GenericPeerID)
 		require.Error(t, err)
 	})
-	t.Run("listing keys", func(t *testing.T) {
-		t.Parallel()
+	t.Run("retrieving missing function fails", func(t *testing.T) {
+		store := store.New(db, codec.NewJSONCodec())
 
-		db := helpers.InMemoryDB(t)
-		defer db.Close()
-		store := store.New(db)
-
-		readKeys := store.Keys()
-		require.Empty(t, readKeys)
-
-		keys := []string{
-			"key1",
-			"key2",
-			"key3",
-			"key4",
-		}
-
-		for _, key := range keys {
-			err := store.SetRecord(key, struct{}{})
-			require.NoError(t, err)
-		}
-
-		readKeys = store.Keys()
-		require.Equal(t, keys, readKeys)
+		_, err := store.RetrieveFunction(mocks.GenericString)
+		require.Error(t, err)
 	})
-	t.Run("deleting key", func(t *testing.T) {
-		t.Parallel()
+	t.Run("save peer handles marshalling failures", func(t *testing.T) {
 
-		db := helpers.InMemoryDB(t)
-		defer db.Close()
-		store := store.New(db)
+		codec := mocks.BaselineCodec(t)
+		codec.MarshalFunc = func(any) ([]byte, error) {
+			return nil, mocks.GenericError
+		}
+		store := store.New(db, codec)
 
-		const (
-			key   = "some-key"
-			value = "some-value"
-		)
+		err := store.SavePeer(mocks.GenericPeer)
+		require.Error(t, err)
+	})
+	t.Run("save function handles marshalling failures", func(t *testing.T) {
 
-		err := store.Set(key, value)
+		codec := mocks.BaselineCodec(t)
+		codec.MarshalFunc = func(any) ([]byte, error) {
+			return nil, mocks.GenericError
+		}
+		store := store.New(db, codec)
+
+		err := store.SaveFunction(mocks.GenericFunctionRecord)
+		require.Error(t, err)
+	})
+	t.Run("retrieve peer handles unmarshalling failures", func(t *testing.T) {
+
+		unmarshalErr := errors.New("unmarshalling error")
+		codec := mocks.BaselineCodec(t)
+		codec.MarshalFunc = func(obj any) ([]byte, error) {
+			return json.Marshal(obj)
+		}
+		codec.UnmarshalFunc = func([]byte, any) error {
+			return unmarshalErr
+		}
+		store := store.New(db, codec)
+
+		// First, save the peer so we don't end up with a "not found" error.
+		peer := helpers.CreateRandomPeers(t, 1)[0]
+		err := store.SavePeer(peer)
 		require.NoError(t, err)
 
-		// Deleting valid key works.
-		err = store.Delete(key)
+		_, err = store.RetrievePeer(peer.ID)
+		require.Error(t, err)
+		require.ErrorIs(t, err, unmarshalErr)
+	})
+	t.Run("retrieve function handles unmarshalling failures", func(t *testing.T) {
+
+		unmarshalErr := errors.New("unmarshalling error")
+		codec := mocks.BaselineCodec(t)
+		codec.MarshalFunc = func(obj any) ([]byte, error) {
+			return json.Marshal(obj)
+		}
+		codec.UnmarshalFunc = func([]byte, any) error {
+			return unmarshalErr
+		}
+		store := store.New(db, codec)
+
+		// First, save the peer so we don't end up with a "not found" error.
+		err := store.SaveFunction(mocks.GenericFunctionRecord)
 		require.NoError(t, err)
 
-		// Value is no longer found.
-		_, err = store.Get(key)
-		require.ErrorIs(t, err, blockless.ErrNotFound)
+		_, err = store.RetrieveFunction(mocks.GenericFunctionRecord.CID)
+		require.Error(t, err)
+		require.ErrorIs(t, err, unmarshalErr)
 	})
 }

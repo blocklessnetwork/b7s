@@ -16,9 +16,8 @@ const (
 
 // Default names for storage directories.
 const (
-	DefaultPeerDBName     = "peer-db"
-	DefaultFunctionDBName = "function-db"
-	DefaultWorkspaceName  = "workspace"
+	DefaultDBName        = "db"
+	DefaultWorkspaceName = "workspace"
 )
 
 var DefaultConfig = Config{
@@ -45,8 +44,7 @@ type Config struct {
 	LoadAttributes bool     `koanf:"load-attributes" flag:"load-attributes"` // TODO: Head node probably doesn't need attributes..?
 	Topics         []string `koanf:"topics"          flag:"topics"`
 
-	PeerDB     string `koanf:"peer-db"     flag:"peer-db"`
-	FunctionDB string `koanf:"function-db" flag:"function-db"` // TODO: Head node doesn't need a function database.
+	DB string `koanf:"db" flag:"db"`
 
 	Log          Log          `koanf:"log"`
 	Connectivity Connectivity `koanf:"connectivity"`
@@ -69,6 +67,7 @@ type Connectivity struct {
 	Websocket             bool   `koanf:"websocket"         flag:"websocket,w"`
 	WebsocketPort         uint   `koanf:"websocket-port"    flag:"websocket-port"`
 	WebsocketDialbackPort uint   `koanf:"websocket-dialback-port" flag:"websocket-dialback-port"`
+	NoDialbackPeers       bool   `koanf:"no-dialback-peers" flag:"no-dialback-peers"`
 }
 
 type Head struct {
@@ -108,10 +107,8 @@ func getFlagDescription(flag string) string {
 		return "node should try to load its attribute data from IPFS"
 	case "topics":
 		return "topics node should subscribe to"
-	case "peer-db":
-		return "path to the database used for persisting peer data"
-	case "function-db":
-		return "path to the database used for persisting function data"
+	case "db":
+		return "path to the database used for persisting peer and function data"
 	case "log-level":
 		return "log level to use"
 	case "address":
@@ -140,6 +137,8 @@ func getFlagDescription(flag string) string {
 		return "amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited"
 	case "memory-limit":
 		return "memory limit (kB) for Blockless Functions"
+	case "no-dialback-peers":
+		return "start without dialing back peers from previous runs"
 	default:
 		return ""
 	}

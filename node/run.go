@@ -23,7 +23,10 @@ func (n *Node) Run(ctx context.Context) error {
 	}
 
 	// Sync functions now in case they were removed from the storage.
-	n.syncFunctions()
+	err = n.fstore.Sync(false)
+	if err != nil {
+		return fmt.Errorf("could not sync functions: %w", err)
+	}
 
 	// Set the handler for direct messages.
 	n.listenDirectMessages(ctx)

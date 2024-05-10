@@ -4,24 +4,45 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/hashicorp/go-multierror"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
+
+func (h *FStore) Sync(haltOnError bool) error {
+
+	functions, err := h.store.RetrieveFunctions()
+	if err != nil {
+		return fmt.Errorf("could not retrieve functions: %w", err)
+	}
+
+	var multierr *multierror.Error
+	for _, function := range functions {
+		err := h.sync(function)
+		if err != nil {
+			// Add CID info to error to know what erred.
+			wrappedErr := fmt.Errorf("could not sync function (cid: %s): %w", function.CID, err)
+			if haltOnError {
+				return wrappedErr
+			}
+
+			multierr = multierror.Append(multierr, wrappedErr)
+		}
+	}
+
+	return multierr.ErrorOrNil()
+}
 
 // Sync will verify that the function identified by `cid` is still found on the local filesystem.
 // If the function archive of function files are missing, they will be recreated.
-func (h *FStore) Sync(cid string) error {
-
-	h.log.Debug().Str("cid", cid).Msg("checking function installation")
+func (h *FStore) sync(fn blockless.FunctionRecord) error {
 
 	// Read the function directly from storage - we don't want to update the timestamp
 	// since this is a 'maintenance' access.
-	var fn functionRecord
-	err := h.store.GetRecord(cid, &fn)
-	if err != nil {
-		return fmt.Errorf("could not get function record: %w", err)
-	}
 
 	h.log.Debug().
-		Str("cid", cid).
+		Str("cid", fn.CID).
 		Str("archive", fn.Archive).
 		Str("files", fn.Files).
 		Msg("checking function installation")
@@ -33,21 +54,21 @@ func (h *FStore) Sync(cid string) error {
 
 	// If both archive and files are there - we're done.
 	if haveArchive && haveFiles {
-		h.log.Debug().Str("cid", cid).Msg("function files found, done")
+		h.log.Debug().Str("cid", fn.CID).Msg("function files found, done")
 		return nil
 	}
 
 	h.log.Debug().
 		Bool("have_archive", haveArchive).
 		Bool("have_files", haveFiles).
-		Str("cid", cid).
+		Str("cid", fn.CID).
 		Msg("function installation missing files")
 
 	// If we don't have the archive - redownload it.
 	if !haveArchive {
-		path, err := h.download(cid, fn.Manifest)
+		path, err := h.download(fn.CID, fn.Manifest)
 		if err != nil {
-			return fmt.Errorf("could not download the function archive (cid: %v): %w", cid, err)
+			return fmt.Errorf("could not download the function archive (cid: %v): %w", fn.CID, err)
 		}
 
 		// Update path in case it changed.
@@ -67,7 +88,7 @@ func (h *FStore) Sync(cid string) error {
 
 		err = h.unpackArchive(archivePath, files)
 		if err != nil {
-			return fmt.Errorf("could not unpack gzip archive (cid: %v, file: %s): %w", cid, fn.Archive, err)
+			return fmt.Errorf("could not unpack gzip archive (cid: %v, file: %s): %w", fn.CID, fn.Archive, err)
 		}
 
 		fn.Files = files
@@ -76,7 +97,7 @@ func (h *FStore) Sync(cid string) error {
 	// Save the updated function record.
 	err = h.saveFunction(fn)
 	if err != nil {
-		return fmt.Errorf("could not save function (cid: %v): %w", cid, err)
+		return fmt.Errorf("could not save function (cid: %v): %w", fn.CID, err)
 	}
 
 	return nil
@@ -84,7 +105,7 @@ func (h *FStore) Sync(cid string) error {
 
 // checkFunctionFiles checks if the files required by the function are found on local storage.
 // It returns two booleans indicating presence of the archive file, the unpacked files, and a potential error.
-func (h *FStore) checkFunctionFiles(fn functionRecord) (bool, bool, error) {
+func (h *FStore) checkFunctionFiles(fn blockless.FunctionRecord) (bool, bool, error) {
 
 	// Check if the archive is found.
 	archiveFound := true

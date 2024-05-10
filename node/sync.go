@@ -5,28 +5,6 @@ import (
 	"time"
 )
 
-// syncFunctions will try to redownload any functions that were removed from local disk
-// but were previously installed. We do NOT abort on failure.
-func (n *Node) syncFunctions() {
-
-	cids, err := n.fstore.InstalledFunctions()
-	if err != nil {
-		n.log.Error().Err(err).Msg("could not get list of installed functions")
-		return
-	}
-
-	for _, cid := range cids {
-
-		err := n.fstore.Sync(cid)
-		if err != nil {
-			n.log.Error().Err(err).Str("cid", cid).Msg("function sync error")
-			continue
-		}
-
-		n.log.Debug().Str("function", cid).Msg("function sync ok")
-	}
-}
-
 func (n *Node) runSyncLoop(ctx context.Context) {
 
 	ticker := time.NewTicker(syncInterval)
@@ -34,7 +12,12 @@ func (n *Node) runSyncLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			n.syncFunctions()
+			err := n.fstore.Sync(false)
+			if err != nil {
+				n.log.Error().Err(err).Msg("function sync unsuccessful")
+			} else {
+				n.log.Debug().Msg("function sync ok")
+			}
 
 		case <-ctx.Done():
 			ticker.Stop()

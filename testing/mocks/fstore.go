@@ -11,7 +11,7 @@ type FStore struct {
 	GetFunc                func(string) (*blockless.FunctionManifest, error)
 	InstalledFunc          func(string) (bool, error)
 	InstalledFunctionsFunc func() ([]string, error)
-	SyncFunc               func(string) error
+	SyncFunc               func(bool) error
 }
 
 func BaselineFStore(t *testing.T) *FStore {
@@ -30,7 +30,7 @@ func BaselineFStore(t *testing.T) *FStore {
 		InstalledFunctionsFunc: func() ([]string, error) {
 			return nil, nil
 		},
-		SyncFunc: func(string) error {
+		SyncFunc: func(bool) error {
 			return nil
 		},
 	}
@@ -54,6 +54,6 @@ func (f *FStore) InstalledFunctions() ([]string, error) {
 	return f.InstalledFunctionsFunc()
 }
 
-func (f *FStore) Sync(cid string) error {
-	return f.SyncFunc(cid)
+func (f *FStore) Sync(haltOnError bool) error {
+	return f.SyncFunc(haltOnError)
 }

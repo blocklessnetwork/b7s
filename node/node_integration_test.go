@@ -30,8 +30,8 @@ import (
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
 	"github.com/blocklessnetwork/b7s/node"
-	"github.com/blocklessnetwork/b7s/peerstore"
 	"github.com/blocklessnetwork/b7s/store"
+	"github.com/blocklessnetwork/b7s/store/codec"
 	"github.com/blocklessnetwork/b7s/testing/helpers"
 	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
@@ -97,9 +97,8 @@ func createNode(t *testing.T, dir string, logger zerolog.Logger, host *host.Host
 	require.NoError(t, err)
 
 	var (
-		store     = store.New(db)
-		peerstore = peerstore.New(store)
-		fstore    = fstore.New(logger, store, workdir)
+		store  = store.New(db, codec.NewJSONCodec())
+		fstore = fstore.New(logger, store, workdir)
 	)
 
 	opts := []node.Option{
@@ -120,7 +119,7 @@ func createNode(t *testing.T, dir string, logger zerolog.Logger, host *host.Host
 		opts = append(opts, node.WithExecutor(executor))
 	}
 
-	node, err := node.New(logger, host, peerstore, fstore, opts...)
+	node, err := node.New(logger, host, store, fstore, opts...)
 	require.NoError(t, err)
 
 	return db, node

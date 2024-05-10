@@ -27,7 +27,7 @@ func TestNode_Health(t *testing.T) {
 
 	var (
 		logger          = mocks.NoopLogger
-		peerstore       = mocks.BaselinePeerStore(t)
+		store           = mocks.BaselineStore(t)
 		functionHandler = mocks.BaselineFStore(t)
 	)
 
@@ -37,7 +37,7 @@ func TestNode_Health(t *testing.T) {
 	nhost, err := host.New(logger, loopback, 0)
 	require.NoError(t, err)
 
-	node, err := New(logger, nhost, peerstore, functionHandler, WithRole(blockless.HeadNode), WithHealthInterval(healthInterval), WithTopics([]string{topic}))
+	node, err := New(logger, nhost, store, functionHandler, WithRole(blockless.HeadNode), WithHealthInterval(healthInterval), WithTopics([]string{topic}))
 	require.NoError(t, err)
 
 	// Create a host that will listen on the the topic to verify health pings

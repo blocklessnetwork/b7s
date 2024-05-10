@@ -5,13 +5,15 @@ import (
 
 	"github.com/cavaliergopher/grab/v3"
 	"github.com/rs/zerolog"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 // FStore - function store - deals with all of the function-related actions - saving/reading them from backing storage,
 // downloading them, unpacking them etc.
 type FStore struct {
 	log        zerolog.Logger
-	store      Store
+	store      blockless.FunctionStore
 	http       *http.Client
 	downloader *grab.Client
 
@@ -19,7 +21,7 @@ type FStore struct {
 }
 
 // New creates a new function store.
-func New(log zerolog.Logger, store Store, workdir string) *FStore {
+func New(log zerolog.Logger, store blockless.FunctionStore, workdir string) *FStore {
 
 	// Create an HTTP client.
 	cli := http.Client{
@@ -39,10 +41,4 @@ func New(log zerolog.Logger, store Store, workdir string) *FStore {
 	}
 
 	return &h
-}
-
-// InstalledFunctions will return the CIDs of all functions found in local storage.
-func (h *FStore) InstalledFunctions() ([]string, error) {
-	ids := h.store.Keys()
-	return ids, nil
 }

@@ -7,42 +7,41 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
-type functionRecord struct {
-	CID      string                     `json:"cid"`
-	URL      string                     `json:"url"`
-	Manifest blockless.FunctionManifest `json:"manifest"`
-	Archive  string                     `json:"archive"`
-	Files    string                     `json:"files"`
+// Get retrieves a function manifest for the given function from storage.
+func (h *FStore) Get(cid string) (blockless.FunctionRecord, error) {
 
-	UpdatedAt     time.Time `json:"updated_at"`
-	LastRetrieved time.Time `json:"last_retrieved"`
+	fn, err := h.getFunction(cid)
+	if err != nil {
+		return blockless.FunctionRecord{}, fmt.Errorf("could not get function from store: %w", err)
+	}
+
+	return fn, nil
 }
 
-func (h *FStore) getFunction(cid string) (*functionRecord, error) {
+func (h *FStore) getFunction(cid string) (blockless.FunctionRecord, error) {
 
-	// Retrieve function.
-	var fn functionRecord
-	err := h.store.GetRecord(cid, &fn)
+	function, err := h.store.RetrieveFunction(cid)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve function record: %w", err)
+		return blockless.FunctionRecord{}, fmt.Errorf("could not retrieve function record: %w", err)
 	}
 
 	// Update the "last retrieved" timestamp.
-	fn.LastRetrieved = time.Now().UTC()
-	err = h.store.SetRecord(cid, fn)
+	function.LastRetrieved = time.Now().UTC()
+	err = h.store.SaveFunction(function)
 	if err != nil {
 		h.log.Warn().Err(err).Str("cid", cid).Msg("could not update function record timestamp")
 	}
 
-	return &fn, nil
+	return function, nil
 }
 
-func (h *FStore) saveFunction(fn functionRecord) error {
+func (h *FStore) saveFunction(fn blockless.FunctionRecord) error {
 
 	// Clean paths - make them relative to the current working directory.
 	fn.Archive = h.cleanPath(fn.Archive)
 	fn.Files = h.cleanPath(fn.Files)
+	fn.Manifest.Deployment.File = h.cleanPath(fn.Manifest.Deployment.File)
 
 	fn.UpdatedAt = time.Now().UTC()
-	return h.store.SetRecord(fn.CID, fn)
+	return h.store.SaveFunction(fn)
 }

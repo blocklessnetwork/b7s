@@ -22,8 +22,8 @@ import (
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node"
-	"github.com/blocklessnetwork/b7s/peerstore"
 	"github.com/blocklessnetwork/b7s/store"
+	"github.com/blocklessnetwork/b7s/store/codec"
 )
 
 const (
@@ -84,14 +84,13 @@ func run() int {
 		}
 	}
 
-	// Set relevant working paths for workspace, peerDB and functionDB.
+	// Set relevant working paths for workspace and DB.
 	// If paths were set using the CLI flags, use those. Else, use generated path, e.g. .b7s_<peer-id>/<default-option-for-directory>.
 	updateDirPaths(nodeDir, cfg)
 
 	log.Info().
 		Str("workspace", cfg.Workspace).
-		Str("peer_db", cfg.PeerDB).
-		Str("function_db", cfg.FunctionDB).
+		Str("db", cfg.DB).
 		Msg("filepaths used by the node")
 
 	// Convert workspace path to an absolute one.
@@ -103,23 +102,15 @@ func run() int {
 	cfg.Workspace = workspace
 
 	// Open the pebble peer database.
-	pdb, err := pebble.Open(cfg.PeerDB, &pebble.Options{Logger: &pebbleNoopLogger{}})
+	db, err := pebble.Open(cfg.DB, &pebble.Options{Logger: &pebbleNoopLogger{}})
 	if err != nil {
-		log.Error().Err(err).Str("db", cfg.PeerDB).Msg("could not open pebble peer database")
+		log.Error().Err(err).Str("db", cfg.DB).Msg("could not open pebble database")
 		return failure
 	}
-	defer pdb.Close()
+	defer db.Close()
 
 	// Create a new store.
-	pstore := store.New(pdb)
-	peerstore := peerstore.New(pstore)
-
-	// Get the list of dial back peers.
-	peers, err := peerstore.Peers()
-	if err != nil {
-		log.Error().Err(err).Msg("could not get list of dial-back peers")
-		return failure
-	}
+	store := store.New(db, codec.NewJSONCodec())
 
 	// Get the list of boot nodes addresses.
 	bootNodeAddrs, err := getBootNodeAddresses(cfg.BootNodes)
@@ -128,17 +119,29 @@ func run() int {
 		return failure
 	}
 
-	// Create libp2p host.
-	host, err := host.New(log, cfg.Connectivity.Address, cfg.Connectivity.Port,
+	hostOpts := []func(*host.Config){
 		host.WithPrivateKey(cfg.Connectivity.PrivateKey),
 		host.WithBootNodes(bootNodeAddrs),
-		host.WithDialBackPeers(peers),
 		host.WithDialBackAddress(cfg.Connectivity.DialbackAddress),
 		host.WithDialBackPort(cfg.Connectivity.DialbackPort),
 		host.WithDialBackWebsocketPort(cfg.Connectivity.WebsocketDialbackPort),
 		host.WithWebsocket(cfg.Connectivity.Websocket),
 		host.WithWebsocketPort(cfg.Connectivity.WebsocketPort),
-	)
+	}
+
+	if !cfg.Connectivity.NoDialbackPeers {
+		// Get the list of dial back peers.
+		peers, err := store.RetrievePeers()
+		if err != nil {
+			log.Error().Err(err).Msg("could not get list of dial-back peers")
+			return failure
+		}
+
+		hostOpts = append(hostOpts, host.WithDialBackPeers(peers))
+	}
+
+	// Create libp2p host.
+	host, err := host.New(log, cfg.Connectivity.Address, cfg.Connectivity.Port, hostOpts...)
 	if err != nil {
 		log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not create host")
 		return failure
@@ -149,7 +152,6 @@ func run() int {
 		Str("id", host.ID().String()).
 		Strs("addresses", host.Addresses()).
 		Int("boot_nodes", len(bootNodeAddrs)).
-		Int("dial_back_peers", len(peers)).
 		Msg("created host")
 
 	// Set node options.
@@ -202,18 +204,8 @@ func run() int {
 		opts = append(opts, node.WithWorkspace(cfg.Workspace))
 	}
 
-	// Open the pebble function database.
-	fdb, err := pebble.Open(cfg.FunctionDB, &pebble.Options{Logger: &pebbleNoopLogger{}})
-	if err != nil {
-		log.Error().Err(err).Str("db", cfg.FunctionDB).Msg("could not open pebble function database")
-		return failure
-	}
-	defer fdb.Close()
-
-	functionStore := store.New(fdb)
-
 	// Create function store.
-	fstore := fstore.New(log, functionStore, cfg.Workspace)
+	fstore := fstore.New(log, store, cfg.Workspace)
 
 	// If we have topics specified, use those.
 	if len(cfg.Topics) > 0 {
@@ -221,7 +213,7 @@ func run() int {
 	}
 
 	// Instantiate node.
-	node, err := node.New(log, host, peerstore, fstore, opts...)
+	node, err := node.New(log, host, store, fstore, opts...)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure
@@ -327,17 +319,11 @@ func updateDirPaths(root string, cfg *config.Config) {
 	}
 	cfg.Workspace = workspace
 
-	peerDB := cfg.PeerDB
-	if peerDB == "" {
-		peerDB = filepath.Join(root, config.DefaultPeerDBName)
+	db := cfg.DB
+	if db == "" {
+		db = filepath.Join(root, config.DefaultDBName)
 	}
-	cfg.PeerDB = peerDB
-
-	functionDB := cfg.FunctionDB
-	if functionDB == "" {
-		functionDB = filepath.Join(root, config.DefaultFunctionDBName)
-	}
-	cfg.FunctionDB = functionDB
+	cfg.DB = db
 }
 
 func generateNodeDirName(id string) string {

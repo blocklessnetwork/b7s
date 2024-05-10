@@ -4,8 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetwork/b7s/host"
@@ -27,14 +25,14 @@ func TestNode_Notifiee(t *testing.T) {
 		storedPeer bool
 	)
 
-	peerstore := mocks.BaselinePeerStore(t)
+	store := mocks.BaselineStore(t)
 	// Override the peerstore methods so we know if the node correctly handled incoming connection.
-	peerstore.StoreFunc = func(peer.ID, multiaddr.Multiaddr, peer.AddrInfo) error {
+	store.SavePeerFunc = func(blockless.Peer) error {
 		storedPeer = true
 		return nil
 	}
 
-	node, err := New(logger, server, peerstore, functionHandler, WithRole(blockless.HeadNode))
+	node, err := New(logger, server, store, functionHandler, WithRole(blockless.HeadNode))
 	require.NoError(t, err)
 
 	client, err := host.New(mocks.NoopLogger, loopback, 0)

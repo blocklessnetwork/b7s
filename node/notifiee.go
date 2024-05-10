@@ -4,18 +4,20 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 type connectionNotifiee struct {
 	log   zerolog.Logger
-	peers PeerStore
+	store blockless.PeerStore
 }
 
-func newConnectionNotifee(log zerolog.Logger, peerStore PeerStore) *connectionNotifiee {
+func newConnectionNotifee(log zerolog.Logger, store blockless.PeerStore) *connectionNotifiee {
 
 	cn := connectionNotifiee{
 		log:   log.With().Str("component", "notifiee").Logger(),
-		peers: peerStore,
+		store: store,
 	}
 
 	return &cn
@@ -36,8 +38,14 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 		Interface("addr_info", addrInfo).
 		Msg("peer connected")
 
+	peer := blockless.Peer{
+		ID:        peerID,
+		MultiAddr: maddr.String(),
+		AddrInfo:  addrInfo,
+	}
+
 	// Store the peer info.
-	err := n.peers.Store(peerID, maddr, addrInfo)
+	err := n.store.SavePeer(peer)
 	if err != nil {
 		n.log.Warn().Err(err).Str("id", peerID.String()).Msg("could not add peer to peerstore")
 	}

@@ -47,7 +47,7 @@ type Node struct {
 }
 
 // New creates a new Node.
-func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore, options ...Option) (*Node, error) {
+func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore FStore, options ...Option) (*Node, error) {
 
 	// Initialize config.
 	cfg := DefaultConfig
@@ -99,8 +99,8 @@ func New(log zerolog.Logger, host *host.Host, peerStore PeerStore, fstore FStore
 		return nil, fmt.Errorf("node configuration is not valid: %w", err)
 	}
 
-	// Create a notifiee with a backing peerstore.
-	cn := newConnectionNotifee(log, peerStore)
+	// Create a notifiee with a backing store.
+	cn := newConnectionNotifee(log, store)
 	host.Network().Notify(cn)
 
 	return n, nil
