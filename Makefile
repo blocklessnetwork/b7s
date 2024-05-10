@@ -60,12 +60,10 @@ setup:
 .PHONY: run-head
 run-head:
 	@echo "\n🚀 Launching Head Node...\n"
-	./dist/b7s --peer-db /tmp/b7s/head-peer-db \
-	--function-db /tmp/b7s/head-fdb \
+	./dist/b7s \
 	--log-level debug \
 	--port 9527 \
 	--role head \
-	--workspace /tmp/debug/head \
 	--private-key ./configs/testkeys/ident1/priv.bin \
 	--rest-api :8081
 	@echo "\n✅ Head Node is running!\n"
@@ -73,14 +71,12 @@ run-head:
 .PHONY: run-worker
 run-worker:
 	@echo "\n🚀 Launching Worker Node...\n"
-	./dist/b7s --peer-db /tmp/b7s/worker-peer-db \
-	--function-db /tmp/b7s/worker-fdb \
+	./dist/b7s \
 	--log-level debug \
 	--port 0 \
 	--role worker \
 	--runtime-path /tmp/runtime \
 	--runtime-cli bls-runtime \
-	--workspace /tmp/debug/worker \
 	--private-key ./configs/testkeys/ident2/priv.bin \
 	--boot-nodes /ip4/0.0.0.0/tcp/9527/p2p/12D3KooWH9GerdSEroL2nqjpd2GuE5dwmqNi7uHX7FoywBdKcP4q
 	@echo "\n✅ Worker Node is running!\n"

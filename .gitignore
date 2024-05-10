@@ -13,3 +13,4 @@ runtime/
 __debug*
 
 *.exe
+.b7s_*
