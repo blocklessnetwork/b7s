@@ -62,7 +62,7 @@ else
   if [ -n "$KEY_PASSWORD" ]; then
     echo $KEY_PASSWORD | blsd keys export node --keyring-backend=test --home=/app/.blockless-chain > /app/keys/wallet.key
   fi
-  ../b7s-keygen
+  ../b7s-keyforge
   # Backup keys
   if [ -n "$KEY_PATH" ]; then
     # backup the on chain node identity
