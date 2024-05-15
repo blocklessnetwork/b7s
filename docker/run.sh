@@ -57,10 +57,10 @@ if [ -f "$CONFIG_PATH/identity" ]; then
   echo "Node restored from backup"
 else 
   echo "Generating New Node Identity"
-  blsd keys add node --keyring-backend=test --home=/app/.blockless-chain > /dev/null 2>&1
+  # blsd keys add node --keyring-backend=test --home=/app/.blockless-chain > /dev/null 2>&1
   cd /app/keys
   if [ -n "$KEY_PASSWORD" ]; then
-    echo $KEY_PASSWORD | blsd keys export node --keyring-backend=test --home=/app/.blockless-chain > /app/keys/wallet.key
+    # echo $KEY_PASSWORD | blsd keys export node --keyring-backend=test --home=/app/.blockless-chain > /app/keys/wallet.key
   fi
   ../b7s-keyforge
   # Backup keys
