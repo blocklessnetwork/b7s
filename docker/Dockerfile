@@ -15,7 +15,7 @@ RUN curl -o ./runtime.tar.gz -sSL https://github.com/blocklessnetwork/runtime/re
 RUN mkdir /app/runtime && tar -xvkf ./runtime.tar.gz -C /app/runtime
 
 # install blockchain client
-RUN curl https://raw.githubusercontent.com/blocklessnetwork/orchestration-chain/main/download.sh | bash
+# RUN curl https://raw.githubusercontent.com/blocklessnetwork/orchestration-chain/main/download.sh | bash
 
 # libssl 1.1
 RUN curl -o ./libssl.deb -sSL http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
