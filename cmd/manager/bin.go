@@ -12,6 +12,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 func installBinary(url, folder string) {
@@ -49,6 +50,12 @@ func installBinary(url, folder string) {
 		}
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		// Do not allow directory traversal as it's a security issue.
+		if strings.Contains(header.Name, "..") {
+			log.Printf("skipping archive entry with disallowed path")
+			continue
 		}
 
 		path := filepath.Join(targetPath, header.Name)

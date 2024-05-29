@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func (h *FStore) unpackArchive(filename string, destination string) error {
@@ -53,6 +54,12 @@ func (h *FStore) unpackArchive(filename string, destination string) error {
 			}
 
 			break
+		}
+
+		// Do not allow directory traversal as it's a security issue.
+		if strings.Contains(entry.Name, "..") {
+			h.log.Warn().Str("archive", filename).Str("entry", entry.Name).Msg("skipping archive entry with disallowed path")
+			continue
 		}
 
 		typ := entry.Typeflag
