@@ -8,6 +8,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/blocklessnetwork/b7s-attributes/attributes"
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -44,6 +47,9 @@ type Node struct {
 
 	executeResponses   *waitmap.WaitMap
 	consensusResponses *waitmap.WaitMap
+
+	// Telemetry
+	tracer trace.Tracer
 }
 
 // New creates a new Node.
@@ -82,6 +88,8 @@ func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore 
 		clusters:           make(map[string]consensusExecutor),
 		executeResponses:   waitmap.New(),
 		consensusResponses: waitmap.New(),
+
+		tracer: otel.Tracer(tracerName),
 	}
 
 	if cfg.LoadAttributes {

@@ -32,13 +32,13 @@ func SetupSDK(ctx context.Context, opts ...Option) (shutdown ShutdownFunc, err e
 	prop := newPropagator()
 	otel.SetTextMapPropagator(prop)
 
-	tracerProvider, err := newTracerProvider(ctx, cfg)
+	tp, err := newTracerProvider(ctx, cfg)
 	if err != nil {
 		handleErr(fmt.Errorf("could not create new trace provider: %w", err))
 		return
 	}
-	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
-	otel.SetTracerProvider(tracerProvider)
+	shutdownFuncs = append(shutdownFuncs, tp.Shutdown)
+	otel.SetTracerProvider(tp)
 
 	// TODO: meter provider
 	// TODO: logger provider
