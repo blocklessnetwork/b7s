@@ -24,6 +24,7 @@ import (
 	"github.com/blocklessnetwork/b7s/node"
 	"github.com/blocklessnetwork/b7s/store"
 	"github.com/blocklessnetwork/b7s/store/codec"
+	"github.com/blocklessnetwork/b7s/telemetry"
 )
 
 const (
@@ -41,6 +42,10 @@ func run() int {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 
+	// Create the main context.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// Initialize logging.
 	log := zerolog.New(os.Stdout).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 
@@ -48,6 +53,28 @@ func run() int {
 	cfg, err := config.Load()
 	if err != nil {
 		log.Error().Err(err).Msg("could not read configuration")
+		return failure
+	}
+
+	// TODO: Change how node starts up with regards to key/no-key.
+	nodeID := ""
+	if cfg.Connectivity.PrivateKey != "" {
+		nodeID, err = peerIDFromKey(cfg.Connectivity.PrivateKey)
+		if err != nil {
+			log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not read private key")
+			return failure
+		}
+	}
+
+	shutdown, err := telemetry.SetupSDK(ctx, telemetry.WithID(nodeID))
+	defer func() {
+		err := shutdown(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("could not shutdown telemetry")
+		}
+	}()
+	if err != nil {
+		log.Error().Err(err).Msg("could not setup telemetry")
 		return failure
 	}
 
@@ -68,14 +95,8 @@ func run() int {
 
 	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.
 	nodeDir := ""
-	if cfg.Connectivity.PrivateKey != "" {
-		id, err := peerIDFromKey(cfg.Connectivity.PrivateKey)
-		if err != nil {
-			log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not read private key")
-			return failure
-		}
-
-		nodeDir = generateNodeDirName(id)
+	if nodeID != "" {
+		nodeDir = generateNodeDirName(nodeID)
 	} else {
 		nodeDir, err = os.MkdirTemp("", ".b7s_*")
 		if err != nil {
@@ -218,10 +239,6 @@ func run() int {
 		log.Error().Err(err).Msg("could not create node")
 		return failure
 	}
-
-	// Create the main context.
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	done := make(chan struct{})
 	failed := make(chan struct{})
