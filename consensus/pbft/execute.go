@@ -1,6 +1,7 @@
 package pbft
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -70,7 +71,8 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 
 	log.Info().Msg("executing request")
 
-	res, err := r.executor.ExecuteFunction(request.ID, request.Execute)
+	// TODO: Reconsider this context handling.
+	res, err := r.executor.ExecuteFunction(context.TODO(), request.ID, request.Execute)
 	if err != nil {
 		log.Error().Err(err).Msg("execution failed")
 	}

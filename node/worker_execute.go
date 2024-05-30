@@ -83,7 +83,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, timestamp ti
 
 	// We are not part of a cluster - just execute the request.
 	if !consensusRequired(consensus) {
-		res, err := n.executor.ExecuteFunction(requestID, req)
+		res, err := n.executor.ExecuteFunction(ctx, requestID, req)
 		if err != nil {
 			return res.Code, res, fmt.Errorf("execution failed: %w", err)
 		}

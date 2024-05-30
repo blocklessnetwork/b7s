@@ -10,8 +10,10 @@ import (
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/network"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 // Run will start the main loop for the node.
@@ -23,7 +25,7 @@ func (n *Node) Run(ctx context.Context) error {
 	}
 
 	// Sync functions now in case they were removed from the storage.
-	err = n.fstore.Sync(false)
+	err = n.fstore.Sync(ctx, false)
 	if err != nil {
 		return fmt.Errorf("could not sync functions: %w", err)
 	}
@@ -92,6 +94,21 @@ func (n *Node) Run(ctx context.Context) error {
 					defer n.wg.Done()
 					defer func() { <-n.sema }()
 
+					// TODO: Add span status here.
+					// TOOD: Consider other span options.
+					opts := []trace.SpanStartOption{
+						trace.WithSpanKind(trace.SpanKindConsumer),
+						trace.WithAttributes(
+							// TODO: Message ID is useful but libp2p has dumb IDs.
+							// b7ssemconv.MessageID.String(msg.ID),
+							b7ssemconv.MessagePeer.String(msg.ReceivedFrom.String()),
+							b7ssemconv.MessagePipeline.String(fmt.Sprintf("topic.%v", name)),
+						),
+					}
+
+					ctx, span := n.tracer.Start(ctx, "message.process", opts...)
+					defer span.End()
+
 					err = n.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), subscriptionPipeline)
 					if err != nil {
 						n.log.Error().Err(err).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("could not process message")
@@ -126,6 +143,17 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 		}
 
 		n.log.Trace().Str("peer", from.String()).Msg("received direct message")
+
+		opts := []trace.SpanStartOption{
+			trace.WithSpanKind(trace.SpanKindConsumer),
+			trace.WithAttributes(
+				b7ssemconv.MessagePeer.String(from.String()),
+				b7ssemconv.MessagePipeline.String(directMessagePipeline.String()),
+			),
+		}
+
+		ctx, span := n.tracer.Start(ctx, "message.process", opts...)
+		defer span.End()
 
 		err = n.processMessage(ctx, from, msg, directMessagePipeline)
 		if err != nil {

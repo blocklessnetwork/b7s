@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // TODO: Currently we may have parallel execution of Blockless functions - e.g. we have two requests at the same time.
@@ -13,8 +15,9 @@ import (
 
 // Executor provides the capabilities to run external applications.
 type Executor struct {
-	log zerolog.Logger
-	cfg Config
+	log    zerolog.Logger
+	cfg    Config
+	tracer trace.Tracer
 }
 
 // New creates a new Executor with the specified working directory.
@@ -55,8 +58,9 @@ func New(log zerolog.Logger, options ...Option) (*Executor, error) {
 	}
 
 	e := Executor{
-		log: log.With().Str("component", "executor").Logger(),
-		cfg: cfg,
+		log:    log.With().Str("component", "executor").Logger(),
+		cfg:    cfg,
+		tracer: otel.Tracer(tracerName),
 	}
 
 	return &e, nil

@@ -1,14 +1,32 @@
 package executor
 
 import (
+	"context"
 	"fmt"
+
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 // ExecuteFunction will run the Blockless function defined by the execution request.
-func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execute.Result, error) {
+func (e *Executor) ExecuteFunction(ctx context.Context, requestID string, req execute.Request) (execute.Result, error) {
+
+	// TODO: Check other span options and stuff.
+	// TODO: More details on the execution.
+	_, span := e.tracer.Start(ctx, "function.execute",
+		trace.WithSpanKind(trace.SpanKindClient),
+		trace.WithAttributes(
+			b7ssemconv.FunctionCID.String(req.FunctionID),
+			b7ssemconv.FunctionMethod.String(req.Method),
+			b7ssemconv.ExecutionNodeCount.Int(req.Config.NodeCount),
+			b7ssemconv.ExecutionConsensus.String(req.Config.ConsensusAlgorithm),
+			b7ssemconv.ExecutionRequestID.String(requestID),
+		),
+	)
+	defer span.End()
 
 	// Execute the function.
 	out, usage, err := e.executeFunction(requestID, req)

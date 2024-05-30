@@ -5,6 +5,8 @@ import (
 
 	"github.com/cavaliergopher/grab/v3"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
@@ -18,6 +20,7 @@ type FStore struct {
 	downloader *grab.Client
 
 	workdir string
+	tracer  trace.Tracer
 }
 
 // New creates a new function store.
@@ -38,6 +41,7 @@ func New(log zerolog.Logger, store blockless.FunctionStore, workdir string) *FSt
 		http:       &cli,
 		downloader: downloader,
 		workdir:    workdir,
+		tracer:     otel.Tracer(tracerName),
 	}
 
 	return &h

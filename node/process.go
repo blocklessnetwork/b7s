@@ -15,26 +15,16 @@ import (
 // processMessage will determine which message was received and how to process it.
 func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline messagePipeline) error {
 
-	// TODO: Add span status here, message ID, topic etc.
-	opts := []trace.SpanStartOption{
-		trace.WithSpanKind(trace.SpanKindClient),
-		trace.WithAttributes(
-			b7ssemconv.MessagePeer.String(from.String()),
-			b7ssemconv.MessagePipeline.String(pipeline.String()),
-		),
-	}
-
-	ctx, span := n.tracer.Start(ctx, "message", opts...)
-	defer span.End()
-
 	// Determine message type.
 	msgType, err := getMessageType(payload)
 	if err != nil {
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
-	// TODO: Set only if span is active.
-	span.SetAttributes(b7ssemconv.MessageType.String(msgType))
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		span.SetAttributes(b7ssemconv.MessageType.String(msgType))
+	}
 
 	log := n.log.With().Str("peer", from.String()).Str("type", msgType).Str("pipeline", pipeline.String()).Logger()
 

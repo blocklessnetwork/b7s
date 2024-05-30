@@ -1,6 +1,7 @@
 package fstore
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,7 +11,8 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
-func (h *FStore) Sync(haltOnError bool) error {
+// TODO: This now has a context.
+func (h *FStore) Sync(ctx context.Context, haltOnError bool) error {
 
 	functions, err := h.store.RetrieveFunctions()
 	if err != nil {

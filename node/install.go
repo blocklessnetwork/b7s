@@ -21,7 +21,7 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, req req
 	}
 
 	// Install function.
-	err := n.installFunction(req.CID, req.ManifestURL)
+	err := n.installFunction(ctx, req.CID, req.ManifestURL)
 	if err != nil {
 		return fmt.Errorf("could not install function: %w", err)
 	}
@@ -43,7 +43,7 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, req req
 }
 
 // installFunction will check if the function is installed first, and install it if not.
-func (n *Node) installFunction(cid string, manifestURL string) error {
+func (n *Node) installFunction(ctx context.Context, cid string, manifestURL string) error {
 
 	// Check if the function is installed.
 	installed, err := n.fstore.Installed(cid)
@@ -56,7 +56,7 @@ func (n *Node) installFunction(cid string, manifestURL string) error {
 	}
 
 	// If the function was not installed already, install it now.
-	err = n.fstore.Install(manifestURL, cid)
+	err = n.fstore.Install(ctx, manifestURL, cid)
 	if err != nil {
 		return fmt.Errorf("could not install function: %w", err)
 	}

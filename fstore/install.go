@@ -1,15 +1,25 @@
 package fstore
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 // Install will download and install function identified by the manifest/CID.
-func (h *FStore) Install(address string, cid string) error {
+func (h *FStore) Install(ctx context.Context, address string, cid string) error {
+
+	// TODO: Consider other span options.
+	_, span := h.tracer.Start(ctx, "function.install",
+		trace.WithSpanKind(trace.SpanKindClient),
+		trace.WithAttributes(b7ssemconv.FunctionCID.String(cid)))
+	defer span.End()
 
 	h.log.Debug().
 		Str("cid", cid).

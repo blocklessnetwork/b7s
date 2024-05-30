@@ -7,4 +7,6 @@ import (
 const (
 	defaultTimeout   = 10 * time.Second
 	defaultUserAgent = "b7s"
+
+	tracerName = "b7s.fstore"
 )

@@ -70,7 +70,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.Ro
 
 		log.Info().Msg("roll call but function not installed, installing now")
 
-		err = n.installFunction(req.FunctionID, manifestURLFromCID(req.FunctionID))
+		err = n.installFunction(ctx, req.FunctionID, manifestURLFromCID(req.FunctionID))
 		if err != nil {
 			sendErr := n.send(ctx, req.Origin, res)
 			if sendErr != nil {
