@@ -13,6 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"github.com/ziflex/lecho/v3"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
 	"github.com/blocklessnetwork/b7s/api"
 	"github.com/blocklessnetwork/b7s/config"
@@ -319,6 +320,7 @@ func createEchoServer(log zerolog.Logger) *echo.Echo {
 
 	elog := lecho.From(log)
 	server.Logger = elog
+	server.Use(otelecho.Middleware(""))
 	server.Use(lecho.Middleware(lecho.Config{Logger: elog}))
 
 	return server
