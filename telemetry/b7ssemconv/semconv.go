@@ -25,6 +25,7 @@ const (
 )
 
 const (
-	PeerID        = attribute.Key("peer.id")
-	PeerMultiaddr = attribute.Key("peer.multiaddr")
+	PeerID         = attribute.Key("peer.id")
+	PeerMultiaddr  = attribute.Key("peer.multiaddr")
+	LocalMultiaddr = attribute.Key("peer.local.multiaddr") //TODO: This doesn't make a lot sense
 )

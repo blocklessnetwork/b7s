@@ -1,29 +1,46 @@
 package node
 
 import (
+	"context"
+
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 type connectionNotifiee struct {
-	log   zerolog.Logger
-	store blockless.PeerStore
+	log    zerolog.Logger
+	store  blockless.PeerStore
+	tracer trace.Tracer
 }
 
 func newConnectionNotifee(log zerolog.Logger, store blockless.PeerStore) *connectionNotifiee {
 
 	cn := connectionNotifiee{
-		log:   log.With().Str("component", "notifiee").Logger(),
-		store: store,
+		log:    log.With().Str("component", "notifiee").Logger(),
+		store:  store,
+		tracer: otel.Tracer("b7s.notifiee"),
 	}
 
 	return &cn
 }
 
 func (n *connectionNotifiee) Connected(network network.Network, conn network.Conn) {
+
+	opts := []trace.SpanStartOption{
+		trace.WithAttributes(
+			b7ssemconv.PeerID.String(conn.RemotePeer().String()),
+			b7ssemconv.PeerMultiaddr.String(conn.RemoteMultiaddr().String()),
+			b7ssemconv.LocalMultiaddr.String(conn.LocalMultiaddr().String()),
+		),
+	}
+	_, span := n.tracer.Start(context.Background(), "peer connected", opts...)
+	defer span.End()
 
 	// Get peer information.
 	peerID := conn.RemotePeer()
@@ -52,6 +69,16 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 }
 
 func (n *connectionNotifiee) Disconnected(_ network.Network, conn network.Conn) {
+
+	opts := []trace.SpanStartOption{
+		trace.WithAttributes(
+			b7ssemconv.PeerID.String(conn.RemotePeer().String()),
+			b7ssemconv.PeerMultiaddr.String(conn.RemoteMultiaddr().String()),
+			b7ssemconv.LocalMultiaddr.String(conn.LocalMultiaddr().String()),
+		),
+	}
+	_, span := n.tracer.Start(context.Background(), "peer diconnected", opts...)
+	defer span.End()
 
 	// TODO: Check - do we want to remove peer after he's been disconnected.
 	maddr := conn.RemoteMultiaddr()
