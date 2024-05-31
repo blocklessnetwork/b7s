@@ -25,6 +25,7 @@ import (
 	"github.com/blocklessnetwork/b7s/node"
 	"github.com/blocklessnetwork/b7s/store"
 	"github.com/blocklessnetwork/b7s/store/codec"
+	"github.com/blocklessnetwork/b7s/store/traceable"
 	"github.com/blocklessnetwork/b7s/telemetry"
 )
 
@@ -132,7 +133,7 @@ func run() int {
 	defer db.Close()
 
 	// Create a new store.
-	store := store.New(db, codec.NewJSONCodec())
+	store := traceable.New(store.New(db, codec.NewJSONCodec()))
 
 	// Get the list of boot nodes addresses.
 	bootNodeAddrs, err := getBootNodeAddresses(cfg.BootNodes)

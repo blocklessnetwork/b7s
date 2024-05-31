@@ -23,3 +23,8 @@ const (
 	ExecutionConsensus = attribute.Key("execution.consensus")
 	ExecutionRequestID = attribute.Key("execution.request.id")
 )
+
+const (
+	PeerID        = attribute.Key("peer.id")
+	PeerMultiaddr = attribute.Key("peer.multiaddr")
+)
