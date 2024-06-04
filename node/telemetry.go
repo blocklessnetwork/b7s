@@ -1,5 +1,5 @@
 package node
 
 const (
-	tracerName = "b7s.node"
+	tracerName = "b7s.Node"
 )

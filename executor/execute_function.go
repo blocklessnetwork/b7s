@@ -16,7 +16,7 @@ func (e *Executor) ExecuteFunction(ctx context.Context, requestID string, req ex
 
 	// TODO: Check other span options and stuff.
 	// TODO: More details on the execution.
-	_, span := e.tracer.Start(ctx, "function.execute",
+	_, span := e.tracer.Start(ctx, "ExecuteFunction",
 		trace.WithSpanKind(trace.SpanKindClient),
 		trace.WithAttributes(
 			b7ssemconv.FunctionCID.String(req.FunctionID),

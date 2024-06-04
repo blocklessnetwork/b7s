@@ -106,7 +106,7 @@ func (n *Node) Run(ctx context.Context) error {
 						),
 					}
 
-					ctx, span := n.tracer.Start(ctx, "message.process", opts...)
+					ctx, span := n.tracer.Start(ctx, "MessageProcess", opts...)
 					defer span.End()
 
 					err = n.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), subscriptionPipeline)
@@ -152,7 +152,7 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 			),
 		}
 
-		ctx, span := n.tracer.Start(ctx, "message.process", opts...)
+		ctx, span := n.tracer.Start(ctx, "MessageProcess", opts...)
 		defer span.End()
 
 		err = n.processMessage(ctx, from, msg, directMessagePipeline)

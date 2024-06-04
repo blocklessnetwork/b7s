@@ -8,21 +8,21 @@ import (
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/store"
-	"github.com/blocklessnetwork/b7s/telemetry"
 	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // Store is a thin wrapper around the standard b7s store, adding a tracer to it.
 type Store struct {
 	store  *store.Store
-	tracer *telemetry.Tracer
+	tracer *tracing.Tracer
 }
 
 func New(store *store.Store) *Store {
 
 	s := Store{
 		store:  store,
-		tracer: telemetry.NewTracer(tracerName),
+		tracer: tracing.NewTracer(tracerName),
 	}
 
 	return &s
@@ -39,7 +39,7 @@ func (s *Store) SavePeer(peer blockless.Peer) error {
 	callback := func() error {
 		return s.store.SavePeer(peer)
 	}
-	return s.tracer.WithSpanFromContext(context.Background(), "save peer", callback, opts...)
+	return s.tracer.WithSpanFromContext(context.Background(), "SavePeer", callback, opts...)
 }
 
 func (s *Store) SaveFunction(function blockless.FunctionRecord) error {
@@ -52,13 +52,13 @@ func (s *Store) SaveFunction(function blockless.FunctionRecord) error {
 		return s.store.SaveFunction(function)
 	}
 
-	return s.tracer.WithSpanFromContext(context.Background(), "save function", callback, opts...)
+	return s.tracer.WithSpanFromContext(context.Background(), "SaveFunction", callback, opts...)
 }
 
 func (s *Store) RetrievePeer(id peer.ID) (blockless.Peer, error) {
 
 	opts := traceOptions
-	opts = append(traceOptions, trace.WithAttributes(b7ssemconv.PeerID.String(id.String())))
+	opts = append(opts, trace.WithAttributes(b7ssemconv.PeerID.String(id.String())))
 
 	var peer blockless.Peer
 	var err error
@@ -67,7 +67,7 @@ func (s *Store) RetrievePeer(id peer.ID) (blockless.Peer, error) {
 		return err
 	}
 
-	_ = s.tracer.WithSpanFromContext(context.Background(), "get peer", callback, opts...)
+	_ = s.tracer.WithSpanFromContext(context.Background(), "GetPeer", callback, opts...)
 	return peer, err
 }
 
@@ -80,7 +80,7 @@ func (s *Store) RetrievePeers() ([]blockless.Peer, error) {
 		return err
 	}
 
-	_ = s.tracer.WithSpanFromContext(context.Background(), "list peers", callback, traceOptions...)
+	_ = s.tracer.WithSpanFromContext(context.Background(), "ListPeers", callback, traceOptions...)
 	return peers, err
 }
 
@@ -96,7 +96,7 @@ func (s *Store) RetrieveFunction(cid string) (blockless.FunctionRecord, error) {
 	opts := traceOptions
 	opts = append(opts, trace.WithAttributes(b7ssemconv.FunctionCID.String(cid)))
 
-	_ = s.tracer.WithSpanFromContext(context.Background(), "get function", callback, opts...)
+	_ = s.tracer.WithSpanFromContext(context.Background(), "GetFunction", callback, opts...)
 	return function, err
 }
 
@@ -109,7 +109,7 @@ func (s *Store) RetrieveFunctions() ([]blockless.FunctionRecord, error) {
 		return err
 	}
 
-	_ = s.tracer.WithSpanFromContext(context.Background(), "get function", callback, traceOptions...)
+	_ = s.tracer.WithSpanFromContext(context.Background(), "ListFunctions", callback, traceOptions...)
 	return functions, err
 }
 
@@ -120,7 +120,7 @@ func (s *Store) RemovePeer(id peer.ID) error {
 
 	return s.tracer.WithSpanFromContext(
 		context.Background(),
-		"remove peer",
+		"RemovePeer",
 		func() error { return s.store.RemovePeer(id) },
 		opts...)
 }
@@ -132,7 +132,7 @@ func (s *Store) RemoveFunction(cid string) error {
 
 	return s.tracer.WithSpanFromContext(
 		context.Background(),
-		"remove function",
+		"RemoveFunction",
 		func() error { return s.store.RemoveFunction(cid) },
 		opts...)
 }

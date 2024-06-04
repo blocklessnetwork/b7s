@@ -16,7 +16,7 @@ import (
 func (h *FStore) Install(ctx context.Context, address string, cid string) error {
 
 	// TODO: Consider other span options.
-	_, span := h.tracer.Start(ctx, "function.install",
+	_, span := h.tracer.Start(ctx, "InstallFunction",
 		trace.WithSpanKind(trace.SpanKindClient),
 		trace.WithAttributes(b7ssemconv.FunctionCID.String(cid)))
 	defer span.End()

@@ -7,5 +7,5 @@ import (
 const (
 	defaultPermissions = os.ModePerm
 	blsListEnvName     = "BLS_LIST_VARS"
-	tracerName         = "b7s.executor"
+	tracerName         = "b7s.Executor"
 )

@@ -1,4 +1,4 @@
-package telemetry
+package tracing
 
 import (
 	"context"
@@ -9,19 +9,19 @@ import (
 )
 
 type Tracer struct {
-	tracer trace.Tracer
+	trace.Tracer
 }
 
 func NewTracer(name string) *Tracer {
 
 	return &Tracer{
-		tracer: otel.Tracer(name),
+		Tracer: otel.Tracer(name),
 	}
 }
 
 func (t *Tracer) WithSpanFromContext(ctx context.Context, spanName string, f func() error, opts ...trace.SpanStartOption) error {
 
-	_, span := t.tracer.Start(ctx, spanName, opts...)
+	_, span := t.Start(ctx, spanName, opts...)
 	defer span.End()
 
 	err := f()

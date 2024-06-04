@@ -59,7 +59,7 @@ func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) erro
 		),
 	}
 
-	ctx, span := n.tracer.Start(ctx, "message.send", opts...)
+	ctx, span := n.tracer.Start(ctx, "MessageSend", opts...)
 	defer span.End()
 
 	// Serialize the message.
@@ -113,7 +113,7 @@ func (n *Node) publishToTopic(ctx context.Context, topic string, msg blockless.M
 		),
 	}
 
-	ctx, span := n.tracer.Start(ctx, "message.publish", opts...)
+	ctx, span := n.tracer.Start(ctx, "MessagePublish", opts...)
 	defer span.End()
 
 	// Serialize the message.

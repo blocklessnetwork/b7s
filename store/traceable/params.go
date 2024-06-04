@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	tracerName = "b7s.store"
+	tracerName = "b7s.Store"
 )
 
 var traceOptions = []trace.SpanStartOption{
