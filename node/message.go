@@ -7,8 +7,10 @@ import (
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 type topicInfo struct {
@@ -48,6 +50,18 @@ func (n *Node) subscribeToTopics(ctx context.Context) error {
 // send serializes the message and sends it to the specified peer.
 func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) error {
 
+	opts := []trace.SpanStartOption{
+		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(
+			b7ssemconv.MessagePeer.String(to.String()),
+			b7ssemconv.MessageType.String(msg.Type()),
+			b7ssemconv.MessagePipeline.String(directMessagePipeline.String()),
+		),
+	}
+
+	ctx, span := n.tracer.Start(ctx, "message.send", opts...)
+	defer span.End()
+
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
 	if err != nil {
@@ -65,6 +79,8 @@ func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) erro
 
 // sendToMany serializes the message and sends it to a number of peers. It aborts on any error.
 func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Message) error {
+
+	// TODO: tracing for this
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -88,6 +104,17 @@ func (n *Node) publish(ctx context.Context, msg blockless.Message) error {
 }
 
 func (n *Node) publishToTopic(ctx context.Context, topic string, msg blockless.Message) error {
+
+	opts := []trace.SpanStartOption{
+		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(
+			b7ssemconv.MessageType.String(msg.Type()),
+			b7ssemconv.MessagePipeline.String(traceableTopicName(topic)),
+		),
+	}
+
+	ctx, span := n.tracer.Start(ctx, "message.publish", opts...)
+	defer span.End()
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)

@@ -102,7 +102,7 @@ func (n *Node) Run(ctx context.Context) error {
 							// TODO: Message ID is useful but libp2p has dumb IDs.
 							// b7ssemconv.MessageID.String(msg.ID),
 							b7ssemconv.MessagePeer.String(msg.ReceivedFrom.String()),
-							b7ssemconv.MessagePipeline.String(fmt.Sprintf("topic.%v", name)),
+							b7ssemconv.MessagePipeline.String(traceableTopicName(name)),
 						),
 					}
 
@@ -160,4 +160,8 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 			n.log.Error().Err(err).Str("peer", from.String()).Msg("could not process direct message")
 		}
 	})
+}
+
+func traceableTopicName(topic string) string {
+	return fmt.Sprintf("topic.%v", topic)
 }
