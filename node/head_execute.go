@@ -20,10 +20,7 @@ import (
 // NOTE: head node typically receives execution requests from the REST API. This message handling is not cognizant of subgroups.
 func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
 
-	requestID, err := newRequestID()
-	if err != nil {
-		return fmt.Errorf("could not generate new request ID: %w", err)
-	}
+	requestID := newRequestID()
 
 	// TODO: Options/attributes.
 	var opts []trace.SpanStartOption

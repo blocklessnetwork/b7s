@@ -117,13 +117,6 @@ func (n *Node) ID() string {
 	return n.host.ID().String()
 }
 
-func newRequestID() (string, error) {
-
-	// Generate a new request/executionID.
-	uuid, err := uuid.NewRandom()
-	if err != nil {
-		return "", fmt.Errorf("could not generate new request ID: %w", err)
-	}
-
-	return uuid.String(), nil
+func newRequestID() string {
+	return uuid.New().String()
 }
