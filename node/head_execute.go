@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/peer"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -23,6 +24,11 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request
 	if err != nil {
 		return fmt.Errorf("could not generate new request ID: %w", err)
 	}
+
+	// TODO: Options/attributes.
+	var opts []trace.SpanStartOption
+	ctx, span := n.tracer.Start(ctx, "ProcessExecute", opts...)
+	defer span.End()
 
 	log := n.log.With().Str("request", req.RequestID).Str("peer", from.String()).Str("function", req.FunctionID).Logger()
 

@@ -2,12 +2,15 @@ package telemetry
 
 import (
 	"time"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
 type Option func(*Config)
 
 type Config struct {
 	ID                string
+	Role              blockless.NodeRole
 	ExporterMethod    ExporterMethod
 	BatchTraceTimeout time.Duration
 }
@@ -15,6 +18,12 @@ type Config struct {
 var defaultConfig = Config{
 	ExporterMethod:    ExporterGRPC,
 	BatchTraceTimeout: 1 * time.Second,
+}
+
+func WithNodeRole(r blockless.NodeRole) Option {
+	return func(cfg *Config) {
+		cfg.Role = r
+	}
 }
 
 func WithExporterMethod(m ExporterMethod) Option {

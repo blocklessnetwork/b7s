@@ -12,6 +12,8 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 func newTracerProvider(ctx context.Context, cfg Config) (*trace.TracerProvider, error) {
@@ -24,10 +26,12 @@ func newTracerProvider(ctx context.Context, cfg Config) (*trace.TracerProvider, 
 	// TODO: Does this correctly join the ID with the remaining stuff?
 	opts := defaultResourceOpts
 	if cfg.ID != "" {
-		opts = append(opts, resource.WithAttributes(
-			semconv.ServiceInstanceIDKey.String(cfg.ID),
-		))
+		opts = append(opts, resource.WithAttributes(semconv.ServiceInstanceIDKey.String(cfg.ID)))
 	}
+	if cfg.Role.Valid() {
+		opts = append(opts, resource.WithAttributes(b7ssemconv.ServiceRole.String(cfg.Role.String())))
+	}
+
 	resource, err := resource.New(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("could not initialize resource: %w", err)

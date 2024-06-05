@@ -7,6 +7,10 @@ import (
 // TODO: Add documentation for these.
 
 const (
+	ServiceRole = attribute.Key("service.role")
+)
+
+const (
 	MessageType     = attribute.Key("message.type")
 	MessageID       = attribute.Key("message.id")
 	MessagePipeline = attribute.Key("message.pipeline")
