@@ -9,9 +9,11 @@ const (
 	tracerName = "b7s.Store"
 )
 
-var traceOptions = []trace.SpanStartOption{
+var defaultSpanOptions = []trace.SpanStartOption{
 	trace.WithSpanKind(trace.SpanKindClient),
-	trace.WithAttributes(
-		semconv.DBSystemKey.String("pebble"),
-	),
+	trace.WithAttributes(semconv.DBSystemKey.String("pebble")),
+}
+
+func storeSpanOptions(opts ...trace.SpanStartOption) []trace.SpanStartOption {
+	return append(defaultSpanOptions, opts...)
 }
