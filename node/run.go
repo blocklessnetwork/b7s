@@ -10,10 +10,9 @@ import (
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/network"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/codes"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 // Run will start the main loop for the node.
@@ -96,23 +95,16 @@ func (n *Node) Run(ctx context.Context) error {
 
 					// TODO: Add span status here.
 					// TOOD: Consider other span options.
-					opts := []trace.SpanStartOption{
-						trace.WithSpanKind(trace.SpanKindConsumer),
-						trace.WithAttributes(
-							// TODO: Message ID is useful but libp2p has dumb IDs.
-							// b7ssemconv.MessageID.String(msg.ID),
-							b7ssemconv.MessagePeer.String(msg.ReceivedFrom.String()),
-							b7ssemconv.MessagePipeline.String(traceableTopicName(name)),
-						),
-					}
-
-					ctx, span := n.tracer.Start(ctx, "MessageProcess", opts...)
+					ctx, span := n.tracer.Start(ctx, "MessageProcess", subscriptionMessageSpanOpts(msg.ReceivedFrom, name)...)
 					defer span.End()
 
 					err = n.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), subscriptionPipeline)
 					if err != nil {
 						n.log.Error().Err(err).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("could not process message")
+						span.SetStatus(codes.Error, err.Error())
+						return
 					}
+
 				}(msg)
 			}
 		}(name, topic.subscription)
@@ -144,24 +136,15 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 
 		n.log.Trace().Str("peer", from.String()).Msg("received direct message")
 
-		opts := []trace.SpanStartOption{
-			trace.WithSpanKind(trace.SpanKindConsumer),
-			trace.WithAttributes(
-				b7ssemconv.MessagePeer.String(from.String()),
-				b7ssemconv.MessagePipeline.String(directMessagePipeline.String()),
-			),
-		}
-
-		ctx, span := n.tracer.Start(ctx, "MessageProcess", opts...)
+		ctx, span := n.tracer.Start(ctx, "MessageProcess", directMessageSpanOpts(from)...)
 		defer span.End()
 
 		err = n.processMessage(ctx, from, msg, directMessagePipeline)
 		if err != nil {
 			n.log.Error().Err(err).Str("peer", from.String()).Msg("could not process direct message")
+			span.SetStatus(codes.Error, err.Error())
+			return
 		}
-	})
-}
 
-func traceableTopicName(topic string) string {
-	return fmt.Sprintf("topic.%v", topic)
+	})
 }
