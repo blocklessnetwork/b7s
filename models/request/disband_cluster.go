@@ -11,6 +11,7 @@ var _ (json.Marshaler) = (*DisbandCluster)(nil)
 // DisbandCluster describes the `MessageDisbandCluster` request payload.
 // It is sent after head node receives the leaders execution response.
 type DisbandCluster struct {
+	blockless.BaseMessage
 	RequestID string `json:"request_id,omitempty"`
 }
 

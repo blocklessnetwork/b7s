@@ -56,7 +56,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.Ro
 	// Check if we have this function installed.
 	installed, err := n.fstore.Installed(req.FunctionID)
 	if err != nil {
-		sendErr := n.send(ctx, req.Origin, res)
+		sendErr := n.send(ctx, req.Origin, &res)
 		if sendErr != nil {
 			// Log send error but choose to return the original error.
 			log.Error().Err(sendErr).Str("to", req.Origin.String()).Msg("could not send response")
@@ -72,7 +72,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.Ro
 
 		err = n.installFunction(ctx, req.FunctionID, manifestURLFromCID(req.FunctionID))
 		if err != nil {
-			sendErr := n.send(ctx, req.Origin, res)
+			sendErr := n.send(ctx, req.Origin, &res)
 			if sendErr != nil {
 				// Log send error but choose to return the original error.
 				log.Error().Err(sendErr).Str("to", req.Origin.String()).Msg("could not send response")
@@ -85,7 +85,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.Ro
 
 	// Send positive response.
 	res.Code = codes.Accepted
-	err = n.send(ctx, req.Origin, res)
+	err = n.send(ctx, req.Origin, &res)
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)
 	}
@@ -194,7 +194,7 @@ func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID
 	}
 
 	// Publish the mssage.
-	err := n.publishToTopic(ctx, topic, rollCall)
+	err := n.publishToTopic(ctx, topic, &rollCall)
 	if err != nil {
 		return fmt.Errorf("could not publish to topic: %w", err)
 	}

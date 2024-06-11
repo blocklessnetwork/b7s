@@ -19,6 +19,7 @@ var _ (json.Marshaler) = (*Execute)(nil)
 
 // Execute describes the response to the `MessageExecute` message.
 type Execute struct {
+	blockless.BaseMessage
 	RequestID string            `json:"request_id,omitempty"`
 	Code      codes.Code        `json:"code,omitempty"`
 	Results   execute.ResultMap `json:"results,omitempty"`

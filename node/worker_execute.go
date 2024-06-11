@@ -56,7 +56,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 	}
 
 	// Send the response, whatever it may be (success or failure).
-	err = n.send(ctx, from, res)
+	err = n.send(ctx, from, &res)
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)
 	}

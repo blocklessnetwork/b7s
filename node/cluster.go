@@ -78,7 +78,7 @@ func (n *Node) formCluster(ctx context.Context, requestID string, replicas []pee
 	}
 
 	// Request execution from peers.
-	err := n.sendToMany(ctx, replicas, reqCluster)
+	err := n.sendToMany(ctx, replicas, &reqCluster)
 	if err != nil {
 		return fmt.Errorf("could not send cluster formation request to peers: %w", err)
 	}
@@ -142,7 +142,7 @@ func (n *Node) disbandCluster(requestID string, replicas []peer.ID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), consensusClusterSendTimeout)
 	defer cancel()
 
-	err := n.sendToMany(ctx, replicas, msgDisband)
+	err := n.sendToMany(ctx, replicas, &msgDisband)
 	if err != nil {
 		return fmt.Errorf("could not send cluster disband request (request: %s): %w", requestID, err)
 	}

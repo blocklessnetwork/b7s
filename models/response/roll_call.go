@@ -11,6 +11,7 @@ var _ (json.Marshaler) = (*RollCall)(nil)
 
 // RollCall describes the `MessageRollCall` response payload.
 type RollCall struct {
+	blockless.BaseMessage
 	Code       codes.Code `json:"code,omitempty"`
 	FunctionID string     `json:"function_id,omitempty"`
 	RequestID  string     `json:"request_id,omitempty"`

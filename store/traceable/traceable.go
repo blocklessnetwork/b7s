@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/libp2p/go-libp2p/core/peer"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -34,7 +35,7 @@ func (s *Store) SavePeer(peer blockless.Peer) error {
 		return s.store.SavePeer(peer)
 	}
 
-	opts := storeSpanOptions(tracing.SpanAttributes(tracing.PeerAttributes(peer))...)
+	opts := storeSpanOptions(tracing.SpanAttributes(peerAttributes(peer))...)
 	return s.tracer.WithSpanFromContext(context.Background(), "SavePeer", callback, opts...)
 }
 
@@ -120,4 +121,11 @@ func (s *Store) RemoveFunction(cid string) error {
 		"RemoveFunction",
 		func() error { return s.store.RemoveFunction(cid) },
 		opts...)
+}
+
+func peerAttributes(peer blockless.Peer) []attribute.KeyValue {
+	return []attribute.KeyValue{
+		b7ssemconv.PeerID.String(peer.ID.String()),
+		b7ssemconv.PeerMultiaddr.String(peer.MultiAddr),
+	}
 }

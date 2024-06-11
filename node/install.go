@@ -34,7 +34,7 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, req req
 	}
 
 	// Reply to the caller.
-	err = n.send(ctx, from, res)
+	err = n.send(ctx, from, &res)
 	if err != nil {
 		return fmt.Errorf("could not send the response (peer: %s): %w", from, err)
 	}

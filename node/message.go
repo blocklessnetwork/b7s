@@ -7,10 +7,8 @@ import (
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 type topicInfo struct {
@@ -50,15 +48,9 @@ func (n *Node) subscribeToTopics(ctx context.Context) error {
 // send serializes the message and sends it to the specified peer.
 func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) error {
 
-	opts := []trace.SpanStartOption{
-		trace.WithSpanKind(trace.SpanKindProducer),
-		trace.WithAttributes(
-			b7ssemconv.MessagePeer.String(to.String()),
-			b7ssemconv.MessageType.String(msg.Type()),
-			b7ssemconv.MessagePipeline.String(directMessagePipeline.String()),
-		),
-	}
+	saveTraceContext(ctx, msg)
 
+	opts := newMsgSpanOpts(msg).pipeline(directMessagePipeline.String()).peer(to).spanOpts()
 	ctx, span := n.tracer.Start(ctx, "MessageSend", opts...)
 	defer span.End()
 
@@ -80,7 +72,11 @@ func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) erro
 // sendToMany serializes the message and sends it to a number of peers. It aborts on any error.
 func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Message) error {
 
-	// TODO: tracing for this
+	saveTraceContext(ctx, msg)
+
+	opts := newMsgSpanOpts(msg).pipeline(directMessagePipeline.String()).peers(peers...).spanOpts()
+	ctx, span := n.tracer.Start(ctx, "MessageSend", opts...)
+	defer span.End()
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -105,14 +101,8 @@ func (n *Node) publish(ctx context.Context, msg blockless.Message) error {
 
 func (n *Node) publishToTopic(ctx context.Context, topic string, msg blockless.Message) error {
 
-	opts := []trace.SpanStartOption{
-		trace.WithSpanKind(trace.SpanKindProducer),
-		trace.WithAttributes(
-			b7ssemconv.MessageType.String(msg.Type()),
-			b7ssemconv.MessagePipeline.String(traceableTopicName(topic)),
-		),
-	}
-
+	saveTraceContext(ctx, msg)
+	opts := newMsgSpanOpts(msg).pipeline(traceableTopicName(topic)).spanOpts()
 	ctx, span := n.tracer.Start(ctx, "MessagePublish", opts...)
 	defer span.End()
 

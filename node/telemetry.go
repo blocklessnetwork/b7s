@@ -1,12 +1,17 @@
 package node
 
 import (
+	"context"
 	"fmt"
+	"strings"
 
 	"github.com/libp2p/go-libp2p/core/peer"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 const (
@@ -36,5 +41,71 @@ func directMessageSpanOpts(from peer.ID) []trace.SpanStartOption {
 			b7ssemconv.MessagePipeline.String(directMessagePipeline.String()),
 			b7ssemconv.MessagePeer.String(from.String()),
 		),
+	}
+}
+
+func saveTraceContext(ctx context.Context, msg blockless.Message) {
+	tmsg, ok := msg.(blockless.TraceableMessage)
+	if ok {
+		tmsg.SaveTraceContext(tracing.GetTraceInfo(ctx))
+	}
+}
+
+// TODO: Move this to a separate file.
+
+type msgSpanConfig struct {
+	typ         string
+	msgPipeline string
+	receivers   []peer.ID
+}
+
+func newMsgSpanOpts(msg blockless.Message) *msgSpanConfig {
+	return &msgSpanConfig{
+		typ: msg.Type(),
+	}
+}
+
+func (c *msgSpanConfig) pipeline(p string) *msgSpanConfig {
+	c.msgPipeline = p
+	return c
+}
+
+func (c *msgSpanConfig) peer(id peer.ID) *msgSpanConfig {
+	if c.receivers == nil {
+		c.receivers = make([]peer.ID, 0, 1)
+	}
+
+	c.receivers = append(c.receivers, id)
+	return c
+}
+
+func (c *msgSpanConfig) peers(id ...peer.ID) *msgSpanConfig {
+	if c.receivers == nil {
+		c.receivers = make([]peer.ID, 0, 1)
+	}
+
+	c.receivers = append(c.receivers, id...)
+	return c
+}
+
+func (c *msgSpanConfig) spanOpts() []trace.SpanStartOption {
+
+	attrs := []attribute.KeyValue{b7ssemconv.MessageType.String(c.typ)}
+
+	if c.msgPipeline != "" {
+		attrs = append(attrs, b7ssemconv.MessagePipeline.String(c.msgPipeline))
+	}
+
+	if len(c.receivers) == 1 {
+		attrs = append(attrs, b7ssemconv.MessagePeer.String(c.receivers[0].String()))
+	} else if len(c.receivers) > 1 {
+		attrs = append(attrs, b7ssemconv.MessagePeers.String(
+			strings.Join(blockless.PeerIDsToStr(c.receivers), ","),
+		))
+	}
+
+	return []trace.SpanStartOption{
+		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(attrs...),
 	}
 }

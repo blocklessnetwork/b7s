@@ -15,6 +15,7 @@ const (
 	MessageID       = attribute.Key("message.id")
 	MessagePipeline = attribute.Key("message.pipeline")
 	MessagePeer     = attribute.Key("message.peer")
+	MessagePeers    = attribute.Key("message.peers")
 )
 
 const (

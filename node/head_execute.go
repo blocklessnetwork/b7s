@@ -50,7 +50,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request
 	}
 
 	// Send the response, whatever it may be (success or failure).
-	err = n.send(ctx, from, res)
+	err = n.send(ctx, from, &res)
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)
 	}
@@ -132,7 +132,7 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 		}
 	}
 
-	err = n.sendToMany(ctx, reportingPeers, reqExecute)
+	err = n.sendToMany(ctx, reportingPeers, &reqExecute)
 	if err != nil {
 		return codes.Error, nil, cluster, fmt.Errorf("could not send execution request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)
 	}

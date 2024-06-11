@@ -10,6 +10,7 @@ var _ (json.Marshaler) = (*InstallFunction)(nil)
 
 // InstallFunction describes the `MessageInstallFunction` request payload.
 type InstallFunction struct {
+	blockless.BaseMessage
 	ManifestURL string `json:"manifest_url,omitempty"`
 	CID         string `json:"cid,omitempty"`
 }

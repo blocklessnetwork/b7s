@@ -46,7 +46,7 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 			},
 		}
 
-		err := n.send(ctx, req.Origin, msg)
+		err := n.send(ctx, req.Origin, &msg)
 		if err != nil {
 			n.log.Error().Err(err).Str("peer", req.Origin.String()).Msg("could not send execution result to node")
 		}
@@ -75,7 +75,7 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 		Consensus: fc.Consensus,
 	}
 
-	err = n.send(ctx, from, res)
+	err = n.send(ctx, from, &res)
 	if err != nil {
 		return fmt.Errorf("could not send cluster confirmation message: %w", err)
 	}
@@ -111,7 +111,7 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 		Consensus: fc.Consensus,
 	}
 
-	err = n.send(ctx, from, res)
+	err = n.send(ctx, from, &res)
 	if err != nil {
 		return fmt.Errorf("could not send cluster confirmation message: %w", err)
 	}

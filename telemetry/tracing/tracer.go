@@ -8,7 +8,6 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
@@ -51,12 +50,5 @@ func ExecutionAttributes(requestID string, req execute.Request) []attribute.KeyV
 		b7ssemconv.ExecutionNodeCount.Int(req.Config.NodeCount),
 		b7ssemconv.ExecutionConsensus.String(req.Config.ConsensusAlgorithm),
 		b7ssemconv.ExecutionRequestID.String(requestID),
-	}
-}
-
-func PeerAttributes(peer blockless.Peer) []attribute.KeyValue {
-	return []attribute.KeyValue{
-		b7ssemconv.PeerID.String(peer.ID.String()),
-		b7ssemconv.PeerMultiaddr.String(peer.MultiAddr),
 	}
 }

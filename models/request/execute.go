@@ -12,6 +12,8 @@ var _ (json.Marshaler) = (*Execute)(nil)
 
 // Execute describes the `MessageExecute` request payload.
 type Execute struct {
+	blockless.BaseMessage
+
 	execute.Request // execute request is embedded.
 
 	Topic     string    `json:"topic,omitempty"`

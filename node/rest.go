@@ -52,7 +52,7 @@ func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid strin
 
 	n.log.Debug().Str("subgroup", subgroup).Str("url", req.ManifestURL).Str("cid", req.CID).Msg("publishing function install message")
 
-	err := n.publishToTopic(ctx, subgroup, req)
+	err := n.publishToTopic(ctx, subgroup, &req)
 	if err != nil {
 		return fmt.Errorf("could not publish message: %w", err)
 	}
