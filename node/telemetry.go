@@ -18,30 +18,25 @@ const (
 	tracerName = "b7s.Node"
 )
 
-func subscriptionMessageSpanOpts(from peer.ID, topicName string) []trace.SpanStartOption {
+func msgProcessSpanOpts(from peer.ID, msgType string, pipeline messagePipeline) []trace.SpanStartOption {
+
+	// TODO: Topic name - refactor message pipeline to include topic name too.
+	// TODO: Message ID is useful but libp2p has dumb IDs.
+	// b7ssemconv.MessageID.String(msg.ID),
+
 	return []trace.SpanStartOption{
 		trace.WithSpanKind(trace.SpanKindConsumer),
 		trace.WithAttributes(
-			// TODO: Message ID is useful but libp2p has dumb IDs.
-			// b7ssemconv.MessageID.String(msg.ID),
 			b7ssemconv.MessagePeer.String(from.String()),
-			b7ssemconv.MessagePipeline.String(traceableTopicName(topicName)),
+			b7ssemconv.MessagePipeline.String(pipeline.String()),
+			b7ssemconv.MessageType.String(msgType),
 		),
 	}
 }
 
+// TODO: Use it or lose it.
 func traceableTopicName(topic string) string {
 	return fmt.Sprintf("topic.%v", topic)
-}
-
-func directMessageSpanOpts(from peer.ID) []trace.SpanStartOption {
-	return []trace.SpanStartOption{
-		trace.WithSpanKind(trace.SpanKindConsumer),
-		trace.WithAttributes(
-			b7ssemconv.MessagePipeline.String(directMessagePipeline.String()),
-			b7ssemconv.MessagePeer.String(from.String()),
-		),
-	}
 }
 
 func saveTraceContext(ctx context.Context, msg blockless.Message) {

@@ -10,10 +10,8 @@ import (
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/network"
-	"go.opentelemetry.io/otel/codes"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // Run will start the main loop for the node.
@@ -94,21 +92,9 @@ func (n *Node) Run(ctx context.Context) error {
 					defer n.wg.Done()
 					defer func() { <-n.sema }()
 
-					// TODO: Add span status here.
-					// TOOD: Consider other span options.
-					payload := msg.GetData()
-					ctx, err := tracing.TraceContextFromMessage(ctx, payload)
-					if err != nil {
-						n.log.Error().Err(err).Msg("could not get trace context from message")
-					}
-
-					ctx, span := n.tracer.Start(ctx, "MessageProcess", subscriptionMessageSpanOpts(msg.ReceivedFrom, name)...)
-					defer span.End()
-
-					err = n.processMessage(ctx, msg.ReceivedFrom, payload, subscriptionPipeline)
+					err = n.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), subscriptionPipeline)
 					if err != nil {
 						n.log.Error().Err(err).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("could not process message")
-						span.SetStatus(codes.Error, err.Error())
 						return
 					}
 
@@ -143,18 +129,9 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 
 		n.log.Trace().Str("peer", from.String()).Msg("received direct message")
 
-		ctx, err := tracing.TraceContextFromMessage(ctx, msg)
-		if err != nil {
-			n.log.Error().Err(err).Msg("could not get trace context from message")
-		}
-
-		ctx, span := n.tracer.Start(ctx, "MessageProcess", directMessageSpanOpts(from)...)
-		defer span.End()
-
 		err = n.processMessage(ctx, from, msg, directMessagePipeline)
 		if err != nil {
 			n.log.Error().Err(err).Str("peer", from.String()).Msg("could not process direct message")
-			span.SetStatus(codes.Error, err.Error())
 			return
 		}
 

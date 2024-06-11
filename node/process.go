@@ -6,10 +6,9 @@ import (
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // processMessage will determine which message was received and how to process it.
@@ -21,10 +20,16 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
-	span := trace.SpanFromContext(ctx)
-	if span.IsRecording() {
-		span.SetAttributes(b7ssemconv.MessageType.String(msgType))
+	// TODO: Span status
+	// TOOD: Consider other span options.
+	ctx, err = tracing.TraceContextFromMessage(ctx, payload)
+	if err != nil {
+		n.log.Error().Err(err).Msg("could not get trace context from message")
 	}
+
+	sn := fmt.Sprintf("MessageProcess %s", msgType)
+	ctx, span := n.tracer.Start(ctx, sn, msgProcessSpanOpts(from, msgType, pipeline)...)
+	defer span.End()
 
 	log := n.log.With().Str("peer", from.String()).Str("type", msgType).Str("pipeline", pipeline.String()).Logger()
 
