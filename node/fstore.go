@@ -10,7 +10,7 @@ type FStore interface {
 	Install(ctx context.Context, address string, cid string) error
 
 	// Installed returns info if the function is installed or not.
-	Installed(cid string) (bool, error)
+	Installed(ctx context.Context, cid string) (bool, error)
 
 	// TODO: Refactor the sync code - move the logic outside of the package
 	// Sync will ensure function installations are correct, redownloading functions if needed.

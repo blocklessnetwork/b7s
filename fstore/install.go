@@ -67,7 +67,7 @@ func (h *FStore) Install(ctx context.Context, address string, cid string) error 
 		Archive:  functionPath,
 		Files:    out,
 	}
-	err = h.saveFunction(fn)
+	err = h.saveFunction(ctx, fn)
 	if err != nil {
 		h.log.Error().
 			Err(err).
@@ -84,9 +84,9 @@ func (h *FStore) Install(ctx context.Context, address string, cid string) error 
 }
 
 // Installed checks if the function with the given CID is installed.
-func (h *FStore) Installed(cid string) (bool, error) {
+func (h *FStore) Installed(ctx context.Context, cid string) (bool, error) {
 
-	fn, err := h.getFunction(cid)
+	fn, err := h.getFunction(ctx, cid)
 	if err != nil && errors.Is(err, blockless.ErrNotFound) {
 		return false, nil
 	}

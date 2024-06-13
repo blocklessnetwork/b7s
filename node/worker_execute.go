@@ -68,7 +68,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 func (n *Node) workerExecute(ctx context.Context, requestID string, timestamp time.Time, req execute.Request, from peer.ID) (codes.Code, execute.Result, error) {
 
 	// Check if we have function in store.
-	functionInstalled, err := n.fstore.Installed(req.FunctionID)
+	functionInstalled, err := n.fstore.Installed(ctx, req.FunctionID)
 	if err != nil {
 		return codes.Error, execute.Result{}, fmt.Errorf("could not lookup function in store: %w", err)
 	}

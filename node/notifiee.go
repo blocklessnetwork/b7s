@@ -32,14 +32,7 @@ func newConnectionNotifee(log zerolog.Logger, store blockless.PeerStore) *connec
 
 func (n *connectionNotifiee) Connected(network network.Network, conn network.Conn) {
 
-	opts := []trace.SpanStartOption{
-		trace.WithAttributes(
-			b7ssemconv.PeerID.String(conn.RemotePeer().String()),
-			b7ssemconv.PeerMultiaddr.String(conn.RemoteMultiaddr().String()),
-			b7ssemconv.LocalMultiaddr.String(conn.LocalMultiaddr().String()),
-		),
-	}
-	_, span := n.tracer.Start(context.Background(), spanPeerConnected, opts...)
+	ctx, span := n.tracer.Start(context.Background(), spanPeerConnected, connectionTraceOpts(conn)...)
 	defer span.End()
 
 	// Get peer information.
@@ -62,7 +55,7 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 	}
 
 	// Store the peer info.
-	err := n.store.SavePeer(peer)
+	err := n.store.SavePeer(ctx, peer)
 	if err != nil {
 		n.log.Warn().Err(err).Str("id", peerID.String()).Msg("could not add peer to peerstore")
 	}
@@ -70,14 +63,7 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 
 func (n *connectionNotifiee) Disconnected(_ network.Network, conn network.Conn) {
 
-	opts := []trace.SpanStartOption{
-		trace.WithAttributes(
-			b7ssemconv.PeerID.String(conn.RemotePeer().String()),
-			b7ssemconv.PeerMultiaddr.String(conn.RemoteMultiaddr().String()),
-			b7ssemconv.LocalMultiaddr.String(conn.LocalMultiaddr().String()),
-		),
-	}
-	_, span := n.tracer.Start(context.Background(), spanPeerDisconnected, opts...)
+	_, span := n.tracer.Start(context.Background(), spanPeerDisconnected, connectionTraceOpts(conn)...)
 	defer span.End()
 
 	// TODO: Check - do we want to remove peer after he's been disconnected.
@@ -98,4 +84,14 @@ func (n *connectionNotifiee) Listen(_ network.Network, _ multiaddr.Multiaddr) {
 
 func (n *connectionNotifiee) ListenClose(_ network.Network, _ multiaddr.Multiaddr) {
 	// Noop
+}
+
+func connectionTraceOpts(conn network.Conn) []trace.SpanStartOption {
+	return []trace.SpanStartOption{
+		trace.WithAttributes(
+			b7ssemconv.PeerID.String(conn.RemotePeer().String()),
+			b7ssemconv.PeerMultiaddr.String(conn.RemoteMultiaddr().String()),
+			b7ssemconv.LocalMultiaddr.String(conn.LocalMultiaddr().String()),
+		),
+	}
 }

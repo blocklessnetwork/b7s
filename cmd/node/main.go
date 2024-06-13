@@ -154,7 +154,7 @@ func run() int {
 
 	if !cfg.Connectivity.NoDialbackPeers {
 		// Get the list of dial back peers.
-		peers, err := store.RetrievePeers()
+		peers, err := store.RetrievePeers(ctx)
 		if err != nil {
 			log.Error().Err(err).Msg("could not get list of dial-back peers")
 			return failure

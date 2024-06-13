@@ -46,7 +46,7 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, req req
 func (n *Node) installFunction(ctx context.Context, cid string, manifestURL string) error {
 
 	// Check if the function is installed.
-	installed, err := n.fstore.Installed(cid)
+	installed, err := n.fstore.Installed(ctx, cid)
 	if err != nil {
 		return fmt.Errorf("could not check if function is installed: %w", err)
 	}
