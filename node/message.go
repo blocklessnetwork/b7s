@@ -48,11 +48,11 @@ func (n *Node) subscribeToTopics(ctx context.Context) error {
 // send serializes the message and sends it to the specified peer.
 func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) error {
 
-	saveTraceContext(ctx, msg)
-
-	opts := newMsgSpanOpts(msg).pipeline(directMessagePipeline.String()).peer(to).spanOpts()
-	ctx, span := n.tracer.Start(ctx, "MessageSend", opts...)
+	opts := new(msgSpanConfig).pipeline(directMessagePipeline.String()).peer(to).spanOpts()
+	ctx, span := n.tracer.Start(ctx, msgSendSpanName(spanMessageSend, msg.Type()), opts...)
 	defer span.End()
+
+	saveTraceContext(ctx, msg)
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -72,11 +72,11 @@ func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) erro
 // sendToMany serializes the message and sends it to a number of peers. It aborts on any error.
 func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Message) error {
 
-	saveTraceContext(ctx, msg)
-
-	opts := newMsgSpanOpts(msg).pipeline(directMessagePipeline.String()).peers(peers...).spanOpts()
-	ctx, span := n.tracer.Start(ctx, "MessageSend", opts...)
+	opts := new(msgSpanConfig).pipeline(directMessagePipeline.String()).peers(peers...).spanOpts()
+	ctx, span := n.tracer.Start(ctx, msgSendSpanName(spanMessageSend, msg.Type()), opts...)
 	defer span.End()
+
+	saveTraceContext(ctx, msg)
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -101,10 +101,11 @@ func (n *Node) publish(ctx context.Context, msg blockless.Message) error {
 
 func (n *Node) publishToTopic(ctx context.Context, topic string, msg blockless.Message) error {
 
-	saveTraceContext(ctx, msg)
-	opts := newMsgSpanOpts(msg).pipeline(traceableTopicName(topic)).spanOpts()
-	ctx, span := n.tracer.Start(ctx, "MessagePublish", opts...)
+	opts := new(msgSpanConfig).pipeline(traceableTopicName(topic)).spanOpts()
+	ctx, span := n.tracer.Start(ctx, msgSendSpanName(spanMessagePublish, msg.Type()), opts...)
 	defer span.End()
+
+	saveTraceContext(ctx, msg)
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)

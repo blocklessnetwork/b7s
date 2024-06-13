@@ -2,6 +2,7 @@ package node
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/blocklessnetwork/b7s/consensus"
@@ -37,3 +38,25 @@ const (
 var (
 	ErrUnsupportedMessage = errors.New("unsupported message")
 )
+
+// Tracing span names.
+const (
+	// message events
+	spanMessageSend    = "MessageSend"
+	spanMessagePublish = "MessagePublish"
+	spanMessageProcess = "MessageProcess"
+	// notifiee events
+	spanPeerConnected    = "PeerConnected"
+	spanPeerDisconnected = "PeerDisconnected"
+	// execution events
+	spanHeadExecute   = "HeadExecute"
+	spanWorkerExecute = "WorkerExecute"
+)
+
+func msgProcessSpanName(msgType string) string {
+	return fmt.Sprintf("%s %s", spanMessageProcess, msgType)
+}
+
+func msgSendSpanName(prefix string, msgType string) string {
+	return fmt.Sprintf("%s %s", prefix, msgType)
+}

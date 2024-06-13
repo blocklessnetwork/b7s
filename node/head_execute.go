@@ -15,17 +15,13 @@ import (
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
 	"github.com/blocklessnetwork/b7s/models/response"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // NOTE: head node typically receives execution requests from the REST API. This message handling is not cognizant of subgroups.
 func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
 
 	requestID := newRequestID()
-
-	// TODO: Options/attributes.
-	var opts []trace.SpanStartOption
-	ctx, span := n.tracer.Start(ctx, "ProcessExecute", opts...)
-	defer span.End()
 
 	log := n.log.With().Str("request", req.RequestID).Str("peer", from.String()).Str("function", req.FunctionID).Logger()
 
@@ -61,6 +57,11 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request
 // headExecute is called on the head node. The head node will publish a roll call and delegate an execution request to chosen nodes.
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
 func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request, subgroup string) (codes.Code, execute.ResultMap, execute.Cluster, error) {
+
+	ctx, span := n.tracer.Start(ctx, spanHeadExecute,
+		trace.WithSpanKind(trace.SpanKindClient),
+		trace.WithAttributes(tracing.ExecutionAttributes(requestID, req)...))
+	defer span.End()
 
 	nodeCount := -1
 	if req.Config.NodeCount >= 1 {

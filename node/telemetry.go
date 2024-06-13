@@ -49,15 +49,8 @@ func saveTraceContext(ctx context.Context, msg blockless.Message) {
 // TODO: Move this to a separate file.
 
 type msgSpanConfig struct {
-	typ         string
 	msgPipeline string
 	receivers   []peer.ID
-}
-
-func newMsgSpanOpts(msg blockless.Message) *msgSpanConfig {
-	return &msgSpanConfig{
-		typ: msg.Type(),
-	}
 }
 
 func (c *msgSpanConfig) pipeline(p string) *msgSpanConfig {
@@ -85,8 +78,7 @@ func (c *msgSpanConfig) peers(id ...peer.ID) *msgSpanConfig {
 
 func (c *msgSpanConfig) spanOpts() []trace.SpanStartOption {
 
-	attrs := []attribute.KeyValue{b7ssemconv.MessageType.String(c.typ)}
-
+	var attrs []attribute.KeyValue
 	if c.msgPipeline != "" {
 		attrs = append(attrs, b7ssemconv.MessagePipeline.String(c.msgPipeline))
 	}

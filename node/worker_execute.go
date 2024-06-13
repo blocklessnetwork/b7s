@@ -23,7 +23,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 
 	// TODO: attributes
 	var opts []trace.SpanStartOption
-	ctx, span := n.tracer.Start(ctx, "ProcessExecute", opts...)
+	ctx, span := n.tracer.Start(ctx, spanWorkerExecute, opts...)
 	defer span.End()
 
 	log := n.log.With().Str("request", req.RequestID).Str("function", req.FunctionID).Logger()

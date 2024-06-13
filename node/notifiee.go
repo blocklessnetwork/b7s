@@ -39,7 +39,7 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 			b7ssemconv.LocalMultiaddr.String(conn.LocalMultiaddr().String()),
 		),
 	}
-	_, span := n.tracer.Start(context.Background(), "PeerConnected", opts...)
+	_, span := n.tracer.Start(context.Background(), spanPeerConnected, opts...)
 	defer span.End()
 
 	// Get peer information.
@@ -77,7 +77,7 @@ func (n *connectionNotifiee) Disconnected(_ network.Network, conn network.Conn) 
 			b7ssemconv.LocalMultiaddr.String(conn.LocalMultiaddr().String()),
 		),
 	}
-	_, span := n.tracer.Start(context.Background(), "PeerDiconnected", opts...)
+	_, span := n.tracer.Start(context.Background(), spanPeerDisconnected, opts...)
 	defer span.End()
 
 	// TODO: Check - do we want to remove peer after he's been disconnected.

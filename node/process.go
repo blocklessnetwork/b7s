@@ -27,8 +27,7 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 		n.log.Error().Err(err).Msg("could not get trace context from message")
 	}
 
-	sn := fmt.Sprintf("MessageProcess %s", msgType)
-	ctx, span := n.tracer.Start(ctx, sn, msgProcessSpanOpts(from, msgType, pipeline)...)
+	ctx, span := n.tracer.Start(ctx, msgProcessSpanName(msgType), msgProcessSpanOpts(from, msgType, pipeline)...)
 	defer span.End()
 
 	log := n.log.With().Str("peer", from.String()).Str("type", msgType).Str("pipeline", pipeline.String()).Logger()
