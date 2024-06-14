@@ -7,11 +7,12 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
-// TODO: This now has a context.
 func (h *FStore) Sync(ctx context.Context, haltOnError bool) error {
 
 	functions, err := h.store.RetrieveFunctions(ctx)
@@ -39,6 +40,9 @@ func (h *FStore) Sync(ctx context.Context, haltOnError bool) error {
 // Sync will verify that the function identified by `cid` is still found on the local filesystem.
 // If the function archive of function files are missing, they will be recreated.
 func (h *FStore) sync(ctx context.Context, fn blockless.FunctionRecord) error {
+
+	ctx, span := h.tracer.Start(ctx, spanSync, trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(b7ssemconv.FunctionCID.String(fn.CID)))
+	defer span.End()
 
 	// Read the function directly from storage - we don't want to update the timestamp
 	// since this is a 'maintenance' access.

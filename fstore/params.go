@@ -10,3 +10,10 @@ const (
 
 	tracerName = "b7s.Fstore"
 )
+
+// Tracing span names.
+const (
+	spanInstall     = "FunctionInstall"
+	spanIsInstalled = "IsFunctionInstalled"
+	spanSync        = "FunctionSync"
+)

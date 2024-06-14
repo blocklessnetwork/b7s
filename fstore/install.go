@@ -15,10 +15,7 @@ import (
 // Install will download and install function identified by the manifest/CID.
 func (h *FStore) Install(ctx context.Context, address string, cid string) error {
 
-	// TODO: Consider other span options.
-	_, span := h.tracer.Start(ctx, "InstallFunction",
-		trace.WithSpanKind(trace.SpanKindClient),
-		trace.WithAttributes(b7ssemconv.FunctionCID.String(cid)))
+	ctx, span := h.tracer.Start(ctx, spanInstall, trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(b7ssemconv.FunctionCID.String(cid)))
 	defer span.End()
 
 	h.log.Debug().
@@ -84,7 +81,10 @@ func (h *FStore) Install(ctx context.Context, address string, cid string) error 
 }
 
 // Installed checks if the function with the given CID is installed.
-func (h *FStore) Installed(ctx context.Context, cid string) (bool, error) {
+func (h *FStore) IsInstalled(ctx context.Context, cid string) (bool, error) {
+
+	ctx, span := h.tracer.Start(ctx, spanIsInstalled, trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(b7ssemconv.FunctionCID.String(fn.CID)))
+	defer span.End()
 
 	fn, err := h.getFunction(ctx, cid)
 	if err != nil && errors.Is(err, blockless.ErrNotFound) {
