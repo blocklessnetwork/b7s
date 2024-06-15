@@ -17,11 +17,14 @@ type Result struct {
 	Peers []peer.ID `json:"peers,omitempty"`
 	// How frequent was this result, in percentages.
 	Frequency float64 `json:"frequency,omitempty"`
+	// Signature of this result
+	Signature []byte `json:"signature,omitempty"`
 }
 
 type resultStats struct {
-	seen  uint
-	peers []peer.ID
+	seen      uint
+	peers     []peer.ID
+	signature []byte
 }
 
 func Aggregate(results execute.ResultMap) Results {
@@ -40,13 +43,15 @@ func Aggregate(results execute.ResultMap) Results {
 		stat, ok := stats[output]
 		if !ok {
 			stats[output] = resultStats{
-				seen:  0,
-				peers: make([]peer.ID, 0),
+				seen:      0,
+				peers:     make([]peer.ID, 0),
+				signature: res.Signature,
 			}
 		}
 
 		stat.seen++
 		stat.peers = append(stat.peers, executingPeer)
+		stat.signature = res.Signature
 
 		stats[output] = stat
 	}
@@ -59,6 +64,7 @@ func Aggregate(results execute.ResultMap) Results {
 			Result:    res,
 			Peers:     stat.peers,
 			Frequency: 100 * float64(stat.seen) / float64(total),
+			Signature: stat.signature,
 		}
 
 		aggregated = append(aggregated, aggr)
