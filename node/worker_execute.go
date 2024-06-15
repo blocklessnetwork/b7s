@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -47,6 +48,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 		Results: execute.ResultMap{
 			n.host.ID(): result,
 		},
+		Signature: hex.EncodeToString(result.Signature),
 	}
 
 	// Send the response, whatever it may be (success or failure).

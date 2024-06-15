@@ -15,6 +15,7 @@ type Result struct {
 	Result    RuntimeOutput `json:"result"`
 	RequestID string        `json:"request_id"`
 	Usage     Usage         `json:"usage,omitempty"`
+	Signature []byte        `json:"signature,omitempty"`
 }
 
 // Cluster represents the set of peers that executed the request.
