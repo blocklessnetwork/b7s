@@ -11,16 +11,15 @@ import (
 func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execute.Result, error) {
 
 	// Execute the function.
-	out, usage, err := e.executeFunction(requestID, req)
+	out, usage, signature, err := e.executeFunction(requestID, req)
 	if err != nil {
-
 		res := execute.Result{
 			Code:      codes.Error,
 			RequestID: requestID,
 			Result:    out,
 			Usage:     usage,
+			Signature: signature,
 		}
-
 		return res, fmt.Errorf("function execution failed: %w", err)
 	}
 
@@ -29,6 +28,7 @@ func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execu
 		RequestID: requestID,
 		Result:    out,
 		Usage:     usage,
+		Signature: signature,
 	}
 
 	return res, nil
@@ -36,7 +36,7 @@ func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execu
 
 // executeFunction handles the actual execution of the Blockless function. It returns the
 // execution information like standard output, standard error, exit code and resource usage.
-func (e *Executor) executeFunction(requestID string, req execute.Request) (execute.RuntimeOutput, execute.Usage, error) {
+func (e *Executor) executeFunction(requestID string, req execute.Request) (execute.RuntimeOutput, execute.Usage, []byte, error) {
 
 	log := e.log.With().Str("request", requestID).Str("function", req.FunctionID).Logger()
 
@@ -47,7 +47,7 @@ func (e *Executor) executeFunction(requestID string, req execute.Request) (execu
 
 	err := e.cfg.FS.MkdirAll(paths.workdir, defaultPermissions)
 	if err != nil {
-		return execute.RuntimeOutput{}, execute.Usage{}, fmt.Errorf("could not setup working directory for execution (dir: %s): %w", paths.workdir, err)
+		return execute.RuntimeOutput{}, execute.Usage{}, []byte{}, fmt.Errorf("could not setup working directory for execution (dir: %s): %w", paths.workdir, err)
 	}
 	// Remove all temporary files after we're done.
 	defer func() {
@@ -66,10 +66,18 @@ func (e *Executor) executeFunction(requestID string, req execute.Request) (execu
 
 	out, usage, err := e.executeCommand(cmd)
 	if err != nil {
-		return out, execute.Usage{}, fmt.Errorf("command execution failed: %w", err)
+		return out, execute.Usage{}, []byte{}, fmt.Errorf("command execution failed: %w", err)
 	}
 
 	log.Info().Msg("command executed successfully")
 
-	return out, usage, nil
+	var signature []byte
+	if e.cfg.Signer != nil {
+		signature, err = e.cfg.Signer.Sign(req, out)
+		if err != nil {
+			return out, usage, []byte{}, fmt.Errorf("could not sign output: %w", err)
+		}
+	}
+
+	return out, usage, signature, nil
 }
