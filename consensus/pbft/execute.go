@@ -1,6 +1,7 @@
 package pbft
 
 import (
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -98,6 +99,7 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 			RequestTimestamp: request.Timestamp,
 			Replica:          r.id,
 		},
+		Signature: hex.EncodeToString(res.Signature),
 	}
 
 	// Save this executions in case it's requested again.
