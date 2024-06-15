@@ -4,26 +4,32 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/execute"
 )
+
+type ExecutionSigner interface {
+	Sign(execute.Request, execute.RuntimeOutput) ([]byte, error)
+}
 
 // defaultConfig used to create Executor.
 var defaultConfig = Config{
-	WorkDir:        "workspace",
-	RuntimeDir:     "",
-	ExecutableName: blockless.RuntimeCLI(),
-	FS:             afero.NewOsFs(),
-	Limiter:        &noopLimiter{},
+	WorkDir:         "workspace",
+	RuntimeDir:      "",
+	ExecutableName:  blockless.RuntimeCLI(),
+	FS:              afero.NewOsFs(),
+	Limiter:         &noopLimiter{},
 	DriversRootPath: "",
 }
 
 // Config represents the Executor configuration.
 type Config struct {
-	WorkDir        string   // directory where files needed for the execution are stored
-	RuntimeDir     string   // directory where the executable can be found
-	ExecutableName string   // name for the executable
-	DriversRootPath string // where are cgi drivers stored
-	FS             afero.Fs // FS accessor
-	Limiter        Limiter  // Resource limiter for executed processes
+	WorkDir         string          // directory where files needed for the execution are stored
+	RuntimeDir      string          // directory where the executable can be found
+	ExecutableName  string          // name for the executable
+	DriversRootPath string          // where are cgi drivers stored
+	FS              afero.Fs        // FS accessor
+	Limiter         Limiter         // Resource limiter for executed processes
+	Signer          ExecutionSigner // Signer for the executor
 }
 
 type Option func(*Config)
@@ -60,5 +66,12 @@ func WithExecutableName(name string) Option {
 func WithLimiter(limiter Limiter) Option {
 	return func(cfg *Config) {
 		cfg.Limiter = limiter
+	}
+}
+
+// WithSigner sets the signer for the executor.
+func WithSigner(signer ExecutionSigner) Option {
+	return func(cfg *Config) {
+		cfg.Signer = signer
 	}
 }
