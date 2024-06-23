@@ -11,7 +11,7 @@ import (
 func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execute.Result, error) {
 
 	// Execute the function.
-	out, usage, signature, err := e.executeFunction(requestID, req)
+	out, usage, signature, meta, err := e.executeFunction(requestID, req)
 	if err != nil {
 		res := execute.Result{
 			Code:      codes.Error,
@@ -29,6 +29,7 @@ func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execu
 		Result:    out,
 		Usage:     usage,
 		Signature: signature,
+		Metadata:  meta,
 	}
 
 	return res, nil
@@ -36,7 +37,7 @@ func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execu
 
 // executeFunction handles the actual execution of the Blockless function. It returns the
 // execution information like standard output, standard error, exit code and resource usage.
-func (e *Executor) executeFunction(requestID string, req execute.Request) (execute.RuntimeOutput, execute.Usage, []byte, error) {
+func (e *Executor) executeFunction(requestID string, req execute.Request) (execute.RuntimeOutput, execute.Usage, []byte, interface{}, error) {
 
 	log := e.log.With().Str("request", requestID).Str("function", req.FunctionID).Logger()
 
@@ -47,7 +48,7 @@ func (e *Executor) executeFunction(requestID string, req execute.Request) (execu
 
 	err := e.cfg.FS.MkdirAll(paths.workdir, defaultPermissions)
 	if err != nil {
-		return execute.RuntimeOutput{}, execute.Usage{}, []byte{}, fmt.Errorf("could not setup working directory for execution (dir: %s): %w", paths.workdir, err)
+		return execute.RuntimeOutput{}, execute.Usage{}, []byte{}, nil, fmt.Errorf("could not setup working directory for execution (dir: %s): %w", paths.workdir, err)
 	}
 	// Remove all temporary files after we're done.
 	defer func() {
@@ -66,7 +67,7 @@ func (e *Executor) executeFunction(requestID string, req execute.Request) (execu
 
 	out, usage, err := e.executeCommand(cmd)
 	if err != nil {
-		return out, execute.Usage{}, []byte{}, fmt.Errorf("command execution failed: %w", err)
+		return out, execute.Usage{}, []byte{}, nil, fmt.Errorf("command execution failed: %w", err)
 	}
 
 	log.Info().Msg("command executed successfully")
@@ -75,9 +76,19 @@ func (e *Executor) executeFunction(requestID string, req execute.Request) (execu
 	if e.cfg.Signer != nil {
 		signature, err = e.cfg.Signer.Sign(req, out)
 		if err != nil {
-			return out, usage, []byte{}, fmt.Errorf("could not sign output: %w", err)
+			return out, usage, []byte{}, nil, fmt.Errorf("failed to sign output: %w", err)
 		}
+		log.Debug().Msg("output signed")
 	}
 
-	return out, usage, signature, nil
+	var metadata interface{}
+	if e.cfg.MetaProvider != nil {
+		metadata, err = e.cfg.MetaProvider.WithMetadata(req, out)
+		if err != nil {
+			return out, usage, []byte{}, nil, fmt.Errorf("failed to inject metadata: %w", err)
+		}
+		log.Debug().Msg("metadata injected")
+	}
+
+	return out, usage, signature, metadata, nil
 }

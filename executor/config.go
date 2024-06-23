@@ -11,6 +11,10 @@ type ExecutionSigner interface {
 	Sign(execute.Request, execute.RuntimeOutput) ([]byte, error)
 }
 
+type MetaProvider interface {
+	WithMetadata(execute.Request, execute.RuntimeOutput) (interface{}, error)
+}
+
 // defaultConfig used to create Executor.
 var defaultConfig = Config{
 	WorkDir:         "workspace",
@@ -30,6 +34,7 @@ type Config struct {
 	FS              afero.Fs        // FS accessor
 	Limiter         Limiter         // Resource limiter for executed processes
 	Signer          ExecutionSigner // Signer for the executor
+	MetaProvider    MetaProvider    // Metadata provider for the executor
 }
 
 type Option func(*Config)
@@ -73,5 +78,12 @@ func WithLimiter(limiter Limiter) Option {
 func WithSigner(signer ExecutionSigner) Option {
 	return func(cfg *Config) {
 		cfg.Signer = signer
+	}
+}
+
+// WithMetaProvider sets the metadata provider for the executor.
+func WithMetaProvider(meta MetaProvider) Option {
+	return func(cfg *Config) {
+		cfg.MetaProvider = meta
 	}
 }
