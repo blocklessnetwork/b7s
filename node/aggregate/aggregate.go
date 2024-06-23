@@ -19,12 +19,15 @@ type Result struct {
 	Frequency float64 `json:"frequency,omitempty"`
 	// Signature of this result
 	Signature []byte `json:"signature,omitempty"`
+	// Metadata is used to store additional information about the result.
+	Metadata interface{} `json:"metadata,omitempty"`
 }
 
 type resultStats struct {
 	seen      uint
 	peers     []peer.ID
 	signature []byte
+	metadata  interface{}
 }
 
 func Aggregate(results execute.ResultMap) Results {
@@ -46,12 +49,14 @@ func Aggregate(results execute.ResultMap) Results {
 				seen:      0,
 				peers:     make([]peer.ID, 0),
 				signature: res.Signature,
+				metadata:  res.Metadata,
 			}
 		}
 
 		stat.seen++
 		stat.peers = append(stat.peers, executingPeer)
 		stat.signature = res.Signature
+		stat.metadata = res.Metadata
 
 		stats[output] = stat
 	}
@@ -65,6 +70,7 @@ func Aggregate(results execute.ResultMap) Results {
 			Peers:     stat.peers,
 			Frequency: 100 * float64(stat.seen) / float64(total),
 			Signature: stat.signature,
+			Metadata:  stat.metadata,
 		}
 
 		aggregated = append(aggregated, aggr)
