@@ -72,7 +72,7 @@ func (h *FStore) sync(ctx context.Context, fn blockless.FunctionRecord) error {
 
 	// If we don't have the archive - redownload it.
 	if !haveArchive {
-		path, err := h.download(fn.CID, fn.Manifest)
+		path, err := h.download(ctx, fn.CID, fn.Manifest)
 		if err != nil {
 			return fmt.Errorf("could not download the function archive (cid: %v): %w", fn.CID, err)
 		}

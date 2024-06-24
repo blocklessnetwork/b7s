@@ -5,6 +5,7 @@ import (
 
 	"github.com/cavaliergopher/grab/v3"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
@@ -27,18 +28,20 @@ type FStore struct {
 func New(log zerolog.Logger, store blockless.FunctionStore, workdir string) *FStore {
 
 	// Create an HTTP client.
-	cli := http.Client{
-		Timeout: defaultTimeout,
+	cli := &http.Client{
+		Timeout:   defaultTimeout,
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
 
 	// Create a download client.
 	downloader := grab.NewClient()
 	downloader.UserAgent = defaultUserAgent
+	downloader.HTTPClient = cli
 
 	h := FStore{
 		log:        log.With().Str("component", "fstore").Logger(),
 		store:      store,
-		http:       &cli,
+		http:       cli,
 		downloader: downloader,
 		workdir:    workdir,
 		tracer:     otel.Tracer(tracerName),

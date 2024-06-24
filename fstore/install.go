@@ -39,7 +39,7 @@ func (h *FStore) Install(ctx context.Context, address string, cid string) error 
 	}
 
 	// Download the function identified by the manifest.
-	functionPath, err := h.download(cid, manifest)
+	functionPath, err := h.download(ctx, cid, manifest)
 	if err != nil {
 		return fmt.Errorf("could not download function: %w", err)
 	}
@@ -81,12 +81,9 @@ func (h *FStore) Install(ctx context.Context, address string, cid string) error 
 }
 
 // Installed checks if the function with the given CID is installed.
-func (h *FStore) IsInstalled(ctx context.Context, cid string) (bool, error) {
+func (h *FStore) IsInstalled(cid string) (bool, error) {
 
-	ctx, span := h.tracer.Start(ctx, spanIsInstalled, trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(b7ssemconv.FunctionCID.String(fn.CID)))
-	defer span.End()
-
-	fn, err := h.getFunction(ctx, cid)
+	fn, err := h.getFunction(context.Background(), cid)
 	if err != nil && errors.Is(err, blockless.ErrNotFound) {
 		return false, nil
 	}

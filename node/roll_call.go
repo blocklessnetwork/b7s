@@ -54,7 +54,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.Ro
 	}
 
 	// Check if we have this function installed.
-	installed, err := n.fstore.Installed(ctx, req.FunctionID)
+	installed, err := n.fstore.IsInstalled(req.FunctionID)
 	if err != nil {
 		sendErr := n.send(ctx, req.Origin, &res)
 		if sendErr != nil {
