@@ -1,6 +1,7 @@
 package pbft
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -85,7 +86,7 @@ func (r *Replica) sendCommit(view uint, sequenceNo uint, digest string) error {
 	return nil
 }
 
-func (r *Replica) processCommit(replica peer.ID, commit Commit) error {
+func (r *Replica) processCommit(ctx context.Context, replica peer.ID, commit Commit) error {
 
 	log := r.log.With().Str("replica", replica.String()).Uint("view", commit.View).Uint("sequence_no", commit.SequenceNumber).Str("digest", commit.Digest).Logger()
 

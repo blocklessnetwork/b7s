@@ -1,12 +1,13 @@
 package pbft
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-func (r *Replica) startNewView(view uint) error {
+func (r *Replica) startNewView(ctx context.Context, view uint) error {
 
 	log := r.log.With().Uint("view", view).Logger()
 
@@ -104,7 +105,7 @@ func (r *Replica) startNewView(view uint) error {
 			continue
 		}
 
-		err = r.processRequest(request.Origin, request)
+		err = r.processRequest(ctx, request.Origin, request)
 		if err != nil {
 			r.log.Error().Err(err).Str("request", request.ID).Msg("could not process request")
 			// Log but continue.
@@ -215,7 +216,7 @@ func getPrepare(vcs map[peer.ID]ViewChange, sequenceNo uint) (PrepareInfo, bool)
 	return out, found
 }
 
-func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
+func (r *Replica) processNewView(ctx context.Context, replica peer.ID, newView NewView) error {
 
 	log := r.log.With().Str("replica", replica.String()).Uint("new_view", newView.View).Logger()
 
@@ -284,7 +285,7 @@ func (r *Replica) processNewView(replica peer.ID, newView NewView) error {
 
 	// Start processing preprepares.
 	for _, preprepare := range newView.PrePrepares {
-		err := r.processPrePrepare(replica, preprepare)
+		err := r.processPrePrepare(ctx, replica, preprepare)
 		if err != nil {
 			log.Error().Err(err).Uint("view", preprepare.View).Uint("sequence", preprepare.SequenceNumber).Msg("error processing preprepare message")
 			// Continue despite errors.

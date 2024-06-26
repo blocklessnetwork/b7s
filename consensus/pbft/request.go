@@ -1,6 +1,7 @@
 package pbft
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -8,7 +9,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
-func (r *Replica) processRequest(from peer.ID, req Request) error {
+func (r *Replica) processRequest(ctx context.Context, from peer.ID, req Request) error {
 
 	pub, err := req.Origin.ExtractPublicKey()
 	if err != nil {

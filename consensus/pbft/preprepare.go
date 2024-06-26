@@ -1,6 +1,7 @@
 package pbft
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -50,7 +51,7 @@ func (r *Replica) sendPrePrepare(req Request) error {
 }
 
 // Process a pre-prepare message. This should only happen on backup replicas.
-func (r *Replica) processPrePrepare(replica peer.ID, msg PrePrepare) error {
+func (r *Replica) processPrePrepare(ctx context.Context, replica peer.ID, msg PrePrepare) error {
 
 	if r.isPrimary() {
 		r.log.Warn().Msg("primary replica received a pre-prepare, dropping")

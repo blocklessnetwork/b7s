@@ -1,6 +1,7 @@
 package pbft
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -59,7 +60,7 @@ func (r *Replica) recordPrepareReceipt(replica peer.ID, prepare Prepare) {
 	prepares.m[replica] = prepare
 }
 
-func (r *Replica) processPrepare(replica peer.ID, prepare Prepare) error {
+func (r *Replica) processPrepare(ctx context.Context, replica peer.ID, prepare Prepare) error {
 
 	log := r.log.With().Str("replica", replica.String()).Uint("view", prepare.View).Uint("sequence_no", prepare.SequenceNumber).Str("digest", prepare.Digest).Logger()
 

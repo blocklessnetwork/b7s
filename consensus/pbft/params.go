@@ -21,6 +21,8 @@ const (
 	RequestTimeout = 10 * time.Second
 
 	EnvVarByzantine = "B7S_PBFT_BYZANTINE"
+
+	tracerName = "b7s.PBFTCluster"
 )
 
 var (

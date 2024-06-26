@@ -27,7 +27,10 @@ func (r *Replica) Execute(client peer.ID, requestID string, timestamp time.Time,
 		Execute:   req,
 	}
 
-	err := r.processRequest(client, request)
+	// TODO: Fix this code path.
+	ctx := context.Background()
+
+	err := r.processRequest(ctx, client, request)
 	if err != nil {
 		return codes.Error, execute.Result{}, fmt.Errorf("could not process request: %w", err)
 	}
