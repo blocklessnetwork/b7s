@@ -40,7 +40,7 @@ func (r *Replica) Execute(client peer.ID, requestID string, timestamp time.Time,
 }
 
 // execute executes the request AND sends the result back to origin.
-func (r *Replica) execute(view uint, sequence uint, digest string) error {
+func (r *Replica) execute(ctx context.Context, view uint, sequence uint, digest string) error {
 
 	// Sanity check, should not happen.
 	request, ok := r.requests[digest]
@@ -74,8 +74,7 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 
 	log.Info().Msg("executing request")
 
-	// TODO: Reconsider this context handling.
-	res, err := r.executor.ExecuteFunction(context.TODO(), request.ID, request.Execute)
+	res, err := r.executor.ExecuteFunction(ctx, request.ID, request.Execute)
 	if err != nil {
 		log.Error().Err(err).Msg("execution failed")
 	}
@@ -118,7 +117,7 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 		return fmt.Errorf("could not sign execution request: %w", err)
 	}
 
-	err = r.send(request.Origin, msg, blockless.ProtocolID)
+	err = r.send(ctx, request.Origin, &msg, blockless.ProtocolID)
 	if err != nil {
 		return fmt.Errorf("could not send execution response to node (target: %s, request: %s): %w", request.Origin.String(), request.ID, err)
 	}

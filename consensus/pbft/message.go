@@ -10,6 +10,18 @@ import (
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
+type TraceableMessage interface {
+	SaveTraceContext(t tracing.TraceInfo)
+}
+
+type BaseMessage struct {
+	tracing.TraceInfo
+}
+
+func (m *BaseMessage) SaveTraceContext(t tracing.TraceInfo) {
+	m.TraceInfo = t
+}
+
 // JSON encoding related code is in serialization.go
 // Signature related code is in message_signature.go
 
@@ -42,7 +54,7 @@ func (m MessageType) String() string {
 }
 
 type Request struct {
-	tracing.TraceInfo
+	BaseMessage
 	ID        string          `json:"id"`
 	Timestamp time.Time       `json:"timestamp"`
 	Origin    peer.ID         `json:"origin"`
@@ -50,7 +62,7 @@ type Request struct {
 }
 
 type PrePrepare struct {
-	tracing.TraceInfo
+	BaseMessage
 	View           uint    `json:"view"`
 	SequenceNumber uint    `json:"sequence_number"`
 	Digest         string  `json:"digest"`
@@ -61,7 +73,7 @@ type PrePrepare struct {
 }
 
 type Prepare struct {
-	tracing.TraceInfo
+	BaseMessage
 	View           uint   `json:"view"`
 	SequenceNumber uint   `json:"sequence_number"`
 	Digest         string `json:"digest"`
@@ -71,7 +83,7 @@ type Prepare struct {
 }
 
 type Commit struct {
-	tracing.TraceInfo
+	BaseMessage
 	View           uint   `json:"view"`
 	SequenceNumber uint   `json:"sequence_number"`
 	Digest         string `json:"digest"`
@@ -81,7 +93,7 @@ type Commit struct {
 }
 
 type ViewChange struct {
-	tracing.TraceInfo
+	BaseMessage
 	View     uint          `json:"view"`
 	Prepares []PrepareInfo `json:"prepares"`
 
@@ -101,7 +113,7 @@ type PrepareInfo struct {
 	Prepares       map[peer.ID]Prepare `json:"prepares"`
 }
 type NewView struct {
-	tracing.TraceInfo
+	BaseMessage
 	View        uint                   `json:"view"`
 	Messages    map[peer.ID]ViewChange `json:"messages"`
 	PrePrepares []PrePrepare           `json:"preprepares"`

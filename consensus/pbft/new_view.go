@@ -65,7 +65,7 @@ func (r *Replica) startNewView(ctx context.Context, view uint) error {
 		return fmt.Errorf("could not sign the new view message: %w", err)
 	}
 
-	err = r.broadcast(newView)
+	err = r.broadcast(ctx, &newView)
 	if err != nil {
 		return fmt.Errorf("could not broadcast new-view message (view: %v): %w", view, err)
 	}

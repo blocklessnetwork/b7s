@@ -15,6 +15,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
 	"github.com/blocklessnetwork/b7s/models/response"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // consensusExecutor defines the interface we have for managing clustered execution.
@@ -96,6 +97,7 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 		fc.Peers,
 		fc.RequestID,
 		pbft.WithPostProcessors(cacheFn),
+		pbft.WithTraceInfo(tracing.GetTraceInfo(ctx)),
 	)
 	if err != nil {
 		return fmt.Errorf("could not create PBFT node: %w", err)

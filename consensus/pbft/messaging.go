@@ -12,7 +12,10 @@ import (
 	"github.com/libp2p/go-libp2p/core/protocol"
 )
 
-func (r *Replica) send(to peer.ID, msg interface{}, protocol protocol.ID) error {
+func (r *Replica) send(ctx context.Context, to peer.ID, msg TraceableMessage, protocol protocol.ID) error {
+
+	// TODO: start new span here.
+	saveTraceContext(ctx, msg)
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -21,7 +24,7 @@ func (r *Replica) send(to peer.ID, msg interface{}, protocol protocol.ID) error 
 	}
 
 	// We don't want to wait indefinitely.
-	ctx, cancel := context.WithTimeout(context.Background(), r.cfg.NetworkTimeout)
+	ctx, cancel := context.WithTimeout(ctx, r.cfg.NetworkTimeout)
 	defer cancel()
 
 	// Send message.
@@ -34,7 +37,10 @@ func (r *Replica) send(to peer.ID, msg interface{}, protocol protocol.ID) error 
 }
 
 // broadcast sends message to all peers in the replica set.
-func (r *Replica) broadcast(msg interface{}) error {
+func (r *Replica) broadcast(ctx context.Context, msg TraceableMessage) error {
+
+	// TODO: start new span here.
+	saveTraceContext(ctx, msg)
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)

@@ -28,5 +28,9 @@ func TraceContextFromMessage(ctx context.Context, payload []byte) (context.Conte
 		return ctx, fmt.Errorf("could not extract trace info from context: %w", err)
 	}
 
-	return otel.GetTextMapPropagator().Extract(ctx, traceInfo.Carrier), nil
+	return TraceContext(ctx, traceInfo), nil
+}
+
+func TraceContext(ctx context.Context, t TraceInfo) context.Context {
+	return otel.GetTextMapPropagator().Extract(ctx, t.Carrier)
 }

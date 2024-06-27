@@ -67,12 +67,12 @@ func (c *msgSpanConfig) peer(id peer.ID) *msgSpanConfig {
 	return c
 }
 
-func (c *msgSpanConfig) peers(id ...peer.ID) *msgSpanConfig {
+func (c *msgSpanConfig) peers(ids ...peer.ID) *msgSpanConfig {
 	if c.receivers == nil {
-		c.receivers = make([]peer.ID, 0, 1)
+		c.receivers = make([]peer.ID, 0, len(ids))
 	}
 
-	c.receivers = append(c.receivers, id...)
+	c.receivers = append(c.receivers, ids...)
 	return c
 }
 

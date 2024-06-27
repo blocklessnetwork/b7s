@@ -7,7 +7,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-func (r *Replica) sendPrePrepare(req Request) error {
+func (r *Replica) sendPrePrepare(ctx context.Context, req Request) error {
 
 	// Only primary replica can send pre-prepares.
 	if !r.isPrimary() {
@@ -37,7 +37,7 @@ func (r *Replica) sendPrePrepare(req Request) error {
 
 	log.Info().Msg("broadcasting pre-prepare message")
 
-	err = r.broadcast(msg)
+	err = r.broadcast(ctx, &msg)
 	if err != nil {
 		return fmt.Errorf("could not broadcast pre-prepare message: %w", err)
 	}
@@ -103,14 +103,14 @@ func (r *Replica) processPrePrepare(ctx context.Context, replica peer.ID, msg Pr
 	log.Info().Msg("processed pre-prepare")
 
 	// Broadcast prepare message.
-	err = r.sendPrepare(msg)
+	err = r.sendPrepare(ctx, msg)
 	if err != nil {
 		return fmt.Errorf("could not send prepare message: %w", err)
 	}
 
 	// There's a possibility our prepare was the one that pushes us into the quorum
 	// and we now have the commit condition achieved.
-	return r.maybeSendCommit(msg.View, msg.SequenceNumber, msg.Digest)
+	return r.maybeSendCommit(ctx, msg.View, msg.SequenceNumber, msg.Digest)
 }
 
 func (r *Replica) conflictingPrePrepare(preprepare PrePrepare) bool {

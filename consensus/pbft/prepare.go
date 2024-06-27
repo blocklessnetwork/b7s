@@ -9,7 +9,7 @@ import (
 
 // Send a prepare message. Naturally this is only sent by the non-primary replicas,
 // as a response to a pre-prepare message.
-func (r *Replica) sendPrepare(preprepare PrePrepare) error {
+func (r *Replica) sendPrepare(ctx context.Context, preprepare PrePrepare) error {
 
 	msg := Prepare{
 		View:           preprepare.View,
@@ -26,7 +26,7 @@ func (r *Replica) sendPrepare(preprepare PrePrepare) error {
 		return fmt.Errorf("could not sign prepare message: %w", err)
 	}
 
-	err = r.broadcast(msg)
+	err = r.broadcast(ctx, &msg)
 	if err != nil {
 		return fmt.Errorf("could not broadcast prepare message: %w", err)
 	}
@@ -84,5 +84,5 @@ func (r *Replica) processPrepare(ctx context.Context, replica peer.ID, prepare P
 
 	log.Info().Msg("processed prepare message")
 
-	return r.maybeSendCommit(prepare.View, prepare.SequenceNumber, prepare.Digest)
+	return r.maybeSendCommit(ctx, prepare.View, prepare.SequenceNumber, prepare.Digest)
 }

@@ -32,7 +32,7 @@ func (r *Replica) processRequest(ctx context.Context, from peer.ID, req Request)
 	if ok {
 		log.Info().Msg("request already executed, sending result to client")
 
-		err := r.send(req.Origin, result, blockless.ProtocolID)
+		err := r.send(ctx, req.Origin, &result, blockless.ProtocolID)
 		if err != nil {
 			return fmt.Errorf("could not send execution result back to client (request: %s, client: %s): %w", req.ID, req.Origin.String(), err)
 		}
@@ -67,7 +67,7 @@ func (r *Replica) processRequest(ctx context.Context, from peer.ID, req Request)
 	r.pending[digest] = req
 
 	// Broadcast a pre-prepare message.
-	err = r.sendPrePrepare(req)
+	err = r.sendPrePrepare(ctx, req)
 	if err != nil {
 		return fmt.Errorf("could not broadcast pre-prepare message (request: %v): %w", req.ID, err)
 	}

@@ -116,6 +116,9 @@ func (r *Replica) setPBFTMessageHandler() {
 		pm[peer] = struct{}{}
 	}
 
+	// Set the root span for this PBFT cluster.
+	ctx := tracing.TraceContext(context.Background(), r.cfg.TraceInfo)
+
 	r.host.Host.SetStreamHandler(r.protocolID, func(stream network.Stream) {
 		defer stream.Close()
 
@@ -138,14 +141,14 @@ func (r *Replica) setPBFTMessageHandler() {
 
 		r.log.Debug().Str("peer", from.String()).Msg("received message")
 
-		err = r.processMessage(from, msg)
+		err = r.processMessage(ctx, from, msg)
 		if err != nil {
 			r.log.Error().Err(err).Str("peer", from.String()).Msg("message processing failed")
 		}
 	})
 }
 
-func (r *Replica) processMessage(from peer.ID, payload []byte) error {
+func (r *Replica) processMessage(ctx context.Context, from peer.ID, payload []byte) error {
 
 	// If we're acting as a byzantine replica, just don't do anything.
 	// At this point we're not trying any elaborate sus behavior.
@@ -154,7 +157,7 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 	}
 
 	// TODO: Inefficient because we'll do double-unmarshalling here and below, but we can optiimize later.
-	ctx, _ := tracing.TraceContextFromMessage(context.Background(), payload)
+	ctx, _ = tracing.TraceContextFromMessage(ctx, payload)
 
 	msg, err := unpackMessage(payload)
 	if err != nil {
