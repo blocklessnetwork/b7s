@@ -1,7 +1,6 @@
 package pbft
 
 import (
-	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -71,7 +70,7 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 
 	log.Info().Msg("executing request")
 
-	res, err := r.executor.ExecuteFunction(request.ID, request.Execute)
+	res, meta, err := r.executor.ExecuteFunction(request.ID, request.Execute)
 	if err != nil {
 		log.Error().Err(err).Msg("execution failed")
 	}
@@ -92,14 +91,13 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 		Code:      res.Code,
 		RequestID: request.ID,
 		Results: execute.ResultMap{
-			r.id: res,
+			r.id: execute.NodeExecutionResult{Result: res, Metadata: meta},
 		},
 		PBFT: response.PBFTResultInfo{
 			View:             r.view,
 			RequestTimestamp: request.Timestamp,
 			Replica:          r.id,
 		},
-		Signature: hex.EncodeToString(res.Signature),
 	}
 
 	// Save this executions in case it's requested again.
