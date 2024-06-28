@@ -12,11 +12,15 @@ import (
 // Result describes an execution result.
 type Result struct {
 	Code      codes.Code    `json:"code"`
-	Result    RuntimeOutput `json:"result"`
+	Output    RuntimeOutput `json:"output"`
 	RequestID string        `json:"request_id"`
 	Usage     Usage         `json:"usage,omitempty"`
-	Signature []byte        `json:"signature,omitempty"`
-	Metadata  interface{}   `json:"metadata,omitempty"`
+}
+
+// NodeExecutionResult describes
+type NodeExecutionResult struct {
+	Result   `json:"execution_result"`
+	Metadata any `json:"metadata,omitempty"`
 }
 
 // Cluster represents the set of peers that executed the request.
@@ -42,7 +46,7 @@ type Usage struct {
 }
 
 // ResultMap contains execution results from multiple peers.
-type ResultMap map[peer.ID]Result
+type ResultMap map[peer.ID]NodeExecutionResult
 
 // MarshalJSON provides means to correctly handle JSON serialization/deserialization.
 // See:
@@ -51,7 +55,7 @@ type ResultMap map[peer.ID]Result
 //	https://github.com/libp2p/go-libp2p-resource-manager/pull/67#issuecomment-1176820561
 func (m ResultMap) MarshalJSON() ([]byte, error) {
 
-	em := make(map[string]Result, len(m))
+	em := make(map[string]NodeExecutionResult, len(m))
 	for p, v := range m {
 		em[p.String()] = v
 	}
