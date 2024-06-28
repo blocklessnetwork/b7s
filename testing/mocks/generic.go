@@ -33,7 +33,7 @@ var (
 
 	GenericExecutionResult = execute.Result{
 		Code: codes.Unknown,
-		Result: execute.RuntimeOutput{
+		Output: execute.RuntimeOutput{
 			Stdout:   "generic-execution-result",
 			Stderr:   "generic-execution-log",
 			ExitCode: 0,
