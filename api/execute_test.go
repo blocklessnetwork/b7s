@@ -19,7 +19,7 @@ import (
 func TestAPI_Execute(t *testing.T) {
 
 	executionResult := execute.Result{
-		Result: execute.RuntimeOutput{
+		Output: execute.RuntimeOutput{
 			Stdout:   "dummy-failed-execution-result",
 			Stderr:   "dummy-failed-execution-log",
 			ExitCode: 0,
@@ -34,7 +34,7 @@ func TestAPI_Execute(t *testing.T) {
 	node.ExecuteFunctionFunc = func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 
 		res := execute.ResultMap{
-			mocks.GenericPeerID: executionResult,
+			mocks.GenericPeerID: execute.NodeExecutionResult{Result: executionResult},
 		}
 
 		cluster := execute.Cluster{
@@ -65,7 +65,7 @@ func TestAPI_Execute(t *testing.T) {
 	require.Equal(t, res.Cluster.Peers, peerIDs)
 
 	require.Len(t, res.Results, 1)
-	require.Equal(t, executionResult.Result, res.Results[0].Result)
+	require.Equal(t, executionResult.Output, res.Results[0].Result)
 	require.Equal(t, float64(100), res.Results[0].Frequency)
 	require.Equal(t, peerIDs, res.Results[0].Peers)
 
@@ -75,7 +75,7 @@ func TestAPI_Execute(t *testing.T) {
 func TestAPI_Execute_HandlesErrors(t *testing.T) {
 
 	executionResult := execute.Result{
-		Result: execute.RuntimeOutput{
+		Output: execute.RuntimeOutput{
 			Stdout:   "dummy-failed-execution-result",
 			Stderr:   "dummy-failed-execution-log",
 			ExitCode: 1,
@@ -88,7 +88,7 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 	node.ExecuteFunctionFunc = func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 
 		res := execute.ResultMap{
-			mocks.GenericPeerID: executionResult,
+			mocks.GenericPeerID: execute.NodeExecutionResult{Result: executionResult},
 		}
 
 		return expectedCode, "", res, execute.Cluster{}, mocks.GenericError
@@ -112,7 +112,7 @@ func TestAPI_Execute_HandlesErrors(t *testing.T) {
 	require.Equal(t, expectedCode.String(), res.Code)
 
 	require.Len(t, res.Results, 1)
-	require.Equal(t, executionResult.Result, res.Results[0].Result)
+	require.Equal(t, executionResult.Output, res.Results[0].Result)
 	require.Equal(t, float64(100), res.Results[0].Frequency)
 	require.Len(t, res.Results[0].Peers, 1)
 	require.Equal(t, mocks.GenericPeerID, res.Results[0].Peers[0])
