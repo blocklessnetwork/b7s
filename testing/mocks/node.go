@@ -22,7 +22,7 @@ func BaselineNode(t *testing.T) *Node {
 		ExecuteFunctionFunc: func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 
 			results := execute.ResultMap{
-				GenericPeerID: GenericExecutionResult,
+				GenericPeerID: execute.NodeExecutionResult{Result: GenericExecutionResult},
 			}
 
 			// TODO: Add a generic cluster info

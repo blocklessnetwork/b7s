@@ -17,7 +17,7 @@ func TestExecute_Signing(t *testing.T) {
 		RequestID: mocks.GenericUUID.String(),
 		Code:      codes.OK,
 		Results: execute.ResultMap{
-			mocks.GenericPeerID: mocks.GenericExecutionResult,
+			mocks.GenericPeerID: execute.NodeExecutionResult{Result: mocks.GenericExecutionResult},
 		},
 		Cluster: execute.Cluster{
 			Peers: mocks.GenericPeerIDs[:4],

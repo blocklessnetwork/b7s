@@ -49,7 +49,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 		// Use a custom executor to verify all execution parameters are correct.
 		executor := mocks.BaselineExecutor(t)
-		executor.ExecFunctionFunc = func(reqID string, req execute.Request) (execute.Result, error) {
+		executor.ExecFunctionFunc = func(reqID string, req execute.Request) (execute.Result, any, error) {
 			require.NotEmpty(t, reqID)
 			require.Equal(t, requestID, reqID)
 			require.Equal(t, executionRequest.FunctionID, req.FunctionID)
@@ -61,7 +61,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 			res := mocks.GenericExecutionResult
 			res.RequestID = outRequestID
 
-			return res, nil
+			return res, nil, nil
 		}
 		node.executor = executor
 
@@ -89,7 +89,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 			require.Equal(t, outRequestID, received.RequestID)
 			require.Equal(t, expected.Code, received.Code)
 
-			require.Equal(t, expected.Result, received.Results[node.host.ID()].Result)
+			require.Equal(t, expected.Output, received.Results[node.host.ID()].Result.Output)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), executionRequest)
@@ -103,7 +103,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		var (
 			faultyExecutionResult = execute.Result{
 				Code: codes.Error,
-				Result: execute.RuntimeOutput{
+				Output: execute.RuntimeOutput{
 					Stdout:   "something horrible has happened",
 					Stderr:   "log of something horrible",
 					ExitCode: 1,
@@ -117,13 +117,13 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 		// Use a custom executor to verify all execution parameters are correct.
 		executor := mocks.BaselineExecutor(t)
-		executor.ExecFunctionFunc = func(reqID string, req execute.Request) (execute.Result, error) {
+		executor.ExecFunctionFunc = func(reqID string, req execute.Request) (execute.Result, any, error) {
 			requestID = reqID
 
 			out := faultyExecutionResult
 			out.RequestID = reqID
 
-			return out, mocks.GenericError
+			return out, nil, mocks.GenericError
 		}
 		node.executor = executor
 
@@ -148,7 +148,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			require.Equal(t, received.RequestID, requestID)
 			require.Equal(t, faultyExecutionResult.Code, received.Code)
-			require.Equal(t, faultyExecutionResult.Result, received.Results[node.host.ID()].Result)
+			require.Equal(t, faultyExecutionResult.Output, received.Results[node.host.ID()].Result.Output)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), executionRequest)
@@ -334,10 +334,12 @@ func TestNode_HeadExecute(t *testing.T) {
 			res := response.Execute{
 				Code:      codes.OK,
 				RequestID: requestID,
-				Results: map[peer.ID]execute.Result{
+				Results: map[peer.ID]execute.NodeExecutionResult{
 					mockWorker.Host.ID(): {
-						Code:   codes.OK,
-						Result: executionResult,
+						Result: execute.Result{
+							Code:   codes.OK,
+							Output: executionResult,
+						},
 					},
 				},
 			}
