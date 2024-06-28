@@ -30,7 +30,7 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 		wg    sync.WaitGroup
 
 		results                   = make(map[string]aggregatedResult)
-		out     execute.ResultMap = make(map[peer.ID]execute.Result)
+		out     execute.ResultMap = make(map[peer.ID]execute.NodeExecutionResult)
 	)
 
 	wg.Add(len(peers))
@@ -74,7 +74,7 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 			result, ok := results[reskey]
 			if !ok {
 				results[reskey] = aggregatedResult{
-					result: exres,
+					result: exres.Result,
 					peers: []peer.ID{
 						sender,
 					},
@@ -88,7 +88,7 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 				exCancel()
 
 				for _, peer := range result.peers {
-					out[peer] = result.result
+					out[peer] = execute.NodeExecutionResult{Result: result.result}
 				}
 			}
 		}(rp)
@@ -107,7 +107,7 @@ func (n *Node) gatherExecutionResults(ctx context.Context, requestID string, pee
 	defer exCancel()
 
 	var (
-		results execute.ResultMap = make(map[peer.ID]execute.Result)
+		results execute.ResultMap = make(map[peer.ID]execute.NodeExecutionResult)
 		reslock sync.Mutex
 		wg      sync.WaitGroup
 	)
