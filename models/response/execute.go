@@ -35,6 +35,16 @@ type Execute struct {
 
 type ExecutionResultMap map[peer.ID]ExecutionResult
 
+func (m ExecutionResultMap) MarshalJSON() ([]byte, error) {
+
+	em := make(map[string]ExecutionResult, len(m))
+	for p, v := range m {
+		em[p.String()] = v
+	}
+
+	return json.Marshal(em)
+}
+
 type ExecutionResult struct {
 	execute.Result
 	Metadata metadata.Metadata `json:"metadata,omitempty"`

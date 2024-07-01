@@ -10,30 +10,17 @@ import (
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
-type Results []Result
-
-// Result represents the execution result along with its aggregation stats.
-type Result struct {
-	Result execute.RuntimeOutput `json:"result,omitempty"`
-	// Peers that got this result.
-	Peers []peer.ID `json:"peers,omitempty"`
-	// Peers metadata
-	Metadata map[peer.ID]metadata.Metadata `json:"metadata,omitempty"`
-	// How frequent was this result, in percentages.
-	Frequency float64 `json:"frequency,omitempty"`
-}
-
-type resultStats struct {
-	seen     uint
-	peers    []peer.ID
-	metadata map[peer.ID]metadata.Metadata
-}
-
 func Aggregate(results response.ExecutionResultMap) Results {
 
 	total := len(results)
 	if total == 0 {
 		return nil
+	}
+
+	type resultStats struct {
+		seen     uint
+		peers    []peer.ID
+		metadata map[peer.ID]metadata.Metadata
 	}
 
 	stats := make(map[execute.RuntimeOutput]resultStats)
@@ -44,7 +31,7 @@ func Aggregate(results response.ExecutionResultMap) Results {
 
 		stat, ok := stats[output]
 		if !ok {
-			stats[output] = resultStats{
+			stat = resultStats{
 				seen:     0,
 				peers:    make([]peer.ID, 0),
 				metadata: make(map[peer.ID]metadata.Metadata),
@@ -53,7 +40,11 @@ func Aggregate(results response.ExecutionResultMap) Results {
 
 		stat.seen++
 		stat.peers = append(stat.peers, executingPeer)
-		stat.metadata[executingPeer] = res.Metadata
+		if res.Metadata != nil {
+			stat.metadata[executingPeer] = res.Metadata
+		}
+
+		stats[output] = stat
 	}
 
 	// Convert map of results to a slice.

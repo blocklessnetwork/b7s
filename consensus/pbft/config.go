@@ -51,8 +51,8 @@ func WithPostProcessors(callbacks ...PostProcessFunc) Option {
 	}
 }
 
-// WithMetaProvider sets the metadata provider for the node.
-func WithMetaProvider(p metadata.Provider) Option {
+// WithMetadataProvider sets the metadata provider for the node.
+func WithMetadataProvider(p metadata.Provider) Option {
 	return func(cfg *Config) {
 		cfg.MetadataProvider = p
 	}
