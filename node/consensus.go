@@ -104,7 +104,7 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 		fc.Peers,
 		fc.RequestID,
 		pbft.WithPostProcessors(cacheFn),
-		pbft.WithMetaProvider(n.cfg.MetadataProvider),
+		pbft.WithMetadataProvider(n.cfg.MetadataProvider),
 	)
 	if err != nil {
 		return fmt.Errorf("could not create PBFT node: %w", err)
