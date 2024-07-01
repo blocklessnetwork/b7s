@@ -20,8 +20,9 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 	defer exCancel()
 
 	type aggregatedResult struct {
-		result execute.Result
-		peers  []peer.ID
+		result   execute.Result
+		peers    []peer.ID
+		metadata map[peer.ID]any
 	}
 
 	var (
@@ -30,7 +31,7 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 		wg    sync.WaitGroup
 
 		results                   = make(map[string]aggregatedResult)
-		out     execute.ResultMap = make(map[peer.ID]execute.Result)
+		out     execute.ResultMap = make(map[peer.ID]execute.NodeResult)
 	)
 
 	wg.Add(len(peers))
@@ -69,26 +70,35 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 			lock.Lock()
 			defer lock.Unlock()
 
-			// Equality means same result and same timestamp.
-			reskey := fmt.Sprintf("%+#v-%s", exres.Result, er.PBFT.RequestTimestamp.String())
+			// Equality means same result (output) and same timestamp.
+			reskey := fmt.Sprintf("%+#v-%s", exres.Result.Result, er.PBFT.RequestTimestamp.String())
 			result, ok := results[reskey]
 			if !ok {
 				results[reskey] = aggregatedResult{
-					result: exres,
+					result: exres.Result,
 					peers: []peer.ID{
 						sender,
+					},
+					metadata: map[peer.ID]any{
+						sender: exres.Metadata,
 					},
 				}
 				return
 			}
 
+			// Record which peers have this result, and their metadata.
 			result.peers = append(result.peers, sender)
+			result.metadata[sender] = exres.Metadata
+
 			if uint(len(result.peers)) >= count {
 				n.log.Info().Str("request", requestID).Int("peers", len(peers)).Uint("matching_results", count).Msg("have enough matching results")
 				exCancel()
 
 				for _, peer := range result.peers {
-					out[peer] = result.result
+					out[peer] = execute.NodeResult{
+						Result:   result.result,
+						Metadata: result.metadata[peer],
+					}
 				}
 			}
 		}(rp)
@@ -107,7 +117,7 @@ func (n *Node) gatherExecutionResults(ctx context.Context, requestID string, pee
 	defer exCancel()
 
 	var (
-		results execute.ResultMap = make(map[peer.ID]execute.Result)
+		results execute.ResultMap = make(map[peer.ID]execute.NodeResult)
 		reslock sync.Mutex
 		wg      sync.WaitGroup
 	)

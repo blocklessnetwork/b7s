@@ -180,7 +180,7 @@ This is the end of my program
 
 		require.Equal(t, codes.OK, res.Code)
 		require.NotEmpty(t, res.RequestID)
-		require.Equal(t, expectedExecutionResult, res.Results[worker.host.ID()].Result.Stdout)
+		require.Equal(t, expectedExecutionResult, res.Results[worker.host.ID()].Result.Result.Stdout)
 
 		t.Log("client verified execution response")
 

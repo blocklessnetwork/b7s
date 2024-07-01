@@ -35,6 +35,11 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 		return nil
 	}
 
+	metadata, err := n.cfg.MetadataProvider.Metadata(req.Request, result.Result)
+	if err != nil {
+		log.Error().Err(err).Msg("could not get metadata for the execution result")
+	}
+
 	log.Info().Str("code", code.String()).Msg("execution complete")
 
 	// Cache the execution result.
@@ -45,7 +50,10 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 		Code:      code,
 		RequestID: requestID,
 		Results: execute.ResultMap{
-			n.host.ID(): result,
+			n.host.ID(): execute.NodeResult{
+				Result:   result,
+				Metadata: metadata,
+			},
 		},
 	}
 
