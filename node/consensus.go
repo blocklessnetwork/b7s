@@ -46,8 +46,8 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 		msg := response.Execute{
 			Code:      res.Code,
 			RequestID: req.RequestID,
-			Results: response.ExecutionResultMap{
-				n.host.ID(): response.ExecutionResult{
+			Results: execute.ResultMap{
+				n.host.ID(): execute.NodeResult{
 					Result:   res,
 					Metadata: metadata,
 				},

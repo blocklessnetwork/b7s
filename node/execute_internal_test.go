@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/network"
-	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetwork/b7s/host"
@@ -88,7 +87,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 			require.Equal(t, outRequestID, received.RequestID)
 			require.Equal(t, expected.Code, received.Code)
 
-			require.Equal(t, expected.Result, received.Results[node.host.ID()].Result)
+			require.Equal(t, expected.Result, received.Results[node.host.ID()].Result.Result)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), executionRequest)
@@ -146,7 +145,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			require.Equal(t, received.RequestID, requestID)
 			require.Equal(t, faultyExecutionResult.Code, received.Code)
-			require.Equal(t, faultyExecutionResult.Result, received.Results[node.host.ID()].Result)
+			require.Equal(t, faultyExecutionResult.Result, received.Results[node.host.ID()].Result.Result)
 		})
 
 		err = node.processExecute(context.Background(), receiver.ID(), executionRequest)
@@ -332,10 +331,12 @@ func TestNode_HeadExecute(t *testing.T) {
 			res := response.Execute{
 				Code:      codes.OK,
 				RequestID: requestID,
-				Results: map[peer.ID]execute.Result{
+				Results: execute.ResultMap{
 					mockWorker.Host.ID(): {
-						Code:   codes.OK,
-						Result: executionResult,
+						Result: execute.Result{
+							Code:   codes.OK,
+							Result: executionResult,
+						},
 					},
 				},
 			}

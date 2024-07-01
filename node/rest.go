@@ -8,11 +8,10 @@ import (
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 // ExecuteFunction can be used to start function execution. At the moment this is used by the API server to start execution on the head node.
-func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request, subgroup string) (codes.Code, string, response.ExecutionResultMap, execute.Cluster, error) {
+func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request, subgroup string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 
 	if !n.isHead() {
 		return codes.NotAvailable, "", nil, execute.Cluster{}, fmt.Errorf("action not supported on this node type")

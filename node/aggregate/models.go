@@ -5,7 +5,6 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/metadata"
 	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
@@ -22,11 +21,11 @@ type Result struct {
 	Frequency float64 `json:"frequency,omitempty"`
 }
 
-type NodeMetadata map[peer.ID]metadata.Metadata
+type NodeMetadata map[peer.ID]any
 
 func (m NodeMetadata) MarshalJSON() ([]byte, error) {
 
-	em := make(map[string]metadata.Metadata, len(m))
+	em := make(map[string]any, len(m))
 	for p, v := range m {
 		em[p.String()] = v
 	}

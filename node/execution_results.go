@@ -9,13 +9,12 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/blocklessnetwork/b7s/consensus/pbft"
-	"github.com/blocklessnetwork/b7s/metadata"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 // gatherExecutionResultsPBFT collects execution results from a PBFT cluster. This means f+1 identical results.
-func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string, peers []peer.ID) response.ExecutionResultMap {
+func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string, peers []peer.ID) execute.ResultMap {
 
 	exctx, exCancel := context.WithTimeout(ctx, n.cfg.ExecutionTimeout)
 	defer exCancel()
@@ -23,7 +22,7 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 	type aggregatedResult struct {
 		result   execute.Result
 		peers    []peer.ID
-		metadata map[peer.ID]metadata.Metadata
+		metadata map[peer.ID]any
 	}
 
 	var (
@@ -31,8 +30,8 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 		lock  sync.Mutex
 		wg    sync.WaitGroup
 
-		results                             = make(map[string]aggregatedResult)
-		out     response.ExecutionResultMap = make(map[peer.ID]response.ExecutionResult)
+		results                   = make(map[string]aggregatedResult)
+		out     execute.ResultMap = make(map[peer.ID]execute.NodeResult)
 	)
 
 	wg.Add(len(peers))
@@ -80,7 +79,7 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 					peers: []peer.ID{
 						sender,
 					},
-					metadata: map[peer.ID]metadata.Metadata{
+					metadata: map[peer.ID]any{
 						sender: exres.Metadata,
 					},
 				}
@@ -96,7 +95,7 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 				exCancel()
 
 				for _, peer := range result.peers {
-					out[peer] = response.ExecutionResult{
+					out[peer] = execute.NodeResult{
 						Result:   result.result,
 						Metadata: result.metadata[peer],
 					}
@@ -111,14 +110,14 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 }
 
 // gatherExecutionResults collects execution results from direct executions or raft clusters.
-func (n *Node) gatherExecutionResults(ctx context.Context, requestID string, peers []peer.ID) response.ExecutionResultMap {
+func (n *Node) gatherExecutionResults(ctx context.Context, requestID string, peers []peer.ID) execute.ResultMap {
 
 	// We're willing to wait for a limited amount of time.
 	exctx, exCancel := context.WithTimeout(ctx, n.cfg.ExecutionTimeout)
 	defer exCancel()
 
 	var (
-		results response.ExecutionResultMap = make(map[peer.ID]response.ExecutionResult)
+		results execute.ResultMap = make(map[peer.ID]execute.NodeResult)
 		reslock sync.Mutex
 		wg      sync.WaitGroup
 	)

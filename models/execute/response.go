@@ -9,6 +9,12 @@ import (
 	"github.com/blocklessnetwork/b7s/models/codes"
 )
 
+// NodeResult is an annotated execution result.
+type NodeResult struct {
+	Result
+	Metadata any `json:"metadata,omitempty"`
+}
+
 // Result describes an execution result.
 type Result struct {
 	Code   codes.Code    `json:"code"`
@@ -39,7 +45,7 @@ type Usage struct {
 }
 
 // ResultMap contains execution results from multiple peers.
-type ResultMap map[peer.ID]Result
+type ResultMap map[peer.ID]NodeResult
 
 // MarshalJSON provides means to correctly handle JSON serialization/deserialization.
 // See:
@@ -48,7 +54,7 @@ type ResultMap map[peer.ID]Result
 //	https://github.com/libp2p/go-libp2p-resource-manager/pull/67#issuecomment-1176820561
 func (m ResultMap) MarshalJSON() ([]byte, error) {
 
-	em := make(map[string]Result, len(m))
+	em := make(map[string]NodeResult, len(m))
 	for p, v := range m {
 		em[p.String()] = v
 	}

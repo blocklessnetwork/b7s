@@ -95,8 +95,8 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 	msg := response.Execute{
 		Code:      res.Code,
 		RequestID: request.ID,
-		Results: response.ExecutionResultMap{
-			r.id: response.ExecutionResult{
+		Results: execute.ResultMap{
+			r.id: execute.NodeResult{
 				Result:   res,
 				Metadata: metadata,
 			},

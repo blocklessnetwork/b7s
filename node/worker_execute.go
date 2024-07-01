@@ -49,8 +49,8 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 	res := response.Execute{
 		Code:      code,
 		RequestID: requestID,
-		Results: response.ExecutionResultMap{
-			n.host.ID(): response.ExecutionResult{
+		Results: execute.ResultMap{
+			n.host.ID(): execute.NodeResult{
 				Result:   result,
 				Metadata: metadata,
 			},

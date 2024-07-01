@@ -5,12 +5,10 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/metadata"
 	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/models/response"
 )
 
-func Aggregate(results response.ExecutionResultMap) Results {
+func Aggregate(results execute.ResultMap) Results {
 
 	total := len(results)
 	if total == 0 {
@@ -20,7 +18,7 @@ func Aggregate(results response.ExecutionResultMap) Results {
 	type resultStats struct {
 		seen     uint
 		peers    []peer.ID
-		metadata map[peer.ID]metadata.Metadata
+		metadata map[peer.ID]any
 	}
 
 	stats := make(map[execute.RuntimeOutput]resultStats)
@@ -34,7 +32,7 @@ func Aggregate(results response.ExecutionResultMap) Results {
 			stat = resultStats{
 				seen:     0,
 				peers:    make([]peer.ID, 0),
-				metadata: make(map[peer.ID]metadata.Metadata),
+				metadata: make(map[peer.ID]any),
 			}
 		}
 
