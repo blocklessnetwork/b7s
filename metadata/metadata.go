@@ -11,7 +11,7 @@ type Provider interface {
 type noopProvider struct{}
 
 func (p noopProvider) Metadata(execute.Request, execute.RuntimeOutput) (any, error) {
-	return map[string]any{}, nil
+	return nil, nil
 }
 
 func NewNoopProvider() Provider {
