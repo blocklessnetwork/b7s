@@ -87,11 +87,19 @@ func (r *Replica) execute(view uint, sequence uint, digest string) error {
 
 	r.lastExecuted = sequence
 
+	metadata, err := r.cfg.MetadataProvider.Metadata(request.Execute, res.Result)
+	if err != nil {
+		log.Warn().Err(err).Msg("could not get metadata")
+	}
+
 	msg := response.Execute{
 		Code:      res.Code,
 		RequestID: request.ID,
-		Results: execute.ResultMap{
-			r.id: res,
+		Results: response.ExecutionResultMap{
+			r.id: response.ExecutionResult{
+				Result:   res,
+				Metadata: metadata,
+			},
 		},
 		PBFT: response.PBFTResultInfo{
 			View:             r.view,

@@ -5,7 +5,9 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetwork/b7s/metadata"
 	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 type Results []Result
@@ -15,16 +17,19 @@ type Result struct {
 	Result execute.RuntimeOutput `json:"result,omitempty"`
 	// Peers that got this result.
 	Peers []peer.ID `json:"peers,omitempty"`
+	// Peers metadata
+	Metadata map[peer.ID]metadata.Metadata `json:"metadata,omitempty"`
 	// How frequent was this result, in percentages.
 	Frequency float64 `json:"frequency,omitempty"`
 }
 
 type resultStats struct {
-	seen  uint
-	peers []peer.ID
+	seen     uint
+	peers    []peer.ID
+	metadata map[peer.ID]metadata.Metadata
 }
 
-func Aggregate(results execute.ResultMap) Results {
+func Aggregate(results response.ExecutionResultMap) Results {
 
 	total := len(results)
 	if total == 0 {
@@ -35,20 +40,20 @@ func Aggregate(results execute.ResultMap) Results {
 	for executingPeer, res := range results {
 
 		// NOTE: It might make sense to ignore stderr in comparison.
-		output := res.Result
+		output := res.Result.Result
 
 		stat, ok := stats[output]
 		if !ok {
 			stats[output] = resultStats{
-				seen:  0,
-				peers: make([]peer.ID, 0),
+				seen:     0,
+				peers:    make([]peer.ID, 0),
+				metadata: make(map[peer.ID]metadata.Metadata),
 			}
 		}
 
 		stat.seen++
 		stat.peers = append(stat.peers, executingPeer)
-
-		stats[output] = stat
+		stat.metadata[executingPeer] = res.Metadata
 	}
 
 	// Convert map of results to a slice.
@@ -59,6 +64,7 @@ func Aggregate(results execute.ResultMap) Results {
 			Result:    res,
 			Peers:     stat.peers,
 			Frequency: 100 * float64(stat.seen) / float64(total),
+			Metadata:  stat.metadata,
 		}
 
 		aggregated = append(aggregated, aggr)

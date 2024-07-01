@@ -38,7 +38,6 @@ var (
 			Stderr:   "generic-execution-log",
 			ExitCode: 0,
 		},
-		RequestID: GenericUUID.String(),
 	}
 
 	GenericExecutionRequest = execute.Request{

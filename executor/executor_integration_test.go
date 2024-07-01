@@ -87,7 +87,6 @@ func TestExecutor_Execute(t *testing.T) {
 
 	// Verify the execution result.
 	require.Equal(t, codes.OK, res.Code)
-	require.Equal(t, requestID, res.RequestID)
 	require.Equal(t, hash, res.Result.Stdout)
 
 	// Verify usage info - for now, only that they are non-zero.

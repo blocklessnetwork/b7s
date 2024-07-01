@@ -57,7 +57,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request
 
 // headExecute is called on the head node. The head node will publish a roll call and delegate an execution request to chosen nodes.
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
-func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request, subgroup string) (codes.Code, execute.ResultMap, execute.Cluster, error) {
+func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request, subgroup string) (codes.Code, response.ExecutionResultMap, execute.Cluster, error) {
 
 	nodeCount := -1
 	if req.Config.NodeCount >= 1 {
@@ -136,7 +136,7 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 
 	log.Debug().Msg("waiting for execution responses")
 
-	var results execute.ResultMap
+	var results response.ExecutionResultMap
 	if consensusAlgo == consensus.PBFT {
 		results = n.gatherExecutionResultsPBFT(ctx, requestID, reportingPeers)
 

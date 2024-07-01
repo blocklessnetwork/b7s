@@ -11,10 +11,9 @@ import (
 
 // Result describes an execution result.
 type Result struct {
-	Code      codes.Code    `json:"code"`
-	Result    RuntimeOutput `json:"result"`
-	RequestID string        `json:"request_id"`
-	Usage     Usage         `json:"usage,omitempty"`
+	Code   codes.Code    `json:"code"`
+	Result RuntimeOutput `json:"result"`
+	Usage  Usage         `json:"usage,omitempty"`
 }
 
 // Cluster represents the set of peers that executed the request.

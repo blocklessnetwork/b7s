@@ -5,6 +5,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blocklessnetwork/b7s/metadata"
 	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
@@ -15,14 +16,16 @@ type Option func(*Config)
 type PostProcessFunc func(requestID string, origin peer.ID, request execute.Request, result execute.Result)
 
 var DefaultConfig = Config{
-	NetworkTimeout: NetworkTimeout,
-	RequestTimeout: RequestTimeout,
+	NetworkTimeout:   NetworkTimeout,
+	RequestTimeout:   RequestTimeout,
+	MetadataProvider: metadata.NewNoopProvider(),
 }
 
 type Config struct {
-	PostProcessors []PostProcessFunc // Callback functions to be invoked after execution is done.
-	NetworkTimeout time.Duration
-	RequestTimeout time.Duration
+	PostProcessors   []PostProcessFunc // Callback functions to be invoked after execution is done.
+	NetworkTimeout   time.Duration
+	RequestTimeout   time.Duration
+	MetadataProvider metadata.Provider
 }
 
 // WithNetworkTimeout sets how much time we allow for message sending.
@@ -45,5 +48,12 @@ func WithPostProcessors(callbacks ...PostProcessFunc) Option {
 		var fns []PostProcessFunc
 		fns = append(fns, callbacks...)
 		cfg.PostProcessors = fns
+	}
+}
+
+// WithMetaProvider sets the metadata provider for the node.
+func WithMetaProvider(p metadata.Provider) Option {
+	return func(cfg *Config) {
+		cfg.MetadataProvider = p
 	}
 }

@@ -38,15 +38,23 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 		ctx, cancel := context.WithTimeout(context.Background(), consensusClusterSendTimeout)
 		defer cancel()
 
+		metadata, err := n.cfg.MetadataProvider.Metadata(req.Execute, res.Result)
+		if err != nil {
+			n.log.Warn().Err(err).Msg("could not get metadata")
+		}
+
 		msg := response.Execute{
 			Code:      res.Code,
 			RequestID: req.RequestID,
-			Results: execute.ResultMap{
-				n.host.ID(): res,
+			Results: response.ExecutionResultMap{
+				n.host.ID(): response.ExecutionResult{
+					Result:   res,
+					Metadata: metadata,
+				},
 			},
 		}
 
-		err := n.send(ctx, req.Origin, msg)
+		err = n.send(ctx, req.Origin, msg)
 		if err != nil {
 			n.log.Error().Err(err).Str("peer", req.Origin.String()).Msg("could not send execution result to node")
 		}

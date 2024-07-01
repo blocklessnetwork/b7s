@@ -59,7 +59,6 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 			outRequestID = reqID
 			res := mocks.GenericExecutionResult
-			res.RequestID = outRequestID
 
 			return res, nil
 		}
@@ -121,7 +120,6 @@ func TestNode_WorkerExecute(t *testing.T) {
 			requestID = reqID
 
 			out := faultyExecutionResult
-			out.RequestID = reqID
 
 			return out, mocks.GenericError
 		}
