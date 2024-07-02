@@ -10,6 +10,7 @@ type signable interface {
 func (p *PrePrepare) signableRecord() any {
 	cp := *p
 	cp.setSignature("")
+	cp.BaseMessage = BaseMessage{}
 	return cp
 }
 
@@ -25,6 +26,7 @@ func (p PrePrepare) getSignature() string {
 func (p *Prepare) signableRecord() any {
 	cp := *p
 	cp.setSignature("")
+	cp.BaseMessage = BaseMessage{}
 	return cp
 }
 
@@ -40,6 +42,7 @@ func (p Prepare) getSignature() string {
 func (c *Commit) signableRecord() any {
 	cp := *c
 	cp.setSignature("")
+	cp.BaseMessage = BaseMessage{}
 	return cp
 }
 
@@ -55,6 +58,7 @@ func (c Commit) getSignature() string {
 func (v *ViewChange) signableRecord() any {
 	cp := *v
 	cp.setSignature("")
+	cp.BaseMessage = BaseMessage{}
 	return cp
 }
 
@@ -70,6 +74,7 @@ func (v ViewChange) getSignature() string {
 func (v *NewView) signableRecord() any {
 	cp := *v
 	cp.setSignature("")
+	cp.BaseMessage = BaseMessage{}
 	return cp
 }
 

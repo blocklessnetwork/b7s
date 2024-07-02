@@ -55,9 +55,10 @@ type PBFTResultInfo struct {
 
 func (e *Execute) Sign(key crypto.PrivKey) error {
 
-	// Exclude signature and the `from` field from the signature.
 	cp := *e
+	// Exclude some of the fields from the signature.
 	cp.Signature = ""
+	cp.BaseMessage = blockless.BaseMessage{}
 
 	payload, err := json.Marshal(cp)
 	if err != nil {
@@ -75,9 +76,10 @@ func (e *Execute) Sign(key crypto.PrivKey) error {
 
 func (e Execute) VerifySignature(key crypto.PubKey) error {
 
-	// Exclude signature and the `from` field from the signature.
 	cp := e
+	// Exclude some of the fields from the signature.
 	cp.Signature = ""
+	cp.BaseMessage = blockless.BaseMessage{}
 
 	payload, err := json.Marshal(cp)
 	if err != nil {
