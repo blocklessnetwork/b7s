@@ -11,6 +11,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/response"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // Execute fullfils the consensus interface by inserting the request into the pipeline.
@@ -28,9 +29,7 @@ func (r *Replica) Execute(client peer.ID, requestID string, timestamp time.Time,
 	}
 
 	// TODO: Fix this code path.
-	ctx := context.Background()
-
-	err := r.processRequest(ctx, client, request)
+	err := r.processRequest(tracing.TraceContext(context.Background(), r.cfg.TraceInfo), client, request)
 	if err != nil {
 		return codes.Error, execute.Result{}, fmt.Errorf("could not process request: %w", err)
 	}

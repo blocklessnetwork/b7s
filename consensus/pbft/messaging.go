@@ -12,9 +12,11 @@ import (
 	"github.com/libp2p/go-libp2p/core/protocol"
 )
 
-func (r *Replica) send(ctx context.Context, to peer.ID, msg TraceableMessage, protocol protocol.ID) error {
+func (r *Replica) send(ctx context.Context, to peer.ID, msg any, protocol protocol.ID) error {
 
-	// TODO: start new span here.
+	ctx, span := r.tracer.Start(ctx, msgSendSpanName(msg, spanMessageSend))
+	defer span.End()
+
 	saveTraceContext(ctx, msg)
 
 	// Serialize the message.
@@ -37,9 +39,11 @@ func (r *Replica) send(ctx context.Context, to peer.ID, msg TraceableMessage, pr
 }
 
 // broadcast sends message to all peers in the replica set.
-func (r *Replica) broadcast(ctx context.Context, msg TraceableMessage) error {
+func (r *Replica) broadcast(ctx context.Context, msg any) error {
 
-	// TODO: start new span here.
+	ctx, span := r.tracer.Start(ctx, msgSendSpanName(msg, spanMessageBroadcast))
+	defer span.End()
+
 	saveTraceContext(ctx, msg)
 
 	// Serialize the message.

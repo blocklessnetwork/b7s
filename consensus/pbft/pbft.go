@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -19,6 +20,7 @@ import (
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
@@ -157,15 +159,17 @@ func (r *Replica) processMessage(ctx context.Context, from peer.ID, payload []by
 	}
 
 	// TODO: Inefficient because we'll do double-unmarshalling here and below, but we can optiimize later.
-	ctx, _ = tracing.TraceContextFromMessage(ctx, payload)
+	ti, ok := getTraceInfoFromMessage(payload)
+	if ok {
+		ctx = tracing.TraceContext(ctx, ti)
+	}
 
 	msg, err := unpackMessage(payload)
 	if err != nil {
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
-	name, opts := processMessageSpanOptions(from, msg)
-	ctx, span := r.tracer.Start(ctx, name, opts...)
+	ctx, span := r.tracer.Start(ctx, msgProcessSpanName(msg.Type()), trace.WithAttributes(b7ssemconv.MessagePeer.String(from.String())))
 	defer span.End()
 	// TODO: Span status.
 

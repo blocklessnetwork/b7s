@@ -10,6 +10,10 @@ import (
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
+type PBFTMessage interface {
+	Type() MessageType
+}
+
 type TraceableMessage interface {
 	SaveTraceContext(t tracing.TraceInfo)
 }
@@ -61,6 +65,10 @@ type Request struct {
 	Execute   execute.Request `json:"execute"`
 }
 
+func (r Request) Type() MessageType {
+	return MessageRequest
+}
+
 type PrePrepare struct {
 	BaseMessage
 	View           uint    `json:"view"`
@@ -70,6 +78,10 @@ type PrePrepare struct {
 
 	// Signed digest of the pre-prepare message.
 	Signature string `json:"signature,omitempty"`
+}
+
+func (p PrePrepare) Type() MessageType {
+	return MessagePrePrepare
 }
 
 type Prepare struct {
@@ -82,6 +94,10 @@ type Prepare struct {
 	Signature string `json:"signature,omitempty"`
 }
 
+func (p Prepare) Type() MessageType {
+	return MessagePrepare
+}
+
 type Commit struct {
 	BaseMessage
 	View           uint   `json:"view"`
@@ -90,6 +106,10 @@ type Commit struct {
 
 	// Signed digest of the commit message.
 	Signature string `json:"signature,omitempty"`
+}
+
+func (c Commit) Type() MessageType {
+	return MessageCommit
 }
 
 type ViewChange struct {
@@ -105,6 +125,10 @@ type ViewChange struct {
 	//  - C - 2f+1 checkpoint messages proving the correctness of s => see above
 }
 
+func (v ViewChange) Type() MessageType {
+	return MessageViewChange
+}
+
 type PrepareInfo struct {
 	View           uint                `json:"view"`
 	SequenceNumber uint                `json:"sequence_number"`
@@ -112,6 +136,7 @@ type PrepareInfo struct {
 	PrePrepare     PrePrepare          `json:"preprepare"`
 	Prepares       map[peer.ID]Prepare `json:"prepares"`
 }
+
 type NewView struct {
 	BaseMessage
 	View        uint                   `json:"view"`
@@ -120,4 +145,8 @@ type NewView struct {
 
 	// Signed digest of the new view message.
 	Signature string `json:"signature,omitempty"`
+}
+
+func (v NewView) Type() MessageType {
+	return MessageNewView
 }
