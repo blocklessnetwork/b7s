@@ -55,7 +55,7 @@ func New(log zerolog.Logger, options ...Option) (*Executor, error) {
 	}
 
 	e := Executor{
-		log:    log.With().Str("component", "executor").Logger(),
+		log:    log,
 		cfg:    cfg,
 		tracer: tracing.NewTracer(tracerName),
 	}

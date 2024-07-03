@@ -6,13 +6,14 @@ import (
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
+	otelcodes "go.opentelemetry.io/otel/codes"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // processMessage will determine which message was received and how to process it.
-func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline messagePipeline) error {
+func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline messagePipeline) (procError error) {
 
 	// Determine message type.
 	msgType, err := getMessageType(payload)
@@ -20,7 +21,6 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
-	// TODO: Span status
 	// TOOD: Consider other span options.
 	ctx, err = tracing.TraceContextFromMessage(ctx, payload)
 	if err != nil {
@@ -29,6 +29,20 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 
 	ctx, span := n.tracer.Start(ctx, msgProcessSpanName(msgType), msgProcessSpanOpts(from, msgType, pipeline)...)
 	defer span.End()
+	// NOTE: This function checks the named return error value in order to set the span status accordingly.
+	defer func() {
+		if procError == nil {
+			span.SetStatus(otelcodes.Ok, spanStatusOK)
+			return
+		}
+
+		if allowErrorLeakToTelemetry {
+			span.SetStatus(otelcodes.Error, procError.Error())
+			return
+		}
+
+		span.SetStatus(otelcodes.Error, spanStatusErr)
+	}()
 
 	log := n.log.With().Str("peer", from.String()).Str("type", msgType).Str("pipeline", pipeline.String()).Logger()
 

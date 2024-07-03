@@ -18,7 +18,8 @@ import (
 
 func newTracerProvider(ctx context.Context, cfg Config) (*trace.TracerProvider, error) {
 
-	exporter, err := traceExporter(ctx, cfg.ExporterMethod)
+	// TODO: Fix hardcoded true.
+	exporter, err := traceExporter(ctx, cfg.ExporterMethod, true)
 	if err != nil {
 		return nil, fmt.Errorf("could not create trace exporter: %w", err)
 	}
@@ -55,16 +56,43 @@ func newPropagator() propagation.TextMapPropagator {
 	return pp
 }
 
-func traceExporter(ctx context.Context, m ExporterMethod) (trace.SpanExporter, error) {
+// TODO: What do we need in the config?
+// GRPC:
+// - endpoint
+// - use compression by default
+// - TLS credentials
+// Perhaps:
+// - insecure?
+//
+// HTTP:
+// - endpoint
+// - compression (use by default)
+// - TLS credentials
+// Perhaps:
+// - insecure
+func traceExporter(ctx context.Context, m ExporterMethod, allowInsecure bool) (trace.SpanExporter, error) {
 
-	// TODO: Allow insecure - from config.
 	switch m {
 	case ExporterGRPC:
-		return otlptracegrpc.New(ctx, otlptracegrpc.WithInsecure())
+		opts := []otlptracegrpc.Option{otlptracegrpc.WithCompressor("gzip")}
+		if allowInsecure {
+			opts = append(opts, otlptracegrpc.WithInsecure())
+		}
+
+		return otlptracegrpc.New(ctx, opts...)
+
+	case ExporterHTTP:
+
+		opts := []otlptracehttp.Option{otlptracehttp.WithCompression(otlptracehttp.GzipCompression)}
+		if allowInsecure {
+			opts = append(opts, otlptracehttp.WithInsecure())
+		}
+
+		return otlptracehttp.New(ctx, opts...)
+
+	// NOTE: STDOUT exporterr is not for production use.
 	case ExporterStdout:
 		return stdouttrace.New(stdouttrace.WithPrettyPrint())
-	case ExporterHTTP:
-		return otlptracehttp.New(ctx, otlptracehttp.WithInsecure())
 
 	default:
 		return nil, errors.New("unsupported exporter type")

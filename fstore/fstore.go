@@ -39,7 +39,7 @@ func New(log zerolog.Logger, store blockless.FunctionStore, workdir string) *FSt
 	downloader.HTTPClient = cli
 
 	h := FStore{
-		log:        log.With().Str("component", "fstore").Logger(),
+		log:        log,
 		store:      store,
 		http:       cli,
 		downloader: downloader,

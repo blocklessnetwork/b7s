@@ -23,6 +23,8 @@ const (
 	EnvVarByzantine = "B7S_PBFT_BYZANTINE"
 
 	tracerName = "b7s.PBFTCluster"
+
+	allowErrorLeakToTelemetry = false // By default we will not send processing errors to telemetry tracers.
 )
 
 var (
@@ -34,4 +36,10 @@ var (
 
 var (
 	NullRequest = Request{}
+)
+
+// Tracing span status messages.
+const (
+	spanStatusOK  = "message processed ok"
+	spanStatusErr = "error processing message"
 )

@@ -73,7 +73,7 @@ func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore 
 	n := &Node{
 		cfg: cfg,
 
-		log:      log.With().Str("component", "node").Logger(),
+		log:      log,
 		host:     host,
 		fstore:   fstore,
 		executor: cfg.Execute,

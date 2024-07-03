@@ -25,6 +25,8 @@ const (
 	defaultExecutionThreshold = 0.6
 
 	syncInterval = time.Hour // How often do we recheck function installations.
+
+	allowErrorLeakToTelemetry = false // By default we will not send processing errors to telemetry tracers.
 )
 
 // Raft and consensus related parameters.
@@ -51,6 +53,12 @@ const (
 	// execution events
 	spanHeadExecute   = "HeadExecute"
 	spanWorkerExecute = "WorkerExecute"
+)
+
+// Tracing span status messages.
+const (
+	spanStatusOK  = "message processed ok"
+	spanStatusErr = "error processing message"
 )
 
 func msgProcessSpanName(msgType string) string {

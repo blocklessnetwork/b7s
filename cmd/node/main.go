@@ -68,18 +68,6 @@ func run() int {
 		}
 	}
 
-	shutdown, err := telemetry.SetupSDK(ctx, telemetry.WithID(nodeID))
-	defer func() {
-		err := shutdown(ctx)
-		if err != nil {
-			log.Error().Err(err).Msg("could not shutdown telemetry")
-		}
-	}()
-	if err != nil {
-		log.Error().Err(err).Msg("could not setup telemetry")
-		return failure
-	}
-
 	// Set log level.
 	level, err := zerolog.ParseLevel(cfg.Log.Level)
 	if err != nil {
@@ -92,6 +80,19 @@ func run() int {
 	role, err := parseNodeRole(cfg.Role)
 	if err != nil {
 		log.Error().Err(err).Str("role", cfg.Role).Msg("invalid node role specified")
+		return failure
+	}
+
+	// Setup telemetry.
+	shutdown, err := telemetry.SetupSDK(ctx, log.With().Str("component", "telemetry").Logger(), telemetry.WithID(nodeID))
+	defer func() {
+		err := shutdown(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("could not shutdown telemetry")
+		}
+	}()
+	if err != nil {
+		log.Error().Err(err).Msg("could not setup telemetry")
 		return failure
 	}
 
@@ -164,7 +165,7 @@ func run() int {
 	}
 
 	// Create libp2p host.
-	host, err := host.New(log, cfg.Connectivity.Address, cfg.Connectivity.Port, hostOpts...)
+	host, err := host.New(log.With().Str("component", "host").Logger(), cfg.Connectivity.Address, cfg.Connectivity.Port, hostOpts...)
 	if err != nil {
 		log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not create host")
 		return failure
@@ -212,7 +213,7 @@ func run() int {
 		}
 
 		// Create an executor.
-		executor, err := executor.New(log, execOptions...)
+		executor, err := executor.New(log.With().Str("component", "executor").Logger(), execOptions...)
 		if err != nil {
 			log.Error().
 				Err(err).
@@ -228,7 +229,7 @@ func run() int {
 	}
 
 	// Create function store.
-	fstore := fstore.New(log, store, cfg.Workspace)
+	fstore := fstore.New(log.With().Str("component", "fstore").Logger(), store, cfg.Workspace)
 
 	// If we have topics specified, use those.
 	if len(cfg.Topics) > 0 {
@@ -236,7 +237,7 @@ func run() int {
 	}
 
 	// Instantiate node.
-	node, err := node.New(log, host, store, fstore, opts...)
+	node, err := node.New(log.With().Str("component", "node").Logger(), host, store, fstore, opts...)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure
@@ -275,7 +276,7 @@ func run() int {
 		server := createEchoServer(log)
 
 		// Create an API handler.
-		apiHandler := api.New(log, node)
+		apiHandler := api.New(log.With().Str("component", "api").Logger(), node)
 		api.RegisterHandlers(server, apiHandler)
 
 		// Start API in a separate goroutine.

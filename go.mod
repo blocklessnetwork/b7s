@@ -13,6 +13,7 @@ require (
 	github.com/fatih/camelcase v1.0.0
 	github.com/fatih/color v1.16.0
 	github.com/getkin/kin-openapi v0.124.0
+	github.com/go-logr/zerologr v1.2.3
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hashicorp/go-hclog v1.3.0
 	github.com/hashicorp/raft v1.4.0

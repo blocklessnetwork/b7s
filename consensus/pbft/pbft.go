@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	otelcodes "go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/libp2p/go-libp2p/core/network"
@@ -150,7 +151,7 @@ func (r *Replica) setPBFTMessageHandler() {
 	})
 }
 
-func (r *Replica) processMessage(ctx context.Context, from peer.ID, payload []byte) error {
+func (r *Replica) processMessage(ctx context.Context, from peer.ID, payload []byte) (procError error) {
 
 	// If we're acting as a byzantine replica, just don't do anything.
 	// At this point we're not trying any elaborate sus behavior.
@@ -171,7 +172,20 @@ func (r *Replica) processMessage(ctx context.Context, from peer.ID, payload []by
 
 	ctx, span := r.tracer.Start(ctx, msgProcessSpanName(msg.Type()), trace.WithAttributes(b7ssemconv.MessagePeer.String(from.String())))
 	defer span.End()
-	// TODO: Span status.
+	// NOTE: This function checks the named return error value in order to set the span status accordingly.
+	defer func() {
+		if procError == nil {
+			span.SetStatus(otelcodes.Ok, spanStatusOK)
+			return
+		}
+
+		if allowErrorLeakToTelemetry {
+			span.SetStatus(otelcodes.Error, procError.Error())
+			return
+		}
+
+		span.SetStatus(otelcodes.Error, spanStatusErr)
+	}()
 
 	// Access to individual segments (pre-prepares, prepares, commits etc) could be managed on an individual level,
 	// but it's probably not worth it. This way we just do it request by request.
