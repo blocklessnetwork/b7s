@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/blocklessnetwork/b7s/consensus"
+	"github.com/blocklessnetwork/b7s/metadata"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
@@ -23,6 +24,7 @@ var DefaultConfig = Config{
 	ClusterFormationTimeout: DefaultClusterFormationTimeout,
 	DefaultConsensus:        DefaultConsensusAlgorithm,
 	LoadAttributes:          DefaultAttributeLoadingSetting,
+	MetadataProvider:        metadata.NewNoopProvider(),
 }
 
 // Config represents the Node configuration.
@@ -38,6 +40,7 @@ type Config struct {
 	Workspace               string             // Directory where we can store files needed for execution.
 	DefaultConsensus        consensus.Type     // Default consensus algorithm to use.
 	LoadAttributes          bool               // Node should try to load its attributes from IPFS.
+	MetadataProvider        metadata.Provider  // Metadata provider for the node
 }
 
 // Validate checks if the given configuration is correct.
@@ -150,6 +153,13 @@ func WithDefaultConsensus(c consensus.Type) Option {
 func WithAttributeLoading(b bool) Option {
 	return func(cfg *Config) {
 		cfg.LoadAttributes = b
+	}
+}
+
+// WithMetadataProvider sets the metadata provider for the node.
+func WithMetadataProvider(p metadata.Provider) Option {
+	return func(cfg *Config) {
+		cfg.MetadataProvider = p
 	}
 }
 

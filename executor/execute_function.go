@@ -15,20 +15,18 @@ func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execu
 	if err != nil {
 
 		res := execute.Result{
-			Code:      codes.Error,
-			RequestID: requestID,
-			Result:    out,
-			Usage:     usage,
+			Code:   codes.Error,
+			Result: out,
+			Usage:  usage,
 		}
 
 		return res, fmt.Errorf("function execution failed: %w", err)
 	}
 
 	res := execute.Result{
-		Code:      codes.OK,
-		RequestID: requestID,
-		Result:    out,
-		Usage:     usage,
+		Code:   codes.OK,
+		Result: out,
+		Usage:  usage,
 	}
 
 	return res, nil

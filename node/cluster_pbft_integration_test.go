@@ -221,7 +221,7 @@ This is the end of my program
 
 		for peer, exres := range res.Results {
 			require.Contains(t, workerIDs, peer)
-			require.Equal(t, expectedExecutionResult, exres.Result.Stdout)
+			require.Equal(t, expectedExecutionResult, exres.Result.Result.Stdout)
 		}
 
 		t.Log("client verified execution response")
