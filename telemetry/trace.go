@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -18,32 +18,35 @@ import (
 
 func newTracerProvider(ctx context.Context, cfg Config) (*trace.TracerProvider, error) {
 
-	// TODO: Fix hardcoded true.
-	exporter, err := traceExporter(ctx, cfg.ExporterMethod, true)
-	if err != nil {
-		return nil, fmt.Errorf("could not create trace exporter: %w", err)
-	}
-
-	// TODO: Does this correctly join the ID with the remaining stuff?
+	// Setup resource.
 	opts := defaultResourceOpts
-	if cfg.ID != "" {
-		opts = append(opts, resource.WithAttributes(semconv.ServiceInstanceIDKey.String(cfg.ID)))
+	if cfg.ID == "" {
+		return nil, errors.New("instance ID is required")
 	}
-	if cfg.Role.Valid() {
-		opts = append(opts, resource.WithAttributes(b7ssemconv.ServiceRole.String(cfg.Role.String())))
+	opts = append(opts, resource.WithAttributes(semconv.ServiceInstanceIDKey.String(cfg.ID)))
+
+	if !cfg.Role.Valid() {
+		return nil, errors.New("node role is required")
 	}
+	opts = append(opts, resource.WithAttributes(b7ssemconv.ServiceRole.String(cfg.Role.String())))
 
 	resource, err := resource.New(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("could not initialize resource: %w", err)
 	}
 
-	provider := trace.NewTracerProvider(
-		trace.WithBatcher(exporter, trace.WithBatchTimeout(cfg.BatchTraceTimeout)),
-		trace.WithResource(resource),
-	)
+	// Setup exporters.
+	exporters, err := traceExporters(ctx, cfg.Trace)
+	if err != nil {
+		return nil, fmt.Errorf("could not create trace exporter: %w", err)
+	}
 
-	return provider, nil
+	traceOpts := []trace.TracerProviderOption{trace.WithResource(resource)}
+	for _, exporter := range exporters {
+		traceOpts = append(traceOpts, trace.WithBatcher(exporter, trace.WithBatchTimeout(cfg.Trace.ExporterBatchTimeout)))
+	}
+
+	return trace.NewTracerProvider(traceOpts...), nil
 }
 
 func newPropagator() propagation.TextMapPropagator {
@@ -56,45 +59,54 @@ func newPropagator() propagation.TextMapPropagator {
 	return pp
 }
 
-// TODO: What do we need in the config?
-// GRPC:
-// - endpoint
-// - use compression by default
-// - TLS credentials
-// Perhaps:
-// - insecure?
-//
-// HTTP:
-// - endpoint
-// - compression (use by default)
-// - TLS credentials
-// Perhaps:
-// - insecure
-func traceExporter(ctx context.Context, m ExporterMethod, allowInsecure bool) (trace.SpanExporter, error) {
+func traceExporters(ctx context.Context, tcfg TraceConfig) ([]trace.SpanExporter, error) {
 
-	switch m {
-	case ExporterGRPC:
-		opts := []otlptracegrpc.Option{otlptracegrpc.WithCompressor("gzip")}
-		if allowInsecure {
-			opts = append(opts, otlptracegrpc.WithInsecure())
+	var exporters []trace.SpanExporter
+	if tcfg.GRPC.Enabled {
+
+		ex, err := newGRPCExporter(ctx, tcfg.GRPC)
+		if err != nil {
+			return nil, fmt.Errorf("could not create new GRPC exporter: %w", err)
 		}
 
-		return otlptracegrpc.New(ctx, opts...)
-
-	case ExporterHTTP:
-
-		opts := []otlptracehttp.Option{otlptracehttp.WithCompression(otlptracehttp.GzipCompression)}
-		if allowInsecure {
-			opts = append(opts, otlptracehttp.WithInsecure())
-		}
-
-		return otlptracehttp.New(ctx, opts...)
-
-	// NOTE: STDOUT exporterr is not for production use.
-	case ExporterStdout:
-		return stdouttrace.New(stdouttrace.WithPrettyPrint())
-
-	default:
-		return nil, errors.New("unsupported exporter type")
+		exporters = append(exporters, ex)
 	}
+
+	if tcfg.HTTP.Enabled {
+
+		ex, err := newHTTPExporter(ctx, tcfg.HTTP)
+		if err != nil {
+			return nil, fmt.Errorf("could not create new GRPC exporter: %w", err)
+		}
+
+		exporters = append(exporters, ex)
+	}
+
+	return exporters, nil
+}
+
+func newGRPCExporter(ctx context.Context, cfg TraceGRPCConfig) (*otlptrace.Exporter, error) {
+
+	var opts []otlptracegrpc.Option
+	if cfg.UseCompression {
+		opts = append(opts, otlptracegrpc.WithCompressor("gzip"))
+	}
+
+	if cfg.AllowInsecure {
+		opts = append(opts, otlptracegrpc.WithInsecure())
+	}
+	return otlptracegrpc.New(ctx, opts...)
+}
+
+func newHTTPExporter(ctx context.Context, cfg TraceHTTPConfig) (*otlptrace.Exporter, error) {
+
+	var opts []otlptracehttp.Option
+	if cfg.UseCompression {
+		otlptracehttp.WithCompression(otlptracehttp.GzipCompression)
+	}
+
+	if cfg.AllowInsecure {
+		opts = append(opts, otlptracehttp.WithInsecure())
+	}
+	return otlptracehttp.New(ctx, opts...)
 }

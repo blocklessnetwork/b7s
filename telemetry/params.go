@@ -19,7 +19,7 @@ var (
 )
 
 const (
-	ExporterStdout ExporterMethod = "stdout"
-	ExporterGRPC   ExporterMethod = "grpc"
-	ExporterHTTP   ExporterMethod = "http"
+	useCompressionForTraceExporters = true
+	// NOTE: Temporary setting for the still young, immature stage of telemetry.
+	allowInsecureTraceExporters = true
 )

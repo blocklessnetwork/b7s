@@ -6,19 +6,62 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
-type Option func(*Config)
+var DefaultConfig = Config{
+
+	Trace: TraceConfig{
+		ExporterBatchTimeout: 1 * time.Second,
+		GRPC: TraceGRPCConfig{
+			Enabled:        false,
+			AllowInsecure:  allowInsecureTraceExporters,
+			UseCompression: useCompressionForTraceExporters,
+		},
+		HTTP: TraceHTTPConfig{
+			Enabled:        false,
+			AllowInsecure:  allowInsecureTraceExporters,
+			UseCompression: useCompressionForTraceExporters,
+		},
+	},
+}
 
 type Config struct {
-	ID                string
-	Role              blockless.NodeRole
-	ExporterMethod    ExporterMethod
-	BatchTraceTimeout time.Duration
+	// Node ID, registered as service instance ID attribute.
+	ID string
+	// Node role, registered as service role attribute.
+	Role blockless.NodeRole
+	// Tracer configuration.
+	Trace TraceConfig
 }
 
-var defaultConfig = Config{
-	ExporterMethod:    ExporterGRPC,
-	BatchTraceTimeout: 1 * time.Second,
+// TODO: Update trace exporters configs
+// GRPC, HTTP:
+// - TLS credentials
+// - disable insecure when mature
+type TraceConfig struct {
+	// Maximum time after which exporters will send batched span.
+	ExporterBatchTimeout time.Duration
+	// Configuration for GRPC trace exporter.
+	GRPC TraceGRPCConfig
+	// Configuration for HTTP trace exporter.
+	HTTP TraceHTTPConfig
 }
+
+type TraceGRPCConfig struct {
+	Enabled        bool
+	Endpoint       string
+	AllowInsecure  bool
+	UseCompression bool
+	// TLSConfig
+}
+
+type TraceHTTPConfig struct {
+	Enabled        bool
+	Endpoint       string
+	AllowInsecure  bool
+	UseCompression bool
+	// TLSConfig
+}
+
+type Option func(*Config)
 
 func WithNodeRole(r blockless.NodeRole) Option {
 	return func(cfg *Config) {
@@ -26,20 +69,28 @@ func WithNodeRole(r blockless.NodeRole) Option {
 	}
 }
 
-func WithExporterMethod(m ExporterMethod) Option {
-	return func(cfg *Config) {
-		cfg.ExporterMethod = m
-	}
-}
-
 func WithBatchTraceTimeout(t time.Duration) Option {
 	return func(cfg *Config) {
-		cfg.BatchTraceTimeout = t
+		cfg.Trace.ExporterBatchTimeout = t
 	}
 }
 
 func WithID(id string) Option {
 	return func(cfg *Config) {
 		cfg.ID = id
+	}
+}
+
+func WithGRPCTracing(endpoint string) Option {
+	return func(cfg *Config) {
+		cfg.Trace.GRPC.Endpoint = endpoint
+		cfg.Trace.GRPC.Enabled = true
+	}
+}
+
+func WithHTTPTracing(endpoint string) Option {
+	return func(cfg *Config) {
+		cfg.Trace.HTTP.Enabled = true
+		cfg.Trace.HTTP.Endpoint = endpoint
 	}
 }

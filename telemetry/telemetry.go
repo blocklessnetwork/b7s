@@ -12,7 +12,7 @@ import (
 
 func SetupSDK(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown ShutdownFunc, err error) {
 
-	cfg := defaultConfig
+	cfg := DefaultConfig
 	for _, opt := range opts {
 		opt(&cfg)
 	}
@@ -31,7 +31,7 @@ func SetupSDK(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown
 		err = errors.Join(inErr, shutdown(ctx))
 	}
 
-	// Set global error handler function - just log error and nothing else.
+	// Set logger and global error handler function - just log error and nothing else.
 	otel.SetErrorHandler(otel.ErrorHandlerFunc(
 		func(err error) { log.Error().Err(err).Msg("telemetry error") },
 	))
@@ -48,7 +48,5 @@ func SetupSDK(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown
 	shutdownFuncs = append(shutdownFuncs, tp.Shutdown)
 	otel.SetTracerProvider(tp)
 
-	// TODO: meter provider
-	// TODO: logger provider
 	return
 }
