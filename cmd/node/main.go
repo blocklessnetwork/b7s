@@ -83,17 +83,30 @@ func run() int {
 		return failure
 	}
 
-	// Setup telemetry.
-	shutdown, err := telemetry.SetupSDK(ctx, log.With().Str("component", "telemetry").Logger(), telemetry.WithID(nodeID))
-	defer func() {
-		err := shutdown(ctx)
-		if err != nil {
-			log.Error().Err(err).Msg("could not shutdown telemetry")
+	if cfg.Telemetry.Enable {
+
+		log.Info().Msg("telemetry enabled")
+
+		opts := []telemetry.Option{
+			telemetry.WithID(nodeID),
+			telemetry.WithNodeRole(role),
+			telemetry.WithBatchTraceTimeout(cfg.Telemetry.Tracing.ExporterBatchTimeout),
+			telemetry.WithGRPCTracing(cfg.Telemetry.Tracing.GRPC.Endpoint),
+			telemetry.WithHTTPTracing(cfg.Telemetry.Tracing.HTTP.Endpoint),
 		}
-	}()
-	if err != nil {
-		log.Error().Err(err).Msg("could not setup telemetry")
-		return failure
+
+		// Setup telemetry.
+		shutdown, err := telemetry.SetupSDK(ctx, log.With().Str("component", "telemetry").Logger(), opts...)
+		defer func() {
+			err := shutdown(ctx)
+			if err != nil {
+				log.Error().Err(err).Msg("could not shutdown telemetry")
+			}
+		}()
+		if err != nil {
+			log.Error().Err(err).Msg("could not setup telemetry")
+			return failure
+		}
 	}
 
 	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.

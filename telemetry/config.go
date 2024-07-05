@@ -84,13 +84,14 @@ func WithID(id string) Option {
 func WithGRPCTracing(endpoint string) Option {
 	return func(cfg *Config) {
 		cfg.Trace.GRPC.Endpoint = endpoint
-		cfg.Trace.GRPC.Enabled = true
+		cfg.Trace.GRPC.Enabled = endpoint != ""
 	}
 }
 
 func WithHTTPTracing(endpoint string) Option {
 	return func(cfg *Config) {
-		cfg.Trace.HTTP.Enabled = true
 		cfg.Trace.HTTP.Endpoint = endpoint
+		cfg.Trace.HTTP.Enabled = endpoint != ""
+
 	}
 }
