@@ -70,13 +70,7 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 	n.clusters[fc.RequestID] = rh
 	n.clusterLock.Unlock()
 
-	res := response.FormCluster{
-		RequestID: fc.RequestID,
-		Code:      codes.OK,
-		Consensus: fc.Consensus,
-	}
-
-	err = n.send(ctx, from, &res)
+	err = n.send(ctx, from, fc.Response(codes.OK).WithConsensus(fc.Consensus))
 	if err != nil {
 		return fmt.Errorf("could not send cluster confirmation message: %w", err)
 	}
@@ -107,13 +101,7 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 	n.clusters[fc.RequestID] = ph
 	n.clusterLock.Unlock()
 
-	res := response.FormCluster{
-		RequestID: fc.RequestID,
-		Code:      codes.OK,
-		Consensus: fc.Consensus,
-	}
-
-	err = n.send(ctx, from, &res)
+	err = n.send(ctx, from, fc.Response(codes.OK).WithConsensus(fc.Consensus))
 	if err != nil {
 		return fmt.Errorf("could not send cluster confirmation message: %w", err)
 	}

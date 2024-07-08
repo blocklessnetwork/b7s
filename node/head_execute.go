@@ -14,7 +14,6 @@ import (
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
@@ -32,21 +31,14 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request
 
 	log.Info().Str("code", code.String()).Msg("execution complete")
 
-	// Create the execution response from the execution result.
-	res := response.Execute{
-		Code:      code,
-		RequestID: requestID,
-		Results:   results,
-		Cluster:   cluster,
-	}
-
+	res := req.Response(code).WithResults(results).WithCluster(cluster)
 	// Communicate the reason for failure in these cases.
 	if errors.Is(err, blockless.ErrRollCallTimeout) || errors.Is(err, blockless.ErrExecutionNotEnoughNodes) {
 		res.Message = err.Error()
 	}
 
 	// Send the response, whatever it may be (success or failure).
-	err = n.send(ctx, from, &res)
+	err = n.send(ctx, from, res)
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)
 	}

@@ -52,6 +52,6 @@ func getTraceInfoFromMessage(payload []byte) (tracing.TraceInfo, bool) {
 		return ti, false
 	}
 
-	// Return true if carries is populated, false if not.
-	return ti, len(ti.Carrier.Keys()) == 0
+	// Return true if carrier is populated, false if not.
+	return ti, !ti.Empty()
 }

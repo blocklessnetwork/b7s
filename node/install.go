@@ -9,7 +9,6 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, req request.InstallFunction) error {
@@ -26,15 +25,8 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, req req
 		return fmt.Errorf("could not install function: %w", err)
 	}
 
-	// Create the response.
-	res := response.InstallFunction{
-		Code:    codes.Accepted,
-		Message: "installed",
-		CID:     req.CID,
-	}
-
 	// Reply to the caller.
-	err = n.send(ctx, from, &res)
+	err = n.send(ctx, from, req.Response(codes.Accepted))
 	if err != nil {
 		return fmt.Errorf("could not send the response (peer: %s): %w", from, err)
 	}

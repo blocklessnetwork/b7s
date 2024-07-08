@@ -18,6 +18,11 @@ type FormCluster struct {
 	Consensus consensus.Type `json:"consensus,omitempty"`
 }
 
+func (f *FormCluster) WithConsensus(c consensus.Type) *FormCluster {
+	f.Consensus = c
+	return f
+}
+
 func (FormCluster) Type() string { return blockless.MessageFormClusterResponse }
 
 func (f FormCluster) MarshalJSON() ([]byte, error) {

@@ -7,6 +7,8 @@ import (
 
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/codes"
+	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 var _ (json.Marshaler) = (*FormCluster)(nil)
@@ -20,6 +22,14 @@ type FormCluster struct {
 	Consensus consensus.Type `json:"consensus,omitempty"`
 }
 
+func (f FormCluster) Response(c codes.Code) *response.FormCluster {
+	return &response.FormCluster{
+		BaseMessage: blockless.BaseMessage{TraceInfo: f.TraceInfo},
+		RequestID:   f.RequestID,
+		Code:        c,
+	}
+
+}
 func (FormCluster) Type() string { return blockless.MessageFormCluster }
 
 func (f FormCluster) MarshalJSON() ([]byte, error) {

@@ -41,8 +41,13 @@ func traceableTopicName(topic string) string {
 
 func saveTraceContext(ctx context.Context, msg blockless.Message) {
 	tmsg, ok := msg.(blockless.TraceableMessage)
-	if ok {
-		tmsg.SaveTraceContext(tracing.GetTraceInfo(ctx))
+	if !ok {
+		return
+	}
+
+	t := tracing.GetTraceInfo(ctx)
+	if !t.Empty() {
+		tmsg.SaveTraceContext(t)
 	}
 }
 

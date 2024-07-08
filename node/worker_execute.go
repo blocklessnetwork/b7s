@@ -11,7 +11,6 @@ import (
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
@@ -47,16 +46,10 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 	n.executeResponses.Set(requestID, result)
 
 	// Create the execution response from the execution result.
-	res := response.Execute{
-		Code:      code,
-		RequestID: requestID,
-		Results: execute.ResultMap{
-			n.host.ID(): result,
-		},
-	}
+	res := req.Response(code).WithResults(execute.ResultMap{n.host.ID(): result})
 
 	// Send the response, whatever it may be (success or failure).
-	err = n.send(ctx, from, &res)
+	err = n.send(ctx, from, res)
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)
 	}

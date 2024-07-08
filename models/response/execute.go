@@ -33,6 +33,16 @@ type Execute struct {
 	Message string `json:"message,omitempty"`
 }
 
+func (e *Execute) WithResults(r execute.ResultMap) *Execute {
+	e.Results = r
+	return e
+}
+
+func (e *Execute) WithCluster(c execute.Cluster) *Execute {
+	e.Cluster = c
+	return e
+}
+
 func (Execute) Type() string { return blockless.MessageExecuteResponse }
 
 func (e Execute) MarshalJSON() ([]byte, error) {
