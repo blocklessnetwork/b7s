@@ -16,9 +16,14 @@ const (
 )
 
 func saveTraceContext(ctx context.Context, msg any) {
-	tmsg, ok := msg.(TraceableMessage)
-	if ok {
-		tmsg.SaveTraceContext(tracing.GetTraceInfo(ctx))
+	tmsg, ok := msg.(blockless.TraceableMessage)
+	if !ok {
+		return
+	}
+
+	t := tracing.GetTraceInfo(ctx)
+	if !t.Empty() {
+		tmsg.SaveTraceContext(t)
 	}
 }
 

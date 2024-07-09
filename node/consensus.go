@@ -84,6 +84,13 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 		n.executeResponses.Set(requestID, result)
 	}
 
+	// If we have tracing enabled we will have trace info in the context.
+	// If not, there might be trace info in the message so just use that.
+	ti := tracing.GetTraceInfo(ctx)
+	if ti.Empty() {
+		ti = fc.TraceInfo
+	}
+
 	ph, err := pbft.NewReplica(
 		n.log,
 		n.host,
@@ -91,7 +98,7 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 		fc.Peers,
 		fc.RequestID,
 		pbft.WithPostProcessors(cacheFn),
-		pbft.WithTraceInfo(tracing.GetTraceInfo(ctx)),
+		pbft.WithTraceInfo(ti),
 	)
 	if err != nil {
 		return fmt.Errorf("could not create PBFT node: %w", err)

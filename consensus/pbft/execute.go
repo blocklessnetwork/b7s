@@ -91,9 +91,10 @@ func (r *Replica) execute(ctx context.Context, view uint, sequence uint, digest 
 	r.lastExecuted = sequence
 
 	msg := response.Execute{
-		Code:      res.Code,
-		RequestID: request.ID,
-		Results:   execute.ResultMap{r.id: res},
+		BaseMessage: blockless.BaseMessage{TraceInfo: r.cfg.TraceInfo},
+		Code:        res.Code,
+		RequestID:   request.ID,
+		Results:     execute.ResultMap{r.id: res},
 		PBFT: response.PBFTResultInfo{
 			View:             r.view,
 			RequestTimestamp: request.Timestamp,
