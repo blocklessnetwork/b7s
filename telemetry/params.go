@@ -10,7 +10,7 @@ var (
 		resource.WithOS(),
 		resource.WithProcess(),
 		resource.WithTelemetrySDK(),
-		resource.WithContainer(), // TODO: Check if this works in docker compose cluster, and in a non-docker env with cgroups
+		resource.WithContainer(),
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String("b7s"),
 			semconv.ServiceVersionKey.String(vcsVersion()),

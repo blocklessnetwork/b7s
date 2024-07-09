@@ -32,7 +32,7 @@ func (r *Replica) startViewChange(view uint) error {
 		return fmt.Errorf("could not sign view change message: %w", err)
 	}
 
-	// TODO: Start a tracing span here?
+	// TODO: Add tracing for the view change sequence too.
 	err = r.broadcast(context.Background(), &vc)
 	if err != nil {
 		return fmt.Errorf("could not broadcast view change: %w", err)

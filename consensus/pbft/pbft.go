@@ -159,7 +159,7 @@ func (r *Replica) processMessage(ctx context.Context, from peer.ID, payload []by
 		return errors.New("we're a byzantine replica, ignoring received message")
 	}
 
-	// TODO: Inefficient because we'll do double-unmarshalling here and below, but we can optiimize later.
+	// NOTE: We do double-unmarshalling here and below - here we just care about the trace info.
 	ti, ok := getTraceInfoFromMessage(payload)
 	if ok {
 		ctx = tracing.TraceContext(ctx, ti)

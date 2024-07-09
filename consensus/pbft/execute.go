@@ -28,7 +28,6 @@ func (r *Replica) Execute(client peer.ID, requestID string, timestamp time.Time,
 		Execute:   req,
 	}
 
-	// TODO: Fix this code path.
 	err := r.processRequest(tracing.TraceContext(context.Background(), r.cfg.TraceInfo), client, request)
 	if err != nil {
 		return codes.Error, execute.Result{}, fmt.Errorf("could not process request: %w", err)

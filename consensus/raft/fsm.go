@@ -57,8 +57,7 @@ func (f fsmExecutor) Apply(log *raft.Log) interface{} {
 
 	f.log.Info().Str("request", logEntry.RequestID).Str("function", logEntry.Execute.FunctionID).Msg("FSM executing function")
 
-	//TODO: Rething this context handling.
-	res, err := f.executor.ExecuteFunction(context.TODO(), logEntry.RequestID, logEntry.Execute)
+	res, err := f.executor.ExecuteFunction(context.Background(), logEntry.RequestID, logEntry.Execute)
 	if err != nil {
 		return fmt.Errorf("could not execute function: %w", err)
 	}

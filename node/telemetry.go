@@ -21,9 +21,6 @@ const (
 func msgProcessSpanOpts(from peer.ID, msgType string, pipeline messagePipeline) []trace.SpanStartOption {
 
 	// TODO: Topic name - refactor message pipeline to include topic name too.
-	// TODO: Message ID is useful but libp2p has dumb IDs.
-	// b7ssemconv.MessageID.String(msg.ID),
-
 	return []trace.SpanStartOption{
 		trace.WithSpanKind(trace.SpanKindConsumer),
 		trace.WithAttributes(
@@ -34,7 +31,6 @@ func msgProcessSpanOpts(from peer.ID, msgType string, pipeline messagePipeline) 
 	}
 }
 
-// TODO: Use it or lose it.
 func traceableTopicName(topic string) string {
 	return fmt.Sprintf("topic.%v", topic)
 }
@@ -50,8 +46,6 @@ func saveTraceContext(ctx context.Context, msg blockless.Message) {
 		tmsg.SaveTraceContext(t)
 	}
 }
-
-// TODO: Move this to a separate file.
 
 type msgSpanConfig struct {
 	msgPipeline string
