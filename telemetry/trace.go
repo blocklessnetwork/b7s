@@ -87,7 +87,9 @@ func traceExporters(ctx context.Context, tcfg TraceConfig) ([]trace.SpanExporter
 
 func newGRPCExporter(ctx context.Context, cfg TraceGRPCConfig) (*otlptrace.Exporter, error) {
 
-	var opts []otlptracegrpc.Option
+	opts := []otlptracegrpc.Option{
+		otlptracegrpc.WithEndpoint(cfg.Endpoint),
+	}
 	if cfg.UseCompression {
 		opts = append(opts, otlptracegrpc.WithCompressor("gzip"))
 	}
@@ -100,7 +102,9 @@ func newGRPCExporter(ctx context.Context, cfg TraceGRPCConfig) (*otlptrace.Expor
 
 func newHTTPExporter(ctx context.Context, cfg TraceHTTPConfig) (*otlptrace.Exporter, error) {
 
-	var opts []otlptracehttp.Option
+	opts := []otlptracehttp.Option{
+		otlptracehttp.WithEndpoint(cfg.Endpoint),
+	}
 	if cfg.UseCompression {
 		otlptracehttp.WithCompression(otlptracehttp.GzipCompression)
 	}

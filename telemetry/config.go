@@ -92,6 +92,5 @@ func WithHTTPTracing(endpoint string) Option {
 	return func(cfg *Config) {
 		cfg.Trace.HTTP.Endpoint = endpoint
 		cfg.Trace.HTTP.Enabled = endpoint != ""
-
 	}
 }
