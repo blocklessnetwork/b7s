@@ -17,7 +17,12 @@ import (
 // Run will start the main loop for the node.
 func (n *Node) Run(ctx context.Context) error {
 
-	err := n.subscribeToTopics(ctx)
+	err := n.host.ConnectToKnownPeers(ctx)
+	if err != nil {
+		return fmt.Errorf("could not connect to known peers: %w", err)
+	}
+
+	err = n.subscribeToTopics(ctx)
 	if err != nil {
 		return fmt.Errorf("could not subscribe to topics: %w", err)
 	}

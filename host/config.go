@@ -15,6 +15,7 @@ var defaultConfig = Config{
 	DialBackPeersLimit:  100,
 	DiscoveryInterval:   10 * time.Second,
 	Websocket:           false,
+	MustReachBootNodes:  defaultMustReachBootNodes,
 }
 
 // Config represents the Host configuration.
@@ -33,6 +34,8 @@ type Config struct {
 	DialBackAddress       string
 	DialBackPort          uint
 	DialBackWebsocketPort uint
+
+	MustReachBootNodes bool
 }
 
 // WithPrivateKey specifies the private key for the Host.
@@ -106,5 +109,12 @@ func WithWebsocket(b bool) func(*Config) {
 func WithWebsocketPort(port uint) func(*Config) {
 	return func(cfg *Config) {
 		cfg.WebsocketPort = port
+	}
+}
+
+// WithMustReachBootNodes specifies if we should treat failure to reach boot nodes as a halting error.
+func WithMustReachBootNodes(b bool) func(*Config) {
+	return func(cfg *Config) {
+		cfg.MustReachBootNodes = b
 	}
 }
