@@ -30,7 +30,7 @@ func (h *Host) ConnectToKnownPeers(ctx context.Context) error {
 	// Spin up a goroutine to maintain connections to boot nodes in the background.
 	// In case boot nodes drops out, we want to connect back to it.
 	go func(ctx context.Context) {
-		ticker := time.NewTicker(h.cfg.DiscoveryInterval)
+		ticker := time.NewTicker(h.cfg.BootNodesReachabilityCheckInterval)
 		for {
 			select {
 			case <-ticker.C:
@@ -41,7 +41,7 @@ func (h *Host) ConnectToKnownPeers(ctx context.Context) error {
 
 			case <-ctx.Done():
 				ticker.Stop()
-				h.log.Info().Msg("stopping boot node monitoring")
+				h.log.Debug().Msg("stopping boot node reachability monitoring")
 			}
 		}
 	}(ctx)

@@ -10,12 +10,13 @@ import (
 
 // defaultConfig used to create Host.
 var defaultConfig = Config{
-	PrivateKey:          "",
-	ConnectionThreshold: 20,
-	DialBackPeersLimit:  100,
-	DiscoveryInterval:   10 * time.Second,
-	Websocket:           false,
-	MustReachBootNodes:  defaultMustReachBootNodes,
+	PrivateKey:                         "",
+	ConnectionThreshold:                20,
+	DialBackPeersLimit:                 100,
+	DiscoveryInterval:                  10 * time.Second,
+	Websocket:                          false,
+	BootNodesReachabilityCheckInterval: 1 * time.Minute,
+	MustReachBootNodes:                 defaultMustReachBootNodes,
 }
 
 // Config represents the Host configuration.
@@ -35,7 +36,8 @@ type Config struct {
 	DialBackPort          uint
 	DialBackWebsocketPort uint
 
-	MustReachBootNodes bool
+	BootNodesReachabilityCheckInterval time.Duration
+	MustReachBootNodes                 bool
 }
 
 // WithPrivateKey specifies the private key for the Host.
@@ -116,5 +118,12 @@ func WithWebsocketPort(port uint) func(*Config) {
 func WithMustReachBootNodes(b bool) func(*Config) {
 	return func(cfg *Config) {
 		cfg.MustReachBootNodes = b
+	}
+}
+
+// WithBootNodesReachabilityInterval specifies how often should we recheck and reconnect to boot nodes.
+func WithBootNodesReachabilityInterval(d time.Duration) func(cfg *Config) {
+	return func(cfg *Config) {
+		cfg.BootNodesReachabilityCheckInterval = d
 	}
 }
