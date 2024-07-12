@@ -31,12 +31,17 @@ func (h *Host) DiscoverPeers(ctx context.Context, topic string) error {
 	connected := uint(0)
 findPeers:
 	for {
-		peers, err := discovery.FindPeers(ctx, topic)
+		h.log.Trace().Msg("starting peer discovery")
+
+		// Using a list instead of a channel. If this starts getting too large switch back.
+		peers, err := util.FindPeers(ctx, discovery, topic)
 		if err != nil {
 			return fmt.Errorf("could not find peers: %w", err)
 		}
 
-		for peer := range peers {
+		h.log.Trace().Int("count", len(peers)).Str("topic", topic).Msg("discovered peers")
+
+		for _, peer := range peers {
 			// Skip self.
 			if peer.ID == h.ID() {
 				continue
@@ -50,10 +55,7 @@ findPeers:
 
 			err = h.Connect(ctx, peer)
 			if err != nil {
-				h.log.Debug().
-					Err(err).
-					Str("peer", peer.String()).
-					Msg("could not connect to peer")
+				h.log.Debug().Err(err).Str("peer", peer.ID.String()).Msg("could not connect to discovered peer")
 				continue
 			}
 
@@ -115,6 +117,7 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 	added := uint(0)
 	addLimit := h.cfg.DialBackPeersLimit
 
+	var dialbackPeers []blockless.Peer
 	for _, peer := range h.cfg.DialBackPeers {
 		peer := peer
 
@@ -130,7 +133,7 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 			ma, err := multiaddr.NewMultiaddr(peer.MultiAddr)
 			if err != nil {
 				h.log.Warn().Str("peer", peer.ID.String()).Str("addr", peer.MultiAddr).Msg("invalid multiaddress for dial-back peer, skipping")
-				break
+				continue
 			}
 
 			h.log.Debug().Str("peer", peer.ID.String()).Msg("using last known multiaddress for dial-back peer")
@@ -140,9 +143,11 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 
 		h.log.Debug().Str("peer", peer.ID.String()).Interface("addr_info", peer.AddrInfo).Msg("adding dial-back peer")
 
-		bootNodes = append(bootNodes, peer)
+		dialbackPeers = append(dialbackPeers, peer)
 		added++
 	}
+
+	bootNodes = append(bootNodes, dialbackPeers...)
 
 	// Connect to the bootstrap nodes.
 	var wg sync.WaitGroup
@@ -164,9 +169,13 @@ func (h *Host) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 			err := h.Host.Connect(ctx, peerAddr)
 			if err != nil {
 				if err.Error() != errNoGoodAddresses {
-					h.log.Error().Err(err).Str("peer", peerAddr.ID.String()).Interface("addr_info", peerAddr).Msg("could not connect to bootstrap node")
+					h.log.Error().Err(err).Str("peer", peer.ID.String()).Interface("addr_info", peerAddr).Msg("could not connect to bootstrap node")
 				}
+
+				return
 			}
+
+			h.log.Debug().Str("peer", peer.ID.String()).Any("addr_info", peerAddr).Msg("connected to known peer")
 		}(bootNode)
 	}
 
