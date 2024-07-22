@@ -81,7 +81,7 @@ func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Me
 		errGroup.Go(func() error {
 			err := n.host.SendMessage(ctx, peer, payload)
 			if err != nil {
-				return fmt.Errorf("peer %v/%v send error (peer: %v): %w", i, len(peers), peer.String(), err)
+				return fmt.Errorf("peer %v/%v send error (peer: %v): %w", i+1, len(peers), peer.String(), err)
 			}
 
 			return nil
@@ -104,6 +104,8 @@ func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Me
 		if requireAll {
 			return fmt.Errorf("some sends failed: %w", retErr)
 		}
+
+		n.log.Warn().Err(retErr).Msg("some sends failed, proceeding")
 
 		return nil
 	}
