@@ -127,6 +127,7 @@ func run() int {
 		host.WithDialBackWebsocketPort(cfg.Connectivity.WebsocketDialbackPort),
 		host.WithWebsocket(cfg.Connectivity.Websocket),
 		host.WithWebsocketPort(cfg.Connectivity.WebsocketPort),
+		host.WithMustReachBootNodes(cfg.Connectivity.MustReachBootNodes),
 	}
 
 	if !cfg.Connectivity.NoDialbackPeers {

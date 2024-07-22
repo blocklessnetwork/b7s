@@ -2,6 +2,7 @@ package node
 
 import (
 	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
 
@@ -29,20 +30,30 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 	peerID := conn.RemotePeer()
 	maddr := conn.RemoteMultiaddr()
 	laddr := conn.LocalMultiaddr()
-	addrInfo := network.Peerstore().PeerInfo(peerID)
+
+	// We could save only the mutliaddress from which we receive this connection. However, we could theoretically have multiple connections
+	// and there's no reason to limit ourselves to a single address.
+
+	peer := blockless.Peer{
+		ID:        peerID,
+		MultiAddr: maddr.String(),
+		// AddrInfo struct basically repeats the above info (multiaddress).
+		AddrInfo: peer.AddrInfo{
+			ID:    peerID,
+			Addrs: make([]multiaddr.Multiaddr, 0),
+		},
+	}
+
+	for _, conn := range network.ConnsToPeer(conn.RemotePeer()) {
+		peer.AddrInfo.Addrs = append(peer.AddrInfo.Addrs, conn.RemoteMultiaddr())
+	}
 
 	n.log.Debug().
 		Str("peer", peerID.String()).
 		Str("remote_address", maddr.String()).
 		Str("local_address", laddr.String()).
-		Interface("addr_info", addrInfo).
+		Any("addr_info", peer.AddrInfo).
 		Msg("peer connected")
-
-	peer := blockless.Peer{
-		ID:        peerID,
-		MultiAddr: maddr.String(),
-		AddrInfo:  addrInfo,
-	}
 
 	// Store the peer info.
 	err := n.store.SavePeer(peer)
@@ -53,7 +64,6 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 
 func (n *connectionNotifiee) Disconnected(_ network.Network, conn network.Conn) {
 
-	// TODO: Check - do we want to remove peer after he's been disconnected.
 	maddr := conn.RemoteMultiaddr()
 	laddr := conn.LocalMultiaddr()
 

@@ -22,6 +22,11 @@ func (n *Node) Run(ctx context.Context) error {
 		return fmt.Errorf("could not subscribe to topics: %w", err)
 	}
 
+	err = n.host.ConnectToKnownPeers(ctx)
+	if err != nil {
+		return fmt.Errorf("could not connect to known peers: %w", err)
+	}
+
 	// Sync functions now in case they were removed from the storage.
 	err = n.fstore.Sync(false)
 	if err != nil {
