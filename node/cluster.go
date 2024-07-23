@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog/log"
 
@@ -24,6 +25,26 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, req request
 	}
 
 	n.log.Info().Str("request", req.RequestID).Strs("peers", blockless.PeerIDsToStr(req.Peers)).Str("consensus", req.Consensus.String()).Msg("received request to form consensus cluster")
+
+	// Add connection info about peers if we're not already connected to them.
+	for _, addrInfo := range req.ConnectionInfo {
+
+		if n.host.Host.ID() == addrInfo.ID {
+			continue
+		}
+
+		if n.host.Network().Connectedness(addrInfo.ID) == network.Connected {
+			continue
+		}
+
+		n.log.Debug().
+			Any("known", n.host.Network().Peerstore().Addrs(addrInfo.ID)).
+			Any("received", addrInfo.Addrs).
+			Stringer("peer", addrInfo.ID).
+			Msg("received addresses for fellow cluster replica")
+
+		n.host.Network().Peerstore().AddAddrs(addrInfo.ID, addrInfo.Addrs, ClusterAddressTTL)
+	}
 
 	switch req.Consensus {
 	case consensus.Raft:
@@ -72,9 +93,20 @@ func (n *Node) formCluster(ctx context.Context, requestID string, replicas []pee
 
 	// Create cluster formation request.
 	reqCluster := request.FormCluster{
-		RequestID: requestID,
-		Peers:     replicas,
-		Consensus: consensus,
+		RequestID:      requestID,
+		Peers:          replicas,
+		Consensus:      consensus,
+		ConnectionInfo: make([]peer.AddrInfo, 0, len(replicas)),
+	}
+
+	// Add connection info in case replicas don't already know of each other.
+	for _, replica := range replicas {
+		addrInfo := peer.AddrInfo{
+			ID:    replica,
+			Addrs: n.host.Peerstore().Addrs(replica),
+		}
+
+		reqCluster.ConnectionInfo = append(reqCluster.ConnectionInfo, addrInfo)
 	}
 
 	// Request execution from peers.

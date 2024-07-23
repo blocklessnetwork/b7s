@@ -14,9 +14,10 @@ var _ (json.Marshaler) = (*FormCluster)(nil)
 // FormCluster describes the `MessageFormCluster` request payload.
 // It is sent on clustered execution of a request.
 type FormCluster struct {
-	RequestID string         `json:"request_id,omitempty"`
-	Peers     []peer.ID      `json:"peers,omitempty"`
-	Consensus consensus.Type `json:"consensus,omitempty"`
+	RequestID      string          `json:"request_id,omitempty"`
+	Peers          []peer.ID       `json:"peers,omitempty"`
+	Consensus      consensus.Type  `json:"consensus,omitempty"`
+	ConnectionInfo []peer.AddrInfo `json:"connection_info,omitempty"`
 }
 
 func (FormCluster) Type() string { return blockless.MessageFormCluster }

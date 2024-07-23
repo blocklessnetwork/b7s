@@ -86,7 +86,7 @@ func (n *Node) Run(ctx context.Context) error {
 					continue
 				}
 
-				n.log.Trace().Str("topic", name).Str("peer", msg.ReceivedFrom.String()).Str("id", msg.ID).Msg("received message")
+				n.log.Trace().Str("topic", name).Str("peer", msg.ReceivedFrom.String()).Hex("id", []byte(msg.ID)).Msg("received message")
 
 				// Try to get a slot for processing the request.
 				n.sema <- struct{}{}
