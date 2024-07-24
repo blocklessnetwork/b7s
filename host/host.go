@@ -12,6 +12,7 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
 	ma "github.com/multiformats/go-multiaddr"
 )
 
@@ -49,12 +50,19 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 		addresses = append(addresses, wsAddr)
 	}
 
+	// By default the connection manager will prune connections each 10 seconds, while new connections are spared from pruning for the initial 1 minute.
+	cm, err := connmgr.NewConnManager(connLimitLo, connLimitHi)
+	if err != nil {
+		return nil, fmt.Errorf("could not create new connection manager: %w", err)
+	}
+
 	opts := []libp2p.Option{
 		libp2p.ListenAddrStrings(addresses...),
 		libp2p.DefaultTransports,
 		libp2p.DefaultMuxers,
 		libp2p.DefaultSecurity,
 		libp2p.NATPortMap(),
+		libp2p.ConnectionManager(cm),
 	}
 
 	// Read private key, if provided.
