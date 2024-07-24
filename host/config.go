@@ -38,6 +38,7 @@ type Config struct {
 
 	BootNodesReachabilityCheckInterval time.Duration
 	MustReachBootNodes                 bool
+	DisableResourceLimits              bool
 }
 
 // WithPrivateKey specifies the private key for the Host.
@@ -125,5 +126,13 @@ func WithMustReachBootNodes(b bool) func(*Config) {
 func WithBootNodesReachabilityInterval(d time.Duration) func(cfg *Config) {
 	return func(cfg *Config) {
 		cfg.BootNodesReachabilityCheckInterval = d
+	}
+}
+
+// WithDisabledResourceLimits allows removing any resource limits set by libp2p.
+// WARNING: experimental
+func WithDisabledResourceLimits(b bool) func(cfg *Config) {
+	return func(cfg *Config) {
+		cfg.DisableResourceLimits = b
 	}
 }
