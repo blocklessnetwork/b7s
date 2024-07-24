@@ -128,6 +128,7 @@ func run() int {
 		host.WithWebsocket(cfg.Connectivity.Websocket),
 		host.WithWebsocketPort(cfg.Connectivity.WebsocketPort),
 		host.WithMustReachBootNodes(cfg.Connectivity.MustReachBootNodes),
+		host.WithDisabledResourceLimits(cfg.Connectivity.DisableConnectionLimits),
 	}
 
 	if !cfg.Connectivity.NoDialbackPeers {

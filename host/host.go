@@ -12,6 +12,7 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
+	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
 	ma "github.com/multiformats/go-multiaddr"
 )
 
@@ -55,6 +56,15 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 		libp2p.DefaultMuxers,
 		libp2p.DefaultSecurity,
 		libp2p.NATPortMap(),
+	}
+
+	if cfg.DisableResourceLimits {
+		rcmgr, err := rcmgr.NewResourceManager(rcmgr.NewFixedLimiter(rcmgr.InfiniteLimits))
+		if err != nil {
+			return nil, fmt.Errorf("could not create new resource manager: %w", err)
+		}
+
+		opts = append(opts, libp2p.ResourceManager(rcmgr))
 	}
 
 	// Read private key, if provided.
