@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/hashicorp/go-multierror"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -63,8 +64,8 @@ func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) erro
 	return nil
 }
 
-// sendToMany serializes the message and sends it to a number of peers. It aborts on any error.
-func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Message) error {
+// sendToMany serializes the message and sends it to a number of peers. `requireAll` dictates how we treat partial errors.
+func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Message, requireAll bool) error {
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -72,15 +73,42 @@ func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Me
 		return fmt.Errorf("could not encode record: %w", err)
 	}
 
+	var errGroup multierror.Group
 	for i, peer := range peers {
-		// Send message.
-		err = n.host.SendMessage(ctx, peer, payload)
-		if err != nil {
-			return fmt.Errorf("could not send message to peer (id: %v, peer %d out of %d): %w", peer, i, len(peers), err)
-		}
+		i := i
+		peer := peer
+
+		errGroup.Go(func() error {
+			err := n.host.SendMessage(ctx, peer, payload)
+			if err != nil {
+				return fmt.Errorf("peer %v/%v send error (peer: %v): %w", i+1, len(peers), peer.String(), err)
+			}
+
+			return nil
+		})
 	}
 
-	return nil
+	retErr := errGroup.Wait()
+	if retErr == nil || len(retErr.Errors) == 0 {
+		// If everything succeeded => ok.
+		return nil
+	}
+
+	switch len(retErr.Errors) {
+	case len(peers):
+		// If everything failed => error.
+		return fmt.Errorf("all sends failed: %w", retErr)
+
+	default:
+		// Some sends failed - do as requested by `requireAll`.
+		if requireAll {
+			return fmt.Errorf("some sends failed: %w", retErr)
+		}
+
+		n.log.Warn().Err(retErr).Msg("some sends failed, proceeding")
+
+		return nil
+	}
 }
 
 func (n *Node) publish(ctx context.Context, msg blockless.Message) error {
