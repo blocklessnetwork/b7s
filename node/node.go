@@ -12,6 +12,7 @@ import (
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node/internal/waitmap"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // Node is the entity that actually provides the main Blockless node functionality.
@@ -44,6 +45,9 @@ type Node struct {
 
 	executeResponses   *waitmap.WaitMap
 	consensusResponses *waitmap.WaitMap
+
+	// Telemetry
+	tracer *tracing.Tracer
 }
 
 // New creates a new Node.
@@ -69,7 +73,7 @@ func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore 
 	n := &Node{
 		cfg: cfg,
 
-		log:      log.With().Str("component", "node").Logger(),
+		log:      log,
 		host:     host,
 		fstore:   fstore,
 		executor: cfg.Execute,
@@ -82,6 +86,8 @@ func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore 
 		clusters:           make(map[string]consensusExecutor),
 		executeResponses:   waitmap.New(),
 		consensusResponses: waitmap.New(),
+
+		tracer: tracing.NewTracer(tracerName),
 	}
 
 	if cfg.LoadAttributes {
@@ -111,13 +117,6 @@ func (n *Node) ID() string {
 	return n.host.ID().String()
 }
 
-func newRequestID() (string, error) {
-
-	// Generate a new request/executionID.
-	uuid, err := uuid.NewRandom()
-	if err != nil {
-		return "", fmt.Errorf("could not generate new request ID: %w", err)
-	}
-
-	return uuid.String(), nil
+func newRequestID() string {
+	return uuid.New().String()
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.RollCall) error {
@@ -46,17 +45,10 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.Ro
 		}
 	}
 
-	// Base response to return.
-	res := response.RollCall{
-		FunctionID: req.FunctionID,
-		RequestID:  req.RequestID,
-		Code:       codes.Error, // CodeError by default, changed if everything goes well.
-	}
-
 	// Check if we have this function installed.
-	installed, err := n.fstore.Installed(req.FunctionID)
+	installed, err := n.fstore.IsInstalled(req.FunctionID)
 	if err != nil {
-		sendErr := n.send(ctx, req.Origin, res)
+		sendErr := n.send(ctx, req.Origin, req.Response(codes.Error))
 		if sendErr != nil {
 			// Log send error but choose to return the original error.
 			log.Error().Err(sendErr).Str("to", req.Origin.String()).Msg("could not send response")
@@ -70,9 +62,9 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.Ro
 
 		log.Info().Msg("roll call but function not installed, installing now")
 
-		err = n.installFunction(req.FunctionID, manifestURLFromCID(req.FunctionID))
+		err = n.installFunction(ctx, req.FunctionID, manifestURLFromCID(req.FunctionID))
 		if err != nil {
-			sendErr := n.send(ctx, req.Origin, res)
+			sendErr := n.send(ctx, req.Origin, req.Response(codes.Error))
 			if sendErr != nil {
 				// Log send error but choose to return the original error.
 				log.Error().Err(sendErr).Str("to", req.Origin.String()).Msg("could not send response")
@@ -84,8 +76,7 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.Ro
 	log.Info().Str("origin", req.Origin.String()).Msg("reporting for roll call")
 
 	// Send positive response.
-	res.Code = codes.Accepted
-	err = n.send(ctx, req.Origin, res)
+	err = n.send(ctx, req.Origin, req.Response(codes.Accepted))
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)
 	}
@@ -194,7 +185,7 @@ func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID
 	}
 
 	// Publish the mssage.
-	err := n.publishToTopic(ctx, topic, rollCall)
+	err := n.publishToTopic(ctx, topic, &rollCall)
 	if err != nil {
 		return fmt.Errorf("could not publish to topic: %w", err)
 	}

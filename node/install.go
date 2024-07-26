@@ -9,7 +9,6 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, req request.InstallFunction) error {
@@ -21,20 +20,13 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, req req
 	}
 
 	// Install function.
-	err := n.installFunction(req.CID, req.ManifestURL)
+	err := n.installFunction(ctx, req.CID, req.ManifestURL)
 	if err != nil {
 		return fmt.Errorf("could not install function: %w", err)
 	}
 
-	// Create the response.
-	res := response.InstallFunction{
-		Code:    codes.Accepted,
-		Message: "installed",
-		CID:     req.CID,
-	}
-
 	// Reply to the caller.
-	err = n.send(ctx, from, res)
+	err = n.send(ctx, from, req.Response(codes.Accepted))
 	if err != nil {
 		return fmt.Errorf("could not send the response (peer: %s): %w", from, err)
 	}
@@ -43,10 +35,10 @@ func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, req req
 }
 
 // installFunction will check if the function is installed first, and install it if not.
-func (n *Node) installFunction(cid string, manifestURL string) error {
+func (n *Node) installFunction(ctx context.Context, cid string, manifestURL string) error {
 
 	// Check if the function is installed.
-	installed, err := n.fstore.Installed(cid)
+	installed, err := n.fstore.IsInstalled(cid)
 	if err != nil {
 		return fmt.Errorf("could not check if function is installed: %w", err)
 	}
@@ -56,7 +48,7 @@ func (n *Node) installFunction(cid string, manifestURL string) error {
 	}
 
 	// If the function was not installed already, install it now.
-	err = n.fstore.Install(manifestURL, cid)
+	err = n.fstore.Install(ctx, manifestURL, cid)
 	if err != nil {
 		return fmt.Errorf("could not install function: %w", err)
 	}

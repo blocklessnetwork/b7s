@@ -7,22 +7,20 @@ import (
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/peer"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // NOTE: head node typically receives execution requests from the REST API. This message handling is not cognizant of subgroups.
 func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
 
-	requestID, err := newRequestID()
-	if err != nil {
-		return fmt.Errorf("could not generate new request ID: %w", err)
-	}
+	requestID := newRequestID()
 
 	log := n.log.With().Str("request", req.RequestID).Str("peer", from.String()).Str("function", req.FunctionID).Logger()
 
@@ -33,14 +31,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request
 
 	log.Info().Str("code", code.String()).Msg("execution complete")
 
-	// Create the execution response from the execution result.
-	res := response.Execute{
-		Code:      code,
-		RequestID: requestID,
-		Results:   results,
-		Cluster:   cluster,
-	}
-
+	res := req.Response(code).WithResults(results).WithCluster(cluster)
 	// Communicate the reason for failure in these cases.
 	if errors.Is(err, blockless.ErrRollCallTimeout) || errors.Is(err, blockless.ErrExecutionNotEnoughNodes) {
 		res.Message = err.Error()
@@ -58,6 +49,11 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request
 // headExecute is called on the head node. The head node will publish a roll call and delegate an execution request to chosen nodes.
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
 func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request, subgroup string) (codes.Code, execute.ResultMap, execute.Cluster, error) {
+
+	ctx, span := n.tracer.Start(ctx, spanHeadExecute,
+		trace.WithSpanKind(trace.SpanKindClient),
+		trace.WithAttributes(tracing.ExecutionAttributes(requestID, req)...))
+	defer span.End()
 
 	nodeCount := -1
 	if req.Config.NodeCount >= 1 {
@@ -129,7 +125,7 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 		}
 	}
 
-	err = n.sendToMany(ctx, reportingPeers, reqExecute)
+	err = n.sendToMany(ctx, reportingPeers, &reqExecute)
 	if err != nil {
 		return codes.Error, nil, cluster, fmt.Errorf("could not send execution request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)
 	}

@@ -23,7 +23,7 @@ type messageEnvelope struct {
 func (r Request) MarshalJSON() ([]byte, error) {
 	type alias Request
 	rec := messageRecord{
-		Type: MessageRequest,
+		Type: r.Type(),
 		Data: alias(r),
 	}
 	return json.Marshal(rec)
@@ -42,7 +42,7 @@ func (r *Request) UnmarshalJSON(data []byte) error {
 func (p PrePrepare) MarshalJSON() ([]byte, error) {
 	type alias PrePrepare
 	rec := messageRecord{
-		Type: MessagePrePrepare,
+		Type: p.Type(),
 		Data: alias(p),
 	}
 	return json.Marshal(rec)
@@ -61,7 +61,7 @@ func (p *PrePrepare) UnmarshalJSON(data []byte) error {
 func (p Prepare) MarshalJSON() ([]byte, error) {
 	type alias Prepare
 	rec := messageRecord{
-		Type: MessagePrepare,
+		Type: p.Type(),
 		Data: alias(p),
 	}
 	return json.Marshal(rec)
@@ -80,7 +80,7 @@ func (p *Prepare) UnmarshalJSON(data []byte) error {
 func (c Commit) MarshalJSON() ([]byte, error) {
 	type alias Commit
 	rec := messageRecord{
-		Type: MessageCommit,
+		Type: c.Type(),
 		Data: alias(c),
 	}
 	return json.Marshal(rec)
@@ -153,7 +153,7 @@ func (p *PrepareInfo) UnmarshalJSON(data []byte) error {
 func (v ViewChange) MarshalJSON() ([]byte, error) {
 	type alias ViewChange
 	rec := messageRecord{
-		Type: MessageViewChange,
+		Type: v.Type(),
 		Data: alias(v),
 	}
 	return json.Marshal(rec)
@@ -193,7 +193,7 @@ func (v NewView) MarshalJSON() ([]byte, error) {
 	}
 
 	rec := messageRecord{
-		Type: MessageNewView,
+		Type: v.Type(),
 		Data: nv,
 	}
 
@@ -233,7 +233,7 @@ func (n *NewView) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func unpackMessage(payload []byte) (any, error) {
+func unpackMessage(payload []byte) (PBFTMessage, error) {
 
 	var msg messageEnvelope
 	err := json.Unmarshal(payload, &msg)

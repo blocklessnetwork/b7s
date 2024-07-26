@@ -15,6 +15,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
 	"github.com/blocklessnetwork/b7s/models/response"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // consensusExecutor defines the interface we have for managing clustered execution.
@@ -46,7 +47,7 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 			},
 		}
 
-		err := n.send(ctx, req.Origin, msg)
+		err := n.send(ctx, req.Origin, &msg)
 		if err != nil {
 			n.log.Error().Err(err).Str("peer", req.Origin.String()).Msg("could not send execution result to node")
 		}
@@ -69,13 +70,7 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 	n.clusters[fc.RequestID] = rh
 	n.clusterLock.Unlock()
 
-	res := response.FormCluster{
-		RequestID: fc.RequestID,
-		Code:      codes.OK,
-		Consensus: fc.Consensus,
-	}
-
-	err = n.send(ctx, from, res)
+	err = n.send(ctx, from, fc.Response(codes.OK).WithConsensus(fc.Consensus))
 	if err != nil {
 		return fmt.Errorf("could not send cluster confirmation message: %w", err)
 	}
@@ -89,6 +84,13 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 		n.executeResponses.Set(requestID, result)
 	}
 
+	// If we have tracing enabled we will have trace info in the context.
+	// If not, there might be trace info in the message so just use that.
+	ti := tracing.GetTraceInfo(ctx)
+	if ti.Empty() {
+		ti = fc.TraceInfo
+	}
+
 	ph, err := pbft.NewReplica(
 		n.log,
 		n.host,
@@ -96,6 +98,7 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 		fc.Peers,
 		fc.RequestID,
 		pbft.WithPostProcessors(cacheFn),
+		pbft.WithTraceInfo(ti),
 	)
 	if err != nil {
 		return fmt.Errorf("could not create PBFT node: %w", err)
@@ -105,13 +108,7 @@ func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.F
 	n.clusters[fc.RequestID] = ph
 	n.clusterLock.Unlock()
 
-	res := response.FormCluster{
-		RequestID: fc.RequestID,
-		Code:      codes.OK,
-		Consensus: fc.Consensus,
-	}
-
-	err = n.send(ctx, from, res)
+	err = n.send(ctx, from, fc.Response(codes.OK).WithConsensus(fc.Consensus))
 	if err != nil {
 		return fmt.Errorf("could not send cluster confirmation message: %w", err)
 	}

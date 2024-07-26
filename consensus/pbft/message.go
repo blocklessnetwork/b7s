@@ -7,7 +7,24 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
+
+type PBFTMessage interface {
+	Type() MessageType
+}
+
+type TraceableMessage interface {
+	SaveTraceContext(t tracing.TraceInfo)
+}
+
+type BaseMessage struct {
+	tracing.TraceInfo
+}
+
+func (m *BaseMessage) SaveTraceContext(t tracing.TraceInfo) {
+	m.TraceInfo = t
+}
 
 // JSON encoding related code is in serialization.go
 // Signature related code is in message_signature.go
@@ -41,13 +58,19 @@ func (m MessageType) String() string {
 }
 
 type Request struct {
+	BaseMessage
 	ID        string          `json:"id"`
 	Timestamp time.Time       `json:"timestamp"`
 	Origin    peer.ID         `json:"origin"`
 	Execute   execute.Request `json:"execute"`
 }
 
+func (r Request) Type() MessageType {
+	return MessageRequest
+}
+
 type PrePrepare struct {
+	BaseMessage
 	View           uint    `json:"view"`
 	SequenceNumber uint    `json:"sequence_number"`
 	Digest         string  `json:"digest"`
@@ -57,7 +80,12 @@ type PrePrepare struct {
 	Signature string `json:"signature,omitempty"`
 }
 
+func (p PrePrepare) Type() MessageType {
+	return MessagePrePrepare
+}
+
 type Prepare struct {
+	BaseMessage
 	View           uint   `json:"view"`
 	SequenceNumber uint   `json:"sequence_number"`
 	Digest         string `json:"digest"`
@@ -66,7 +94,12 @@ type Prepare struct {
 	Signature string `json:"signature,omitempty"`
 }
 
+func (p Prepare) Type() MessageType {
+	return MessagePrepare
+}
+
 type Commit struct {
+	BaseMessage
 	View           uint   `json:"view"`
 	SequenceNumber uint   `json:"sequence_number"`
 	Digest         string `json:"digest"`
@@ -75,7 +108,12 @@ type Commit struct {
 	Signature string `json:"signature,omitempty"`
 }
 
+func (c Commit) Type() MessageType {
+	return MessageCommit
+}
+
 type ViewChange struct {
+	BaseMessage
 	View     uint          `json:"view"`
 	Prepares []PrepareInfo `json:"prepares"`
 
@@ -87,6 +125,10 @@ type ViewChange struct {
 	//  - C - 2f+1 checkpoint messages proving the correctness of s => see above
 }
 
+func (v ViewChange) Type() MessageType {
+	return MessageViewChange
+}
+
 type PrepareInfo struct {
 	View           uint                `json:"view"`
 	SequenceNumber uint                `json:"sequence_number"`
@@ -94,11 +136,17 @@ type PrepareInfo struct {
 	PrePrepare     PrePrepare          `json:"preprepare"`
 	Prepares       map[peer.ID]Prepare `json:"prepares"`
 }
+
 type NewView struct {
+	BaseMessage
 	View        uint                   `json:"view"`
 	Messages    map[peer.ID]ViewChange `json:"messages"`
 	PrePrepares []PrePrepare           `json:"preprepares"`
 
 	// Signed digest of the new view message.
 	Signature string `json:"signature,omitempty"`
+}
+
+func (v NewView) Type() MessageType {
+	return MessageNewView
 }
