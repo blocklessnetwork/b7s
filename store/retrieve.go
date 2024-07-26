@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
-func (s *Store) RetrievePeer(id peer.ID) (blockless.Peer, error) {
+func (s *Store) RetrievePeer(_ context.Context, id peer.ID) (blockless.Peer, error) {
 
 	idBytes, err := id.MarshalBinary()
 	if err != nil {
@@ -27,7 +28,7 @@ func (s *Store) RetrievePeer(id peer.ID) (blockless.Peer, error) {
 	return peer, nil
 }
 
-func (s *Store) RetrievePeers() ([]blockless.Peer, error) {
+func (s *Store) RetrievePeers(_ context.Context) ([]blockless.Peer, error) {
 
 	peers := make([]blockless.Peer, 0)
 
@@ -50,7 +51,7 @@ func (s *Store) RetrievePeers() ([]blockless.Peer, error) {
 	return peers, nil
 }
 
-func (s *Store) RetrieveFunction(cid string) (blockless.FunctionRecord, error) {
+func (s *Store) RetrieveFunction(_ context.Context, cid string) (blockless.FunctionRecord, error) {
 
 	key := encodeKey(PrefixFunction, cid)
 	var function blockless.FunctionRecord
@@ -62,7 +63,7 @@ func (s *Store) RetrieveFunction(cid string) (blockless.FunctionRecord, error) {
 	return function, nil
 }
 
-func (s *Store) RetrieveFunctions() ([]blockless.FunctionRecord, error) {
+func (s *Store) RetrieveFunctions(_ context.Context) ([]blockless.FunctionRecord, error) {
 
 	functions := make([]blockless.FunctionRecord, 0)
 

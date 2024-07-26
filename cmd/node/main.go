@@ -13,6 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"github.com/ziflex/lecho/v3"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
 	"github.com/blocklessnetwork/b7s/api"
 	"github.com/blocklessnetwork/b7s/config"
@@ -24,6 +25,8 @@ import (
 	"github.com/blocklessnetwork/b7s/node"
 	"github.com/blocklessnetwork/b7s/store"
 	"github.com/blocklessnetwork/b7s/store/codec"
+	"github.com/blocklessnetwork/b7s/store/traceable"
+	"github.com/blocklessnetwork/b7s/telemetry"
 )
 
 const (
@@ -41,6 +44,10 @@ func run() int {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 
+	// Create the main context.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// Initialize logging.
 	log := zerolog.New(os.Stdout).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 
@@ -49,6 +56,16 @@ func run() int {
 	if err != nil {
 		log.Error().Err(err).Msg("could not read configuration")
 		return failure
+	}
+
+	// TODO: Change how node starts up with regards to key/no-key.
+	nodeID := ""
+	if cfg.Connectivity.PrivateKey != "" {
+		nodeID, err = peerIDFromKey(cfg.Connectivity.PrivateKey)
+		if err != nil {
+			log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not read private key")
+			return failure
+		}
 	}
 
 	// Set log level.
@@ -66,16 +83,36 @@ func run() int {
 		return failure
 	}
 
-	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.
-	nodeDir := ""
-	if cfg.Connectivity.PrivateKey != "" {
-		id, err := peerIDFromKey(cfg.Connectivity.PrivateKey)
-		if err != nil {
-			log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not read private key")
-			return failure
+	if cfg.Telemetry.Enable {
+
+		log.Info().Msg("telemetry enabled")
+
+		opts := []telemetry.Option{
+			telemetry.WithID(nodeID),
+			telemetry.WithNodeRole(role),
+			telemetry.WithBatchTraceTimeout(cfg.Telemetry.Tracing.ExporterBatchTimeout),
+			telemetry.WithGRPCTracing(cfg.Telemetry.Tracing.GRPC.Endpoint),
+			telemetry.WithHTTPTracing(cfg.Telemetry.Tracing.HTTP.Endpoint),
 		}
 
-		nodeDir = generateNodeDirName(id)
+		// Setup telemetry.
+		shutdown, err := telemetry.SetupSDK(ctx, log.With().Str("component", "telemetry").Logger(), opts...)
+		defer func() {
+			err := shutdown(ctx)
+			if err != nil {
+				log.Error().Err(err).Msg("could not shutdown telemetry")
+			}
+		}()
+		if err != nil {
+			log.Error().Err(err).Msg("could not setup telemetry")
+			return failure
+		}
+	}
+
+	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.
+	nodeDir := ""
+	if nodeID != "" {
+		nodeDir = generateNodeDirName(nodeID)
 	} else {
 		nodeDir, err = os.MkdirTemp("", ".b7s_*")
 		if err != nil {
@@ -110,7 +147,7 @@ func run() int {
 	defer db.Close()
 
 	// Create a new store.
-	store := store.New(db, codec.NewJSONCodec())
+	store := traceable.New(store.New(db, codec.NewJSONCodec()))
 
 	// Get the list of boot nodes addresses.
 	bootNodeAddrs, err := getBootNodeAddresses(cfg.BootNodes)
@@ -134,7 +171,7 @@ func run() int {
 
 	if !cfg.Connectivity.NoDialbackPeers {
 		// Get the list of dial back peers.
-		peers, err := store.RetrievePeers()
+		peers, err := store.RetrievePeers(ctx)
 		if err != nil {
 			log.Error().Err(err).Msg("could not get list of dial-back peers")
 			return failure
@@ -144,7 +181,7 @@ func run() int {
 	}
 
 	// Create libp2p host.
-	host, err := host.New(log, cfg.Connectivity.Address, cfg.Connectivity.Port, hostOpts...)
+	host, err := host.New(log.With().Str("component", "host").Logger(), cfg.Connectivity.Address, cfg.Connectivity.Port, hostOpts...)
 	if err != nil {
 		log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not create host")
 		return failure
@@ -192,7 +229,7 @@ func run() int {
 		}
 
 		// Create an executor.
-		executor, err := executor.New(log, execOptions...)
+		executor, err := executor.New(log.With().Str("component", "executor").Logger(), execOptions...)
 		if err != nil {
 			log.Error().
 				Err(err).
@@ -208,7 +245,7 @@ func run() int {
 	}
 
 	// Create function store.
-	fstore := fstore.New(log, store, cfg.Workspace)
+	fstore := fstore.New(log.With().Str("component", "fstore").Logger(), store, cfg.Workspace)
 
 	// If we have topics specified, use those.
 	if len(cfg.Topics) > 0 {
@@ -216,15 +253,11 @@ func run() int {
 	}
 
 	// Instantiate node.
-	node, err := node.New(log, host, store, fstore, opts...)
+	node, err := node.New(log.With().Str("component", "node").Logger(), host, store, fstore, opts...)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure
 	}
-
-	// Create the main context.
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	done := make(chan struct{})
 	failed := make(chan struct{})
@@ -259,7 +292,7 @@ func run() int {
 		server := createEchoServer(log)
 
 		// Create an API handler.
-		apiHandler := api.New(log, node)
+		apiHandler := api.New(log.With().Str("component", "api").Logger(), node)
 		api.RegisterHandlers(server, apiHandler)
 
 		// Start API in a separate goroutine.
@@ -305,6 +338,7 @@ func createEchoServer(log zerolog.Logger) *echo.Echo {
 
 	elog := lecho.From(log)
 	server.Logger = elog
+	server.Use(otelecho.Middleware(""))
 	server.Use(lecho.Middleware(lecho.Config{Logger: elog}))
 
 	return server

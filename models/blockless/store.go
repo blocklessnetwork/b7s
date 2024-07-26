@@ -1,6 +1,8 @@
 package blockless
 
 import (
+	"context"
+
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
@@ -10,15 +12,15 @@ type Store interface {
 }
 
 type PeerStore interface {
-	SavePeer(peer Peer) error
-	RetrievePeer(id peer.ID) (Peer, error)
-	RetrievePeers() ([]Peer, error)
-	RemovePeer(id peer.ID) error
+	SavePeer(ctx context.Context, peer Peer) error
+	RetrievePeer(ctx context.Context, id peer.ID) (Peer, error)
+	RetrievePeers(ctx context.Context) ([]Peer, error)
+	RemovePeer(ctx context.Context, id peer.ID) error
 }
 
 type FunctionStore interface {
-	SaveFunction(function FunctionRecord) error
-	RetrieveFunction(cid string) (FunctionRecord, error)
-	RetrieveFunctions() ([]FunctionRecord, error)
-	RemoveFunction(id string) error
+	SaveFunction(ctx context.Context, function FunctionRecord) error
+	RetrieveFunction(ctx context.Context, cid string) (FunctionRecord, error)
+	RetrieveFunctions(ctx context.Context) ([]FunctionRecord, error)
+	RemoveFunction(ctx context.Context, id string) error
 }

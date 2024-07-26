@@ -1,25 +1,28 @@
 package fstore
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
-func (h *FStore) Sync(haltOnError bool) error {
+func (h *FStore) Sync(ctx context.Context, haltOnError bool) error {
 
-	functions, err := h.store.RetrieveFunctions()
+	functions, err := h.store.RetrieveFunctions(ctx)
 	if err != nil {
 		return fmt.Errorf("could not retrieve functions: %w", err)
 	}
 
 	var multierr *multierror.Error
 	for _, function := range functions {
-		err := h.sync(function)
+		err := h.sync(ctx, function)
 		if err != nil {
 			// Add CID info to error to know what erred.
 			wrappedErr := fmt.Errorf("could not sync function (cid: %s): %w", function.CID, err)
@@ -36,7 +39,10 @@ func (h *FStore) Sync(haltOnError bool) error {
 
 // Sync will verify that the function identified by `cid` is still found on the local filesystem.
 // If the function archive of function files are missing, they will be recreated.
-func (h *FStore) sync(fn blockless.FunctionRecord) error {
+func (h *FStore) sync(ctx context.Context, fn blockless.FunctionRecord) error {
+
+	ctx, span := h.tracer.Start(ctx, spanSync, trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(b7ssemconv.FunctionCID.String(fn.CID)))
+	defer span.End()
 
 	// Read the function directly from storage - we don't want to update the timestamp
 	// since this is a 'maintenance' access.
@@ -66,7 +72,7 @@ func (h *FStore) sync(fn blockless.FunctionRecord) error {
 
 	// If we don't have the archive - redownload it.
 	if !haveArchive {
-		path, err := h.download(fn.CID, fn.Manifest)
+		path, err := h.download(ctx, fn.CID, fn.Manifest)
 		if err != nil {
 			return fmt.Errorf("could not download the function archive (cid: %v): %w", fn.CID, err)
 		}
@@ -95,7 +101,7 @@ func (h *FStore) sync(fn blockless.FunctionRecord) error {
 	}
 
 	// Save the updated function record.
-	err = h.saveFunction(fn)
+	err = h.saveFunction(ctx, fn)
 	if err != nil {
 		return fmt.Errorf("could not save function (cid: %v): %w", fn.CID, err)
 	}

@@ -19,6 +19,7 @@ var _ (json.Marshaler) = (*Execute)(nil)
 
 // Execute describes the response to the `MessageExecute` message.
 type Execute struct {
+	blockless.BaseMessage
 	RequestID string            `json:"request_id,omitempty"`
 	Code      codes.Code        `json:"code,omitempty"`
 	Results   execute.ResultMap `json:"results,omitempty"`
@@ -30,6 +31,16 @@ type Execute struct {
 
 	// Used to communicate the reason for failure to the user.
 	Message string `json:"message,omitempty"`
+}
+
+func (e *Execute) WithResults(r execute.ResultMap) *Execute {
+	e.Results = r
+	return e
+}
+
+func (e *Execute) WithCluster(c execute.Cluster) *Execute {
+	e.Cluster = c
+	return e
 }
 
 func (Execute) Type() string { return blockless.MessageExecuteResponse }
@@ -54,9 +65,10 @@ type PBFTResultInfo struct {
 
 func (e *Execute) Sign(key crypto.PrivKey) error {
 
-	// Exclude signature and the `from` field from the signature.
 	cp := *e
+	// Exclude some of the fields from the signature.
 	cp.Signature = ""
+	cp.BaseMessage = blockless.BaseMessage{}
 
 	payload, err := json.Marshal(cp)
 	if err != nil {
@@ -74,9 +86,10 @@ func (e *Execute) Sign(key crypto.PrivKey) error {
 
 func (e Execute) VerifySignature(key crypto.PubKey) error {
 
-	// Exclude signature and the `from` field from the signature.
 	cp := e
+	// Exclude some of the fields from the signature.
 	cp.Signature = ""
+	cp.BaseMessage = blockless.BaseMessage{}
 
 	payload, err := json.Marshal(cp)
 	if err != nil {

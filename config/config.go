@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/blocklessnetwork/b7s/node"
 )
 
@@ -50,6 +52,7 @@ type Config struct {
 	Connectivity Connectivity `koanf:"connectivity"`
 	Head         Head         `koanf:"head"`
 	Worker       Worker       `koanf:"worker"`
+	Telemetry    Telemetry    `koanf:"telemetry"`
 }
 
 // Log describes the logging configuration.
@@ -81,6 +84,25 @@ type Worker struct {
 	RuntimeCLI         string  `koanf:"runtime-cli"          flag:"runtime-cli"`
 	CPUPercentageLimit float64 `koanf:"cpu-percentage-limit" flag:"cpu-percentage-limit"`
 	MemoryLimitKB      int64   `koanf:"memory-limit"         flag:"memory-limit"`
+}
+
+type Telemetry struct {
+	Enable  bool    `koanf:"enable" flag:"enable-telemetry"`
+	Tracing Tracing `koanf:"tracing"`
+}
+
+type Tracing struct {
+	ExporterBatchTimeout time.Duration `koanf:"exporter-batch-timeout"`
+	GRPC                 GRPCTracing   `koanf:"grpc"`
+	HTTP                 HTTPTracing   `koanf:"http"`
+}
+
+type GRPCTracing struct {
+	Endpoint string `koanf:"endpoint" flag:"tracing-grpc-endpoint"`
+}
+
+type HTTPTracing struct {
+	Endpoint string `koanf:"endpoint" flag:"tracing-http-endpoint"`
 }
 
 // ConfigOptionInfo describes a specific configuration option, it's location in the config file and
@@ -141,6 +163,12 @@ func getFlagDescription(flag string) string {
 		return "memory limit (kB) for Blockless Functions"
 	case "no-dialback-peers":
 		return "start without dialing back peers from previous runs"
+	case "enable-telemetry":
+		return "emit telemetry data"
+	case "tracing-grpc-endpoint":
+		return "tracing exporter GRPC endpoint"
+	case "tracing-http-endpoint":
+		return "tracing exporter HTTP endpoint"
 	case "must-reach-boot-nodes":
 		return "halt node if we fail to reach boot nodes on start"
 	case "disable-connection-limits":

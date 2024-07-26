@@ -6,15 +6,15 @@ import (
 	"path/filepath"
 
 	"github.com/rs/zerolog"
-)
 
-// TODO: Currently we may have parallel execution of Blockless functions - e.g. we have two requests at the same time.
-// Do we want to limit this too?
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
+)
 
 // Executor provides the capabilities to run external applications.
 type Executor struct {
-	log zerolog.Logger
-	cfg Config
+	log    zerolog.Logger
+	cfg    Config
+	tracer *tracing.Tracer
 }
 
 // New creates a new Executor with the specified working directory.
@@ -55,8 +55,9 @@ func New(log zerolog.Logger, options ...Option) (*Executor, error) {
 	}
 
 	e := Executor{
-		log: log.With().Str("component", "executor").Logger(),
-		cfg: cfg,
+		log:    log,
+		cfg:    cfg,
+		tracer: tracing.NewTracer(tracerName),
 	}
 
 	return &e, nil

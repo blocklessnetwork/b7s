@@ -12,7 +12,7 @@ func (n *Node) runSyncLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			err := n.fstore.Sync(false)
+			err := n.fstore.Sync(ctx, false)
 			if err != nil {
 				n.log.Error().Err(err).Msg("function sync unsuccessful")
 			} else {

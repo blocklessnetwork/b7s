@@ -1,6 +1,7 @@
 package pbft
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -31,7 +32,8 @@ func (r *Replica) startViewChange(view uint) error {
 		return fmt.Errorf("could not sign view change message: %w", err)
 	}
 
-	err = r.broadcast(vc)
+	// TODO: Add tracing for the view change sequence too.
+	err = r.broadcast(context.Background(), &vc)
 	if err != nil {
 		return fmt.Errorf("could not broadcast view change: %w", err)
 	}
@@ -43,7 +45,7 @@ func (r *Replica) startViewChange(view uint) error {
 	return nil
 }
 
-func (r *Replica) processViewChange(replica peer.ID, msg ViewChange) error {
+func (r *Replica) processViewChange(ctx context.Context, replica peer.ID, msg ViewChange) error {
 
 	log := r.log.With().Str("replica", replica.String()).Uint("received_view", msg.View).Logger()
 	log.Info().Msg("processing view change message")
@@ -102,7 +104,7 @@ func (r *Replica) processViewChange(replica peer.ID, msg ViewChange) error {
 
 	log.Info().Msg("I am the expected primary for the new view, have enough view change messages")
 
-	return r.startNewView(msg.View)
+	return r.startNewView(ctx, msg.View)
 }
 
 func (r *Replica) recordViewChangeReceipt(replica peer.ID, vc ViewChange) {

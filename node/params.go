@@ -2,6 +2,7 @@ package node
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/blocklessnetwork/b7s/consensus"
@@ -26,6 +27,8 @@ const (
 	defaultExecutionThreshold = 0.6
 
 	syncInterval = time.Hour // How often do we recheck function installations.
+
+	allowErrorLeakToTelemetry = false // By default we will not send processing errors to telemetry tracers.
 )
 
 // Raft and consensus related parameters.
@@ -39,3 +42,31 @@ const (
 var (
 	ErrUnsupportedMessage = errors.New("unsupported message")
 )
+
+// Tracing span names.
+const (
+	// message events
+	spanMessageSend    = "MessageSend"
+	spanMessagePublish = "MessagePublish"
+	spanMessageProcess = "MessageProcess"
+	// notifiee events
+	spanPeerConnected    = "PeerConnected"
+	spanPeerDisconnected = "PeerDisconnected"
+	// execution events
+	spanHeadExecute   = "HeadExecute"
+	spanWorkerExecute = "WorkerExecute"
+)
+
+// Tracing span status messages.
+const (
+	spanStatusOK  = "message processed ok"
+	spanStatusErr = "error processing message"
+)
+
+func msgProcessSpanName(msgType string) string {
+	return fmt.Sprintf("%s %s", spanMessageProcess, msgType)
+}
+
+func msgSendSpanName(prefix string, msgType string) string {
+	return fmt.Sprintf("%s %s", prefix, msgType)
+}

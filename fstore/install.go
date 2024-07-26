@@ -1,15 +1,22 @@
 package fstore
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 // Install will download and install function identified by the manifest/CID.
-func (h *FStore) Install(address string, cid string) error {
+func (h *FStore) Install(ctx context.Context, address string, cid string) error {
+
+	ctx, span := h.tracer.Start(ctx, spanInstall, trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(b7ssemconv.FunctionCID.String(cid)))
+	defer span.End()
 
 	h.log.Debug().
 		Str("cid", cid).
@@ -32,7 +39,7 @@ func (h *FStore) Install(address string, cid string) error {
 	}
 
 	// Download the function identified by the manifest.
-	functionPath, err := h.download(cid, manifest)
+	functionPath, err := h.download(ctx, cid, manifest)
 	if err != nil {
 		return fmt.Errorf("could not download function: %w", err)
 	}
@@ -57,7 +64,7 @@ func (h *FStore) Install(address string, cid string) error {
 		Archive:  functionPath,
 		Files:    out,
 	}
-	err = h.saveFunction(fn)
+	err = h.saveFunction(ctx, fn)
 	if err != nil {
 		h.log.Error().
 			Err(err).
@@ -74,9 +81,9 @@ func (h *FStore) Install(address string, cid string) error {
 }
 
 // Installed checks if the function with the given CID is installed.
-func (h *FStore) Installed(cid string) (bool, error) {
+func (h *FStore) IsInstalled(cid string) (bool, error) {
 
-	fn, err := h.getFunction(cid)
+	fn, err := h.getFunction(context.Background(), cid)
 	if err != nil && errors.Is(err, blockless.ErrNotFound) {
 		return false, nil
 	}

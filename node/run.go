@@ -28,7 +28,7 @@ func (n *Node) Run(ctx context.Context) error {
 	}
 
 	// Sync functions now in case they were removed from the storage.
-	err = n.fstore.Sync(false)
+	err = n.fstore.Sync(ctx, false)
 	if err != nil {
 		return fmt.Errorf("could not sync functions: %w", err)
 	}
@@ -100,7 +100,9 @@ func (n *Node) Run(ctx context.Context) error {
 					err = n.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), subscriptionPipeline)
 					if err != nil {
 						n.log.Error().Err(err).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("could not process message")
+						return
 					}
+
 				}(msg)
 			}
 		}(name, topic.subscription)
@@ -135,6 +137,8 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 		err = n.processMessage(ctx, from, msg, directMessagePipeline)
 		if err != nil {
 			n.log.Error().Err(err).Str("peer", from.String()).Msg("could not process direct message")
+			return
 		}
+
 	})
 }

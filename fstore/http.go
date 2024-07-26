@@ -1,6 +1,7 @@
 package fstore
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -34,7 +35,7 @@ func (h *FStore) getJSON(address string, out interface{}) error {
 // download will retrieve the function with the given manifest. It returns the full path
 // of the file where the function is saved on the local storage or any error that might have
 // occurred in the process. The function blocks until the download is complete.
-func (h *FStore) download(cid string, manifest blockless.FunctionManifest) (string, error) {
+func (h *FStore) download(ctx context.Context, cid string, manifest blockless.FunctionManifest) (string, error) {
 
 	// Determine directory where files should be stored.
 	fdir := filepath.Join(h.workdir, cid)
@@ -64,6 +65,7 @@ func (h *FStore) download(cid string, manifest blockless.FunctionManifest) (stri
 	}
 	req.SetChecksum(sha256.New(), sum, true)
 	req.NoCreateDirectories = false
+	req = req.WithContext(ctx)
 
 	// Execute the download request.
 	res := h.downloader.Do(req)

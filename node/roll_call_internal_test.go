@@ -250,10 +250,7 @@ func TestNode_RollCall(t *testing.T) {
 
 		time.Sleep(subscriptionDiseminationPause)
 
-		requestID, err := newRequestID()
-		require.NoError(t, err)
-
-		err = node.publishRollCall(ctx, requestID, functionID, consensus.Type(0), "", nil)
+		err = node.publishRollCall(ctx, newRequestID(), functionID, consensus.Type(0), "", nil)
 		require.NoError(t, err)
 
 		deadlineCtx, cancel := context.WithTimeout(ctx, publishTimeout)
