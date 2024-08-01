@@ -10,7 +10,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func SetupSDK(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown ShutdownFunc, err error) {
+func InitializeTracing(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown ShutdownFunc, err error) {
 
 	cfg := DefaultConfig
 	for _, opt := range opts {

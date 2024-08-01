@@ -87,6 +87,7 @@ type Worker struct {
 type Telemetry struct {
 	Enable  bool    `koanf:"enable" flag:"enable-telemetry"`
 	Tracing Tracing `koanf:"tracing"`
+	Metrics Metrics `koanf:"metrics"`
 }
 
 type Tracing struct {
@@ -101,6 +102,15 @@ type GRPCTracing struct {
 
 type HTTPTracing struct {
 	Endpoint string `koanf:"endpoint" flag:"tracing-http-endpoint"`
+}
+
+type Metrics struct {
+	Prometheus Prometheus `koanf:"prometheus"`
+}
+
+type Prometheus struct {
+	Address     string `koanf:"address"      flag:"prometheus-address"`
+	PushGateway string `koanf:"push-gateway" flag:"prometheus-push-gateway"`
 }
 
 // ConfigOptionInfo describes a specific configuration option, it's location in the config file and
@@ -167,6 +177,10 @@ func getFlagDescription(flag string) string {
 		return "tracing exporter GRPC endpoint"
 	case "tracing-http-endpoint":
 		return "tracing exporter HTTP endpoint"
+	case "prometheus-address":
+		return "address where prometheus metrics will be served"
+	case "prometheus-push-gateway":
+		return "prometheus push gateway address"
 	default:
 		return ""
 	}

@@ -23,6 +23,7 @@ var DefaultConfig = Config{
 	},
 }
 
+// TODO: The Prometheus stuff does not belong there if we're doing tracing and metrics separate.
 type Config struct {
 	// Node ID, registered as service instance ID attribute.
 	ID string
@@ -30,6 +31,8 @@ type Config struct {
 	Role blockless.NodeRole
 	// Tracer configuration.
 	Trace TraceConfig
+	// Metrics configuration.
+	Metrics MetricsConfig
 }
 
 // TODO: Update trace exporters configs
@@ -59,6 +62,11 @@ type TraceHTTPConfig struct {
 	AllowInsecure  bool
 	UseCompression bool
 	// TLSConfig
+}
+
+type MetricsConfig struct {
+	PrometheusAddress     string
+	PrometheusPushGateway string
 }
 
 type Option func(*Config)
@@ -92,5 +100,17 @@ func WithHTTPTracing(endpoint string) Option {
 	return func(cfg *Config) {
 		cfg.Trace.HTTP.Endpoint = endpoint
 		cfg.Trace.HTTP.Enabled = endpoint != ""
+	}
+}
+
+func WithPrometheusAddress(address string) Option {
+	return func(cfg *Config) {
+		cfg.Metrics.PrometheusAddress = address
+	}
+}
+
+func WithPrometheusPushGateway(address string) Option {
+	return func(cfg *Config) {
+		cfg.Metrics.PrometheusPushGateway = address
 	}
 }
