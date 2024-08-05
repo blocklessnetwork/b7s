@@ -95,9 +95,8 @@ func run() int {
 
 		log.Info().Msg("telemetry enabled")
 
-		if cfg.Telemetry.Metrics.Prometheus.Address != "" {
-			server.GET("/metric", echo.WrapHandler(telemetry.GetMetricsHTTPHandler()))
-		}
+		// Set up metrics handler.
+		server.GET("/metrics", echo.WrapHandler(telemetry.GetMetricsHTTPHandler()))
 
 		opts := []telemetry.Option{
 			telemetry.WithID(nodeID),

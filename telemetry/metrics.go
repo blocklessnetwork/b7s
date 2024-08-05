@@ -21,12 +21,12 @@ func initPrometheusRegistry() error {
 
 	registry := prometheus.NewRegistry()
 	colls := []prometheus.Collector{
-		collectors.NewGoCollector(),
+		collectors.NewGoCollector(), // Add Go metrics.
 	}
 
+	// Add process metrics.
 	po := collectors.ProcessCollectorOpts{}
 	procCollector := collectors.NewProcessCollector(po)
-
 	colls = append(colls, procCollector)
 
 	for _, col := range colls {
@@ -35,6 +35,8 @@ func initPrometheusRegistry() error {
 			return fmt.Errorf("could not register collector: %w", err)
 		}
 	}
+
+	globalRegistry = registry
 
 	return nil
 }
