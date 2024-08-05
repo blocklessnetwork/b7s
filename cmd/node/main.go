@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -12,7 +13,6 @@ import (
 	"github.com/cockroachdb/pebble"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/ziflex/lecho/v3"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
@@ -33,6 +33,10 @@ const (
 	defaultLogLevel = zerolog.DebugLevel
 )
 
+var (
+	log = zerolog.New(os.Stdout).With().Timestamp().Logger().Level(defaultLogLevel)
+)
+
 const (
 	success = 0
 	failure = 1
@@ -44,31 +48,41 @@ func main() {
 
 func run() int {
 
-	// Create the main context.
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// Initialize logging.
-	log := zerolog.New(os.Stdout).With().Timestamp().Logger().Level(defaultLogLevel)
-
 	// Parse CLI flags and validate that the configuration is valid.
 	cfg, err := config.Load()
 	if err != nil {
 		log.Error().Err(err).Msg("could not read configuration")
 		return failure
 	}
+
 	// Update log level to what's in the config.
 	log = log.Level(parseLogLevel(cfg.Log.Level))
 
-	// Determine node role.
-	role, err := parseNodeRole(cfg.Role)
-	if err != nil {
-		log.Error().Err(err).Str("role", cfg.Role).Msg("invalid node role specified")
-		return failure
+	var (
+		nodeID  string
+		nodeDir string
+
+		nodeRole = parseNodeRole(cfg.Role)
+
+		// HTTP server will be created in two scenarios:
+		// - node is a head node (head node always has a REST API)
+		// - node has local prometheus metrics enabled
+		needHTTPServer = nodeRole == blockless.HeadNode || (cfg.Telemetry.Enable && cfg.Telemetry.Metrics.Prometheus.Address != "")
+		server         *echo.Echo
+
+		// If we have a REST API address, serve metrics there.
+		serverAddress = cmp.Or(cfg.Head.RestAPI, cfg.Telemetry.Metrics.Prometheus.Address)
+	)
+
+	// Create the main context.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if needHTTPServer {
+		server = createEchoServer(log)
 	}
 
 	// TODO: Change how node starts up with regards to key/no-key.
-	nodeID := ""
 	if cfg.Connectivity.PrivateKey != "" {
 		nodeID, err = peerIDFromKey(cfg.Connectivity.PrivateKey)
 		if err != nil {
@@ -81,9 +95,13 @@ func run() int {
 
 		log.Info().Msg("telemetry enabled")
 
+		if cfg.Telemetry.Metrics.Prometheus.Address != "" {
+			server.GET("/metric", echo.WrapHandler(telemetry.GetMetricsHTTPHandler()))
+		}
+
 		opts := []telemetry.Option{
 			telemetry.WithID(nodeID),
-			telemetry.WithNodeRole(role),
+			telemetry.WithNodeRole(nodeRole),
 			telemetry.WithBatchTraceTimeout(cfg.Telemetry.Tracing.ExporterBatchTimeout),
 			telemetry.WithGRPCTracing(cfg.Telemetry.Tracing.GRPC.Endpoint),
 			telemetry.WithHTTPTracing(cfg.Telemetry.Tracing.HTTP.Endpoint),
@@ -104,7 +122,6 @@ func run() int {
 	}
 
 	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.
-	nodeDir := ""
 	if nodeID != "" {
 		nodeDir = generateNodeDirName(nodeID)
 	} else {
@@ -167,13 +184,13 @@ func run() int {
 
 	// Set node options.
 	opts := []node.Option{
-		node.WithRole(role),
+		node.WithRole(nodeRole),
 		node.WithConcurrency(cfg.Concurrency),
 		node.WithAttributeLoading(cfg.LoadAttributes),
 	}
 
 	// If this is a worker node, initialize an executor.
-	if role == blockless.WorkerNode {
+	if nodeRole == blockless.WorkerNode {
 
 		// Executor options.
 		execOptions := []executor.Option{
@@ -237,7 +254,7 @@ func run() int {
 	go func() {
 
 		log.Info().
-			Str("role", role.String()).
+			Stringer("role", nodeRole).
 			Msg("Blockless Node starting")
 
 		err := node.Run(ctx)
@@ -251,26 +268,27 @@ func run() int {
 		log.Info().Msg("Blockless Node stopped")
 	}()
 
-	// If we're a head node - start the REST API.
-	if role == blockless.HeadNode {
+	// Start the REST API if needed.
+	if needHTTPServer {
 
-		if cfg.Head.RestAPI == "" {
-			log.Error().Err(err).Msg("REST API address is required")
+		if serverAddress == "" {
+			log.Error().Err(err).Msg("HTTP server address is required")
 			return failure
 		}
 
-		// Create echo server and iniialize logging.
-		server := createEchoServer(log)
+		// Create an API handler if we're a head node.
+		if nodeRole == blockless.HeadNode {
 
-		// Create an API handler.
-		apiHandler := api.New(log.With().Str("component", "api").Logger(), node)
-		api.RegisterHandlers(server, apiHandler)
+			apiHandler := api.New(log.With().Str("component", "api").Logger(), node)
+			api.RegisterHandlers(server, apiHandler)
+		}
 
-		// Start API in a separate goroutine.
+		// Start server in a separate goroutine.
 		go func() {
 
-			log.Info().Str("port", cfg.Head.RestAPI).Msg("Node API starting")
-			err := server.Start(cfg.Head.RestAPI)
+			log.Info().Str("address", serverAddress).Msg("Node API starting")
+
+			err := server.Start(serverAddress)
 			if err != nil && !errors.Is(err, http.ErrServerClosed) {
 				log.Warn().Err(err).Msg("Node API failed")
 				close(failed)
@@ -278,7 +296,7 @@ func run() int {
 				close(done)
 			}
 
-			log.Info().Msg("Node API stopped")
+			log.Info().Msg("HTTP server stopped")
 		}()
 	}
 

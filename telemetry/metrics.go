@@ -1,18 +1,25 @@
 package telemetry
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func initializeMetrics(cfg MetricsConfig) error {
+var (
+	// TODO: Maybe just use the prometheus default registry?
+	globalRegistry *prometheus.Registry
+	metricsOnce    sync.Once
+)
+
+func initPrometheusRegistry() error {
 
 	registry := prometheus.NewRegistry()
-
 	colls := []prometheus.Collector{
 		collectors.NewGoCollector(),
 	}
@@ -24,22 +31,26 @@ func initializeMetrics(cfg MetricsConfig) error {
 
 	for _, col := range colls {
 		err := registry.Register(col)
-		if err != nil {
+		if err != nil && !errors.As(err, &prometheus.AlreadyRegisteredError{}) {
 			return fmt.Errorf("could not register collector: %w", err)
 		}
 	}
 
 	return nil
-
 }
 
-func GetHTTPHandler() http.Handler {
+func GetMetricsHTTPHandler() http.Handler {
 
-	var registry *prometheus.Registry
+	metricsOnce.Do(func() {
+
+		// TODO: Handle error.
+		err := initPrometheusRegistry()
+		_ = err
+	})
 
 	opts := promhttp.HandlerOpts{
-		Registry: registry,
+		Registry: globalRegistry,
 	}
 
-	return promhttp.HandlerFor(registry, opts)
+	return promhttp.HandlerFor(globalRegistry, opts)
 }
