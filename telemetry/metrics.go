@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 )
 
 var (
-	// TODO: Maybe just use the prometheus default registry?
 	globalRegistry *prometheus.Registry
 	metricsOnce    sync.Once
 )
@@ -20,13 +20,15 @@ var (
 func initPrometheusRegistry() error {
 
 	registry := prometheus.NewRegistry()
-	colls := []prometheus.Collector{
-		collectors.NewGoCollector(), // Add Go metrics.
-	}
 
-	// Add process metrics.
 	po := collectors.ProcessCollectorOpts{}
 	procCollector := collectors.NewProcessCollector(po)
+
+	colls := []prometheus.Collector{
+		collectors.NewGoCollector(), // Add Go metrics.
+		procCollector,               // Add process metrics.
+	}
+
 	colls = append(colls, procCollector)
 
 	for _, col := range colls {
@@ -55,4 +57,15 @@ func GetMetricsHTTPHandler() http.Handler {
 	}
 
 	return promhttp.HandlerFor(globalRegistry, opts)
+}
+
+// TODO: think again, whether we want/need this done manually or just work with the default/global registry?
+// Upside here is we manually add in what we want.
+
+func PrometheusRegisterer() prometheus.Registerer {
+	return cmp.Or(prometheus.Registerer(globalRegistry), prometheus.DefaultRegisterer)
+}
+
+func PrometheusGatherer() prometheus.Gatherer {
+	return cmp.Or(prometheus.Gatherer(globalRegistry), prometheus.DefaultGatherer)
 }

@@ -6,13 +6,14 @@ import (
 	"os"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/rs/zerolog"
-
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	ma "github.com/multiformats/go-multiaddr"
+	"github.com/rs/zerolog"
+
+	"github.com/blocklessnetwork/b7s/telemetry"
 )
 
 // Host represents a new libp2p host.
@@ -55,6 +56,7 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 		libp2p.DefaultMuxers,
 		libp2p.DefaultSecurity,
 		libp2p.NATPortMap(),
+		libp2p.PrometheusRegisterer(telemetry.PrometheusRegisterer()),
 	}
 
 	// Read private key, if provided.
