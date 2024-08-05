@@ -5,16 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-)
-
-var (
-	globalRegistry *prometheus.Registry
-	metricsOnce    sync.Once
 )
 
 func initPrometheusRegistry() error {
@@ -45,18 +39,11 @@ func initPrometheusRegistry() error {
 
 func GetMetricsHTTPHandler() http.Handler {
 
-	metricsOnce.Do(func() {
-
-		// TODO: Handle error.
-		err := initPrometheusRegistry()
-		_ = err
-	})
-
 	opts := promhttp.HandlerOpts{
-		Registry: globalRegistry,
+		Registry: PrometheusRegisterer(),
 	}
 
-	return promhttp.HandlerFor(globalRegistry, opts)
+	return promhttp.HandlerFor(PrometheusGatherer(), opts)
 }
 
 // TODO: think again, whether we want/need this done manually or just work with the default/global registry?

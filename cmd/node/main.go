@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/cockroachdb/pebble"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"github.com/ziflex/lecho/v3"
@@ -95,9 +96,6 @@ func run() int {
 
 		log.Info().Msg("telemetry enabled")
 
-		// Set up metrics handler.
-		server.GET("/metrics", echo.WrapHandler(telemetry.GetMetricsHTTPHandler()))
-
 		opts := []telemetry.Option{
 			telemetry.WithID(nodeID),
 			telemetry.WithNodeRole(nodeRole),
@@ -107,7 +105,7 @@ func run() int {
 		}
 
 		// Setup telemetry.
-		shutdown, err := telemetry.InitializeTracing(ctx, log.With().Str("component", "telemetry").Logger(), opts...)
+		shutdown, err := telemetry.Initialize(ctx, log.With().Str("component", "telemetry").Logger(), opts...)
 		defer func() {
 			err := shutdown(ctx)
 			if err != nil {
@@ -118,6 +116,18 @@ func run() int {
 			log.Error().Err(err).Msg("could not setup telemetry")
 			return failure
 		}
+
+		// Metrics stuff.
+
+		// Set up metrics handler.
+		server.GET("/metrics", echo.WrapHandler(telemetry.GetMetricsHTTPHandler()))
+
+		// Echo (HTTP server) metrics.
+		server.Use(echoprometheus.NewMiddlewareWithConfig(
+			echoprometheus.MiddlewareConfig{
+				Registerer: telemetry.PrometheusRegisterer(),
+			},
+		))
 	}
 
 	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.

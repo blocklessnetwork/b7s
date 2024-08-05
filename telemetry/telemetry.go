@@ -6,16 +6,37 @@ import (
 	"fmt"
 
 	"github.com/go-logr/zerologr"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel"
 )
 
-func InitializeTracing(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown ShutdownFunc, err error) {
+var (
+	globalRegistry *prometheus.Registry
+)
+
+func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown ShutdownFunc, err error) {
 
 	cfg := DefaultConfig
 	for _, opt := range opts {
 		opt(&cfg)
 	}
+
+	shutdown, err = initializeTracing(ctx, log, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("could not initialize tracing: %w", err)
+	}
+
+	err = initPrometheusRegistry()
+	if err != nil {
+		shutdown(ctx)
+		return nil, fmt.Errorf("could not initialize prometheus registry: %w", err)
+	}
+
+	return shutdown, nil
+}
+
+func initializeTracing(ctx context.Context, log zerolog.Logger, cfg Config) (shutdown ShutdownFunc, err error) {
 
 	var shutdownFuncs []ShutdownFunc
 	shutdown = func(ctx context.Context) error {
