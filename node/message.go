@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/armon/go-metrics"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -24,6 +25,8 @@ func (n *Node) subscribeToTopics(ctx context.Context) error {
 	}
 
 	n.log.Info().Strs("topics", n.cfg.Topics).Msg("topics node will subscribe to")
+
+	metrics.IncrCounter([]string{"b7s", "topic", "subscriptions"}, float32(len(n.cfg.Topics)))
 
 	// TODO: If some topics/subscriptions failed, cleanup those already subscribed to.
 	for _, topicName := range n.cfg.Topics {

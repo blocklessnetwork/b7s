@@ -8,6 +8,7 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/armon/go-metrics"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
@@ -76,6 +77,8 @@ func (h *FStore) Install(ctx context.Context, address string, cid string) error 
 		Str("cid", cid).
 		Str("address", address).
 		Msg("installed function")
+
+	metrics.IncrCounter([]string{"b7s", "functions", "installed"}, 1)
 
 	return nil
 }

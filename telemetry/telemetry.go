@@ -6,14 +6,13 @@ import (
 	"fmt"
 
 	"github.com/go-logr/zerologr"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel"
 )
 
-var (
-	globalRegistry *prometheus.Registry
-)
+// var (
+// 	globalRegistry *prometheus.Registry
+// )
 
 func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown ShutdownFunc, err error) {
 

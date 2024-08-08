@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.opentelemetry.io/otel/trace"
 
@@ -49,6 +50,12 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request
 // headExecute is called on the head node. The head node will publish a roll call and delegate an execution request to chosen nodes.
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
 func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request, subgroup string) (codes.Code, execute.ResultMap, execute.Cluster, error) {
+
+	metrics.IncrCounterWithLabels([]string{"b7s", "function", "executions"}, 1,
+		[]metrics.Label{
+			{Name: "function", Value: req.FunctionID},
+			{Name: "consensus", Value: req.Config.ConsensusAlgorithm},
+		})
 
 	ctx, span := n.tracer.Start(ctx, spanHeadExecute,
 		trace.WithSpanKind(trace.SpanKindClient),

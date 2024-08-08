@@ -119,15 +119,14 @@ func run() int {
 
 		// Metrics stuff.
 
-		// Set up metrics handler.
-		server.GET("/metrics", echo.WrapHandler(telemetry.GetMetricsHTTPHandler()))
+		// If we have a server - setup handler.
+		if serverAddress != "" {
+			// Set up metrics handler.
+			server.GET("/metrics", echo.WrapHandler(telemetry.GetMetricsHTTPHandler()))
 
-		// Echo (HTTP server) metrics.
-		server.Use(echoprometheus.NewMiddlewareWithConfig(
-			echoprometheus.MiddlewareConfig{
-				Registerer: telemetry.PrometheusRegisterer(),
-			},
-		))
+			// Echo (HTTP server) metrics.
+			server.Use(echoprometheus.NewMiddlewareWithConfig(echoprometheus.MiddlewareConfig{}))
+		}
 	}
 
 	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.

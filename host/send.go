@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	metrics "github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
 
@@ -17,6 +18,8 @@ func (h *Host) SendMessage(ctx context.Context, to peer.ID, payload []byte) erro
 
 // SendMessageOnProtocol sends a message directly to the specified peer, using the specified protocol.
 func (h *Host) SendMessageOnProtocol(ctx context.Context, to peer.ID, payload []byte, protocol protocol.ID) error {
+
+	metrics.IncrCounterWithLabels([]string{"b7s", "messages", "sent"}, 1, []metrics.Label{{Name: "protocol", Value: string(protocol)}})
 
 	stream, err := h.Host.NewStream(ctx, to, protocol)
 	if err != nil {

@@ -3,7 +3,9 @@ package executor
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/armon/go-metrics"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/codes"
@@ -12,7 +14,21 @@ import (
 )
 
 // ExecuteFunction will run the Blockless function defined by the execution request.
-func (e *Executor) ExecuteFunction(ctx context.Context, requestID string, req execute.Request) (execute.Result, error) {
+func (e *Executor) ExecuteFunction(ctx context.Context, requestID string, req execute.Request) (result execute.Result, retErr error) {
+
+	ml := []metrics.Label{{Name: "function", Value: req.FunctionID}}
+	metrics.IncrCounterWithLabels([]string{"b7s", "executor", "function", "executions"}, 1, ml)
+
+	metrics.MeasureSinceWithLabels([]string{"b7s", "executor", "function", "executions", "seconds"}, time.Now(), ml)
+
+	defer func() {
+		if retErr != nil {
+			metrics.IncrCounterWithLabels([]string{"b7s", "executor", "function", "executions", "err"}, 1, ml)
+			return
+		}
+
+		metrics.IncrCounterWithLabels([]string{"b7s", "executor", "function", "executions", "ok"}, 1, ml)
+	}()
 
 	// TODO: Check other span options and stuff.
 	// TODO: More details on the execution.
