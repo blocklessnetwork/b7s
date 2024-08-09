@@ -13,19 +13,6 @@ import (
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
-func messageMetricLabels(typ string, peer peer.ID) []metrics.Label {
-	return []metrics.Label{
-		{
-			Name:  "type",
-			Value: typ,
-		},
-		{
-			Name:  "peer",
-			Value: peer.String(),
-		},
-	}
-}
-
 // processMessage will determine which message was received and how to process it.
 func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline messagePipeline) (procError error) {
 
@@ -35,13 +22,13 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
-	metrics.IncrCounterWithLabels([]string{"b7s", "messages", "processed"}, 1, messageMetricLabels(msgType, from))
+	metrics.IncrCounterWithLabels([]string{"b7s", "messages", "processed"}, 1, []metrics.Label{{Name: "type", Value: msgType}})
 	defer func() {
 		if procError != nil {
-			metrics.IncrCounterWithLabels([]string{"b7s", "message", "processed", "err"}, 1, messageMetricLabels(msgType, from))
+			metrics.IncrCounterWithLabels([]string{"b7s", "message", "processed", "err"}, 1, []metrics.Label{{Name: "type", Value: msgType}})
 			return
 		}
-		metrics.IncrCounterWithLabels([]string{"b7s", "messages", "processed", "ok"}, 1, messageMetricLabels(msgType, from))
+		metrics.IncrCounterWithLabels([]string{"b7s", "messages", "processed", "ok"}, 1, []metrics.Label{{Name: "type", Value: msgType}})
 	}()
 
 	// TOOD: Consider other span options.

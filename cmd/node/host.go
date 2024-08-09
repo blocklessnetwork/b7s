@@ -33,7 +33,6 @@ func createHost(log zerolog.Logger, cfg config.Config, dialbackPeers ...blockles
 	if err != nil {
 		return nil, fmt.Errorf("could not create host (key: '%s'): %w", cfg.Connectivity.PrivateKey, err)
 	}
-	defer host.Close()
 
 	return host, nil
 }

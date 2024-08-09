@@ -93,8 +93,7 @@ func (n *Node) Run(ctx context.Context) error {
 					defer n.wg.Done()
 					defer func() { <-n.sema }()
 
-					metrics.IncrCounterWithLabels([]string{"b7s", "topic", "messages", "received"}, 1,
-						[]metrics.Label{{Name: "peer", Value: msg.GetFrom().String()}})
+					metrics.IncrCounterWithLabels([]string{"b7s", "topic", "messages", "received"}, 1, []metrics.Label{{Name: "topic", Value: name}})
 
 					err = n.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), subscriptionPipeline)
 					if err != nil {
@@ -123,8 +122,7 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 
 		from := stream.Conn().RemotePeer()
 
-		metrics.IncrCounterWithLabels([]string{"b7s", "direct", "messages", "received"}, 1,
-			[]metrics.Label{{Name: "peer", Value: from.String()}})
+		metrics.IncrCounter([]string{"b7s", "direct", "messages", "received"}, 1)
 
 		buf := bufio.NewReader(stream)
 		msg, err := buf.ReadBytes('\n')
