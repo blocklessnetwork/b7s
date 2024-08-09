@@ -15,6 +15,8 @@ const (
 	DefaultClusterFormationTimeout = 10 * time.Second
 	DefaultConcurrency             = 10
 
+	ClusterAddressTTL = 30 * time.Minute
+
 	DefaultConsensusAlgorithm = consensus.Raft
 
 	DefaultAttributeLoadingSetting = false

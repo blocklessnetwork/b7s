@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/rs/zerolog/log"
 
 	"github.com/blocklessnetwork/b7s/consensus/pbft"
 	"github.com/blocklessnetwork/b7s/models/execute"
@@ -52,13 +51,13 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 
 			pub, err := sender.ExtractPublicKey()
 			if err != nil {
-				log.Error().Err(err).Msg("could not derive public key from peer ID")
+				n.log.Error().Err(err).Msg("could not derive public key from peer ID")
 				return
 			}
 
 			err = er.VerifySignature(pub)
 			if err != nil {
-				log.Error().Err(err).Msg("could not verify signature of an execution response")
+				n.log.Error().Err(err).Msg("could not verify signature of an execution response")
 				return
 			}
 
