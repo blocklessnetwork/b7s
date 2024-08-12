@@ -22,13 +22,13 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
-	metrics.IncrCounterWithLabels([]string{"node", "messages", "processed"}, 1, []metrics.Label{{Name: "type", Value: msgType}})
+	metrics.IncrCounterWithLabels(messagesProcessedMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 	defer func() {
 		if procError != nil {
-			metrics.IncrCounterWithLabels([]string{"node", "message", "processed", "err"}, 1, []metrics.Label{{Name: "type", Value: msgType}})
+			metrics.IncrCounterWithLabels(messagesProcessedErrMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 			return
 		}
-		metrics.IncrCounterWithLabels([]string{"node", "messages", "processed", "ok"}, 1, []metrics.Label{{Name: "type", Value: msgType}})
+		metrics.IncrCounterWithLabels(messagesProcessedOkMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 	}()
 
 	// TOOD: Consider other span options.

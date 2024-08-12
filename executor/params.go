@@ -11,11 +11,10 @@ const (
 )
 
 var (
-	moduleName                = "executor"
-	functionExecutionsMetric  = []string{moduleName, "function", "executions"}
-	functionDurationMetric    = append(functionExecutionsMetric, "milliseconds")
-	functionCPUUserTimeMetric = append(functionExecutionsMetric, "cpu", "user", "time", "milliseconds")
-	functionCPUSysTimeMetric  = append(functionExecutionsMetric, "cpu", "sys", "time", "milliseconds")
-	functionOkMetric          = append(functionExecutionsMetric, "ok")
-	functionErrMetric         = append(functionExecutionsMetric, "err")
+	functionExecutionsMetric  = []string{"executor", "function", "executions"}
+	functionDurationMetric    = []string{"executor", "function", "executions", "milliseconds"}
+	functionCPUUserTimeMetric = []string{"executor", "function", "executions", "cpu", "user", "time", "milliseconds"}
+	functionCPUSysTimeMetric  = []string{"executor", "function", "executions", "cpu", "sys", "time", "milliseconds"}
+	functionOkMetric          = []string{"executor", "function", "executions", "ok"}
+	functionErrMetric         = []string{"executor", "function", "executions", "err"}
 )
