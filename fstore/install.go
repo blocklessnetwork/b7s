@@ -78,7 +78,7 @@ func (h *FStore) Install(ctx context.Context, address string, cid string) error 
 		Str("address", address).
 		Msg("installed function")
 
-	metrics.IncrCounter([]string{"b7s", "functions", "installed"}, 1)
+	metrics.IncrCounter([]string{"functions", "installed"}, 1)
 
 	return nil
 }

@@ -17,17 +17,21 @@ import (
 func (e *Executor) ExecuteFunction(ctx context.Context, requestID string, req execute.Request) (result execute.Result, retErr error) {
 
 	ml := []metrics.Label{{Name: "function", Value: req.FunctionID}}
-	metrics.IncrCounterWithLabels([]string{"b7s", "executor", "function", "executions"}, 1, ml)
+	metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, ml)
 
-	metrics.MeasureSinceWithLabels([]string{"b7s", "executor", "function", "executions", "seconds"}, time.Now(), ml)
+	defer metrics.MeasureSinceWithLabels(functionDurationMetric, time.Now(), ml)
 
 	defer func() {
+
+		metrics.IncrCounter(functionCPUUserTimeMetric, float32(result.Usage.CPUUserTime.Milliseconds()))
+		metrics.IncrCounter(functionCPUSysTimeMetric, float32(result.Usage.CPUSysTime.Milliseconds()))
+
 		if retErr != nil {
-			metrics.IncrCounterWithLabels([]string{"b7s", "executor", "function", "executions", "err"}, 1, ml)
+			metrics.IncrCounterWithLabels(functionErrMetric, 1, ml)
 			return
 		}
 
-		metrics.IncrCounterWithLabels([]string{"b7s", "executor", "function", "executions", "ok"}, 1, ml)
+		metrics.IncrCounterWithLabels(functionOkMetric, 1, ml)
 	}()
 
 	// TODO: Check other span options and stuff.

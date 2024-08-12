@@ -43,7 +43,7 @@ func (h *FStore) Sync(ctx context.Context, haltOnError bool) error {
 	}
 
 	h.functionCount.Do(func() {
-		metrics.IncrCounter([]string{"b7s", "functions", "installed"}, float32(total))
+		metrics.IncrCounter([]string{"functions", "installed"}, float32(total))
 	})
 
 	return multierr.ErrorOrNil()

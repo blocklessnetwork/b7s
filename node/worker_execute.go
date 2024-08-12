@@ -16,7 +16,7 @@ import (
 
 func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
 
-	metrics.IncrCounterWithLabels([]string{"b7s", "function", "executions"}, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
+	metrics.IncrCounterWithLabels([]string{"node", "function", "executions"}, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
 
 	requestID := req.RequestID
 	if requestID == "" {
@@ -85,15 +85,6 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, timestamp ti
 
 	// We are not part of a cluster - just execute the request.
 	if !consensusRequired(consensus) {
-
-		metrics.IncrCounterWithLabels([]string{"b7s", "executions", "direct"}, 1,
-			[]metrics.Label{{Name: "function", Value: req.FunctionID}},
-		)
-		defer metrics.MeasureSinceWithLabels(
-			[]string{"b7s", "executions", "direct", "seconds"},
-			time.Now(),
-			[]metrics.Label{{Name: "function", Value: req.FunctionID}},
-		)
 
 		res, err := n.executor.ExecuteFunction(ctx, requestID, req)
 		if err != nil {

@@ -3,6 +3,7 @@ package telemetry
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/armon/go-metrics"
 	mp "github.com/armon/go-metrics/prometheus"
@@ -45,10 +46,11 @@ func initPrometheusRegistry() error {
 		return fmt.Errorf("could not create prometheus sink: %w", err)
 	}
 
-	// TODO: Create config here
 	mcfg := &metrics.Config{
+		ServiceName:          "b7s",
 		FilterDefault:        true,
 		EnableRuntimeMetrics: true,
+		TimerGranularity:     time.Millisecond,
 	}
 	_, err = metrics.NewGlobal(mcfg, sink)
 	if err != nil {
