@@ -19,7 +19,7 @@ func (h *Host) SendMessage(ctx context.Context, to peer.ID, payload []byte) erro
 // SendMessageOnProtocol sends a message directly to the specified peer, using the specified protocol.
 func (h *Host) SendMessageOnProtocol(ctx context.Context, to peer.ID, payload []byte, protocol protocol.ID) error {
 
-	metrics.IncrCounterWithLabels([]string{"messages", "sent"}, 1, []metrics.Label{{Name: "protocol", Value: string(protocol)}})
+	metrics.IncrCounterWithLabels(messagesSentMetric, 1, []metrics.Label{{Name: "protocol", Value: string(protocol)}})
 
 	stream, err := h.Host.NewStream(ctx, to, protocol)
 	if err != nil {

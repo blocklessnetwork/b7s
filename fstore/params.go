@@ -17,3 +17,7 @@ const (
 	spanIsInstalled = "IsFunctionInstalled"
 	spanSync        = "FunctionSync"
 )
+
+var (
+	functionsInstalledMetric = []string{"functions", "installed"}
+)
