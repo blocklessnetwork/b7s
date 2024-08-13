@@ -24,11 +24,12 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 
 	metrics.IncrCounterWithLabels(messagesProcessedMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 	defer func() {
-		if procError != nil {
+		switch procError {
+		case nil:
+			metrics.IncrCounterWithLabels(messagesProcessedOkMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+		default:
 			metrics.IncrCounterWithLabels(messagesProcessedErrMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
-			return
 		}
-		metrics.IncrCounterWithLabels(messagesProcessedOkMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 	}()
 
 	// TOOD: Consider other span options.

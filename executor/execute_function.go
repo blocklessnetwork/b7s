@@ -26,12 +26,12 @@ func (e *Executor) ExecuteFunction(ctx context.Context, requestID string, req ex
 		metrics.IncrCounter(functionCPUUserTimeMetric, float32(result.Usage.CPUUserTime.Milliseconds()))
 		metrics.IncrCounter(functionCPUSysTimeMetric, float32(result.Usage.CPUSysTime.Milliseconds()))
 
-		if retErr != nil {
+		switch retErr {
+		case nil:
+			metrics.IncrCounterWithLabels(functionOkMetric, 1, ml)
+		default:
 			metrics.IncrCounterWithLabels(functionErrMetric, 1, ml)
-			return
 		}
-
-		metrics.IncrCounterWithLabels(functionOkMetric, 1, ml)
 	}()
 
 	// TODO: Check other span options and stuff.

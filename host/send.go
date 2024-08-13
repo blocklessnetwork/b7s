@@ -20,6 +20,7 @@ func (h *Host) SendMessage(ctx context.Context, to peer.ID, payload []byte) erro
 func (h *Host) SendMessageOnProtocol(ctx context.Context, to peer.ID, payload []byte, protocol protocol.ID) error {
 
 	metrics.IncrCounterWithLabels(messagesSentMetric, 1, []metrics.Label{{Name: "protocol", Value: string(protocol)}})
+	metrics.IncrCounterWithLabels(messagesSentSizeMetric, float32(len(payload)), []metrics.Label{{Name: "protocol", Value: string(protocol)}})
 
 	stream, err := h.Host.NewStream(ctx, to, protocol)
 	if err != nil {

@@ -22,4 +22,6 @@ const (
 	useCompressionForTraceExporters = true
 	// NOTE: Temporary setting for the still young, immature stage of telemetry.
 	allowInsecureTraceExporters = true
+
+	metricPrefix = "b7s"
 )

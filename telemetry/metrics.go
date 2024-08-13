@@ -3,10 +3,15 @@ package telemetry
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/armon/go-metrics"
 	mp "github.com/armon/go-metrics/prometheus"
+	"github.com/blocklessnetwork/b7s/executor"
+	"github.com/blocklessnetwork/b7s/fstore"
+	"github.com/blocklessnetwork/b7s/host"
+	"github.com/blocklessnetwork/b7s/node"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -14,32 +19,13 @@ import (
 
 func initPrometheusRegistry() error {
 
-	// registry := prometheus.NewRegistry()
-
-	// po := collectors.ProcessCollectorOpts{}
-	// procCollector := collectors.NewProcessCollector(po)
-
-	// colls := []prometheus.Collector{
-	// 	collectors.NewGoCollector(), // Add Go metrics.
-	// 	procCollector,               // Add process metrics.
-	// }
-
-	// colls = append(colls, procCollector)
-
-	// for _, col := range colls {
-	// 	err := registry.Register(col)
-	// 	if err != nil && !errors.As(err, &prometheus.AlreadyRegisteredError{}) {
-	// 		return fmt.Errorf("could not register collector: %w", err)
-	// 	}
-	// }
-
-	// globalRegistry = registry
-
-	// TODO: Check - Do we want to predeclare some metrics?
-	opts := mp.PrometheusOpts{
-		Registerer: prometheus.DefaultRegisterer,
-		Name:       "b7s",
-	}
+	var (
+		opts = mp.PrometheusOpts{
+			Registerer:         prometheus.DefaultRegisterer,
+			CounterDefinitions: counters(),
+			SummaryDefinitions: summaries(),
+		}
+	)
 
 	sink, err := mp.NewPrometheusSinkFrom(opts)
 	if err != nil {
@@ -69,13 +55,35 @@ func GetMetricsHTTPHandler() http.Handler {
 	return promhttp.HandlerFor(prometheus.DefaultGatherer, opts)
 }
 
-// TODO: think again, whether we want/need this done manually or just work with the default/global registry?
-// Upside here is we manually add in what we want.
+func counters() []mp.CounterDefinition {
 
-// func PrometheusRegisterer() prometheus.Registerer {
-// 	return cmp.Or(prometheus.Registerer(globalRegistry), prometheus.DefaultRegisterer)
-// }
-//
-// func PrometheusGatherer() prometheus.Gatherer {
-// 	return cmp.Or(prometheus.Gatherer(globalRegistry), prometheus.DefaultGatherer)
-// }
+	counters := slices.Concat(
+		node.Counters,
+		host.Counters,
+		fstore.Counters,
+		executor.Counters,
+	)
+	prefixed := make([]mp.CounterDefinition, len(counters))
+
+	for i := 0; i < len(counters); i++ {
+		c := counters[i]
+		c.Name = append([]string{metricPrefix}, c.Name...)
+		prefixed[i] = c
+	}
+
+	return prefixed
+}
+
+func summaries() []mp.SummaryDefinition {
+
+	summaries := slices.Concat(executor.Summaries, fstore.Summaries)
+	prefixed := make([]mp.SummaryDefinition, len(summaries))
+
+	for i := 0; i < len(summaries); i++ {
+		s := summaries[i]
+		s.Name = append([]string{metricPrefix}, s.Name...)
+		prefixed[i] = s
+	}
+
+	return prefixed
+}
