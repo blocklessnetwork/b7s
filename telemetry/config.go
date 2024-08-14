@@ -23,7 +23,6 @@ var DefaultConfig = Config{
 	},
 }
 
-// TODO: The Prometheus stuff does not belong there if we're doing tracing and metrics separate.
 type Config struct {
 	// Node ID, registered as service instance ID attribute.
 	ID string
