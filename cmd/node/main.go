@@ -294,11 +294,11 @@ func run() int {
 		// Start server in a separate goroutine.
 		go func() {
 
-			log.Info().Str("address", serverAddress).Msg("Node API starting")
+			log.Info().Str("address", serverAddress).Msg("HTTP server starting")
 
 			err := server.Start(serverAddress)
 			if err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Warn().Err(err).Msg("Node API failed")
+				log.Warn().Err(err).Msg("HTTP server failed")
 				close(failed)
 			} else {
 				close(done)

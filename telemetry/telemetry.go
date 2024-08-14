@@ -10,10 +10,6 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-// var (
-// 	globalRegistry *prometheus.Registry
-// )
-
 func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown ShutdownFunc, err error) {
 
 	cfg := DefaultConfig

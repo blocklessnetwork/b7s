@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 
+	"github.com/rs/zerolog"
+
 	"github.com/blocklessnetwork/b7s/config"
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/rs/zerolog"
 )
 
 func createHost(log zerolog.Logger, cfg config.Config, dialbackPeers ...blockless.Peer) (*host.Host, error) {
