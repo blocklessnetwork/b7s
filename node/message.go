@@ -69,6 +69,8 @@ func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) erro
 		return fmt.Errorf("could not send message: %w", err)
 	}
 
+	metrics.IncrCounterWithLabels(messagesSentMetric, 1, []metrics.Label{{Name: "type", Value: msg.Type()}})
+
 	return nil
 }
 
@@ -94,6 +96,8 @@ func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Me
 			return fmt.Errorf("could not send message to peer (id: %v, peer %d out of %d): %w", peer, i, len(peers), err)
 		}
 	}
+
+	metrics.IncrCounterWithLabels(messagesSentMetric, float32(len(peers)), []metrics.Label{{Name: "type", Value: msg.Type()}})
 
 	return nil
 }
@@ -135,6 +139,12 @@ func (n *Node) publishToTopic(ctx context.Context, topic string, msg blockless.M
 	if err != nil {
 		return fmt.Errorf("could not publish message: %w", err)
 	}
+
+	metrics.IncrCounterWithLabels(messagesPublishedMetric, 1,
+		[]metrics.Label{
+			{Name: "type", Value: msg.Type()},
+			{Name: "topic", Value: topic},
+		})
 
 	return nil
 }

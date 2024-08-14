@@ -2,6 +2,8 @@ package raft
 
 import (
 	"time"
+
+	"github.com/armon/go-metrics/prometheus"
 )
 
 // Raft and consensus related parameters.
@@ -17,3 +19,14 @@ const (
 
 	consensusTransportTimeout = 1 * time.Minute
 )
+
+var (
+	raftExecutionTimeMetric = []string{"raft", "execute", "milliseconds"}
+)
+
+var Summaries = []prometheus.SummaryDefinition{
+	{
+		Name: raftExecutionTimeMetric,
+		Help: "Time needed to reach Raft consensus.",
+	},
+}

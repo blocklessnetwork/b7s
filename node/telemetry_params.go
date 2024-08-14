@@ -41,6 +41,8 @@ var (
 	messagesProcessedMetric    = []string{"node", "messages", "processed"}
 	messagesProcessedOkMetric  = []string{"node", "messages", "processed", "ok"}
 	messagesProcessedErrMetric = []string{"node", "messages", "processed", "err"}
+	messagesSentMetric         = []string{"node", "messages", "sent"}
+	messagesPublishedMetric    = []string{"node", "messages", "published"}
 	functionExecutionsMetric   = []string{"node", "function", "executions"}
 	subscriptionsMetric        = []string{"node", "topic", "subscriptions"}
 	directMessagesMetric       = []string{"node", "direct", "messages"}
@@ -87,5 +89,13 @@ var Counters = []prometheus.CounterDefinition{
 	{
 		Name: topicMessagesMetric,
 		Help: "Number of topic messages this node received.",
+	},
+	{
+		Name: messagesSentMetric,
+		Help: "Number of messages sent.",
+	},
+	{
+		Name: messagesPublishedMetric,
+		Help: "Number of messages published",
 	},
 }

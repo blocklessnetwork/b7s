@@ -8,6 +8,8 @@ import (
 
 	"github.com/armon/go-metrics"
 	mp "github.com/armon/go-metrics/prometheus"
+	"github.com/blocklessnetwork/b7s/consensus/pbft"
+	"github.com/blocklessnetwork/b7s/consensus/raft"
 	"github.com/blocklessnetwork/b7s/executor"
 	"github.com/blocklessnetwork/b7s/fstore"
 	"github.com/blocklessnetwork/b7s/host"
@@ -76,7 +78,12 @@ func counters() []mp.CounterDefinition {
 
 func summaries() []mp.SummaryDefinition {
 
-	summaries := slices.Concat(executor.Summaries, fstore.Summaries)
+	summaries := slices.Concat(
+		executor.Summaries,
+		fstore.Summaries,
+		pbft.Summaries,
+		raft.Summaries,
+	)
 	prefixed := make([]mp.SummaryDefinition, len(summaries))
 
 	for i := 0; i < len(summaries); i++ {
