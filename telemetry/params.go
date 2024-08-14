@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"github.com/blocklessnetwork/b7s/info"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
@@ -13,7 +14,7 @@ var (
 		resource.WithContainer(),
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String("b7s"),
-			semconv.ServiceVersionKey.String(vcsVersion()),
+			semconv.ServiceVersionKey.String(info.VcsVersion()),
 		),
 	}
 )

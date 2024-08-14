@@ -26,6 +26,7 @@ func initPrometheusRegistry() error {
 			Registerer:         prometheus.DefaultRegisterer,
 			CounterDefinitions: counters(),
 			SummaryDefinitions: summaries(),
+			GaugeDefinitions:   gauges(),
 		}
 	)
 
@@ -90,6 +91,21 @@ func summaries() []mp.SummaryDefinition {
 		s := summaries[i]
 		s.Name = append([]string{metricPrefix}, s.Name...)
 		prefixed[i] = s
+	}
+
+	return prefixed
+}
+
+func gauges() []mp.GaugeDefinition {
+
+	// Right now we have a single gauge - node info.
+	gauges := node.Gauges
+	prefixed := make([]mp.GaugeDefinition, len(gauges))
+
+	for i := 0; i < len(gauges); i++ {
+		g := gauges[i]
+		g.Name = append([]string{metricPrefix}, g.Name...)
+		prefixed[i] = g
 	}
 
 	return prefixed
