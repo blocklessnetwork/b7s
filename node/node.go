@@ -112,6 +112,7 @@ func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore 
 	host.Network().Notify(cn)
 
 	metrics.SetGaugeWithLabels(nodeInfoMetric, 1, []metrics.Label{
+		{Name: "id", Value: n.ID()},
 		{Name: "version", Value: info.VcsVersion()},
 		{Name: "role", Value: n.cfg.Role.String()},
 	})
