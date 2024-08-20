@@ -18,7 +18,7 @@ RUN mkdir /app/runtime && tar -xvkf ./runtime.tar.gz -C /app/runtime
 # RUN curl https://raw.githubusercontent.com/blocklessnetwork/orchestration-chain/main/download.sh | bash
 
 # libssl 1.1
-RUN curl -o ./libssl.deb -sSL http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+RUN curl -o ./libssl.deb -sSL http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
 RUN dpkg -i ./libssl.deb
 
 # Install AWS CLI so we can use to backup to IPFS s3 compatible storage providers
