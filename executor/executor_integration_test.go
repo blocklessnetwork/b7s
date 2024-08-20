@@ -4,10 +4,10 @@
 package executor_test
 
 import (
+	"context"
 	"crypto/md5"
 	"crypto/rand"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -82,7 +82,7 @@ func TestExecutor_Execute(t *testing.T) {
 		},
 	}
 
-	res, err := executor.ExecuteFunction(requestID, req)
+	res, err := executor.ExecuteFunction(context.Background(), requestID, req)
 	require.NoError(t, err)
 
 	// Verify the execution result.
@@ -104,7 +104,7 @@ func createTestFile(t *testing.T, dir string, size int) (string, string) {
 		filePattern = "testfile-"
 	)
 
-	f, err := ioutil.TempFile(dir, filePattern)
+	f, err := os.CreateTemp(dir, filePattern)
 	require.NoError(t, err)
 	defer f.Close()
 

@@ -71,13 +71,13 @@ func (h *FStore) download(ctx context.Context, cid string, manifest blockless.Fu
 	// Execute the download request.
 	res := h.downloader.Do(req)
 
-	metrics.IncrCounter(functionsDownloadedSizeMetric, float32(res.HTTPResponse.ContentLength))
-
 	// Wait until the download is complete.
 	err = res.Err()
 	if err != nil {
 		return "", fmt.Errorf("could not download function: %w", err)
 	}
+
+	metrics.IncrCounter(functionsDownloadedSizeMetric, float32(res.HTTPResponse.ContentLength))
 
 	h.log.Info().
 		Str("output", res.Filename).

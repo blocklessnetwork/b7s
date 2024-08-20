@@ -49,7 +49,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 		// Use a custom executor to verify all execution parameters are correct.
 		executor := mocks.BaselineExecutor(t)
-		executor.ExecFunctionFunc = func(reqID string, req execute.Request) (execute.Result, error) {
+		executor.ExecFunctionFunc = func(_ context.Context, reqID string, req execute.Request) (execute.Result, error) {
 			require.NotEmpty(t, reqID)
 			require.Equal(t, requestID, reqID)
 			require.Equal(t, executionRequest.FunctionID, req.FunctionID)
@@ -117,7 +117,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 		// Use a custom executor to verify all execution parameters are correct.
 		executor := mocks.BaselineExecutor(t)
-		executor.ExecFunctionFunc = func(reqID string, req execute.Request) (execute.Result, error) {
+		executor.ExecFunctionFunc = func(_ context.Context, reqID string, req execute.Request) (execute.Result, error) {
 			requestID = reqID
 
 			out := faultyExecutionResult
@@ -163,7 +163,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 
 		// Error retrieving function manifest.
 		fstore := mocks.BaselineFStore(t)
-		fstore.InstalledFunc = func(string) (bool, error) {
+		fstore.IsInstalledFunc = func(string) (bool, error) {
 			return false, mocks.GenericError
 		}
 		node.fstore = fstore
@@ -196,7 +196,7 @@ func TestNode_WorkerExecute(t *testing.T) {
 		wg.Wait()
 
 		// Function is not installed.
-		fstore.InstalledFunc = func(string) (bool, error) {
+		fstore.IsInstalledFunc = func(string) (bool, error) {
 			return false, nil
 		}
 		node.fstore = fstore

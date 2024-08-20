@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/stretchr/testify/require"
 
@@ -40,14 +41,15 @@ This is the end of my program
 `
 	)
 
-	cleanupDisabled := cleanupDisabled()
-
-	var verifiedExecution bool
+	var (
+		cleanupDisabled   = cleanupDisabled()
+		ctx, cancel       = context.WithCancel(context.Background())
+		requestID         = uuid.New().String()
+		verifiedExecution bool
+	)
+	defer cancel()
 
 	t.Log("starting test")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	// Set a hard limit for test duration.
 	// This looks a bit sketchy as tests can have the time limit
@@ -187,7 +189,7 @@ This is the end of my program
 		verifiedExecution = true
 	})
 
-	err = client.sendExecutionMessage(ctx, head.host.ID(), cid, functionMethod, 0, 1)
+	err = client.sendExecutionMessage(ctx, head.host.ID(), requestID, cid, functionMethod, 0, 1)
 	require.NoError(t, err)
 
 	executeWG.Wait()

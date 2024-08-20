@@ -4,6 +4,7 @@
 package fstore_test
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -34,6 +35,7 @@ func TestStore_InstallFunction(t *testing.T) {
 		manifestURL = "https://bafybeia24v4czavtpjv2co3j54o4a5ztduqcpyyinerjgncx7s2s22s7ea.ipfs.w3s.link/manifest.json"
 		dirPattern  = "b7s-fstore-integration-test-"
 	)
+	ctx := context.Background()
 
 	// 0. Setup.
 
@@ -55,7 +57,7 @@ func TestStore_InstallFunction(t *testing.T) {
 	fstore := fstore.New(mocks.NoopLogger, store.New(db, codec.NewJSONCodec()), dir)
 
 	// 1. Function Install
-	err = fstore.Install(manifestURL, functionCID)
+	err = fstore.Install(ctx, manifestURL, functionCID)
 	require.NoError(t, err)
 
 	t.Log("function install successful")
@@ -79,7 +81,7 @@ func TestStore_InstallFunction(t *testing.T) {
 
 	// 3. Verify function record is persisted
 
-	function, err := fstore.Get(functionCID)
+	function, err := fstore.Get(ctx, functionCID)
 	require.NoError(t, err)
 
 	t.Log("retrieved function record")
@@ -100,7 +102,7 @@ func TestStore_InstallFunction(t *testing.T) {
 	require.NoError(t, os.Remove(archive))
 	require.NoError(t, os.Remove(file))
 
-	require.NoError(t, fstore.Sync(true))
+	require.NoError(t, fstore.Sync(ctx, true))
 	require.Equal(t, listedChecksum, getChecksum(t, archive))
 	info, err = os.Stat(file)
 	require.NoError(t, err)
