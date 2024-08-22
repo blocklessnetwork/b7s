@@ -8,61 +8,106 @@ import (
 	"github.com/go-logr/zerologr"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+
+	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
-func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown ShutdownFunc, err error) {
+func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (ShutdownFunc, error) {
 
 	cfg := DefaultConfig
 	for _, opt := range opts {
 		opt(&cfg)
 	}
 
-	shutdown, err = initializeTracing(ctx, log, cfg)
+	err := cfg.Valid()
 	if err != nil {
-		return nil, fmt.Errorf("could not initialize tracing: %w", err)
+		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
+
+	// Setup general otel stuff.
+	setupOtel(log)
+
+	resource, err := createResource(ctx, cfg.ID, cfg.Role)
+	if err != nil {
+		return nil, fmt.Errorf("could not initialize otel resource: %w", err)
+	}
+
+	// Setup tracing.
+
+	exporters, err := createTraceExporters(ctx, cfg.Trace)
+	if err != nil {
+		return nil, fmt.Errorf("could not create trace exporters: %w", err)
+	}
+
+	if cfg.Trace.ExporterBatchTimeout == 0 {
+		log.Warn().Msg("trace exporter batch timeout is disabled")
+	}
+
+	tp := createTracerProvider(resource, cfg.Trace.ExporterBatchTimeout, exporters...)
+	otel.SetTracerProvider(tp)
+
+	// From here on down, we have components that need shutdown.
+	// Potential other shutdown functions should be appended to this slice.
+	shutdownFuncs := []ShutdownFunc{
+		tp.Shutdown,
+	}
+
+	// Setup metrics.
 
 	err = initPrometheusRegistry()
 	if err != nil {
-		shutdown(ctx)
-		return nil, fmt.Errorf("could not initialize prometheus registry: %w", err)
+
+		outErr := errors.Join(
+			shutdownAll(shutdownFuncs)(ctx),
+			fmt.Errorf("could not initialize prometheus registry: %w", err))
+
+		return nil, outErr
 	}
 
-	return shutdown, nil
+	return shutdownAll(shutdownFuncs), nil
 }
 
-func initializeTracing(ctx context.Context, log zerolog.Logger, cfg Config) (shutdown ShutdownFunc, err error) {
-
-	var shutdownFuncs []ShutdownFunc
-	shutdown = func(ctx context.Context) error {
+func shutdownAll(funcs []ShutdownFunc) ShutdownFunc {
+	return func(ctx context.Context) error {
 		var err error
-		for _, fn := range shutdownFuncs {
+		for _, fn := range funcs {
 			err = errors.Join(err, fn(ctx))
 		}
-		shutdownFuncs = nil
 		return err
 	}
+}
 
-	handleErr := func(inErr error) {
-		err = errors.Join(inErr, shutdown(ctx))
-	}
+func createResource(ctx context.Context, id string, role blockless.NodeRole) (*resource.Resource, error) {
 
-	// Set logger and global error handler function - just log error and nothing else.
-	otel.SetErrorHandler(otel.ErrorHandlerFunc(
-		func(err error) { log.Error().Err(err).Msg("telemetry error") },
-	))
-	otel.SetLogger(zerologr.New(&log))
+	opts := append(
+		defaultResourceOpts,
+		resource.WithAttributes(semconv.ServiceInstanceIDKey.String(id)),
+		resource.WithAttributes(b7ssemconv.ServiceRole.String(role.String())),
+	)
 
-	prop := newPropagator()
-	otel.SetTextMapPropagator(prop)
-
-	tp, err := newTracerProvider(ctx, cfg)
+	resource, err := resource.New(ctx, opts...)
 	if err != nil {
-		handleErr(fmt.Errorf("could not create new trace provider: %w", err))
-		return
+		return nil, fmt.Errorf("could not initialize resource: %w", err)
 	}
-	shutdownFuncs = append(shutdownFuncs, tp.Shutdown)
-	otel.SetTracerProvider(tp)
 
-	return
+	return resource, nil
+}
+
+// Setup general otel stuff like logging and error handling. We will just log telemetry errors and do nothing more.
+func setupOtel(log zerolog.Logger) {
+
+	propagator := propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	)
+
+	otel.SetTextMapPropagator(propagator)
+	otel.SetLogger(zerologr.New(&log))
+	otel.SetErrorHandler(otel.ErrorHandlerFunc(
+		func(err error) { log.Error().Err(err).Msg("telemetry error") }),
+	)
 }

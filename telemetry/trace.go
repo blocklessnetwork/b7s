@@ -2,66 +2,48 @@ package telemetry
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"time"
 
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
-
-	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
-func newTracerProvider(ctx context.Context, cfg Config) (*trace.TracerProvider, error) {
+// Create a new tracer provider.
+// NOTE: batchTimeout should not be set to zero for production use.
+func createTracerProvider(resource *resource.Resource, batchTimeout time.Duration, exporters ...trace.SpanExporter) *trace.TracerProvider {
 
-	// Setup resource.
-	opts := defaultResourceOpts
-	if cfg.ID == "" {
-		return nil, errors.New("instance ID is required")
-	}
-	opts = append(opts, resource.WithAttributes(semconv.ServiceInstanceIDKey.String(cfg.ID)))
-
-	if !cfg.Role.Valid() {
-		return nil, errors.New("node role is required")
-	}
-	opts = append(opts, resource.WithAttributes(b7ssemconv.ServiceRole.String(cfg.Role.String())))
-
-	resource, err := resource.New(ctx, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("could not initialize resource: %w", err)
+	opts := []trace.TracerProviderOption{
+		trace.WithResource(resource),
 	}
 
-	// Setup exporters.
-	exporters, err := traceExporters(ctx, cfg.Trace)
-	if err != nil {
-		return nil, fmt.Errorf("could not create trace exporter: %w", err)
-	}
-
-	traceOpts := []trace.TracerProviderOption{trace.WithResource(resource)}
 	for _, exporter := range exporters {
-		traceOpts = append(traceOpts, trace.WithBatcher(exporter, trace.WithBatchTimeout(cfg.Trace.ExporterBatchTimeout)))
+		if batchTimeout == 0 {
+			opts = append(opts, trace.WithSyncer(exporter))
+			continue
+		}
+
+		opts = append(opts, trace.WithBatcher(exporter, trace.WithBatchTimeout(batchTimeout)))
 	}
 
-	return trace.NewTracerProvider(traceOpts...), nil
+	return trace.NewTracerProvider(opts...)
 }
 
-func newPropagator() propagation.TextMapPropagator {
-
-	pp := propagation.NewCompositeTextMapPropagator(
-		propagation.TraceContext{},
-		propagation.Baggage{},
-	)
-
-	return pp
-}
-
-func traceExporters(ctx context.Context, tcfg TraceConfig) ([]trace.SpanExporter, error) {
+func createTraceExporters(ctx context.Context, tcfg TraceConfig) ([]trace.SpanExporter, error) {
 
 	var exporters []trace.SpanExporter
+
+	// If creating some of the exporters fails, shutdown others that were created.
+	shutdown := func() {
+		for _, ex := range exporters {
+			_ = ex.Shutdown(ctx)
+		}
+	}
+
 	if tcfg.GRPC.Enabled {
 
 		ex, err := newGRPCExporter(ctx, tcfg.GRPC)
@@ -76,7 +58,19 @@ func traceExporters(ctx context.Context, tcfg TraceConfig) ([]trace.SpanExporter
 
 		ex, err := newHTTPExporter(ctx, tcfg.HTTP)
 		if err != nil {
-			return nil, fmt.Errorf("could not create new GRPC exporter: %w", err)
+			shutdown()
+			return nil, fmt.Errorf("could not create new HTTP exporter: %w", err)
+		}
+
+		exporters = append(exporters, ex)
+	}
+
+	if tcfg.InMem.Enabled {
+
+		ex, err := newInMemExporter()
+		if err != nil {
+			shutdown()
+			return nil, fmt.Errorf("could not create new InMem trace exporter: %w", err)
 		}
 
 		exporters = append(exporters, ex)
@@ -113,4 +107,8 @@ func newHTTPExporter(ctx context.Context, cfg TraceHTTPConfig) (*otlptrace.Expor
 		opts = append(opts, otlptracehttp.WithInsecure())
 	}
 	return otlptracehttp.New(ctx, opts...)
+}
+
+func newInMemExporter() (*tracetest.InMemoryExporter, error) {
+	return tracetest.NewInMemoryExporter(), nil
 }

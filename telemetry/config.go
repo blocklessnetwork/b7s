@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"errors"
 	"time"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -34,6 +35,19 @@ type Config struct {
 	Metrics MetricsConfig
 }
 
+func (c Config) Valid() error {
+
+	if c.ID == "" {
+		return errors.New("instance ID is required")
+	}
+
+	if !c.Role.Valid() {
+		return errors.New("invalid node role")
+	}
+
+	return nil
+}
+
 // TODO: Update trace exporters configs
 // GRPC, HTTP:
 // - TLS credentials
@@ -45,6 +59,8 @@ type TraceConfig struct {
 	GRPC TraceGRPCConfig
 	// Configuration for HTTP trace exporter.
 	HTTP TraceHTTPConfig
+	// Configuration for the InMem trace exporter (used for testing mainly).
+	InMem TraceInMemConfig
 }
 
 type TraceGRPCConfig struct {
@@ -61,6 +77,10 @@ type TraceHTTPConfig struct {
 	AllowInsecure  bool
 	UseCompression bool
 	// TLSConfig
+}
+
+type TraceInMemConfig struct {
+	Enabled bool
 }
 
 type MetricsConfig struct {
