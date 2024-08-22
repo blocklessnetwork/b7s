@@ -66,14 +66,7 @@ func createTraceExporters(ctx context.Context, tcfg TraceConfig) ([]trace.SpanEx
 	}
 
 	if tcfg.InMem.Enabled {
-
-		ex, err := newInMemExporter()
-		if err != nil {
-			shutdown()
-			return nil, fmt.Errorf("could not create new InMem trace exporter: %w", err)
-		}
-
-		exporters = append(exporters, ex)
+		exporters = append(exporters, newInMemExporter())
 	}
 
 	return exporters, nil
@@ -109,6 +102,6 @@ func newHTTPExporter(ctx context.Context, cfg TraceHTTPConfig) (*otlptrace.Expor
 	return otlptracehttp.New(ctx, opts...)
 }
 
-func newInMemExporter() (*tracetest.InMemoryExporter, error) {
-	return tracetest.NewInMemoryExporter(), nil
+func newInMemExporter() *tracetest.InMemoryExporter {
+	return tracetest.NewInMemoryExporter()
 }
