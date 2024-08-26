@@ -31,7 +31,7 @@ func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (Shutdo
 	// Setup general otel stuff.
 	setupOtel(log)
 
-	resource, err := createResource(ctx, cfg.ID, cfg.Role)
+	resource, err := CreateResource(ctx, cfg.ID, cfg.Role)
 	if err != nil {
 		return nil, fmt.Errorf("could not initialize otel resource: %w", err)
 	}
@@ -47,7 +47,7 @@ func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (Shutdo
 		log.Warn().Msg("trace exporter batch timeout is disabled")
 	}
 
-	tp := createTracerProvider(resource, cfg.Trace.ExporterBatchTimeout, exporters...)
+	tp := CreateTracerProvider(resource, cfg.Trace.ExporterBatchTimeout, exporters...)
 	otel.SetTracerProvider(tp)
 
 	// From here on down, we have components that need shutdown.
@@ -81,7 +81,7 @@ func shutdownAll(funcs []ShutdownFunc) ShutdownFunc {
 	}
 }
 
-func createResource(ctx context.Context, id string, role blockless.NodeRole) (*resource.Resource, error) {
+func CreateResource(ctx context.Context, id string, role blockless.NodeRole) (*resource.Resource, error) {
 
 	opts := append(
 		defaultResourceOpts,

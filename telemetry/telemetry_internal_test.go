@@ -17,7 +17,7 @@ func TestTelemetry_Resource(t *testing.T) {
 		role = blockless.WorkerNode
 	)
 
-	resource, err := createResource(context.Background(), id, role)
+	resource, err := CreateResource(context.Background(), id, role)
 	require.NoError(t, err)
 
 	// Convert attributes to a map.

@@ -17,9 +17,12 @@ type Tracer struct {
 }
 
 func NewTracer(name string, opts ...trace.TracerOption) *Tracer {
+	return NewTracerFromProvider(otel.GetTracerProvider(), name, opts...)
+}
 
+func NewTracerFromProvider(tp trace.TracerProvider, name string, opts ...trace.TracerOption) *Tracer {
 	return &Tracer{
-		Tracer: otel.Tracer(name, opts...),
+		Tracer: tp.Tracer(name, opts...),
 	}
 }
 

@@ -15,7 +15,7 @@ import (
 
 // Create a new tracer provider.
 // NOTE: batchTimeout should not be set to zero for production use.
-func createTracerProvider(resource *resource.Resource, batchTimeout time.Duration, exporters ...trace.SpanExporter) *trace.TracerProvider {
+func CreateTracerProvider(resource *resource.Resource, batchTimeout time.Duration, exporters ...trace.SpanExporter) *trace.TracerProvider {
 
 	opts := []trace.TracerProviderOption{
 		trace.WithResource(resource),
@@ -46,7 +46,7 @@ func createTraceExporters(ctx context.Context, tcfg TraceConfig) ([]trace.SpanEx
 
 	if tcfg.GRPC.Enabled {
 
-		ex, err := newGRPCExporter(ctx, tcfg.GRPC)
+		ex, err := NewGRPCExporter(ctx, tcfg.GRPC)
 		if err != nil {
 			return nil, fmt.Errorf("could not create new GRPC exporter: %w", err)
 		}
@@ -56,7 +56,7 @@ func createTraceExporters(ctx context.Context, tcfg TraceConfig) ([]trace.SpanEx
 
 	if tcfg.HTTP.Enabled {
 
-		ex, err := newHTTPExporter(ctx, tcfg.HTTP)
+		ex, err := NewHTTPExporter(ctx, tcfg.HTTP)
 		if err != nil {
 			shutdown()
 			return nil, fmt.Errorf("could not create new HTTP exporter: %w", err)
@@ -66,13 +66,13 @@ func createTraceExporters(ctx context.Context, tcfg TraceConfig) ([]trace.SpanEx
 	}
 
 	if tcfg.InMem.Enabled {
-		exporters = append(exporters, newInMemExporter())
+		exporters = append(exporters, NewInMemExporter())
 	}
 
 	return exporters, nil
 }
 
-func newGRPCExporter(ctx context.Context, cfg TraceGRPCConfig) (*otlptrace.Exporter, error) {
+func NewGRPCExporter(ctx context.Context, cfg TraceGRPCConfig) (*otlptrace.Exporter, error) {
 
 	opts := []otlptracegrpc.Option{
 		otlptracegrpc.WithEndpoint(cfg.Endpoint),
@@ -87,7 +87,7 @@ func newGRPCExporter(ctx context.Context, cfg TraceGRPCConfig) (*otlptrace.Expor
 	return otlptracegrpc.New(ctx, opts...)
 }
 
-func newHTTPExporter(ctx context.Context, cfg TraceHTTPConfig) (*otlptrace.Exporter, error) {
+func NewHTTPExporter(ctx context.Context, cfg TraceHTTPConfig) (*otlptrace.Exporter, error) {
 
 	opts := []otlptracehttp.Option{
 		otlptracehttp.WithEndpoint(cfg.Endpoint),
@@ -102,6 +102,6 @@ func newHTTPExporter(ctx context.Context, cfg TraceHTTPConfig) (*otlptrace.Expor
 	return otlptracehttp.New(ctx, opts...)
 }
 
-func newInMemExporter() *tracetest.InMemoryExporter {
+func NewInMemExporter() *tracetest.InMemoryExporter {
 	return tracetest.NewInMemoryExporter()
 }

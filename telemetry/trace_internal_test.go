@@ -28,11 +28,11 @@ func TestTelemetry_TraceProviderInMem(t *testing.T) {
 		role       = blockless.WorkerNode
 	)
 
-	resource, err := createResource(ctx, resourceID, role)
+	resource, err := CreateResource(ctx, resourceID, role)
 	require.NoError(t, err)
 
-	exporter := newInMemExporter()
-	tp := createTracerProvider(resource, 0, exporter)
+	exporter := NewInMemExporter()
+	tp := CreateTracerProvider(resource, 0, exporter)
 	defer tp.Shutdown(ctx)
 
 	tracer := tp.Tracer("test")
@@ -74,11 +74,11 @@ func TestTelemetry_TraceProviderInMem(t *testing.T) {
 		require.Equal(t, span.Resource, resource)
 
 		require.Equal(t, span.Status.Code, otelcodes.Error)
-		require.Equal(t, span.Status.Description, spanError.Error())
+		require.Equal(t, spanError.Error(), span.Status.Description)
 
 		require.Len(t, span.Attributes, 1)
-		require.Equal(t, string(span.Attributes[0].Key), "span-key")
-		require.Equal(t, span.Attributes[0].Value.AsString(), attrValue)
+		require.Equal(t, "span-key", string(span.Attributes[0].Key))
+		require.Equal(t, attrValue, span.Attributes[0].Value.AsString())
 
 	}
 
