@@ -50,26 +50,7 @@ func TestTracer_TraceFunction(t *testing.T) {
 
 			var (
 				spanName = fmt.Sprintf("test-span-%v", rand.Int())
-
-				keys = []string{
-					fmt.Sprintf("attr-key-1-%v", rand.Int()),
-					fmt.Sprintf("attr-key-2-%v", rand.Int()),
-				}
-				values = []any{
-					fmt.Sprintf("attr-value-1-%v", rand.Int()),
-					rand.Int(),
-				}
-
-				attrs = []attribute.KeyValue{
-					{
-						Key:   attribute.Key(keys[0]),
-						Value: attribute.StringValue(values[0].(string)),
-					},
-					{
-						Key:   attribute.Key(keys[1]),
-						Value: attribute.IntValue(values[1].(int)),
-					},
-				}
+				attrs    = createAttributes()
 			)
 
 			// Function that will be executed and traced.
@@ -90,6 +71,8 @@ func TestTracer_TraceFunction(t *testing.T) {
 			span := spans[0]
 			require.Equal(t, spanName, span.Name)
 
+			require.Equal(t, span.Attributes, attrs)
+
 			switch test.wantedErr {
 			case nil:
 				require.Equal(t, span.Status.Code, otelcodes.Ok)
@@ -97,13 +80,38 @@ func TestTracer_TraceFunction(t *testing.T) {
 				require.Equal(t, span.Status.Code, otelcodes.Error)
 				require.Equal(t, fnErr.Error(), span.Status.Description)
 			}
-
-			require.Len(t, span.Attributes, 2)
-			require.Equal(t, string(span.Attributes[0].Key), keys[0])
-			require.Equal(t, values[0].(string), span.Attributes[0].Value.AsString())
-			require.Equal(t, string(span.Attributes[1].Key), keys[1])
-			require.Equal(t, int64(values[1].(int)), span.Attributes[1].Value.AsInt64())
-			require.Equal(t, tracerName, span.InstrumentationLibrary.Name)
 		})
 	}
+}
+
+func createAttributes() []attribute.KeyValue {
+
+	keys := []string{
+		fmt.Sprintf("test-attr-key-1-%v", rand.Int()),
+		fmt.Sprintf("test-attr-key-2-%v", rand.Int()),
+		fmt.Sprintf("test-attr-key-3-%v", rand.Int()),
+	}
+
+	values := []any{
+		fmt.Sprintf("attr-value-1-%v", rand.Int()),
+		rand.Int(),
+		rand.Float64(),
+	}
+
+	attrs := []attribute.KeyValue{
+		{
+			Key:   attribute.Key(keys[0]),
+			Value: attribute.StringValue(values[0].(string)),
+		},
+		{
+			Key:   attribute.Key(keys[1]),
+			Value: attribute.IntValue(values[1].(int)),
+		},
+		{
+			Key:   attribute.Key(keys[2]),
+			Value: attribute.Float64Value(values[2].(float64)),
+		},
+	}
+
+	return attrs
 }

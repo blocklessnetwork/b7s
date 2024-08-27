@@ -20,8 +20,13 @@ func (t TraceInfo) Empty() bool {
 
 // GetTraceInfo extracts tracing information from the context.
 func GetTraceInfo(ctx context.Context) TraceInfo {
+	return GetTraceInfoWithPropagator(ctx, otel.GetTextMapPropagator())
+}
+
+func GetTraceInfoWithPropagator(ctx context.Context, propagator propagation.TextMapPropagator) TraceInfo {
+
 	carrier := propagation.MapCarrier{}
-	otel.GetTextMapPropagator().Inject(ctx, carrier)
+	propagator.Inject(ctx, carrier)
 
 	return TraceInfo{Carrier: carrier}
 }
@@ -40,5 +45,10 @@ func TraceContextFromMessage(ctx context.Context, payload []byte) (context.Conte
 
 // TraceContext injects the trace information into passed context.
 func TraceContext(ctx context.Context, t TraceInfo) context.Context {
-	return otel.GetTextMapPropagator().Extract(ctx, t.Carrier)
+	return TraceContextWithPropagator(ctx, otel.GetTextMapPropagator(), t)
+}
+
+func TraceContextWithPropagator(ctx context.Context, propagator propagation.TextMapPropagator, t TraceInfo) context.Context {
+	return propagator.Extract(ctx, t.Carrier)
+
 }

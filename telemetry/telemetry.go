@@ -37,7 +37,6 @@ func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (Shutdo
 	}
 
 	// Setup tracing.
-
 	exporters, err := createTraceExporters(ctx, cfg.Trace)
 	if err != nil {
 		return nil, fmt.Errorf("could not create trace exporters: %w", err)
@@ -97,15 +96,17 @@ func CreateResource(ctx context.Context, id string, role blockless.NodeRole) (*r
 	return resource, nil
 }
 
-// Setup general otel stuff like logging and error handling. We will just log telemetry errors and do nothing more.
-func setupOtel(log zerolog.Logger) {
-
-	propagator := propagation.NewCompositeTextMapPropagator(
+func CreatePropagator() propagation.TextMapPropagator {
+	return propagation.NewCompositeTextMapPropagator(
 		propagation.TraceContext{},
 		propagation.Baggage{},
 	)
+}
 
-	otel.SetTextMapPropagator(propagator)
+// Setup general otel stuff like logging and error handling. We will just log telemetry errors and do nothing more.
+func setupOtel(log zerolog.Logger) {
+
+	otel.SetTextMapPropagator(CreatePropagator())
 	otel.SetLogger(zerologr.New(&log))
 	otel.SetErrorHandler(otel.ErrorHandlerFunc(
 		func(err error) { log.Error().Err(err).Msg("telemetry error") }),
