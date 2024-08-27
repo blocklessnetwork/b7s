@@ -57,7 +57,7 @@ func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (Shutdo
 
 	// Setup metrics.
 
-	err = initPrometheusRegistry()
+	err = initPrometheusRegistry(cfg.Metrics)
 	if err != nil {
 
 		outErr := errors.Join(

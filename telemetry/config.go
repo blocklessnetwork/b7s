@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/armon/go-metrics/prometheus"
+
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
@@ -86,6 +88,10 @@ type TraceInMemConfig struct {
 type MetricsConfig struct {
 	PrometheusAddress     string
 	PrometheusPushGateway string
+
+	Counters  []prometheus.CounterDefinition
+	Summaries []prometheus.SummaryDefinition
+	Gauges    []prometheus.GaugeDefinition
 }
 
 type Option func(*Config)
@@ -131,5 +137,23 @@ func WithPrometheusAddress(address string) Option {
 func WithPrometheusPushGateway(address string) Option {
 	return func(cfg *Config) {
 		cfg.Metrics.PrometheusPushGateway = address
+	}
+}
+
+func WithCounters(counters []prometheus.CounterDefinition) Option {
+	return func(cfg *Config) {
+		cfg.Metrics.Counters = counters
+	}
+}
+
+func WithSummaries(summaries []prometheus.SummaryDefinition) Option {
+	return func(cfg *Config) {
+		cfg.Metrics.Summaries = summaries
+	}
+}
+
+func WithGauges(gauges []prometheus.GaugeDefinition) Option {
+	return func(cfg *Config) {
+		cfg.Metrics.Gauges = gauges
 	}
 }

@@ -102,6 +102,9 @@ func run() int {
 			telemetry.WithBatchTraceTimeout(cfg.Telemetry.Tracing.ExporterBatchTimeout),
 			telemetry.WithGRPCTracing(cfg.Telemetry.Tracing.GRPC.Endpoint),
 			telemetry.WithHTTPTracing(cfg.Telemetry.Tracing.HTTP.Endpoint),
+			telemetry.WithCounters(metricCounters()),
+			telemetry.WithSummaries(metricSummaries()),
+			telemetry.WithGauges(metricGauges()),
 		}
 
 		// Setup telemetry.

@@ -3,30 +3,23 @@ package telemetry
 import (
 	"fmt"
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/armon/go-metrics"
 	mp "github.com/armon/go-metrics/prometheus"
-	"github.com/blocklessnetwork/b7s/consensus/pbft"
-	"github.com/blocklessnetwork/b7s/consensus/raft"
-	"github.com/blocklessnetwork/b7s/executor"
-	"github.com/blocklessnetwork/b7s/fstore"
-	"github.com/blocklessnetwork/b7s/host"
-	"github.com/blocklessnetwork/b7s/node"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func initPrometheusRegistry() error {
+func initPrometheusRegistry(cfg MetricsConfig) error {
 
 	var (
 		opts = mp.PrometheusOpts{
 			Registerer:         prometheus.DefaultRegisterer,
-			CounterDefinitions: counters(),
-			SummaryDefinitions: summaries(),
-			GaugeDefinitions:   gauges(),
+			CounterDefinitions: counters(cfg.Counters),
+			SummaryDefinitions: summaries(cfg.Summaries),
+			GaugeDefinitions:   gauges(cfg.Gauges),
 		}
 	)
 
@@ -58,14 +51,8 @@ func GetMetricsHTTPHandler() http.Handler {
 	return promhttp.HandlerFor(prometheus.DefaultGatherer, opts)
 }
 
-func counters() []mp.CounterDefinition {
+func counters(counters []mp.CounterDefinition) []mp.CounterDefinition {
 
-	counters := slices.Concat(
-		node.Counters,
-		host.Counters,
-		fstore.Counters,
-		executor.Counters,
-	)
 	prefixed := make([]mp.CounterDefinition, len(counters))
 
 	for i := 0; i < len(counters); i++ {
@@ -77,14 +64,8 @@ func counters() []mp.CounterDefinition {
 	return prefixed
 }
 
-func summaries() []mp.SummaryDefinition {
+func summaries(summaries []mp.SummaryDefinition) []mp.SummaryDefinition {
 
-	summaries := slices.Concat(
-		executor.Summaries,
-		fstore.Summaries,
-		pbft.Summaries,
-		raft.Summaries,
-	)
 	prefixed := make([]mp.SummaryDefinition, len(summaries))
 
 	for i := 0; i < len(summaries); i++ {
@@ -96,10 +77,10 @@ func summaries() []mp.SummaryDefinition {
 	return prefixed
 }
 
-func gauges() []mp.GaugeDefinition {
+func gauges(gauges []mp.GaugeDefinition) []mp.GaugeDefinition {
 
 	// Right now we have a single gauge - node info.
-	gauges := node.Gauges
+	// gauges := node.Gauges
 	prefixed := make([]mp.GaugeDefinition, len(gauges))
 
 	for i := 0; i < len(gauges); i++ {
