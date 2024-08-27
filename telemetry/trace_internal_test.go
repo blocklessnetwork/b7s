@@ -2,7 +2,6 @@ package telemetry
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -54,9 +53,6 @@ func TestTelemetry_TraceProviderInMem(t *testing.T) {
 	}
 
 	traceFunc()
-
-	payload, _ := json.Marshal(exporter.GetSpans())
-	fmt.Printf("%s\n", payload)
 
 	spans := exporter.GetSpans()
 	require.NotEmpty(t, spans)
