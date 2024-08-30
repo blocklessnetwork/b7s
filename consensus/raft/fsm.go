@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/hashicorp/raft"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
@@ -32,6 +34,11 @@ func newFsmExecutor(log zerolog.Logger, executor blockless.Executor, processors 
 
 	ps := make([]FSMProcessFunc, 0, len(processors))
 	ps = append(ps, processors...)
+
+	start := time.Now()
+	ps = append(ps, func(req FSMLogEntry, res execute.Result) {
+		metrics.MeasureSinceWithLabels(raftExecutionTimeMetric, start, []metrics.Label{{Name: "function", Value: req.Execute.FunctionID}})
+	})
 
 	fsm := fsmExecutor{
 		log:        log.With().Str("module", "fsm").Logger(),

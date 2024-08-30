@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/armon/go-metrics/prometheus"
 	"github.com/libp2p/go-libp2p/core/protocol"
 )
 
@@ -43,3 +44,14 @@ const (
 	spanStatusOK  = "message processed ok"
 	spanStatusErr = "error processing message"
 )
+
+var (
+	pbftExecutionsTimeMetric = []string{"pbft", "execute", "milliseconds"}
+)
+
+var Summaries = []prometheus.SummaryDefinition{
+	{
+		Name: pbftExecutionsTimeMetric,
+		Help: "Time needed to reach pBFT consensus.",
+	},
+}

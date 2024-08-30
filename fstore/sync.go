@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/armon/go-metrics"
 	"github.com/hashicorp/go-multierror"
 	"go.opentelemetry.io/otel/trace"
 
@@ -20,7 +21,11 @@ func (h *FStore) Sync(ctx context.Context, haltOnError bool) error {
 		return fmt.Errorf("could not retrieve functions: %w", err)
 	}
 
-	var multierr *multierror.Error
+	var (
+		multierr *multierror.Error
+		total    int
+	)
+
 	for _, function := range functions {
 		err := h.sync(ctx, function)
 		if err != nil {
@@ -31,8 +36,15 @@ func (h *FStore) Sync(ctx context.Context, haltOnError bool) error {
 			}
 
 			multierr = multierror.Append(multierr, wrappedErr)
+			continue
 		}
+
+		total++
 	}
+
+	h.functionCount.Do(func() {
+		metrics.IncrCounter(functionsInstalledMetric, float32(total))
+	})
 
 	return multierr.ErrorOrNil()
 }

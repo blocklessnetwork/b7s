@@ -5,11 +5,13 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/armon/go-metrics"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
 	"github.com/blocklessnetwork/b7s-attributes/attributes"
 	"github.com/blocklessnetwork/b7s/host"
+	"github.com/blocklessnetwork/b7s/info"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node/internal/waitmap"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
@@ -108,6 +110,12 @@ func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore 
 	// Create a notifiee with a backing store.
 	cn := newConnectionNotifee(log, store)
 	host.Network().Notify(cn)
+
+	metrics.SetGaugeWithLabels(nodeInfoMetric, 1, []metrics.Label{
+		{Name: "id", Value: n.ID()},
+		{Name: "version", Value: info.VcsVersion()},
+		{Name: "role", Value: n.cfg.Role.String()},
+	})
 
 	return n, nil
 }

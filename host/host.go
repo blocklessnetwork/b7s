@@ -6,8 +6,6 @@ import (
 	"os"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/rs/zerolog"
-
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -16,6 +14,7 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ma "github.com/multiformats/go-multiaddr"
+	"github.com/rs/zerolog"
 )
 
 // Host represents a new libp2p host.

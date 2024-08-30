@@ -2,6 +2,7 @@ package fstore
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/cavaliergopher/grab/v3"
 	"github.com/rs/zerolog"
@@ -19,6 +20,8 @@ type FStore struct {
 	store      blockless.FunctionStore
 	http       *http.Client
 	downloader *grab.Client
+
+	functionCount sync.Once
 
 	workdir string
 	tracer  trace.Tracer

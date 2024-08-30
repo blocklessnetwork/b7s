@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetwork/b7s/consensus"
@@ -21,6 +22,8 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.Ro
 		n.log.Debug().Msg("skipping roll call as a non-worker node")
 		return nil
 	}
+
+	metrics.IncrCounterWithLabels(rollCallsSeenMetric, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
 
 	log := n.log.With().Str("request", req.RequestID).Str("origin", req.Origin.String()).Str("function", req.FunctionID).Logger()
 	log.Debug().Msg("received roll call request")
@@ -74,6 +77,8 @@ func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.Ro
 	}
 
 	log.Info().Str("origin", req.Origin.String()).Msg("reporting for roll call")
+
+	metrics.IncrCounterWithLabels(rollCallsAppliedMetric, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
 
 	// Send positive response.
 	err = n.send(ctx, req.Origin, req.Response(codes.Accepted))
@@ -170,6 +175,8 @@ rollCallResponseLoop:
 // publishRollCall will create a roll call request for executing the given function.
 // On successful issuance of the roll call request, we return the ID of the issued request.
 func (n *Node) publishRollCall(ctx context.Context, requestID string, functionID string, consensus consensus.Type, topic string, attributes *execute.Attributes) error {
+
+	metrics.IncrCounterWithLabels(rollCallsPublishedMetric, 1, []metrics.Label{{Name: "function", Value: functionID}})
 
 	// Create a roll call request.
 	rollCall := request.RollCall{
