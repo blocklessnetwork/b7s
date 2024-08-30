@@ -129,7 +129,11 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 		}
 	}
 
-	err = n.sendToMany(ctx, reportingPeers, reqExecute)
+	err = n.sendToMany(ctx,
+		reportingPeers,
+		reqExecute,
+		consensusRequired(consensusAlgo), // If we're using consensus, try to reach all peers.
+	)
 	if err != nil {
 		return codes.Error, nil, cluster, fmt.Errorf("could not send execution request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)
 	}

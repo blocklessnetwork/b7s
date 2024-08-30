@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 
 	"github.com/hashicorp/go-multierror"
 
@@ -45,48 +44,37 @@ func (r *Replica) broadcast(msg interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.cfg.NetworkTimeout)
 	defer cancel()
 
-	var (
-		wg       sync.WaitGroup
-		multierr *multierror.Error
-		lock     sync.Mutex
-	)
-
+	var errGroup multierror.Group
 	for _, target := range r.peers {
+		target := target
+
 		// Skip self.
 		if target == r.id {
 			continue
 		}
 
-		wg.Add(1)
-
 		// Send concurrently to everyone.
-		go func(peer peer.ID) {
-			defer wg.Done()
+		errGroup.Go(func() error {
 
 			// NOTE: We could potentially retry sending if we fail once. On the other hand, somewhat unlikely they're
 			// back online split second later.
-
-			err := r.host.SendMessageOnProtocol(ctx, peer, payload, r.protocolID)
+			err := r.host.SendMessageOnProtocol(ctx, target, payload, r.protocolID)
 			if err != nil {
-
-				lock.Lock()
-				defer lock.Unlock()
-
-				multierr = multierror.Append(multierr, err)
+				return fmt.Errorf("peer send error (peer: %v): %w", target.String(), err)
 			}
-		}(target)
+
+			return nil
+		})
 	}
 
-	wg.Wait()
-
 	// If all went well, just return.
-	sendErr := multierr.ErrorOrNil()
-	if sendErr == nil {
+	sendErr := errGroup.Wait()
+	if sendErr.ErrorOrNil() == nil {
 		return nil
 	}
 
 	// Warn if we had more send errors than we bargained for.
-	errCount := uint(multierr.Len())
+	errCount := uint(sendErr.Len())
 	if errCount > r.f {
 		r.log.Warn().Uint("f", r.f).Uint("errors", errCount).Msg("broadcast error count higher than pBFT f value")
 	}
