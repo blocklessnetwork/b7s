@@ -10,11 +10,12 @@ import (
 	otelcodes "go.opentelemetry.io/otel/codes"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/node/internal/pipeline"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // processMessage will determine which message was received and how to process it.
-func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline messagePipeline) (procError error) {
+func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline pipeline.Pipeline) (procError error) {
 
 	// Determine message type.
 	msgType, err := getMessageType(payload)
@@ -32,7 +33,6 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 		}
 	}()
 
-	// TOOD: Consider other span options.
 	ctx, err = tracing.TraceContextFromMessage(ctx, payload)
 	if err != nil {
 		n.log.Error().Err(err).Msg("could not get trace context from message")

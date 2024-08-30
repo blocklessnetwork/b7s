@@ -19,6 +19,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
+	"github.com/blocklessnetwork/b7s/node/internal/pipeline"
 	"github.com/blocklessnetwork/b7s/telemetry"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 	"github.com/blocklessnetwork/b7s/testing/helpers"
@@ -45,7 +46,8 @@ func TestNode_TraceHealthCheck(t *testing.T) {
 
 	pre := time.Now()
 
-	err := node.processMessage(ctx, from, payload, subscriptionPipeline)
+	pipeline := pipeline.PubSubPipeline(DefaultTopic)
+	err := node.processMessage(ctx, from, payload, pipeline)
 	require.NoError(t, err)
 
 	post := time.Now()
@@ -75,7 +77,8 @@ func TestNode_TraceHealthCheck(t *testing.T) {
 	attributes := attributeMap(span.Attributes)
 
 	require.Equal(t, from.String(), attributes["message.peer"].AsString())
-	require.Equal(t, subscriptionPipeline.String(), attributes["message.pipeline"].AsString())
+	require.Equal(t, pipeline.ID.String(), attributes["message.pipeline"].AsString())
+	require.Equal(t, pipeline.Topic, attributes["message.topic"].AsString())
 	require.Equal(t, blockless.MessageHealthCheck, attributes["message.type"].AsString())
 
 	require.Equal(t, resource, span.Resource)
@@ -171,8 +174,7 @@ func TestNode_TraceExecution(t *testing.T) {
 				attributes := attributeMap(span.Attributes)
 
 				require.Equal(t, receiver.ID().String(), attributes["message.peer"].AsString())
-				require.Equal(t, directMessagePipeline.String(), attributes["message.pipeline"].AsString())
-
+				require.Equal(t, pipeline.DirectMessage.String(), attributes["message.pipeline"].AsString())
 			}
 			verifyExecutionSpan := func(t *testing.T, span tracetest.SpanStub) {
 				t.Helper()
