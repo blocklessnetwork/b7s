@@ -1,4 +1,4 @@
-package telemetry
+package telemetry_test
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry"
 )
 
 func TestTelemetry_Resource(t *testing.T) {
@@ -17,7 +18,7 @@ func TestTelemetry_Resource(t *testing.T) {
 		role = blockless.WorkerNode
 	)
 
-	resource, err := CreateResource(context.Background(), id, role)
+	resource, err := telemetry.CreateResource(context.Background(), id, role)
 	require.NoError(t, err)
 
 	// Convert attributes to a map.
