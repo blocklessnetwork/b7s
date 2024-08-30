@@ -11,5 +11,6 @@ dist/
 runtime/
 *.env
 __debug*
-
+.b7s_*
 *.exe
+.vscode/
