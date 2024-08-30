@@ -1,77 +1,129 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Launch Head Node",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/node",
-      "args": [
-        "--peer-db",
-        "/tmp/b7s/head-peer-db",
-        "--function-db",
-        "/tmp/b7s/head-fdb",
-        "--log-level",
-        "debug",
-        "--port",
-        "9527",
-        "--role",
-        "head",
-        "--workspace",
-        "/tmp/debug/head",
-        "--private-key",
-        "${workspaceFolder}/configs/testkeys/ident1/priv.bin",
-        "--rest-api",
-        ":8081"
-      ],
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "Launch Worker Node",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/node",
-      "args": [
-        "--peer-db",
-        "/tmp/b7s/worker-peer-db",
-        "--function-db",
-        "/tmp/b7s/worker-fdb",
-        "--log-level",
-        "debug",
-        "--port",
-        "0",
-        "--role",
-        "worker",
-        "--runtime-path",
-        "/tmp/runtime",
-        "--runtime-cli",
-        "bls-runtime",
-        "--workspace",
-        "/tmp/debug/worker",
-        "--private-key",
-        "${workspaceFolder}/configs/testkeys/ident2/priv.bin",
-        "--boot-nodes",
-        "/ip4/0.0.0.0/tcp/9527/p2p/12D3KooWH9GerdSEroL2nqjpd2GuE5dwmqNi7uHX7FoywBdKcP4q"
-      ],
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "Launch Manager",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/manager",
-      "args": [
-        "-l",
-        "3333",
-        "--private-key",
-        "${workspaceFolder}/configs/testkeys/ident2/priv.bin",
-        "--allowed-peer",
-        "QmSz8bJZjg9gWfvrJjYibo4UhSo8dXYtpNRb4kxn28SoHG"
-      ],
-      "cwd": "${workspaceFolder}"
-    }
-  ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Launch Head Node",
+			"type": "go",
+			"request": "launch",
+			"mode": "auto",
+			"program": "${workspaceFolder}/cmd/node",
+			"args": [
+				"--db",
+				"/tmp/b7s/head-db",
+				"--log-level",
+				"debug",
+				"--port",
+				"9527",
+				"--role",
+				"head",
+				"--workspace",
+				"/tmp/debug/head",
+				"--private-key",
+				"${workspaceFolder}/configs/testkeys/ident1/priv.bin",
+				"--rest-api",
+				":8081"
+			],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"name": "Launch Worker 1",
+			"type": "go",
+			"request": "launch",
+			"mode": "auto",
+			"program": "${workspaceFolder}/cmd/node",
+			"args": [
+				"--db",
+				"/tmp/b7s/worker1-db",
+				"--log-level",
+				"debug",
+				"--port",
+				"0",
+				"--role",
+				"worker",
+				"--runtime-path",
+				"/tmp/runtime",
+				"--runtime-cli",
+				"bls-runtime",
+				"--workspace",
+				"/tmp/debug/worker",
+				"--private-key",
+				"${workspaceFolder}/configs/testkeys/ident2/priv.bin",
+				"--boot-nodes",
+				"/ip4/0.0.0.0/tcp/9527/p2p/12D3KooWH9GerdSEroL2nqjpd2GuE5dwmqNi7uHX7FoywBdKcP4q"
+			],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"name": "Launch Worker 2",
+			"type": "go",
+			"request": "launch",
+			"mode": "auto",
+			"program": "${workspaceFolder}/cmd/node",
+			"args": [
+				"--db",
+				"/tmp/b7s/worker2-db",
+				"--log-level",
+				"debug",
+				"--port",
+				"0",
+				"--role",
+				"worker",
+				"--runtime-path",
+				"/tmp/runtime",
+				"--runtime-cli",
+				"bls-runtime",
+				"--workspace",
+				"/tmp/debug/worker",
+				"--private-key",
+				"${workspaceFolder}/configs/testkeys/ident3/priv.bin",
+				"--boot-nodes",
+				"/ip4/0.0.0.0/tcp/9527/p2p/12D3KooWH9GerdSEroL2nqjpd2GuE5dwmqNi7uHX7FoywBdKcP4q"
+			],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"name": "Launch Worker 3",
+			"type": "go",
+			"request": "launch",
+			"mode": "auto",
+			"program": "${workspaceFolder}/cmd/node",
+			"args": [
+				"--db",
+				"/tmp/b7s/worker3-db",
+				"--log-level",
+				"debug",
+				"--port",
+				"0",
+				"--role",
+				"worker",
+				"--runtime-path",
+				"/tmp/runtime",
+				"--runtime-cli",
+				"bls-runtime",
+				"--workspace",
+				"/tmp/debug/worker",
+				"--private-key",
+				"${workspaceFolder}/configs/testkeys/ident4/priv.bin",
+				"--boot-nodes",
+				"/ip4/0.0.0.0/tcp/9527/p2p/12D3KooWH9GerdSEroL2nqjpd2GuE5dwmqNi7uHX7FoywBdKcP4q"
+			],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"name": "Launch Manager",
+			"type": "go",
+			"request": "launch",
+			"mode": "auto",
+			"program": "${workspaceFolder}/cmd/manager",
+			"args": [
+				"-l",
+				"3333",
+				"--private-key",
+				"${workspaceFolder}/configs/testkeys/ident2/priv.bin",
+				"--allowed-peer",
+				"QmSz8bJZjg9gWfvrJjYibo4UhSo8dXYtpNRb4kxn28SoHG"
+			],
+			"cwd": "${workspaceFolder}"
+		}
+	]
 }
