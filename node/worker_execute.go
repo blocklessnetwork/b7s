@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.opentelemetry.io/otel/trace"
 
@@ -14,6 +15,8 @@ import (
 )
 
 func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
+
+	metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
 
 	requestID := req.RequestID
 	if requestID == "" {
@@ -82,6 +85,7 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, timestamp ti
 
 	// We are not part of a cluster - just execute the request.
 	if !consensusRequired(consensus) {
+
 		res, err := n.executor.ExecuteFunction(ctx, requestID, req)
 		if err != nil {
 			return res.Code, res, fmt.Errorf("execution failed: %w", err)

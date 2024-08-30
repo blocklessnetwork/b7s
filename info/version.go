@@ -1,11 +1,12 @@
-package telemetry
+package info
 
 import (
 	"runtime/debug"
 	"strings"
 )
 
-func vcsVersion() string {
+// VcsVersion returns the version info, in the form of "<git-commit-hash>:<git-commit-timestamp>".
+func VcsVersion() string {
 
 	var (
 		timestamp  string

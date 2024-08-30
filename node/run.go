@@ -8,6 +8,7 @@ import (
 	"io"
 	"sync"
 
+	"github.com/armon/go-metrics"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/network"
 
@@ -92,6 +93,8 @@ func (n *Node) Run(ctx context.Context) error {
 					defer n.wg.Done()
 					defer func() { <-n.sema }()
 
+					metrics.IncrCounterWithLabels(topicMessagesMetric, 1, []metrics.Label{{Name: "topic", Value: name}})
+
 					err = n.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), subscriptionPipeline)
 					if err != nil {
 						n.log.Error().Err(err).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("could not process message")
@@ -118,6 +121,8 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 		defer stream.Close()
 
 		from := stream.Conn().RemotePeer()
+
+		metrics.IncrCounter(directMessagesMetric, 1)
 
 		buf := bufio.NewReader(stream)
 		msg, err := buf.ReadBytes('\n')

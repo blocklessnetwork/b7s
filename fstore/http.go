@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/armon/go-metrics"
 	"github.com/cavaliergopher/grab/v3"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -69,6 +70,8 @@ func (h *FStore) download(ctx context.Context, cid string, manifest blockless.Fu
 
 	// Execute the download request.
 	res := h.downloader.Do(req)
+
+	metrics.IncrCounter(functionsDownloadedSizeMetric, float32(res.HTTPResponse.ContentLength))
 
 	// Wait until the download is complete.
 	err = res.Err()

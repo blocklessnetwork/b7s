@@ -6,13 +6,12 @@ import (
 	"os"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/rs/zerolog"
-
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	ma "github.com/multiformats/go-multiaddr"
+	"github.com/rs/zerolog"
 )
 
 // Host represents a new libp2p host.

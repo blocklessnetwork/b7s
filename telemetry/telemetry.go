@@ -10,12 +10,28 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func SetupSDK(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown ShutdownFunc, err error) {
+func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (shutdown ShutdownFunc, err error) {
 
 	cfg := DefaultConfig
 	for _, opt := range opts {
 		opt(&cfg)
 	}
+
+	shutdown, err = initializeTracing(ctx, log, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("could not initialize tracing: %w", err)
+	}
+
+	err = initPrometheusRegistry()
+	if err != nil {
+		shutdown(ctx)
+		return nil, fmt.Errorf("could not initialize prometheus registry: %w", err)
+	}
+
+	return shutdown, nil
+}
+
+func initializeTracing(ctx context.Context, log zerolog.Logger, cfg Config) (shutdown ShutdownFunc, err error) {
 
 	var shutdownFuncs []ShutdownFunc
 	shutdown = func(ctx context.Context) error {

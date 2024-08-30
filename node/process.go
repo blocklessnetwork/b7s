@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 	otelcodes "go.opentelemetry.io/otel/codes"
 
@@ -20,6 +21,16 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 	if err != nil {
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
+
+	metrics.IncrCounterWithLabels(messagesProcessedMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+	defer func() {
+		switch procError {
+		case nil:
+			metrics.IncrCounterWithLabels(messagesProcessedOkMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+		default:
+			metrics.IncrCounterWithLabels(messagesProcessedErrMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+		}
+	}()
 
 	// TOOD: Consider other span options.
 	ctx, err = tracing.TraceContextFromMessage(ctx, payload)

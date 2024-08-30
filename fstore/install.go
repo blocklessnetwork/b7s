@@ -5,15 +5,29 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/armon/go-metrics"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 // Install will download and install function identified by the manifest/CID.
-func (h *FStore) Install(ctx context.Context, address string, cid string) error {
+func (h *FStore) Install(ctx context.Context, address string, cid string) (retErr error) {
+
+	defer metrics.MeasureSince(functionsInstallTimeMetric, time.Now())
+	metrics.IncrCounter(functionsInstalledMetric, 1)
+	defer func() {
+		switch retErr {
+		case nil:
+			metrics.IncrCounter(functionsInstalledOkMetric, 1)
+		default:
+			metrics.IncrCounter(functionsInstalledErrMetric, 1)
+
+		}
+	}()
 
 	ctx, span := h.tracer.Start(ctx, spanInstall, trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(b7ssemconv.FunctionCID.String(cid)))
 	defer span.End()

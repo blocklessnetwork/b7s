@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -118,6 +119,8 @@ func (r *Replica) execute(ctx context.Context, view uint, sequence uint, digest 
 	if err != nil {
 		return fmt.Errorf("could not send execution response to node (target: %s, request: %s): %w", request.Origin.String(), request.ID, err)
 	}
+
+	metrics.MeasureSinceWithLabels(pbftExecutionsTimeMetric, request.Timestamp, []metrics.Label{{Name: "function", Value: request.Execute.FunctionID}})
 
 	return nil
 }
