@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/armon/go-metrics"
 	"github.com/go-logr/zerologr"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel"
@@ -56,8 +57,7 @@ func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (Shutdo
 	}
 
 	// Setup metrics.
-
-	err = initPrometheusRegistry(cfg.Metrics)
+	err = initMetrics(cfg.Metrics)
 	if err != nil {
 
 		outErr := errors.Join(
@@ -66,6 +66,12 @@ func Initialize(ctx context.Context, log zerolog.Logger, opts ...Option) (Shutdo
 
 		return nil, outErr
 	}
+
+	shutdownFuncs = append(shutdownFuncs,
+		func(context.Context) error {
+			metrics.Shutdown()
+			return nil
+		})
 
 	return shutdownAll(shutdownFuncs), nil
 }

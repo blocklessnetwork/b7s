@@ -12,21 +12,36 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func initPrometheusRegistry(cfg MetricsConfig) error {
+func initMetrics(cfg MetricsConfig) error {
 
-	var (
-		opts = mp.PrometheusOpts{
-			Registerer:         prometheus.DefaultRegisterer,
-			CounterDefinitions: counters(cfg.Counters),
-			SummaryDefinitions: summaries(cfg.Summaries),
-			GaugeDefinitions:   gauges(cfg.Gauges),
-		}
-	)
+	registerer := prometheus.DefaultRegisterer
 
-	sink, err := mp.NewPrometheusSinkFrom(opts)
+	sink, err := CreateMetricSink(registerer, cfg)
 	if err != nil {
 		return fmt.Errorf("could not create prometheus sink: %w", err)
 	}
+
+	_, err = CreateMetrics(sink, cfg.Global)
+	if err != nil {
+		return fmt.Errorf("could not create prometheus metrics: %w", err)
+	}
+
+	return nil
+}
+
+func CreateMetricSink(registerer prometheus.Registerer, cfg MetricsConfig) (*mp.PrometheusSink, error) {
+
+	opts := mp.PrometheusOpts{
+		Registerer:         registerer,
+		CounterDefinitions: formatCounters(cfg.Counters),
+		SummaryDefinitions: formatSummaries(cfg.Summaries),
+		GaugeDefinitions:   formatGauges(cfg.Gauges),
+	}
+
+	return mp.NewPrometheusSinkFrom(opts)
+}
+
+func CreateMetrics(sink *mp.PrometheusSink, global bool) (*metrics.Metrics, error) {
 
 	mcfg := &metrics.Config{
 		ServiceName:          "b7s",
@@ -34,14 +49,25 @@ func initPrometheusRegistry(cfg MetricsConfig) error {
 		EnableRuntimeMetrics: true,
 		TimerGranularity:     time.Millisecond,
 	}
-	_, err = metrics.NewGlobal(mcfg, sink)
+
+	var (
+		m   *metrics.Metrics
+		err error
+	)
+
+	if global {
+		m, err = metrics.NewGlobal(mcfg, sink)
+	} else {
+		m, err = metrics.New(mcfg, sink)
+	}
 	if err != nil {
-		return fmt.Errorf("could not initialize metrics: %w", err)
+		return nil, fmt.Errorf("could not create new metrics instance: %w", err)
 	}
 
-	return nil
+	return m, nil
 }
 
+// GetMetricsHTTPHandler returns an HTTP handler for the default prometheus registerer and gatherer.
 func GetMetricsHTTPHandler() http.Handler {
 
 	opts := promhttp.HandlerOpts{
@@ -51,7 +77,7 @@ func GetMetricsHTTPHandler() http.Handler {
 	return promhttp.HandlerFor(prometheus.DefaultGatherer, opts)
 }
 
-func counters(counters []mp.CounterDefinition) []mp.CounterDefinition {
+func formatCounters(counters []mp.CounterDefinition) []mp.CounterDefinition {
 
 	prefixed := make([]mp.CounterDefinition, len(counters))
 
@@ -64,7 +90,7 @@ func counters(counters []mp.CounterDefinition) []mp.CounterDefinition {
 	return prefixed
 }
 
-func summaries(summaries []mp.SummaryDefinition) []mp.SummaryDefinition {
+func formatSummaries(summaries []mp.SummaryDefinition) []mp.SummaryDefinition {
 
 	prefixed := make([]mp.SummaryDefinition, len(summaries))
 
@@ -77,7 +103,7 @@ func summaries(summaries []mp.SummaryDefinition) []mp.SummaryDefinition {
 	return prefixed
 }
 
-func gauges(gauges []mp.GaugeDefinition) []mp.GaugeDefinition {
+func formatGauges(gauges []mp.GaugeDefinition) []mp.GaugeDefinition {
 
 	// Right now we have a single gauge - node info.
 	// gauges := node.Gauges

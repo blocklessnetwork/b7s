@@ -24,6 +24,9 @@ var DefaultConfig = Config{
 			UseCompression: useCompressionForTraceExporters,
 		},
 	},
+	Metrics: MetricsConfig{
+		Global: true,
+	},
 }
 
 type Config struct {
@@ -86,6 +89,7 @@ type TraceInMemConfig struct {
 }
 
 type MetricsConfig struct {
+	Global                bool
 	PrometheusAddress     string
 	PrometheusPushGateway string
 
