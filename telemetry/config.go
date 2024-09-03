@@ -89,10 +89,7 @@ type TraceInMemConfig struct {
 }
 
 type MetricsConfig struct {
-	Global                bool
-	PrometheusAddress     string
-	PrometheusPushGateway string
-
+	Global    bool
 	Counters  []prometheus.CounterDefinition
 	Summaries []prometheus.SummaryDefinition
 	Gauges    []prometheus.GaugeDefinition
@@ -129,18 +126,6 @@ func WithHTTPTracing(endpoint string) Option {
 	return func(cfg *Config) {
 		cfg.Trace.HTTP.Endpoint = endpoint
 		cfg.Trace.HTTP.Enabled = endpoint != ""
-	}
-}
-
-func WithPrometheusAddress(address string) Option {
-	return func(cfg *Config) {
-		cfg.Metrics.PrometheusAddress = address
-	}
-}
-
-func WithPrometheusPushGateway(address string) Option {
-	return func(cfg *Config) {
-		cfg.Metrics.PrometheusPushGateway = address
 	}
 }
 
