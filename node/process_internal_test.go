@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
 	otelcodes "go.opentelemetry.io/otel/codes"
@@ -19,6 +21,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
+	"github.com/blocklessnetwork/b7s/models/response"
 	"github.com/blocklessnetwork/b7s/node/internal/pipeline"
 	"github.com/blocklessnetwork/b7s/telemetry"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
@@ -253,4 +256,110 @@ func attributeMap(attrs []attribute.KeyValue) map[attribute.Key]attribute.Value 
 	}
 
 	return attributes
+}
+
+func TestNode_ProcessedMessageMetric(t *testing.T) {
+
+	var (
+		ctx      = context.Background()
+		registry = prometheus.NewRegistry()
+		node     = createNode(t, blockless.WorkerNode)
+	)
+
+	sink, err := telemetry.CreateMetricSink(registry, telemetry.MetricsConfig{Counters: Counters})
+	require.NoError(t, err)
+
+	m, err := telemetry.CreateMetrics(sink, false)
+	require.NoError(t, err)
+
+	node.metrics = m
+
+	// Messages to send. We will send multiple health check, execution response and install response messages.
+	// Note that not all messages make sense in the context of a real-world node, but we just care about having
+	// a few messages flow through the system.
+	var (
+		// Do between 1 and 10 messages.
+		limit            = 10
+		healthcheckCount = rand.Intn(limit) + 1
+		execCount        = rand.Intn(limit) + 1
+		installCount     = rand.Intn(limit) + 1
+
+		healthCheck = response.Health{}
+
+		execResponse = response.Execute{
+			RequestID: newRequestID(),
+			Results:   execute.ResultMap{mocks.GenericPeerID: mocks.GenericExecutionResult},
+		}
+
+		instResponse = response.InstallFunction{
+			CID: mocks.GenericFunctionRecord.CID,
+		}
+	)
+
+	msgs := []struct {
+		count   int
+		payload []byte
+	}{
+		{
+			count:   healthcheckCount,
+			payload: serialize(t, healthCheck),
+		},
+		{
+			count:   execCount,
+			payload: serialize(t, execResponse),
+		},
+		{
+			count:   installCount,
+			payload: serialize(t, instResponse),
+		},
+	}
+
+	for _, msg := range msgs {
+		for i := 0; i < msg.count; i++ {
+			err = node.processMessage(ctx, mocks.GenericPeerID, msg.payload, pipeline.PubSubPipeline(DefaultTopic))
+			require.NoError(t, err)
+		}
+	}
+
+	// Not that we processed all messages, verify recorded metrics.
+	gathered, err := registry.Gather()
+	require.NoError(t, err)
+
+	// Create a map of gathered metricMap.
+	metricMap := make(map[string]*dto.MetricFamily)
+	for _, m := range gathered {
+		metricMap[*m.Name] = m
+	}
+
+	metric, ok := metricMap["b7s_node_messages_processed"]
+	require.True(t, ok)
+
+	require.Equal(t, dto.MetricType_COUNTER, metric.GetType())
+
+	// There first metric is the  default, unadorned one.
+	// The counters that we actually do use, they will have the message labels set.
+	metrics := metric.GetMetric()
+	require.Len(t, metrics, 4)
+	require.Equal(t, float64(0), metric.GetMetric()[0].GetCounter().GetValue())
+
+	for i := 1; i < 4; i++ {
+		metric := metrics[i]
+
+		labels := metric.GetLabel()
+		require.Len(t, labels, 1)
+
+		labelName := labels[0].GetName()
+		labelValue := labels[0].GetValue()
+
+		require.Equal(t, "type", labelName)
+
+		switch labelValue {
+		case "MsgExecuteResponse":
+			require.Equal(t, float64(execCount), metric.GetCounter().GetValue())
+		case "MsgInstallResponse":
+			require.Equal(t, float64(installCount), metric.GetCounter().GetValue())
+		case "MsgHealthCheck":
+			require.Equal(t, float64(healthcheckCount), metric.GetCounter().GetValue())
+		}
+	}
 }
