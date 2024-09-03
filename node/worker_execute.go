@@ -17,7 +17,7 @@ import (
 
 func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
 
-	metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
+	n.metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
 
 	requestID := req.RequestID
 	if requestID == "" {

@@ -27,7 +27,7 @@ func (n *Node) subscribeToTopics(ctx context.Context) error {
 
 	n.log.Info().Strs("topics", n.cfg.Topics).Msg("topics node will subscribe to")
 
-	metrics.IncrCounter(subscriptionsMetric, float32(len(n.cfg.Topics)))
+	n.metrics.IncrCounter(subscriptionsMetric, float32(len(n.cfg.Topics)))
 
 	// TODO: If some topics/subscriptions failed, cleanup those already subscribed to.
 	for _, topicName := range n.cfg.Topics {
@@ -70,7 +70,7 @@ func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) erro
 		return fmt.Errorf("could not send message: %w", err)
 	}
 
-	metrics.IncrCounterWithLabels(messagesSentMetric, 1, []metrics.Label{{Name: "type", Value: msg.Type()}})
+	n.metrics.IncrCounterWithLabels(messagesSentMetric, 1, []metrics.Label{{Name: "type", Value: msg.Type()}})
 
 	return nil
 }
@@ -98,7 +98,7 @@ func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Me
 		}
 	}
 
-	metrics.IncrCounterWithLabels(messagesSentMetric, float32(len(peers)), []metrics.Label{{Name: "type", Value: msg.Type()}})
+	n.metrics.IncrCounterWithLabels(messagesSentMetric, float32(len(peers)), []metrics.Label{{Name: "type", Value: msg.Type()}})
 
 	return nil
 }
@@ -141,7 +141,7 @@ func (n *Node) publishToTopic(ctx context.Context, topic string, msg blockless.M
 		return fmt.Errorf("could not publish message: %w", err)
 	}
 
-	metrics.IncrCounterWithLabels(messagesPublishedMetric, 1,
+	n.metrics.IncrCounterWithLabels(messagesPublishedMetric, 1,
 		[]metrics.Label{
 			{Name: "type", Value: msg.Type()},
 			{Name: "topic", Value: topic},

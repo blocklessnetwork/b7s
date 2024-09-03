@@ -23,13 +23,13 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
-	metrics.IncrCounterWithLabels(messagesProcessedMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+	n.metrics.IncrCounterWithLabels(messagesProcessedMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 	defer func() {
 		switch procError {
 		case nil:
-			metrics.IncrCounterWithLabels(messagesProcessedOkMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+			n.metrics.IncrCounterWithLabels(messagesProcessedOkMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 		default:
-			metrics.IncrCounterWithLabels(messagesProcessedErrMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+			n.metrics.IncrCounterWithLabels(messagesProcessedErrMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 		}
 	}()
 

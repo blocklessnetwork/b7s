@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/armon/go-metrics"
 	"github.com/cavaliergopher/grab/v3"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -25,6 +26,7 @@ type FStore struct {
 
 	workdir string
 	tracer  trace.Tracer
+	metrics *metrics.Metrics
 }
 
 // New creates a new function store.
@@ -48,6 +50,7 @@ func New(log zerolog.Logger, store blockless.FunctionStore, workdir string) *FSt
 		downloader: downloader,
 		workdir:    workdir,
 		tracer:     otel.Tracer(tracerName),
+		metrics:    metrics.Default(),
 	}
 
 	return &h

@@ -120,7 +120,7 @@ func (r *Replica) execute(ctx context.Context, view uint, sequence uint, digest 
 		return fmt.Errorf("could not send execution response to node (target: %s, request: %s): %w", request.Origin.String(), request.ID, err)
 	}
 
-	metrics.MeasureSinceWithLabels(pbftExecutionsTimeMetric, request.Timestamp, []metrics.Label{{Name: "function", Value: request.Execute.FunctionID}})
+	r.metrics.MeasureSinceWithLabels(pbftExecutionsTimeMetric, request.Timestamp, []metrics.Label{{Name: "function", Value: request.Execute.FunctionID}})
 
 	return nil
 }

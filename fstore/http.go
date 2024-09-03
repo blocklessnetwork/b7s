@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/armon/go-metrics"
 	"github.com/cavaliergopher/grab/v3"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -77,7 +76,7 @@ func (h *FStore) download(ctx context.Context, cid string, manifest blockless.Fu
 		return "", fmt.Errorf("could not download function: %w", err)
 	}
 
-	metrics.IncrCounter(functionsDownloadedSizeMetric, float32(res.HTTPResponse.ContentLength))
+	h.metrics.IncrCounter(functionsDownloadedSizeMetric, float32(res.HTTPResponse.ContentLength))
 
 	h.log.Info().
 		Str("output", res.Filename).

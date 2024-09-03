@@ -37,6 +37,7 @@ func newFsmExecutor(log zerolog.Logger, executor blockless.Executor, processors 
 
 	start := time.Now()
 	ps = append(ps, func(req FSMLogEntry, res execute.Result) {
+		// Global metrics handle.
 		metrics.MeasureSinceWithLabels(raftExecutionTimeMetric, start, []metrics.Label{{Name: "function", Value: req.Execute.FunctionID}})
 	})
 

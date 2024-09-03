@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/armon/go-metrics"
 	"github.com/hashicorp/go-multierror"
 	"go.opentelemetry.io/otel/trace"
 
@@ -43,7 +42,7 @@ func (h *FStore) Sync(ctx context.Context, haltOnError bool) error {
 	}
 
 	h.functionCount.Do(func() {
-		metrics.IncrCounter(functionsInstalledMetric, float32(total))
+		h.metrics.IncrCounter(functionsInstalledMetric, float32(total))
 	})
 
 	return multierr.ErrorOrNil()
