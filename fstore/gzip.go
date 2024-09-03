@@ -10,14 +10,14 @@ import (
 	"path/filepath"
 )
 
-func (h *FStore) unpackArchive(filename string, destination string) error {
+func (f *FStore) unpackArchive(filename string, destination string) error {
 
 	// Use CWD if not specified.
 	if destination == "" {
 		destination = "."
 	}
 
-	h.log.Debug().
+	f.log.Debug().
 		Str("archive", filename).
 		Str("destination", destination).
 		Msg("unpacking gzip archive")
@@ -29,14 +29,14 @@ func (h *FStore) unpackArchive(filename string, destination string) error {
 	}
 
 	// Open gzip archive.
-	f, err := os.Open(filename)
+	file, err := os.Open(filename)
 	if err != nil {
 		return fmt.Errorf("could not open gzip archive (file: %s): %w", filename, err)
 	}
-	defer f.Close()
+	defer file.Close()
 
 	// Create reader for compressed data.
-	reader, err := gzip.NewReader(f)
+	reader, err := gzip.NewReader(file)
 	if err != nil {
 		return fmt.Errorf("could not create gzip reader: %w", err)
 	}
@@ -57,7 +57,7 @@ func (h *FStore) unpackArchive(filename string, destination string) error {
 
 		typ := entry.Typeflag
 
-		h.log.Debug().
+		f.log.Debug().
 			Str("archive", filename).
 			Str("entry", entry.Name).
 			Str("type", fmt.Sprintf("%d", typ)).
@@ -92,7 +92,7 @@ func (h *FStore) unpackArchive(filename string, destination string) error {
 		}
 	}
 
-	h.log.Debug().
+	f.log.Debug().
 		Str("archive", filename).
 		Str("destination", destination).
 		Msg("gzip archive unpacked")

@@ -14,11 +14,11 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
-func (h *FStore) getJSON(address string, out interface{}) error {
+func (f *FStore) getJSON(address string, out interface{}) error {
 
-	h.log.Debug().Str("url", address).Msg("retrieving JSON doc")
+	f.log.Debug().Str("url", address).Msg("retrieving JSON doc")
 
-	res, err := h.http.Get(address)
+	res, err := f.http.Get(address)
 	if err != nil {
 		return fmt.Errorf("could not get resource (url: %s): %w", address, err)
 	}
@@ -35,12 +35,12 @@ func (h *FStore) getJSON(address string, out interface{}) error {
 // download will retrieve the function with the given manifest. It returns the full path
 // of the file where the function is saved on the local storage or any error that might have
 // occurred in the process. The function blocks until the download is complete.
-func (h *FStore) download(ctx context.Context, cid string, manifest blockless.FunctionManifest) (string, error) {
+func (f *FStore) download(ctx context.Context, cid string, manifest blockless.FunctionManifest) (string, error) {
 
 	// Determine directory where files should be stored.
-	fdir := filepath.Join(h.workdir, cid)
+	fdir := filepath.Join(f.workdir, cid)
 
-	h.log.Info().
+	f.log.Info().
 		Str("target_dir", fdir).
 		Str("cid", cid).
 		Str("function_uri", manifest.Deployment.URI).
@@ -68,7 +68,7 @@ func (h *FStore) download(ctx context.Context, cid string, manifest blockless.Fu
 	req = req.WithContext(ctx)
 
 	// Execute the download request.
-	res := h.downloader.Do(req)
+	res := f.downloader.Do(req)
 
 	// Wait until the download is complete.
 	err = res.Err()
@@ -76,9 +76,9 @@ func (h *FStore) download(ctx context.Context, cid string, manifest blockless.Fu
 		return "", fmt.Errorf("could not download function: %w", err)
 	}
 
-	h.metrics.IncrCounter(functionsDownloadedSizeMetric, float32(res.HTTPResponse.ContentLength))
+	f.metrics.IncrCounter(functionsDownloadedSizeMetric, float32(res.HTTPResponse.ContentLength))
 
-	h.log.Info().
+	f.log.Info().
 		Str("output", res.Filename).
 		Str("cid", cid).
 		Str("function_uri", manifest.Deployment.URI).
