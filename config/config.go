@@ -85,12 +85,12 @@ type Worker struct {
 }
 
 type Telemetry struct {
-	Enable  bool    `koanf:"enable" flag:"enable-telemetry"`
 	Tracing Tracing `koanf:"tracing"`
 	Metrics Metrics `koanf:"metrics"`
 }
 
 type Tracing struct {
+	Enable               bool          `koanf:"enable" flag:"enable-tracing"`
 	ExporterBatchTimeout time.Duration `koanf:"exporter-batch-timeout"`
 	GRPC                 GRPCTracing   `koanf:"grpc"`
 	HTTP                 HTTPTracing   `koanf:"http"`
@@ -105,12 +105,8 @@ type HTTPTracing struct {
 }
 
 type Metrics struct {
-	Prometheus Prometheus `koanf:"prometheus"`
-}
-
-type Prometheus struct {
-	Address     string `koanf:"address"      flag:"prometheus-address"`
-	PushGateway string `koanf:"push-gateway" flag:"prometheus-push-gateway"`
+	Enable            bool   `koanf:"enable" flag:"enable-metrics"`
+	PrometheusAddress string `koanf:"prometheus-address" flag:"prometheus-address"`
 }
 
 // ConfigOptionInfo describes a specific configuration option, it's location in the config file and
@@ -171,8 +167,10 @@ func getFlagDescription(flag string) string {
 		return "memory limit (kB) for Blockless Functions"
 	case "no-dialback-peers":
 		return "start without dialing back peers from previous runs"
-	case "enable-telemetry":
-		return "emit telemetry data"
+	case "enable-tracing":
+		return "emit tracing data"
+	case "enable-metrics":
+		return "emit metrics"
 	case "tracing-grpc-endpoint":
 		return "tracing exporter GRPC endpoint"
 	case "tracing-http-endpoint":

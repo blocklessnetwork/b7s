@@ -12,23 +12,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func initMetrics(cfg MetricsConfig) error {
-
-	registerer := prometheus.DefaultRegisterer
-
-	sink, err := CreateMetricSink(registerer, cfg)
-	if err != nil {
-		return fmt.Errorf("could not create prometheus sink: %w", err)
-	}
-
-	_, err = CreateMetrics(sink, cfg.Global)
-	if err != nil {
-		return fmt.Errorf("could not create prometheus metrics: %w", err)
-	}
-
-	return nil
-}
-
 func CreateMetricSink(registerer prometheus.Registerer, cfg MetricsConfig) (*mp.PrometheusSink, error) {
 
 	opts := mp.PrometheusOpts{
