@@ -10,7 +10,6 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/prometheus/client_golang/prometheus"
-	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
 	otelcodes "go.opentelemetry.io/otel/codes"
@@ -321,45 +320,8 @@ func TestNode_ProcessedMessageMetric(t *testing.T) {
 		}
 	}
 
-	// Not that we processed all messages, verify recorded metrics.
-	gathered, err := registry.Gather()
-	require.NoError(t, err)
-
-	// Create a map of gathered metricMap.
-	metricMap := make(map[string]*dto.MetricFamily)
-	for _, m := range gathered {
-		metricMap[*m.Name] = m
-	}
-
-	metric, ok := metricMap["b7s_node_messages_processed"]
-	require.True(t, ok)
-
-	require.Equal(t, dto.MetricType_COUNTER, metric.GetType())
-
-	// There first metric is the  default, unadorned one.
-	// The counters that we actually do use, they will have the message labels set.
-	metrics := metric.GetMetric()
-	require.Len(t, metrics, 4)
-	require.Equal(t, float64(0), metric.GetMetric()[0].GetCounter().GetValue())
-
-	for i := 1; i < 4; i++ {
-		metric := metrics[i]
-
-		labels := metric.GetLabel()
-		require.Len(t, labels, 1)
-
-		labelName := labels[0].GetName()
-		labelValue := labels[0].GetValue()
-
-		require.Equal(t, "type", labelName)
-
-		switch labelValue {
-		case "MsgExecuteResponse":
-			require.Equal(t, float64(execCount), metric.GetCounter().GetValue())
-		case "MsgInstallResponse":
-			require.Equal(t, float64(installCount), metric.GetCounter().GetValue())
-		case "MsgHealthCheck":
-			require.Equal(t, float64(healthcheckCount), metric.GetCounter().GetValue())
-		}
-	}
+	metricMap := helpers.MetricMap(t, registry)
+	helpers.CounterCmp(t, metricMap, float64(healthcheckCount), "b7s_node_messages_processed", "type", "MsgHealthCheck")
+	helpers.CounterCmp(t, metricMap, float64(execCount), "b7s_node_messages_processed", "type", "MsgExecuteResponse")
+	helpers.CounterCmp(t, metricMap, float64(installCount), "b7s_node_messages_processed", "type", "MsgInstallFunctionResponse")
 }

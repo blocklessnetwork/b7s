@@ -17,20 +17,20 @@ import (
 func (e *Executor) ExecuteFunction(ctx context.Context, requestID string, req execute.Request) (result execute.Result, retErr error) {
 
 	ml := []metrics.Label{{Name: "function", Value: req.FunctionID}}
-	e.metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, ml)
+	e.cfg.Metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, ml)
 
-	defer e.metrics.MeasureSinceWithLabels(functionDurationMetric, time.Now(), ml)
+	defer e.cfg.Metrics.MeasureSinceWithLabels(functionDurationMetric, time.Now(), ml)
 
 	defer func() {
 
-		e.metrics.IncrCounter(functionCPUUserTimeMetric, float32(result.Usage.CPUUserTime.Milliseconds()))
-		e.metrics.IncrCounter(functionCPUSysTimeMetric, float32(result.Usage.CPUSysTime.Milliseconds()))
+		e.cfg.Metrics.IncrCounter(functionCPUUserTimeMetric, float32(result.Usage.CPUUserTime.Milliseconds()))
+		e.cfg.Metrics.IncrCounter(functionCPUSysTimeMetric, float32(result.Usage.CPUSysTime.Milliseconds()))
 
 		switch retErr {
 		case nil:
-			e.metrics.IncrCounterWithLabels(functionOkMetric, 1, ml)
+			e.cfg.Metrics.IncrCounterWithLabels(functionOkMetric, 1, ml)
 		default:
-			e.metrics.IncrCounterWithLabels(functionErrMetric, 1, ml)
+			e.cfg.Metrics.IncrCounterWithLabels(functionErrMetric, 1, ml)
 		}
 	}()
 

@@ -13,11 +13,14 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetwork/b7s/executor"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/telemetry"
+	"github.com/blocklessnetwork/b7s/testing/helpers"
 	"github.com/blocklessnetwork/b7s/testing/mocks"
 )
 
@@ -51,7 +54,14 @@ func TestExecutor_Execute(t *testing.T) {
 		workdir     = filepath.Join(workspace, "t", requestID) // request work directory
 		fsRoot      = filepath.Join(workdir, "fs")             // function FS root
 		functiondir = filepath.Join(workspace, functionID)     // function location
+		registry    = prometheus.NewRegistry()
 	)
+
+	sink, err := telemetry.CreateMetricSink(registry, telemetry.MetricsConfig{Counters: executor.Counters})
+	require.NoError(t, err)
+
+	metrics, err := telemetry.CreateMetrics(sink, false)
+	require.NoError(t, err)
 
 	t.Logf("working directory: %v", workspace)
 	createDirs(t, workdir, fsRoot, functiondir)
@@ -67,6 +77,7 @@ func TestExecutor_Execute(t *testing.T) {
 		mocks.NoopLogger,
 		executor.WithWorkDir(workspace),
 		executor.WithRuntimeDir(os.Getenv(runtimeDirEnv)),
+		executor.WithMetrics(metrics),
 	)
 	require.NoError(t, err)
 
@@ -95,6 +106,8 @@ func TestExecutor_Execute(t *testing.T) {
 	require.NotZero(t, cpuTimeTotal)
 	require.NotZero(t, res.Usage.WallClockTime)
 	require.NotZero(t, res.Usage.MemoryMaxKB)
+
+	verifyExecutionMetrics(t, registry, req, res)
 }
 
 func createTestFile(t *testing.T, dir string, size int) (string, string) {
@@ -154,4 +167,16 @@ func copyFunction(t *testing.T, filePath string, target string) {
 
 func cleanupDisabled() bool {
 	return os.Getenv(cleanupDisableEnv) == "yes"
+}
+
+func verifyExecutionMetrics(t *testing.T, gatherer prometheus.Gatherer, req execute.Request, res execute.Result) {
+	t.Helper()
+
+	metrics := helpers.MetricMap(t, gatherer)
+
+	helpers.CounterCmp(t, metrics, float64(1), "b7s_executor_function_executions", "function", req.FunctionID)
+	helpers.CounterCmp(t, metrics, float64(res.Usage.CPUSysTime.Milliseconds()), "b7s_executor_function_executions_cpu_sys_time_milliseconds")
+	helpers.CounterCmp(t, metrics, float64(res.Usage.CPUUserTime.Milliseconds()), "b7s_executor_function_executions_cpu_user_time_milliseconds")
+	helpers.CounterCmp(t, metrics, float64(0), "b7s_executor_function_executions_err")
+	helpers.CounterCmp(t, metrics, float64(1), "b7s_executor_function_executions_ok", "function", req.FunctionID)
 }
