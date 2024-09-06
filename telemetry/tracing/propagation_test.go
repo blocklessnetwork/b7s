@@ -27,7 +27,7 @@ func TestTraceInfo(t *testing.T) {
 
 	t.Run("untraced context returns and empty traceinfo", func(t *testing.T) {
 		t.Parallel()
-		ti := tracing.GetTraceInfo(ctx)
+		ti := tracing.GetTraceInfo(context.Background())
 		require.True(t, ti.Empty())
 	})
 	t.Run("traced context returns populated traceinfo", func(t *testing.T) {
@@ -43,10 +43,10 @@ func TestTraceInfo(t *testing.T) {
 
 		// Verify trace data.
 		sctx := span.SpanContext()
-		require.Equal(t, fields[0], "00") // version field.
-		require.Equal(t, fields[1], sctx.TraceID().String())
-		require.Equal(t, fields[2], sctx.SpanID().String())
-		require.Equal(t, fields[3], sctx.TraceFlags().String())
+		require.Equal(t, "00", fields[0]) // version field.
+		require.Equal(t, sctx.TraceID().String(), fields[1])
+		require.Equal(t, sctx.SpanID().String(), fields[2])
+		require.Equal(t, sctx.TraceFlags().String(), fields[3])
 	})
 	t.Run("injected traceinfo produces identical context", func(t *testing.T) {
 		t.Parallel()
