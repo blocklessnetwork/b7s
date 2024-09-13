@@ -158,7 +158,6 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 
 	results = n.gatherExecutionResults(ctx, requestID, reportingPeers)
 
-	// log.Info().Any("results", results)
 	log.Info().Int("cluster_size", len(reportingPeers)).Int("responded", len(results)).Msg("received execution responses")
 
 	// How many results do we have, and how many do we expect.
