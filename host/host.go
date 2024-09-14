@@ -127,9 +127,12 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 		return nil, fmt.Errorf("could not create libp2p host: %w", err)
 	}
 
-	_, err = relayv2.New(h)
-	if err != nil {
-		return nil, fmt.Errorf("could not create relay: %w", err)
+	if cfg.EnableP2PRelay {
+		log.Info().Msg("enabling p2p relay...")
+		_, err = relayv2.New(h)
+		if err != nil {
+			return nil, fmt.Errorf("could not create relay: %w", err)
+		}
 	}
 
 	host := Host{
