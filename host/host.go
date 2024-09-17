@@ -141,11 +141,6 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	}
 	host.Host = h
 
-	log.Printf("PeerID: %s", host.ID().String())
-	for _, addr := range h.Addrs() {
-		log.Printf("Listening on: %s/p2p/%s\n", addr.String(), host.ID())
-	}
-
 	return &host, nil
 }
 
