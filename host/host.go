@@ -54,8 +54,8 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 
 	opts := []libp2p.Option{
 		libp2p.ListenAddrStrings(addresses...),
-		libp2p.Transport(webrtc.New),
 		libp2p.DefaultTransports,
+		libp2p.Transport(webrtc.New),
 		libp2p.DefaultMuxers,
 		libp2p.DefaultSecurity,
 		libp2p.NATPortMap(),
