@@ -13,7 +13,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
-	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
+	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ma "github.com/multiformats/go-multiaddr"
 )
@@ -129,7 +129,7 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 
 	if cfg.EnableP2PRelay {
 		log.Info().Msg("enabling p2p relay...")
-		_, err = relayv2.New(h)
+		_, err = relay.New(h)
 		if err != nil {
 			return nil, fmt.Errorf("could not create relay: %w", err)
 		}
