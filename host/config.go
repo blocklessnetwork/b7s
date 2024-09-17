@@ -17,7 +17,7 @@ var defaultConfig = Config{
 	Websocket:                          false,
 	BootNodesReachabilityCheckInterval: 1 * time.Minute,
 	MustReachBootNodes:                 defaultMustReachBootNodes,
-	EnableP2PRelay:                     true,
+	EnableP2PRelay:                     false,
 }
 
 // Config represents the Host configuration.
