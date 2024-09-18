@@ -51,7 +51,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
 func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Request, subgroup string) (codes.Code, execute.ResultMap, execute.Cluster, error) {
 
-	metrics.IncrCounterWithLabels(functionExecutionsMetric, 1,
+	n.metrics.IncrCounterWithLabels(functionExecutionsMetric, 1,
 		[]metrics.Label{
 			{Name: "function", Value: req.FunctionID},
 			{Name: "consensus", Value: req.Config.ConsensusAlgorithm},

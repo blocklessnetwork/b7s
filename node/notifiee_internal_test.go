@@ -27,7 +27,7 @@ func TestNode_Notifiee(t *testing.T) {
 
 	store := mocks.BaselineStore(t)
 	// Override the peerstore methods so we know if the node correctly handled incoming connection.
-	store.SavePeerFunc = func(blockless.Peer) error {
+	store.SavePeerFunc = func(context.Context, blockless.Peer) error {
 		storedPeer = true
 		return nil
 	}

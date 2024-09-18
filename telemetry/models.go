@@ -5,5 +5,3 @@ import (
 )
 
 type ShutdownFunc func(context.Context) error
-
-type ExporterMethod string

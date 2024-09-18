@@ -6,25 +6,30 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/node/internal/pipeline"
 )
 
 func TestNode_DisallowedMessages(t *testing.T) {
 
+	var (
+		pubsub = pipeline.PubSubPipeline(DefaultTopic)
+		direct = pipeline.DirectMessagePipeline()
+	)
+
 	tests := []struct {
+		pipeline pipeline.Pipeline
 		message  string
-		pipeline messagePipeline
 	}{
 		// Messages disallowed for publishing.
-		{message: blockless.MessageInstallFunctionResponse, pipeline: subscriptionPipeline},
-		{message: blockless.MessageExecute, pipeline: subscriptionPipeline},
-		{message: blockless.MessageExecuteResponse, pipeline: subscriptionPipeline},
-		{message: blockless.MessageFormCluster, pipeline: subscriptionPipeline},
-		{message: blockless.MessageFormClusterResponse, pipeline: subscriptionPipeline},
-		{message: blockless.MessageDisbandCluster, pipeline: subscriptionPipeline},
-
+		{pubsub, blockless.MessageInstallFunctionResponse},
+		{pubsub, blockless.MessageExecute},
+		{pubsub, blockless.MessageExecuteResponse},
+		{pubsub, blockless.MessageFormCluster},
+		{pubsub, blockless.MessageFormClusterResponse},
+		{pubsub, blockless.MessageDisbandCluster},
 		// Messages disallowed for direct sending.
-		{message: blockless.MessageHealthCheck, pipeline: directMessagePipeline},
-		{message: blockless.MessageRollCall, pipeline: directMessagePipeline},
+		{direct, blockless.MessageHealthCheck},
+		{direct, blockless.MessageRollCall},
 	}
 
 	for _, test := range tests {

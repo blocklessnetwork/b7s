@@ -49,7 +49,8 @@ type Node struct {
 	consensusResponses *waitmap.WaitMap
 
 	// Telemetry
-	tracer *tracing.Tracer
+	tracer  *tracing.Tracer
+	metrics *metrics.Metrics
 }
 
 // New creates a new Node.
@@ -89,7 +90,8 @@ func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore 
 		executeResponses:   waitmap.New(),
 		consensusResponses: waitmap.New(),
 
-		tracer: tracing.NewTracer(tracerName),
+		tracer:  tracing.NewTracer(tracerName),
+		metrics: metrics.Default(),
 	}
 
 	if cfg.LoadAttributes {
@@ -111,7 +113,7 @@ func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore 
 	cn := newConnectionNotifee(log, store)
 	host.Network().Notify(cn)
 
-	metrics.SetGaugeWithLabels(nodeInfoMetric, 1, []metrics.Label{
+	n.metrics.SetGaugeWithLabels(nodeInfoMetric, 1, []metrics.Label{
 		{Name: "id", Value: n.ID()},
 		{Name: "version", Value: info.VcsVersion()},
 		{Name: "role", Value: n.cfg.Role.String()},

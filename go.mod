@@ -5,6 +5,7 @@ go 1.22.0
 require (
 	github.com/Microsoft/go-winio v0.6.1
 	github.com/a-h/templ v0.2.648
+	github.com/armon/go-metrics v0.4.1
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/blocklessnetwork/b7s-attributes v0.0.0
 	github.com/cavaliergopher/grab/v3 v3.0.1
@@ -48,7 +49,6 @@ require (
 )
 
 require (
-	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cilium/ebpf v0.12.3 // indirect
@@ -68,7 +68,6 @@ require (
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-metrics v0.5.3 // indirect
 	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/invopop/yaml v0.2.0 // indirect

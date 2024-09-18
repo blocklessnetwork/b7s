@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -10,6 +9,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	pp "github.com/blocklessnetwork/b7s/node/internal/pipeline"
 	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
@@ -18,21 +18,22 @@ const (
 	tracerName = "b7s.Node"
 )
 
-func msgProcessSpanOpts(from peer.ID, msgType string, pipeline messagePipeline) []trace.SpanStartOption {
+func msgProcessSpanOpts(from peer.ID, msgType string, pipeline pp.Pipeline) []trace.SpanStartOption {
 
-	// TODO: Topic name - refactor message pipeline to include topic name too.
+	attrs := []attribute.KeyValue{
+		b7ssemconv.MessagePeer.String(from.String()),
+		b7ssemconv.MessageType.String(msgType),
+		b7ssemconv.MessagePipeline.String(pipeline.ID.String()),
+	}
+
+	if pipeline.ID == pp.PubSub {
+		attrs = append(attrs, b7ssemconv.MessageTopic.String(pipeline.Topic))
+	}
+
 	return []trace.SpanStartOption{
 		trace.WithSpanKind(trace.SpanKindConsumer),
-		trace.WithAttributes(
-			b7ssemconv.MessagePeer.String(from.String()),
-			b7ssemconv.MessagePipeline.String(pipeline.String()),
-			b7ssemconv.MessageType.String(msgType),
-		),
+		trace.WithAttributes(attrs...),
 	}
-}
-
-func traceableTopicName(topic string) string {
-	return fmt.Sprintf("topic.%v", topic)
 }
 
 func saveTraceContext(ctx context.Context, msg blockless.Message) {
@@ -48,11 +49,11 @@ func saveTraceContext(ctx context.Context, msg blockless.Message) {
 }
 
 type msgSpanConfig struct {
-	msgPipeline string
+	msgPipeline pp.Pipeline
 	receivers   []peer.ID
 }
 
-func (c *msgSpanConfig) pipeline(p string) *msgSpanConfig {
+func (c *msgSpanConfig) pipeline(p pp.Pipeline) *msgSpanConfig {
 	c.msgPipeline = p
 	return c
 }
@@ -77,9 +78,12 @@ func (c *msgSpanConfig) peers(ids ...peer.ID) *msgSpanConfig {
 
 func (c *msgSpanConfig) spanOpts() []trace.SpanStartOption {
 
-	var attrs []attribute.KeyValue
-	if c.msgPipeline != "" {
-		attrs = append(attrs, b7ssemconv.MessagePipeline.String(c.msgPipeline))
+	attrs := []attribute.KeyValue{
+		b7ssemconv.MessagePipeline.String(c.msgPipeline.ID.String()),
+	}
+
+	if c.msgPipeline.ID == pp.PubSub {
+		attrs = append(attrs, b7ssemconv.MessageTopic.String(c.msgPipeline.Topic))
 	}
 
 	if len(c.receivers) == 1 {

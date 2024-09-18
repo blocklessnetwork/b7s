@@ -1,6 +1,7 @@
 package fstore_test
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -23,12 +24,12 @@ func TestFunction_RetrieveHandlesErrors(t *testing.T) {
 	defer os.RemoveAll(workdir)
 
 	store := mocks.BaselineStore(t)
-	store.RetrieveFunctionFunc = func(string) (blockless.FunctionRecord, error) {
+	store.RetrieveFunctionFunc = func(context.Context, string) (blockless.FunctionRecord, error) {
 		return blockless.FunctionRecord{}, mocks.GenericError
 	}
 
 	fh := fstore.New(mocks.NoopLogger, store, workdir)
 
-	_, err = fh.Get(testCID)
+	_, err = fh.Get(context.Background(), testCID)
 	require.Error(t, err)
 }

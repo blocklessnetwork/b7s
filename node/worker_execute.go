@@ -12,20 +12,19 @@ import (
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
 
-	metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
+	n.metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
 
 	requestID := req.RequestID
 	if requestID == "" {
 		return fmt.Errorf("request ID must be set by the head node")
 	}
 
-	// TODO: attributes
-	var opts []trace.SpanStartOption
-	ctx, span := n.tracer.Start(ctx, spanWorkerExecute, opts...)
+	ctx, span := n.tracer.Start(ctx, spanWorkerExecute, trace.WithAttributes(tracing.ExecutionAttributes(requestID, req.Request)...))
 	defer span.End()
 
 	log := n.log.With().Str("request", req.RequestID).Str("function", req.FunctionID).Logger()

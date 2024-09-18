@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/rs/zerolog"
 	otelcodes "go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -53,7 +54,8 @@ type Replica struct {
 	byzantine bool
 
 	// Telemetry
-	tracer *tracing.Tracer
+	tracer  *tracing.Tracer
+	metrics *metrics.Metrics
 }
 
 // NewReplica creates a new PBFT replica.
@@ -87,7 +89,8 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor blockless.Executor
 
 		byzantine: isByzantine(),
 
-		tracer: tracing.NewTracer(tracerName),
+		tracer:  tracing.NewTracer(tracerName),
+		metrics: metrics.Default(),
 	}
 
 	replica.log.Info().Strs("replicas", peerIDList(peers)).Uint("n", total).Uint("f", replica.f).Bool("byzantine", replica.byzantine).Msg("created PBFT replica")

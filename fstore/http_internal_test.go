@@ -1,6 +1,7 @@
 package fstore
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -165,7 +166,7 @@ func TestFunction_Download(t *testing.T) {
 		},
 	}
 
-	path, err := fh.download("", manifest)
+	path, err := fh.download(context.Background(), "", manifest)
 	require.NoError(t, err)
 
 	// Check if the file created is within the specified workdir.
@@ -183,7 +184,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 	const (
 		size = 10_000
 	)
-
+	ctx := context.Background()
 	payload := getRandomPayload(t, size)
 
 	srv := httptest.NewServer(
@@ -214,7 +215,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 			},
 		}
 
-		_, err = fh.download("", manifest)
+		_, err = fh.download(ctx, "", manifest)
 		require.Error(t, err)
 	})
 	t.Run("handles invalid URI", func(t *testing.T) {
@@ -236,7 +237,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 			},
 		}
 
-		_, err = fh.download("", manifest)
+		_, err = fh.download(ctx, "", manifest)
 		require.Error(t, err)
 	})
 	t.Run("handles download failure", func(t *testing.T) {
@@ -260,7 +261,7 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 			},
 		}
 
-		_, err = fh.download("", manifest)
+		_, err = fh.download(ctx, "", manifest)
 		require.Error(t, err)
 	})
 }

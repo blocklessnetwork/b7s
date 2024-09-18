@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/armon/go-metrics"
 	"github.com/asaskevich/govalidator"
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -24,7 +25,8 @@ type Host struct {
 	log zerolog.Logger
 	cfg Config
 
-	pubsub *pubsub.PubSub
+	pubsub  *pubsub.PubSub
+	metrics *metrics.Metrics
 }
 
 // New creates a new Host.
@@ -135,8 +137,9 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	}
 
 	host := Host{
-		log: log,
-		cfg: cfg,
+		log:     log,
+		cfg:     cfg,
+		metrics: metrics.Default(),
 	}
 	host.Host = h
 

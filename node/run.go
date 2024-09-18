@@ -13,6 +13,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/node/internal/pipeline"
 )
 
 // Run will start the main loop for the node.
@@ -98,9 +99,9 @@ func (n *Node) Run(ctx context.Context) error {
 					defer n.wg.Done()
 					defer func() { <-n.sema }()
 
-					metrics.IncrCounterWithLabels(topicMessagesMetric, 1, []metrics.Label{{Name: "topic", Value: name}})
+					n.metrics.IncrCounterWithLabels(topicMessagesMetric, 1, []metrics.Label{{Name: "topic", Value: name}})
 
-					err = n.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), subscriptionPipeline)
+					err = n.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), pipeline.PubSubPipeline(name))
 					if err != nil {
 						n.log.Error().Err(err).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("could not process message")
 						return
@@ -127,7 +128,7 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 
 		from := stream.Conn().RemotePeer()
 
-		metrics.IncrCounter(directMessagesMetric, 1)
+		n.metrics.IncrCounter(directMessagesMetric, 1)
 
 		buf := bufio.NewReader(stream)
 		msg, err := buf.ReadBytes('\n')
@@ -139,7 +140,7 @@ func (n *Node) listenDirectMessages(ctx context.Context) {
 
 		n.log.Trace().Str("peer", from.String()).Msg("received direct message")
 
-		err = n.processMessage(ctx, from, msg, directMessagePipeline)
+		err = n.processMessage(ctx, from, msg, pipeline.DirectMessagePipeline())
 		if err != nil {
 			n.log.Error().Err(err).Str("peer", from.String()).Msg("could not process direct message")
 			return

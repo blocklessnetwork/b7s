@@ -10,11 +10,12 @@ import (
 	otelcodes "go.opentelemetry.io/otel/codes"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/node/internal/pipeline"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // processMessage will determine which message was received and how to process it.
-func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline messagePipeline) (procError error) {
+func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline pipeline.Pipeline) (procError error) {
 
 	// Determine message type.
 	msgType, err := getMessageType(payload)
@@ -22,17 +23,16 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
-	metrics.IncrCounterWithLabels(messagesProcessedMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+	n.metrics.IncrCounterWithLabels(messagesProcessedMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 	defer func() {
 		switch procError {
 		case nil:
-			metrics.IncrCounterWithLabels(messagesProcessedOkMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+			n.metrics.IncrCounterWithLabels(messagesProcessedOkMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 		default:
-			metrics.IncrCounterWithLabels(messagesProcessedErrMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+			n.metrics.IncrCounterWithLabels(messagesProcessedErrMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 		}
 	}()
 
-	// TOOD: Consider other span options.
 	ctx, err = tracing.TraceContextFromMessage(ctx, payload)
 	if err != nil {
 		n.log.Error().Err(err).Msg("could not get trace context from message")

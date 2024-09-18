@@ -67,12 +67,12 @@ func run() int {
 
 		// HTTP server will be created in two scenarios:
 		// - node is a head node (head node always has a REST API)
-		// - node has local prometheus metrics enabled
-		needHTTPServer = nodeRole == blockless.HeadNode || (cfg.Telemetry.Enable && cfg.Telemetry.Metrics.Prometheus.Address != "")
+		// - node has prometheus metrics enabled
+		needHTTPServer = nodeRole == blockless.HeadNode || cfg.Telemetry.Metrics.Enable
 		server         *echo.Echo
 
 		// If we have a REST API address, serve metrics there.
-		serverAddress = cmp.Or(cfg.Head.RestAPI, cfg.Telemetry.Metrics.Prometheus.Address)
+		serverAddress = cmp.Or(cfg.Head.RestAPI, cfg.Telemetry.Metrics.PrometheusAddress)
 	)
 
 	// Create the main context.
@@ -80,6 +80,12 @@ func run() int {
 	defer cancel()
 
 	if needHTTPServer {
+
+		if serverAddress == "" {
+			log.Error().Err(err).Msg("HTTP server address is required")
+			return failure
+		}
+
 		server = createEchoServer(log)
 	}
 
@@ -92,11 +98,9 @@ func run() int {
 		}
 	}
 
-	if cfg.Telemetry.Enable {
+	if cfg.Telemetry.Tracing.Enable {
 
-		log.Info().Msg("telemetry enabled")
-
-		opts := []telemetry.Option{
+		opts := []telemetry.TraceOption{
 			telemetry.WithID(nodeID),
 			telemetry.WithNodeRole(nodeRole),
 			telemetry.WithBatchTraceTimeout(cfg.Telemetry.Tracing.ExporterBatchTimeout),
@@ -104,29 +108,41 @@ func run() int {
 			telemetry.WithHTTPTracing(cfg.Telemetry.Tracing.HTTP.Endpoint),
 		}
 
-		// Setup telemetry.
-		shutdown, err := telemetry.Initialize(ctx, log.With().Str("component", "telemetry").Logger(), opts...)
+		shutdown, err := telemetry.InitializeTracing(ctx, log.With().Str("component", "telemetry").Logger(), opts...)
+		if err != nil {
+			log.Error().Err(err).Msg("could not initialize tracing")
+			return failure
+		}
 		defer func() {
 			err := shutdown(ctx)
 			if err != nil {
-				log.Error().Err(err).Msg("could not shutdown telemetry")
+				log.Error().Err(err).Msg("could not shutdown tracing")
 			}
 		}()
+
+		log.Info().Msg("tracing enabled")
+	}
+
+	if cfg.Telemetry.Metrics.Enable {
+
+		metrics, err := telemetry.InitializeMetrics(
+			telemetry.WithCounters(metricCounters()),
+			telemetry.WithSummaries(metricSummaries()),
+			telemetry.WithGauges(metricGauges()),
+		)
 		if err != nil {
-			log.Error().Err(err).Msg("could not setup telemetry")
+			log.Error().Err(err).Msg("could not initialize metrics")
 			return failure
 		}
+		defer metrics.Shutdown()
 
-		// Metrics stuff.
+		log.Info().Msg("metrics enabled")
 
-		// If we have a server - setup handler.
-		if serverAddress != "" {
-			// Set up metrics handler.
-			server.GET("/metrics", echo.WrapHandler(telemetry.GetMetricsHTTPHandler()))
+		// Setup metrics endpoint.
+		server.GET("/metrics", echo.WrapHandler(telemetry.GetMetricsHTTPHandler()))
 
-			// Echo (HTTP server) metrics.
-			server.Use(echoprometheus.NewMiddlewareWithConfig(echoprometheus.MiddlewareConfig{}))
-		}
+		// Echo (HTTP server) metrics.
+		server.Use(echoprometheus.NewMiddlewareWithConfig(echoprometheus.MiddlewareConfig{}))
 	}
 
 	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.
@@ -278,11 +294,6 @@ func run() int {
 
 	// Start the REST API if needed.
 	if needHTTPServer {
-
-		if serverAddress == "" {
-			log.Error().Err(err).Msg("HTTP server address is required")
-			return failure
-		}
 
 		// Create an API handler if we're a head node.
 		if nodeRole == blockless.HeadNode {

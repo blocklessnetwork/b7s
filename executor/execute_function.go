@@ -17,25 +17,23 @@ import (
 func (e *Executor) ExecuteFunction(ctx context.Context, requestID string, req execute.Request) (result execute.Result, retErr error) {
 
 	ml := []metrics.Label{{Name: "function", Value: req.FunctionID}}
-	metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, ml)
+	e.cfg.Metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, ml)
 
-	defer metrics.MeasureSinceWithLabels(functionDurationMetric, time.Now(), ml)
+	defer e.cfg.Metrics.MeasureSinceWithLabels(functionDurationMetric, time.Now(), ml)
 
 	defer func() {
 
-		metrics.IncrCounter(functionCPUUserTimeMetric, float32(result.Usage.CPUUserTime.Milliseconds()))
-		metrics.IncrCounter(functionCPUSysTimeMetric, float32(result.Usage.CPUSysTime.Milliseconds()))
+		e.cfg.Metrics.IncrCounter(functionCPUUserTimeMetric, float32(result.Usage.CPUUserTime.Milliseconds()))
+		e.cfg.Metrics.IncrCounter(functionCPUSysTimeMetric, float32(result.Usage.CPUSysTime.Milliseconds()))
 
 		switch retErr {
 		case nil:
-			metrics.IncrCounterWithLabels(functionOkMetric, 1, ml)
+			e.cfg.Metrics.IncrCounterWithLabels(functionOkMetric, 1, ml)
 		default:
-			metrics.IncrCounterWithLabels(functionErrMetric, 1, ml)
+			e.cfg.Metrics.IncrCounterWithLabels(functionErrMetric, 1, ml)
 		}
 	}()
 
-	// TODO: Check other span options and stuff.
-	// TODO: More details on the execution.
 	_, span := e.tracer.Start(ctx, "ExecuteFunction",
 		trace.WithSpanKind(trace.SpanKindClient),
 		trace.WithAttributes(tracing.ExecutionAttributes(requestID, req)...))
