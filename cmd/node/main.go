@@ -129,6 +129,7 @@ func run() int {
 		host.WithWebsocketPort(cfg.Connectivity.WebsocketPort),
 		host.WithMustReachBootNodes(cfg.Connectivity.MustReachBootNodes),
 		host.WithDisabledResourceLimits(cfg.Connectivity.DisableConnectionLimits),
+		host.WithEnableP2PRelay(role == blockless.HeadNode),
 	}
 
 	if !cfg.Connectivity.NoDialbackPeers {

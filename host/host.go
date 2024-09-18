@@ -13,6 +13,8 @@ import (
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
+	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
+	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ma "github.com/multiformats/go-multiaddr"
 )
 
@@ -53,6 +55,7 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	opts := []libp2p.Option{
 		libp2p.ListenAddrStrings(addresses...),
 		libp2p.DefaultTransports,
+		libp2p.Transport(webrtc.New),
 		libp2p.DefaultMuxers,
 		libp2p.DefaultSecurity,
 		libp2p.NATPortMap(),
@@ -122,6 +125,14 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	h, err := libp2p.New(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create libp2p host: %w", err)
+	}
+
+	if cfg.EnableP2PRelay {
+		log.Info().Msg("enabling p2p relay...")
+		_, err = relay.New(h)
+		if err != nil {
+			return nil, fmt.Errorf("could not create relay: %w", err)
+		}
 	}
 
 	host := Host{
