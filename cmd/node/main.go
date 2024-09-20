@@ -193,7 +193,7 @@ func run() int {
 		}
 	}
 
-	host, err := createHost(log.With().Str("component", "host").Logger(), *cfg, role, dialbackPeers...)
+	host, err := createHost(log.With().Str("component", "host").Logger(), *cfg, nodeRole, dialbackPeers...)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create host")
 		return failure

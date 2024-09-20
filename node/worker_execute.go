@@ -53,7 +53,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 	n.executeResponses.Set(requestID, result)
 
 	// Create the execution response from the execution result.
-	res := req.Response(code).WithResults(execute.ResultMap{n.host.ID(): { Result: result, Metadata: metadata})
+	res := req.Response(code).WithResults(execute.ResultMap{n.host.ID(): {Result: result, Metadata: metadata}})
 
 	// Send the response, whatever it may be (success or failure).
 	err = n.send(ctx, from, res)

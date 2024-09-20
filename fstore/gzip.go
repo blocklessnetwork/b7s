@@ -58,7 +58,7 @@ func (f *FStore) unpackArchive(filename string, destination string) error {
 
 		// Do not allow directory traversal as it's a security issue.
 		if strings.Contains(entry.Name, "..") {
-			h.log.Warn().Str("archive", filename).Str("entry", entry.Name).Msg("skipping archive entry with disallowed path")
+			f.log.Warn().Str("archive", filename).Str("entry", entry.Name).Msg("skipping archive entry with disallowed path")
 			continue
 		}
 
