@@ -287,7 +287,7 @@ func TestNode_ProcessedMessageMetric(t *testing.T) {
 
 		execResponse = response.Execute{
 			RequestID: newRequestID(),
-			Results:   execute.ResultMap{mocks.GenericPeerID: mocks.GenericExecutionResult},
+			Results:   execute.ResultMap{mocks.GenericPeerID: execute.NodeResult{Result: mocks.GenericExecutionResult}},
 		}
 
 		instResponse = response.InstallFunction{
