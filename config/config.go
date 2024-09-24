@@ -169,6 +169,10 @@ func getFlagDescription(flag string) string {
 		return "memory limit (kB) for Blockless Functions"
 	case "no-dialback-peers":
 		return "start without dialing back peers from previous runs"
+	case "must-reach-boot-nodes":
+		return "halt node if we fail to reach boot nodes on start"
+	case "disable-connection-limits":
+		return "disable libp2p connection limits (experimental)"
 	case "enable-tracing":
 		return "emit tracing data"
 	case "enable-metrics":
@@ -179,12 +183,6 @@ func getFlagDescription(flag string) string {
 		return "tracing exporter HTTP endpoint"
 	case "prometheus-address":
 		return "address where prometheus metrics will be served"
-	case "prometheus-push-gateway":
-		return "prometheus push gateway address"
-	case "must-reach-boot-nodes":
-		return "halt node if we fail to reach boot nodes on start"
-	case "disable-connection-limits":
-		return "disable libp2p connection limits (experimental)"
 	default:
 		return ""
 	}

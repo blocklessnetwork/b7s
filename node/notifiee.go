@@ -41,9 +41,6 @@ func (n *connectionNotifiee) Connected(network network.Network, conn network.Con
 	maddr := conn.RemoteMultiaddr()
 	laddr := conn.LocalMultiaddr()
 
-	// We could save only the mutliaddress from which we receive this connection. However, we could theoretically have multiple connections
-	// and there's no reason to limit ourselves to a single address.
-
 	peer := blockless.Peer{
 		ID:        peerID,
 		MultiAddr: maddr.String(),

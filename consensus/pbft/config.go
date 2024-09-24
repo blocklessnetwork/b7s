@@ -26,8 +26,8 @@ type Config struct {
 	PostProcessors   []PostProcessFunc // Callback functions to be invoked after execution is done.
 	NetworkTimeout   time.Duration
 	RequestTimeout   time.Duration
-	TraceInfo        tracing.TraceInfo
 	MetadataProvider metadata.Provider
+	TraceInfo        tracing.TraceInfo
 }
 
 // WithNetworkTimeout sets how much time we allow for message sending.
@@ -53,16 +53,16 @@ func WithPostProcessors(callbacks ...PostProcessFunc) Option {
 	}
 }
 
-// WithTraceInfo passes along telemetry trace information.
-func WithTraceInfo(t tracing.TraceInfo) Option {
-	return func(cfg *Config) {
-		cfg.TraceInfo = t
-	}
-}
-
 // WithMetadataProvider sets the metadata provider for the node.
 func WithMetadataProvider(p metadata.Provider) Option {
 	return func(cfg *Config) {
 		cfg.MetadataProvider = p
+	}
+}
+
+// WithTraceInfo passes along telemetry trace information.
+func WithTraceInfo(t tracing.TraceInfo) Option {
+	return func(cfg *Config) {
+		cfg.TraceInfo = t
 	}
 }

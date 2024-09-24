@@ -1,6 +1,8 @@
 package host
 
-import "github.com/armon/go-metrics/prometheus"
+import (
+	"github.com/armon/go-metrics/prometheus"
+)
 
 const (
 	// Sentinel error for DHT.

@@ -180,6 +180,7 @@ func run() int {
 		return failure
 	}
 	defer db.Close()
+
 	// Create a new store.
 	store := traceable.New(store.New(db, codec.NewJSONCodec()))
 
@@ -292,7 +293,7 @@ func run() int {
 		log.Info().Msg("Blockless Node stopped")
 	}()
 
-	// Start the REST API if needed.
+	// Start the HTTP server if needed.
 	if needHTTPServer {
 
 		// Create an API handler if we're a head node.

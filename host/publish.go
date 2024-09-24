@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	metrics "github.com/armon/go-metrics"
+	"github.com/armon/go-metrics"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 )
 
