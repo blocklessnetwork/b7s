@@ -1,10 +1,12 @@
 package executor
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"path/filepath"
 
+	"github.com/armon/go-metrics"
 	"github.com/rs/zerolog"
 
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
@@ -12,9 +14,10 @@ import (
 
 // Executor provides the capabilities to run external applications.
 type Executor struct {
-	log    zerolog.Logger
-	cfg    Config
-	tracer *tracing.Tracer
+	log     zerolog.Logger
+	cfg     Config
+	tracer  *tracing.Tracer
+	metrics *metrics.Metrics
 }
 
 // New creates a new Executor with the specified working directory.
@@ -55,9 +58,10 @@ func New(log zerolog.Logger, options ...Option) (*Executor, error) {
 	}
 
 	e := Executor{
-		log:    log,
-		cfg:    cfg,
-		tracer: tracing.NewTracer(tracerName),
+		log:     log,
+		cfg:     cfg,
+		tracer:  tracing.NewTracer(tracerName),
+		metrics: cmp.Or(cfg.Metrics, metrics.Default()),
 	}
 
 	return &e, nil

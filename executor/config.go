@@ -15,7 +15,6 @@ var defaultConfig = Config{
 	FS:              afero.NewOsFs(),
 	Limiter:         &noopLimiter{},
 	DriversRootPath: "",
-	Metrics:         metrics.Default(),
 }
 
 // Config represents the Executor configuration.
