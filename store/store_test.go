@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,26 +20,27 @@ import (
 func TestStore_PeerOperations(t *testing.T) {
 	db := helpers.InMemoryDB(t)
 	defer db.Close()
+	ctx := context.Background()
 
 	peer := helpers.CreateRandomPeers(t, 1)[0]
 	store := store.New(db, codec.NewJSONCodec())
 
 	t.Run("save peer", func(t *testing.T) {
-		err := store.SavePeer(peer)
+		err := store.SavePeer(ctx, peer)
 		require.NoError(t, err)
 	})
 	t.Run("retrieve peer", func(t *testing.T) {
-		retrieved, err := store.RetrievePeer(peer.ID)
+		retrieved, err := store.RetrievePeer(ctx, peer.ID)
 		require.NoError(t, err)
 
 		require.Equal(t, peer, retrieved)
 	})
 	t.Run("remove peer", func(t *testing.T) {
-		err := store.RemovePeer(peer.ID)
+		err := store.RemovePeer(ctx, peer.ID)
 		require.NoError(t, err)
 
 		// Verify peer is gone.
-		_, err = store.RetrievePeer(peer.ID)
+		_, err = store.RetrievePeer(ctx, peer.ID)
 		require.ErrorIs(t, err, blockless.ErrNotFound)
 	})
 }
@@ -47,6 +49,7 @@ func TestStore_RetrievePeers(t *testing.T) {
 	db := helpers.InMemoryDB(t)
 	defer db.Close()
 	store := store.New(db, codec.NewJSONCodec())
+	ctx := context.Background()
 
 	count := 10
 	peers := make(map[peer.ID]blockless.Peer)
@@ -57,11 +60,11 @@ func TestStore_RetrievePeers(t *testing.T) {
 
 	// Save peers.
 	for _, peer := range peers {
-		err := store.SavePeer(peer)
+		err := store.SavePeer(ctx, peer)
 		require.NoError(t, err)
 	}
 
-	retrieved, err := store.RetrievePeers()
+	retrieved, err := store.RetrievePeers(ctx)
 	require.NoError(t, err)
 	require.Len(t, retrieved, count)
 
@@ -77,24 +80,25 @@ func TestStore_FunctionOperations(t *testing.T) {
 
 	function := mocks.GenericFunctionRecord
 	store := store.New(db, codec.NewJSONCodec())
+	ctx := context.Background()
 
 	t.Run("save function", func(t *testing.T) {
-		err := store.SaveFunction(function)
+		err := store.SaveFunction(ctx, function)
 		require.NoError(t, err)
 	})
 	t.Run("retrieve function", func(t *testing.T) {
-		retrieved, err := store.RetrieveFunction(function.CID)
+		retrieved, err := store.RetrieveFunction(ctx, function.CID)
 		require.NoError(t, err)
 
 		require.Equal(t, function, retrieved)
 	})
 
 	t.Run("remove function", func(t *testing.T) {
-		err := store.RemoveFunction(function.CID)
+		err := store.RemoveFunction(ctx, function.CID)
 		require.NoError(t, err)
 
 		// Verify function is gone.
-		_, err = store.RetrieveFunction(function.CID)
+		_, err = store.RetrieveFunction(ctx, function.CID)
 		require.ErrorIs(t, err, blockless.ErrNotFound)
 	})
 }
@@ -103,6 +107,7 @@ func TestStore_RetrieveFunctions(t *testing.T) {
 	db := helpers.InMemoryDB(t)
 	defer db.Close()
 	store := store.New(db, codec.NewJSONCodec())
+	ctx := context.Background()
 
 	count := 10
 	functions := make(map[string]blockless.FunctionRecord)
@@ -121,11 +126,11 @@ func TestStore_RetrieveFunctions(t *testing.T) {
 
 	// Save functions.
 	for _, fn := range functions {
-		err := store.SaveFunction(fn)
+		err := store.SaveFunction(ctx, fn)
 		require.NoError(t, err)
 	}
 
-	retrieved, err := store.RetrieveFunctions()
+	retrieved, err := store.RetrieveFunctions(ctx)
 	require.NoError(t, err)
 	require.Len(t, retrieved, count)
 
@@ -139,17 +144,18 @@ func TestStore_HandlesFailures(t *testing.T) {
 
 	db := helpers.InMemoryDB(t)
 	defer db.Close()
+	ctx := context.Background()
 
 	t.Run("retrieving missing peer fails", func(t *testing.T) {
 		store := store.New(db, codec.NewJSONCodec())
 
-		_, err := store.RetrievePeer(mocks.GenericPeerID)
+		_, err := store.RetrievePeer(ctx, mocks.GenericPeerID)
 		require.Error(t, err)
 	})
 	t.Run("retrieving missing function fails", func(t *testing.T) {
 		store := store.New(db, codec.NewJSONCodec())
 
-		_, err := store.RetrieveFunction(mocks.GenericString)
+		_, err := store.RetrieveFunction(ctx, mocks.GenericString)
 		require.Error(t, err)
 	})
 	t.Run("save peer handles marshalling failures", func(t *testing.T) {
@@ -160,7 +166,7 @@ func TestStore_HandlesFailures(t *testing.T) {
 		}
 		store := store.New(db, codec)
 
-		err := store.SavePeer(mocks.GenericPeer)
+		err := store.SavePeer(ctx, mocks.GenericPeer)
 		require.Error(t, err)
 	})
 	t.Run("save function handles marshalling failures", func(t *testing.T) {
@@ -171,7 +177,7 @@ func TestStore_HandlesFailures(t *testing.T) {
 		}
 		store := store.New(db, codec)
 
-		err := store.SaveFunction(mocks.GenericFunctionRecord)
+		err := store.SaveFunction(ctx, mocks.GenericFunctionRecord)
 		require.Error(t, err)
 	})
 	t.Run("retrieve peer handles unmarshalling failures", func(t *testing.T) {
@@ -188,10 +194,10 @@ func TestStore_HandlesFailures(t *testing.T) {
 
 		// First, save the peer so we don't end up with a "not found" error.
 		peer := helpers.CreateRandomPeers(t, 1)[0]
-		err := store.SavePeer(peer)
+		err := store.SavePeer(ctx, peer)
 		require.NoError(t, err)
 
-		_, err = store.RetrievePeer(peer.ID)
+		_, err = store.RetrievePeer(ctx, peer.ID)
 		require.Error(t, err)
 		require.ErrorIs(t, err, unmarshalErr)
 	})
@@ -208,10 +214,10 @@ func TestStore_HandlesFailures(t *testing.T) {
 		store := store.New(db, codec)
 
 		// First, save the peer so we don't end up with a "not found" error.
-		err := store.SaveFunction(mocks.GenericFunctionRecord)
+		err := store.SaveFunction(ctx, mocks.GenericFunctionRecord)
 		require.NoError(t, err)
 
-		_, err = store.RetrieveFunction(mocks.GenericFunctionRecord.CID)
+		_, err = store.RetrieveFunction(ctx, mocks.GenericFunctionRecord.CID)
 		require.Error(t, err)
 		require.ErrorIs(t, err, unmarshalErr)
 	})

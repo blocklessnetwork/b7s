@@ -22,7 +22,7 @@ func (n *Node) HealthPing(ctx context.Context) {
 				Code: http.StatusOK,
 			}
 
-			err := n.publish(ctx, msg)
+			err := n.publish(ctx, &msg)
 			if err != nil {
 				n.log.Warn().Err(err).Msg("could not publish health signal")
 			}

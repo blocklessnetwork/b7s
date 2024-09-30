@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/cockroachdb/pebble"
@@ -8,7 +9,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
-func (s *Store) SavePeer(peer blockless.Peer) error {
+func (s *Store) SavePeer(_ context.Context, peer blockless.Peer) error {
 
 	id, err := peer.ID.MarshalBinary()
 	if err != nil {
@@ -24,7 +25,7 @@ func (s *Store) SavePeer(peer blockless.Peer) error {
 	return nil
 }
 
-func (s *Store) SaveFunction(function blockless.FunctionRecord) error {
+func (s *Store) SaveFunction(_ context.Context, function blockless.FunctionRecord) error {
 
 	key := encodeKey(PrefixFunction, function.CID)
 	err := s.save(key, function)

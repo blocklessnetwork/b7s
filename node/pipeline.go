@@ -4,31 +4,14 @@ import (
 	"errors"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
-)
-
-type messagePipeline int
-
-const (
-	subscriptionPipeline messagePipeline = iota + 1
-	directMessagePipeline
+	pp "github.com/blocklessnetwork/b7s/node/internal/pipeline"
 )
 
 var errDisallowedMessage = errors.New("disallowed message")
 
-func (p messagePipeline) String() string {
-	switch p {
-	case subscriptionPipeline:
-		return "Subscription"
-	case directMessagePipeline:
-		return "DirectMessage"
-	default:
-		return "Unknown"
-	}
-}
+func allowedMessage(msg string, pipeline pp.Pipeline) error {
 
-func allowedMessage(msg string, pipeline messagePipeline) error {
-
-	if pipeline == directMessagePipeline {
+	if pipeline.ID == pp.DirectMessage {
 
 		switch msg {
 		// Messages we don't expect as direct messages.

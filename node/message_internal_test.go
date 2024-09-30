@@ -43,7 +43,7 @@ func TestNode_SendMessage(t *testing.T) {
 		require.Equal(t, rec, received)
 	})
 
-	err = node.send(context.Background(), client.ID(), rec)
+	err = node.send(context.Background(), client.ID(), &rec)
 	require.NoError(t, err)
 
 	wg.Wait()
@@ -80,7 +80,7 @@ func TestNode_Publish(t *testing.T) {
 
 	time.Sleep(subscriptionDiseminationPause)
 
-	err = node.publish(ctx, rec)
+	err = node.publish(ctx, &rec)
 	require.NoError(t, err)
 
 	deadlineCtx, cancel := context.WithTimeout(ctx, publishTimeout)

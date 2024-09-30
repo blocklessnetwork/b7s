@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/armon/go-metrics"
 	"github.com/hashicorp/go-multierror"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/node/internal/pipeline"
 )
 
 type topicInfo struct {
@@ -25,6 +27,8 @@ func (n *Node) subscribeToTopics(ctx context.Context) error {
 	}
 
 	n.log.Info().Strs("topics", n.cfg.Topics).Msg("topics node will subscribe to")
+
+	n.metrics.IncrCounter(subscriptionsMetric, float32(len(n.cfg.Topics)))
 
 	// TODO: If some topics/subscriptions failed, cleanup those already subscribed to.
 	for _, topicName := range n.cfg.Topics {
@@ -49,6 +53,12 @@ func (n *Node) subscribeToTopics(ctx context.Context) error {
 // send serializes the message and sends it to the specified peer.
 func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) error {
 
+	opts := new(msgSpanConfig).pipeline(pipeline.DirectMessagePipeline()).peer(to).spanOpts()
+	ctx, span := n.tracer.Start(ctx, msgSendSpanName(spanMessageSend, msg.Type()), opts...)
+	defer span.End()
+
+	saveTraceContext(ctx, msg)
+
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
 	if err != nil {
@@ -61,11 +71,19 @@ func (n *Node) send(ctx context.Context, to peer.ID, msg blockless.Message) erro
 		return fmt.Errorf("could not send message: %w", err)
 	}
 
+	n.metrics.IncrCounterWithLabels(messagesSentMetric, 1, []metrics.Label{{Name: "type", Value: msg.Type()}})
+
 	return nil
 }
 
 // sendToMany serializes the message and sends it to a number of peers. `requireAll` dictates how we treat partial errors.
 func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Message, requireAll bool) error {
+
+	opts := new(msgSpanConfig).pipeline(pipeline.DirectMessagePipeline()).peers(peers...).spanOpts()
+	ctx, span := n.tracer.Start(ctx, msgSendSpanName(spanMessageSend, msg.Type()), opts...)
+	defer span.End()
+
+	saveTraceContext(ctx, msg)
 
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
@@ -87,6 +105,8 @@ func (n *Node) sendToMany(ctx context.Context, peers []peer.ID, msg blockless.Me
 			return nil
 		})
 	}
+
+	n.metrics.IncrCounterWithLabels(messagesSentMetric, float32(len(peers)), []metrics.Label{{Name: "type", Value: msg.Type()}})
 
 	retErr := errGroup.Wait()
 	if retErr == nil || len(retErr.Errors) == 0 {
@@ -117,6 +137,12 @@ func (n *Node) publish(ctx context.Context, msg blockless.Message) error {
 
 func (n *Node) publishToTopic(ctx context.Context, topic string, msg blockless.Message) error {
 
+	opts := new(msgSpanConfig).pipeline(pipeline.PubSubPipeline(topic)).spanOpts()
+	ctx, span := n.tracer.Start(ctx, msgSendSpanName(spanMessagePublish, msg.Type()), opts...)
+	defer span.End()
+
+	saveTraceContext(ctx, msg)
+
 	// Serialize the message.
 	payload, err := json.Marshal(msg)
 	if err != nil {
@@ -142,6 +168,12 @@ func (n *Node) publishToTopic(ctx context.Context, topic string, msg blockless.M
 	if err != nil {
 		return fmt.Errorf("could not publish message: %w", err)
 	}
+
+	n.metrics.IncrCounterWithLabels(messagesPublishedMetric, 1,
+		[]metrics.Label{
+			{Name: "type", Value: msg.Type()},
+			{Name: "topic", Value: topic},
+		})
 
 	return nil
 }

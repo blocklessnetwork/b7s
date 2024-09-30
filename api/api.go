@@ -14,7 +14,7 @@ type API struct {
 func New(log zerolog.Logger, node Node) *API {
 
 	api := API{
-		Log:  log.With().Str("component", "api").Logger(),
+		Log:  log,
 		Node: node,
 	}
 

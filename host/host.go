@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/armon/go-metrics"
 	"github.com/asaskevich/govalidator"
-	"github.com/rs/zerolog"
-
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -16,6 +15,7 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ma "github.com/multiformats/go-multiaddr"
+	"github.com/rs/zerolog"
 )
 
 // Host represents a new libp2p host.
@@ -25,7 +25,8 @@ type Host struct {
 	log zerolog.Logger
 	cfg Config
 
-	pubsub *pubsub.PubSub
+	pubsub  *pubsub.PubSub
+	metrics *metrics.Metrics
 }
 
 // New creates a new Host.
@@ -136,8 +137,9 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	}
 
 	host := Host{
-		log: log.With().Str("component", "host").Logger(),
-		cfg: cfg,
+		log:     log,
+		cfg:     cfg,
+		metrics: metrics.Default(),
 	}
 	host.Host = h
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/blocklessnetwork/b7s/metadata"
 	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // Option can be used to set PBFT configuration options.
@@ -26,6 +27,7 @@ type Config struct {
 	NetworkTimeout   time.Duration
 	RequestTimeout   time.Duration
 	MetadataProvider metadata.Provider
+	TraceInfo        tracing.TraceInfo
 }
 
 // WithNetworkTimeout sets how much time we allow for message sending.
@@ -55,5 +57,12 @@ func WithPostProcessors(callbacks ...PostProcessFunc) Option {
 func WithMetadataProvider(p metadata.Provider) Option {
 	return func(cfg *Config) {
 		cfg.MetadataProvider = p
+	}
+}
+
+// WithTraceInfo passes along telemetry trace information.
+func WithTraceInfo(t tracing.TraceInfo) Option {
+	return func(cfg *Config) {
+		cfg.TraceInfo = t
 	}
 }

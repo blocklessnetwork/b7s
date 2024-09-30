@@ -5,20 +5,27 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
+
+	n.metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
 
 	requestID := req.RequestID
 	if requestID == "" {
 		return fmt.Errorf("request ID must be set by the head node")
 	}
+
+	ctx, span := n.tracer.Start(ctx, spanWorkerExecute, trace.WithAttributes(tracing.ExecutionAttributes(requestID, req.Request)...))
+	defer span.End()
 
 	log := n.log.With().Str("request", req.RequestID).Str("function", req.FunctionID).Logger()
 
@@ -46,16 +53,8 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 	n.executeResponses.Set(requestID, result)
 
 	// Create the execution response from the execution result.
-	res := response.Execute{
-		Code:      code,
-		RequestID: requestID,
-		Results: execute.ResultMap{
-			n.host.ID(): execute.NodeResult{
-				Result:   result,
-				Metadata: metadata,
-			},
-		},
-	}
+	rm := execute.ResultMap{n.host.ID(): {Result: result, Metadata: metadata}}
+	res := req.Response(code).WithResults(rm)
 
 	// Send the response, whatever it may be (success or failure).
 	err = n.send(ctx, from, res)
@@ -70,7 +69,7 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 func (n *Node) workerExecute(ctx context.Context, requestID string, timestamp time.Time, req execute.Request, from peer.ID) (codes.Code, execute.Result, error) {
 
 	// Check if we have function in store.
-	functionInstalled, err := n.fstore.Installed(req.FunctionID)
+	functionInstalled, err := n.fstore.IsInstalled(req.FunctionID)
 	if err != nil {
 		return codes.Error, execute.Result{}, fmt.Errorf("could not lookup function in store: %w", err)
 	}
@@ -91,7 +90,8 @@ func (n *Node) workerExecute(ctx context.Context, requestID string, timestamp ti
 
 	// We are not part of a cluster - just execute the request.
 	if !consensusRequired(consensus) {
-		res, err := n.executor.ExecuteFunction(requestID, req)
+
+		res, err := n.executor.ExecuteFunction(ctx, requestID, req)
 		if err != nil {
 			return res.Code, res, fmt.Errorf("execution failed: %w", err)
 		}

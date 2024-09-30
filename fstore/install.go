@@ -1,24 +1,44 @@
 package fstore
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
+	"time"
+
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 // Install will download and install function identified by the manifest/CID.
-func (h *FStore) Install(address string, cid string) error {
+func (f *FStore) Install(ctx context.Context, address string, cid string) (retErr error) {
 
-	h.log.Debug().
+	defer f.metrics.MeasureSince(functionsInstallTimeMetric, time.Now())
+	f.metrics.IncrCounter(functionsInstalledMetric, 1)
+	defer func() {
+		switch retErr {
+		case nil:
+			f.metrics.IncrCounter(functionsInstalledOkMetric, 1)
+		default:
+			f.metrics.IncrCounter(functionsInstalledErrMetric, 1)
+
+		}
+	}()
+
+	ctx, span := f.tracer.Start(ctx, spanInstall, trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(b7ssemconv.FunctionCID.String(cid)))
+	defer span.End()
+
+	f.log.Debug().
 		Str("cid", cid).
 		Str("address", address).
 		Msg("installing function")
 
 	// Retrieve function manifest from the given address.
 	var manifest blockless.FunctionManifest
-	err := h.getJSON(address, &manifest)
+	err := f.getJSON(address, &manifest)
 	if err != nil {
 		return fmt.Errorf("could not retrieve manifest: %w", err)
 	}
@@ -32,17 +52,17 @@ func (h *FStore) Install(address string, cid string) error {
 	}
 
 	// Download the function identified by the manifest.
-	functionPath, err := h.download(cid, manifest)
+	functionPath, err := f.download(ctx, cid, manifest)
 	if err != nil {
 		return fmt.Errorf("could not download function: %w", err)
 	}
 
-	out := filepath.Join(h.workdir, cid)
+	out := filepath.Join(f.workdir, cid)
 
 	// Unpack the .tar.gz archive.
 	// TODO: Would be good to know the content of the .tar.gz archive.
 	// We're unpacking the archive here and storing the path to the .tar.gz in the DB.
-	err = h.unpackArchive(functionPath, out)
+	err = f.unpackArchive(functionPath, out)
 	if err != nil {
 		return fmt.Errorf("could not unpack gzip archive (file: %s): %w", functionPath, err)
 	}
@@ -57,15 +77,15 @@ func (h *FStore) Install(address string, cid string) error {
 		Archive:  functionPath,
 		Files:    out,
 	}
-	err = h.saveFunction(fn)
+	err = f.saveFunction(ctx, fn)
 	if err != nil {
-		h.log.Error().
+		f.log.Error().
 			Err(err).
 			Str("cid", cid).
 			Msg("could not save function record")
 	}
 
-	h.log.Debug().
+	f.log.Debug().
 		Str("cid", cid).
 		Str("address", address).
 		Msg("installed function")
@@ -74,9 +94,9 @@ func (h *FStore) Install(address string, cid string) error {
 }
 
 // Installed checks if the function with the given CID is installed.
-func (h *FStore) Installed(cid string) (bool, error) {
+func (f *FStore) IsInstalled(cid string) (bool, error) {
 
-	fn, err := h.getFunction(cid)
+	fn, err := f.getFunction(context.Background(), cid)
 	if err != nil && errors.Is(err, blockless.ErrNotFound) {
 		return false, nil
 	}
@@ -84,7 +104,7 @@ func (h *FStore) Installed(cid string) (bool, error) {
 		return false, fmt.Errorf("could not get function from store: %w", err)
 	}
 
-	haveArchive, haveFiles, err := h.checkFunctionFiles(fn)
+	haveArchive, haveFiles, err := f.checkFunctionFiles(fn)
 	if err != nil {
 		return false, fmt.Errorf("could not verify function cache: %w", err)
 	}

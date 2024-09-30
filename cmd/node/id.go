@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -13,12 +12,12 @@ func peerIDFromKey(keyPath string) (string, error) {
 
 	key, err := readPrivateKey(keyPath)
 	if err != nil {
-		log.Fatalf("could not read key file: %s", err)
+		return "", fmt.Errorf("could not read key file: %w", err)
 	}
 
 	id, err := peer.IDFromPrivateKey(key)
 	if err != nil {
-		log.Fatalf("could not determine identity: %s", err)
+		return "", fmt.Errorf("could not determine identity: %w", err)
 	}
 
 	return id.String(), nil

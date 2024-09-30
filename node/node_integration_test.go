@@ -163,9 +163,10 @@ func (c *client) sendInstallMessage(ctx context.Context, to peer.ID, manifestURL
 	return nil
 }
 
-func (c *client) sendExecutionMessage(ctx context.Context, to peer.ID, cid string, method string, consensus consensus.Type, count int) error {
+func (c *client) sendExecutionMessage(ctx context.Context, to peer.ID, requestID string, cid string, method string, consensus consensus.Type, count int) error {
 
 	req := request.Execute{
+		RequestID: requestID,
 		Request: execute.Request{
 			FunctionID: cid,
 			Method:     method,

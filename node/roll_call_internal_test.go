@@ -91,7 +91,7 @@ func TestNode_RollCall(t *testing.T) {
 
 		// Function store fails to check function presence.
 		fstore := mocks.BaselineFStore(t)
-		fstore.InstalledFunc = func(string) (bool, error) {
+		fstore.IsInstalledFunc = func(string) (bool, error) {
 			return false, mocks.GenericError
 		}
 		node.fstore = fstore
@@ -137,10 +137,10 @@ func TestNode_RollCall(t *testing.T) {
 
 		// Function store has no function but is able to install it.
 		fstore := mocks.BaselineFStore(t)
-		fstore.InstalledFunc = func(string) (bool, error) {
+		fstore.IsInstalledFunc = func(string) (bool, error) {
 			return false, nil
 		}
-		fstore.InstallFunc = func(string, string) error {
+		fstore.InstallFunc = func(context.Context, string, string) error {
 			return nil
 		}
 		node.fstore = fstore
@@ -186,10 +186,10 @@ func TestNode_RollCall(t *testing.T) {
 
 		// Function store has no function but is not able to install it.
 		fstore := mocks.BaselineFStore(t)
-		fstore.InstalledFunc = func(string) (bool, error) {
+		fstore.IsInstalledFunc = func(string) (bool, error) {
 			return false, nil
 		}
-		fstore.InstallFunc = func(string, string) error {
+		fstore.InstallFunc = func(context.Context, string, string) error {
 			return mocks.GenericError
 		}
 		node.fstore = fstore
@@ -250,9 +250,7 @@ func TestNode_RollCall(t *testing.T) {
 
 		time.Sleep(subscriptionDiseminationPause)
 
-		requestID, err := newRequestID()
-		require.NoError(t, err)
-
+		requestID := newRequestID()
 		err = node.publishRollCall(ctx, requestID, functionID, consensus.Type(0), "", nil)
 		require.NoError(t, err)
 

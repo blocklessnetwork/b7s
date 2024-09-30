@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -10,20 +11,31 @@ import (
 	"path/filepath"
 
 	"github.com/cockroachdb/pebble"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"github.com/ziflex/lecho/v3"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
 	"github.com/blocklessnetwork/b7s/api"
 	"github.com/blocklessnetwork/b7s/config"
 	"github.com/blocklessnetwork/b7s/executor"
 	"github.com/blocklessnetwork/b7s/executor/limits"
 	"github.com/blocklessnetwork/b7s/fstore"
-	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node"
 	"github.com/blocklessnetwork/b7s/store"
 	"github.com/blocklessnetwork/b7s/store/codec"
+	"github.com/blocklessnetwork/b7s/store/traceable"
+	"github.com/blocklessnetwork/b7s/telemetry"
+)
+
+const (
+	defaultLogLevel = zerolog.DebugLevel
+)
+
+var (
+	log = zerolog.New(os.Stdout).With().Timestamp().Logger().Level(defaultLogLevel)
 )
 
 const (
@@ -37,13 +49,6 @@ func main() {
 
 func run() int {
 
-	// Signal catching for clean shutdown.
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt)
-
-	// Initialize logging.
-	log := zerolog.New(os.Stdout).With().Timestamp().Logger().Level(zerolog.DebugLevel)
-
 	// Parse CLI flags and validate that the configuration is valid.
 	cfg, err := config.Load()
 	if err != nil {
@@ -51,31 +56,98 @@ func run() int {
 		return failure
 	}
 
-	// Set log level.
-	level, err := zerolog.ParseLevel(cfg.Log.Level)
-	if err != nil {
-		log.Error().Err(err).Str("level", cfg.Log.Level).Msg("could not parse log level")
-		return failure
-	}
-	log = log.Level(level)
+	// Update log level to what's in the config.
+	log = log.Level(parseLogLevel(cfg.Log.Level))
 
-	// Determine node role.
-	role, err := parseNodeRole(cfg.Role)
-	if err != nil {
-		log.Error().Err(err).Str("role", cfg.Role).Msg("invalid node role specified")
-		return failure
+	var (
+		nodeID  string
+		nodeDir string
+
+		nodeRole = parseNodeRole(cfg.Role)
+
+		// HTTP server will be created in two scenarios:
+		// - node is a head node (head node always has a REST API)
+		// - node has prometheus metrics enabled
+		needHTTPServer = nodeRole == blockless.HeadNode || cfg.Telemetry.Metrics.Enable
+		server         *echo.Echo
+
+		// If we have a REST API address, serve metrics there.
+		serverAddress = cmp.Or(cfg.Head.RestAPI, cfg.Telemetry.Metrics.PrometheusAddress)
+	)
+
+	// Create the main context.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if needHTTPServer {
+
+		if serverAddress == "" {
+			log.Error().Err(err).Msg("HTTP server address is required")
+			return failure
+		}
+
+		server = createEchoServer(log)
 	}
 
-	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.
-	nodeDir := ""
+	// TODO: Change how node starts up with regards to key/no-key.
 	if cfg.Connectivity.PrivateKey != "" {
-		id, err := peerIDFromKey(cfg.Connectivity.PrivateKey)
+		nodeID, err = peerIDFromKey(cfg.Connectivity.PrivateKey)
 		if err != nil {
 			log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not read private key")
 			return failure
 		}
+	}
 
-		nodeDir = generateNodeDirName(id)
+	if cfg.Telemetry.Tracing.Enable {
+
+		opts := []telemetry.TraceOption{
+			telemetry.WithID(nodeID),
+			telemetry.WithNodeRole(nodeRole),
+			telemetry.WithBatchTraceTimeout(cfg.Telemetry.Tracing.ExporterBatchTimeout),
+			telemetry.WithGRPCTracing(cfg.Telemetry.Tracing.GRPC.Endpoint),
+			telemetry.WithHTTPTracing(cfg.Telemetry.Tracing.HTTP.Endpoint),
+		}
+
+		shutdown, err := telemetry.InitializeTracing(ctx, log.With().Str("component", "telemetry").Logger(), opts...)
+		if err != nil {
+			log.Error().Err(err).Msg("could not initialize tracing")
+			return failure
+		}
+		defer func() {
+			err := shutdown(ctx)
+			if err != nil {
+				log.Error().Err(err).Msg("could not shutdown tracing")
+			}
+		}()
+
+		log.Info().Msg("tracing enabled")
+	}
+
+	if cfg.Telemetry.Metrics.Enable {
+
+		metrics, err := telemetry.InitializeMetrics(
+			telemetry.WithCounters(metricCounters()),
+			telemetry.WithSummaries(metricSummaries()),
+			telemetry.WithGauges(metricGauges()),
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("could not initialize metrics")
+			return failure
+		}
+		defer metrics.Shutdown()
+
+		log.Info().Msg("metrics enabled")
+
+		// Setup metrics endpoint.
+		server.GET("/metrics", echo.WrapHandler(telemetry.GetMetricsHTTPHandler()))
+
+		// Echo (HTTP server) metrics.
+		server.Use(echoprometheus.NewMiddlewareWithConfig(echoprometheus.MiddlewareConfig{}))
+	}
+
+	// If we have a key, use path that corresponds to that key e.g. `.b7s_<peer-id>`.
+	if nodeID != "" {
+		nodeDir = generateNodeDirName(nodeID)
 	} else {
 		nodeDir, err = os.MkdirTemp("", ".b7s_*")
 		if err != nil {
@@ -110,43 +182,21 @@ func run() int {
 	defer db.Close()
 
 	// Create a new store.
-	store := store.New(db, codec.NewJSONCodec())
+	store := traceable.New(store.New(db, codec.NewJSONCodec()))
 
-	// Get the list of boot nodes addresses.
-	bootNodeAddrs, err := getBootNodeAddresses(cfg.BootNodes)
-	if err != nil {
-		log.Error().Err(err).Msg("could not get boot node addresses")
-		return failure
-	}
-
-	hostOpts := []func(*host.Config){
-		host.WithPrivateKey(cfg.Connectivity.PrivateKey),
-		host.WithBootNodes(bootNodeAddrs),
-		host.WithDialBackAddress(cfg.Connectivity.DialbackAddress),
-		host.WithDialBackPort(cfg.Connectivity.DialbackPort),
-		host.WithDialBackWebsocketPort(cfg.Connectivity.WebsocketDialbackPort),
-		host.WithWebsocket(cfg.Connectivity.Websocket),
-		host.WithWebsocketPort(cfg.Connectivity.WebsocketPort),
-		host.WithMustReachBootNodes(cfg.Connectivity.MustReachBootNodes),
-		host.WithDisabledResourceLimits(cfg.Connectivity.DisableConnectionLimits),
-		host.WithEnableP2PRelay(role == blockless.HeadNode),
-	}
-
+	// Create host.
+	var dialbackPeers []blockless.Peer
 	if !cfg.Connectivity.NoDialbackPeers {
-		// Get the list of dial back peers.
-		peers, err := store.RetrievePeers()
+		dialbackPeers, err = store.RetrievePeers(ctx)
 		if err != nil {
 			log.Error().Err(err).Msg("could not get list of dial-back peers")
 			return failure
 		}
-
-		hostOpts = append(hostOpts, host.WithDialBackPeers(peers))
 	}
 
-	// Create libp2p host.
-	host, err := host.New(log, cfg.Connectivity.Address, cfg.Connectivity.Port, hostOpts...)
+	host, err := createHost(log.With().Str("component", "host").Logger(), *cfg, nodeRole, dialbackPeers...)
 	if err != nil {
-		log.Error().Err(err).Str("key", cfg.Connectivity.PrivateKey).Msg("could not create host")
+		log.Error().Err(err).Msg("could not create host")
 		return failure
 	}
 	defer host.Close()
@@ -154,18 +204,18 @@ func run() int {
 	log.Info().
 		Str("id", host.ID().String()).
 		Strs("addresses", host.Addresses()).
-		Int("boot_nodes", len(bootNodeAddrs)).
+		Strs("boot_nodes", cfg.BootNodes).
 		Msg("created host")
 
 	// Set node options.
 	opts := []node.Option{
-		node.WithRole(role),
+		node.WithRole(nodeRole),
 		node.WithConcurrency(cfg.Concurrency),
 		node.WithAttributeLoading(cfg.LoadAttributes),
 	}
 
 	// If this is a worker node, initialize an executor.
-	if role == blockless.WorkerNode {
+	if nodeRole == blockless.WorkerNode {
 
 		// Executor options.
 		execOptions := []executor.Option{
@@ -192,7 +242,7 @@ func run() int {
 		}
 
 		// Create an executor.
-		executor, err := executor.New(log, execOptions...)
+		executor, err := executor.New(log.With().Str("component", "executor").Logger(), execOptions...)
 		if err != nil {
 			log.Error().
 				Err(err).
@@ -208,7 +258,7 @@ func run() int {
 	}
 
 	// Create function store.
-	fstore := fstore.New(log, store, cfg.Workspace)
+	fstore := fstore.New(log.With().Str("component", "fstore").Logger(), store, cfg.Workspace)
 
 	// If we have topics specified, use those.
 	if len(cfg.Topics) > 0 {
@@ -216,15 +266,11 @@ func run() int {
 	}
 
 	// Instantiate node.
-	node, err := node.New(log, host, store, fstore, opts...)
+	node, err := node.New(log.With().Str("component", "node").Logger(), host, store, fstore, opts...)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure
 	}
-
-	// Create the main context.
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	done := make(chan struct{})
 	failed := make(chan struct{})
@@ -233,7 +279,7 @@ func run() int {
 	go func() {
 
 		log.Info().
-			Str("role", role.String()).
+			Stringer("role", nodeRole).
 			Msg("Blockless Node starting")
 
 		err := node.Run(ctx)
@@ -247,36 +293,36 @@ func run() int {
 		log.Info().Msg("Blockless Node stopped")
 	}()
 
-	// If we're a head node - start the REST API.
-	if role == blockless.HeadNode {
+	// Start the HTTP server if needed.
+	if needHTTPServer {
 
-		if cfg.Head.RestAPI == "" {
-			log.Error().Err(err).Msg("REST API address is required")
-			return failure
+		// Create an API handler if we're a head node.
+		if nodeRole == blockless.HeadNode {
+
+			apiHandler := api.New(log.With().Str("component", "api").Logger(), node)
+			api.RegisterHandlers(server, apiHandler)
 		}
 
-		// Create echo server and iniialize logging.
-		server := createEchoServer(log)
-
-		// Create an API handler.
-		apiHandler := api.New(log, node)
-		api.RegisterHandlers(server, apiHandler)
-
-		// Start API in a separate goroutine.
+		// Start server in a separate goroutine.
 		go func() {
 
-			log.Info().Str("port", cfg.Head.RestAPI).Msg("Node API starting")
-			err := server.Start(cfg.Head.RestAPI)
+			log.Info().Str("address", serverAddress).Msg("HTTP server starting")
+
+			err := server.Start(serverAddress)
 			if err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Warn().Err(err).Msg("Node API failed")
+				log.Warn().Err(err).Msg("HTTP server failed")
 				close(failed)
 			} else {
 				close(done)
 			}
 
-			log.Info().Msg("Node API stopped")
+			log.Info().Msg("HTTP server stopped")
 		}()
 	}
+
+	// Signal catching for clean shutdown.
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
 
 	select {
 	case <-sig:
@@ -305,6 +351,7 @@ func createEchoServer(log zerolog.Logger) *echo.Echo {
 
 	elog := lecho.From(log)
 	server.Logger = elog
+	server.Use(otelecho.Middleware(""))
 	server.Use(lecho.Middleware(lecho.Config{Logger: elog}))
 
 	return server
@@ -331,4 +378,15 @@ func updateDirPaths(root string, cfg *config.Config) {
 
 func generateNodeDirName(id string) string {
 	return fmt.Sprintf(".b7s_%s", id)
+}
+
+func parseLogLevel(s string) zerolog.Level {
+
+	level, err := zerolog.ParseLevel(s)
+	if err != nil {
+		log.Error().Err(err).Str("level", s).Msg("could not parse log level")
+		return defaultLogLevel
+	}
+
+	return level
 }

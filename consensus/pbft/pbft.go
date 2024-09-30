@@ -2,6 +2,7 @@ package pbft
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -9,7 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/rs/zerolog"
+	otelcodes "go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -18,6 +22,8 @@ import (
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // TODO (pbft): Request timestamp - execution exactly once, prevent multiple/out of order executions.
@@ -46,6 +52,10 @@ type Replica struct {
 
 	// TODO (pbft): This is used for testing ATM, remove later.
 	byzantine bool
+
+	// Telemetry
+	tracer  *tracing.Tracer
+	metrics *metrics.Metrics
 }
 
 // NewReplica creates a new PBFT replica.
@@ -78,6 +88,9 @@ func NewReplica(log zerolog.Logger, host *host.Host, executor blockless.Executor
 		peers: peers,
 
 		byzantine: isByzantine(),
+
+		tracer:  tracing.NewTracer(tracerName),
+		metrics: metrics.Default(),
 	}
 
 	replica.log.Info().Strs("replicas", peerIDList(peers)).Uint("n", total).Uint("f", replica.f).Bool("byzantine", replica.byzantine).Msg("created PBFT replica")
@@ -109,6 +122,9 @@ func (r *Replica) setPBFTMessageHandler() {
 		pm[peer] = struct{}{}
 	}
 
+	// Set the root span for this PBFT cluster.
+	ctx := tracing.TraceContext(context.Background(), r.cfg.TraceInfo)
+
 	r.host.Host.SetStreamHandler(r.protocolID, func(stream network.Stream) {
 		defer stream.Close()
 
@@ -131,14 +147,14 @@ func (r *Replica) setPBFTMessageHandler() {
 
 		r.log.Debug().Str("peer", from.String()).Msg("received message")
 
-		err = r.processMessage(from, msg)
+		err = r.processMessage(ctx, from, msg)
 		if err != nil {
 			r.log.Error().Err(err).Str("peer", from.String()).Msg("message processing failed")
 		}
 	})
 }
 
-func (r *Replica) processMessage(from peer.ID, payload []byte) error {
+func (r *Replica) processMessage(ctx context.Context, from peer.ID, payload []byte) (procError error) {
 
 	// If we're acting as a byzantine replica, just don't do anything.
 	// At this point we're not trying any elaborate sus behavior.
@@ -146,10 +162,33 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 		return errors.New("we're a byzantine replica, ignoring received message")
 	}
 
+	// NOTE: We do double-unmarshalling here and below - here we just care about the trace info.
+	ti, ok := getTraceInfoFromMessage(payload)
+	if ok {
+		ctx = tracing.TraceContext(ctx, ti)
+	}
+
 	msg, err := unpackMessage(payload)
 	if err != nil {
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
+
+	ctx, span := r.tracer.Start(ctx, msgProcessSpanName(msg.Type()), trace.WithAttributes(b7ssemconv.MessagePeer.String(from.String())))
+	defer span.End()
+	// NOTE: This function checks the named return error value in order to set the span status accordingly.
+	defer func() {
+		if procError == nil {
+			span.SetStatus(otelcodes.Ok, spanStatusOK)
+			return
+		}
+
+		if allowErrorLeakToTelemetry {
+			span.SetStatus(otelcodes.Error, procError.Error())
+			return
+		}
+
+		span.SetStatus(otelcodes.Error, spanStatusErr)
+	}()
 
 	// Access to individual segments (pre-prepares, prepares, commits etc) could be managed on an individual level,
 	// but it's probably not worth it. This way we just do it request by request.
@@ -166,22 +205,22 @@ func (r *Replica) processMessage(from peer.ID, payload []byte) error {
 	switch m := msg.(type) {
 
 	case Request:
-		return r.processRequest(from, m)
+		return r.processRequest(ctx, from, m)
 
 	case PrePrepare:
-		return r.processPrePrepare(from, m)
+		return r.processPrePrepare(ctx, from, m)
 
 	case Prepare:
-		return r.processPrepare(from, m)
+		return r.processPrepare(ctx, from, m)
 
 	case Commit:
-		return r.processCommit(from, m)
+		return r.processCommit(ctx, from, m)
 
 	case ViewChange:
-		return r.processViewChange(from, m)
+		return r.processViewChange(ctx, from, m)
 
 	case NewView:
-		return r.processNewView(from, m)
+		return r.processNewView(ctx, from, m)
 	}
 
 	return fmt.Errorf("unexpected message type (from: %s): %T", from, msg)

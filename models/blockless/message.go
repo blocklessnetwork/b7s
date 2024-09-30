@@ -1,5 +1,13 @@
 package blockless
 
+import (
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
+)
+
+type Message interface {
+	Type() string
+}
+
 // Message types in the Blockless protocol.
 const (
 	MessageHealthCheck             = "MsgHealthCheck"
@@ -14,6 +22,15 @@ const (
 	MessageDisbandCluster          = "MsgDisbandCluster"
 )
 
-type Message interface {
-	Type() string
+type TraceableMessage interface {
+	Message
+	SaveTraceContext(tracing.TraceInfo)
+}
+
+type BaseMessage struct {
+	tracing.TraceInfo
+}
+
+func (m *BaseMessage) SaveTraceContext(t tracing.TraceInfo) {
+	m.TraceInfo = t
 }
