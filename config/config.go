@@ -73,6 +73,7 @@ type Connectivity struct {
 	NoDialbackPeers         bool   `koanf:"no-dialback-peers"         flag:"no-dialback-peers"`
 	MustReachBootNodes      bool   `koanf:"must-reach-boot-nodes"     flag:"must-reach-boot-nodes"`
 	DisableConnectionLimits bool   `koanf:"disable-connection-limits" flag:"disable-connection-limits"`
+	ConnectionCount         uint   `koanf:"connection-count"          flag:"connection-count"`
 }
 
 type Head struct {
@@ -157,6 +158,8 @@ func getFlagDescription(flag string) string {
 		return "port to use for websocket connections"
 	case "websocket-dialback-port":
 		return "external port that the b7s host will advertise for websocket connections"
+	case "connection-count":
+		return "maximum number of connections the b7s host will aim to have"
 	case "rest-api":
 		return "address where the head node REST API will listen on"
 	case "runtime-path":

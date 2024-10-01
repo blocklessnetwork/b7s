@@ -29,6 +29,7 @@ type Config struct {
 	DialBackPeers       []blockless.Peer
 	DialBackPeersLimit  uint
 	DiscoveryInterval   time.Duration
+	ConnectionLimit     uint
 
 	Websocket     bool
 	WebsocketPort uint
@@ -143,5 +144,13 @@ func WithDisabledResourceLimits(b bool) func(cfg *Config) {
 func WithEnableP2PRelay(b bool) func(cfg *Config) {
 	return func(cfg *Config) {
 		cfg.EnableP2PRelay = b
+	}
+}
+
+// WithConnectionLimit will specify the connection count threshold.
+// We allow this limit to be surpassed by 20% before trimming back to this limit.
+func WithConnectionLimit(n uint) func(cfg *Config) {
+	return func(cfg *Config) {
+		cfg.ConnectionLimit = n
 	}
 }
