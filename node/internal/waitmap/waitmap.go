@@ -10,32 +10,32 @@ import (
 // Important: Since this implementation is tied pretty closely to how it will be used,
 // (as an internal package), it has the peculiar behavior of only the first `Set` setting
 // the value. Subsequent `Sets()` are recorded, but don't change the returned value.
-type WaitMap struct {
+type WaitMap[K comparable, V any] struct {
 	sync.Mutex
 
-	m    map[string][]any
-	subs map[string][]chan any
+	m    map[K][]V
+	subs map[K][]chan V
 }
 
 // New creates a new WaitMap.
-func New() *WaitMap {
+func New[K comparable, V any]() *WaitMap[K, V] {
 
-	wm := WaitMap{
-		m:    make(map[string][]any),
-		subs: make(map[string][]chan any),
+	wm := WaitMap[K, V]{
+		m:    make(map[K][]V),
+		subs: make(map[K][]chan V),
 	}
 
 	return &wm
 }
 
 // Set sets the value for a key. If the value already exists, we append it to a list.
-func (w *WaitMap) Set(key string, value any) {
+func (w *WaitMap[K, V]) Set(key K, value V) {
 	w.Lock()
 	defer w.Unlock()
 
 	_, ok := w.m[key]
 	if !ok {
-		w.m[key] = make([]any, 0)
+		w.m[key] = make([]V, 0)
 	}
 
 	w.m[key] = append(w.m[key], value)
@@ -48,7 +48,7 @@ func (w *WaitMap) Set(key string, value any) {
 }
 
 // Wait will wait until the value for a key becomes available.
-func (w *WaitMap) Wait(key string) any {
+func (w *WaitMap[K, V]) Wait(key K) V {
 	w.Lock()
 	// Unlock cannot be deferred so we can ublock Set() while waiting.
 
@@ -59,7 +59,7 @@ func (w *WaitMap) Wait(key string) any {
 	}
 
 	// If there's no value yet, subscribe to any new values for this key.
-	ch := make(chan any)
+	ch := make(chan V)
 	w.subs[key] = append(w.subs[key], ch)
 	w.Unlock()
 
@@ -67,7 +67,7 @@ func (w *WaitMap) Wait(key string) any {
 }
 
 // WaitFor will wait for the value for a key to become available, but no longer than the specified duration.
-func (w *WaitMap) WaitFor(ctx context.Context, key string) (any, bool) {
+func (w *WaitMap[K, V]) WaitFor(ctx context.Context, key K) (V, bool) {
 	w.Lock()
 	// Unlock cannot be deferred so we can ublock Set() while waiting.
 
@@ -79,26 +79,28 @@ func (w *WaitMap) WaitFor(ctx context.Context, key string) (any, bool) {
 
 	// If there's no value yet, subscribe to any new values for this key.
 	// Use a bufferred channel since we might bail before collecting our value.
-	ch := make(chan any, 1)
+	ch := make(chan V, 1)
 	w.subs[key] = append(w.subs[key], ch)
 	w.Unlock()
 
 	select {
 	case <-ctx.Done():
-		return nil, false
+		zero := *new(V)
+		return zero, false
 	case value := <-ch:
 		return value, true
 	}
 }
 
 // Get will return the current value for the key, if any.
-func (w *WaitMap) Get(key string) (any, bool) {
+func (w *WaitMap[K, V]) Get(key K) (V, bool) {
 	w.Lock()
 	defer w.Unlock()
 
 	values, ok := w.m[key]
 	if !ok {
-		return values, ok
+		zero := *new(V)
+		return zero, ok
 	}
 
 	// As noted in the comment at the beginning of this file,
