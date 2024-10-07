@@ -27,7 +27,7 @@ func (n *Node) processExecuteResponse(ctx context.Context, from peer.ID, res res
 	n.log.Debug().Str("request", res.RequestID).Str("from", from.String()).Msg("received execution response")
 
 	key := executionResultKey(res.RequestID, from)
-	n.executeResponses.Set(key, res)
+	n.executeResponses.Set(key, res.Results)
 
 	return nil
 }

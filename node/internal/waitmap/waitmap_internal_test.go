@@ -23,7 +23,7 @@ func TestWaitMap(t *testing.T) {
 			value = "dummy-value"
 		)
 
-		wm := New()
+		wm := New[string, string]()
 
 		wm.Set(key, value)
 		require.Len(t, wm.m, 1)
@@ -40,7 +40,7 @@ func TestWaitMap(t *testing.T) {
 			key = "dummy-key"
 		)
 
-		wm := New()
+		wm := New[string, string]()
 
 		_, ok := wm.Get(key)
 		require.False(t, ok)
@@ -57,7 +57,7 @@ func TestWaitMap(t *testing.T) {
 			retrieved string
 		)
 
-		wm := New()
+		wm := New[string, string]()
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -66,7 +66,7 @@ func TestWaitMap(t *testing.T) {
 			defer wg.Done()
 			waited := wm.Wait(key)
 
-			retrieved = waited.(string)
+			retrieved = waited
 		}()
 
 		// Delay so that the goroutine actually has to wait.
@@ -91,7 +91,7 @@ func TestWaitMap(t *testing.T) {
 			value = "dummy-value"
 		)
 
-		wm := New()
+		wm := New[string, string]()
 
 		wm.Set(key, value)
 
@@ -106,7 +106,7 @@ func TestWaitMap(t *testing.T) {
 			value = "dummy-value"
 		)
 
-		wm := New()
+		wm := New[string, string]()
 
 		var wg sync.WaitGroup
 		wg.Add(3)
@@ -115,7 +115,7 @@ func TestWaitMap(t *testing.T) {
 			defer wg.Done()
 			waited := wm.Wait(key)
 
-			require.Equal(t, value, waited.(string))
+			require.Equal(t, value, waited)
 		}
 
 		// Spin up three goroutines - they should all get the same result.
@@ -135,7 +135,7 @@ func TestWaitMap(t *testing.T) {
 			value = "dummy-value"
 		)
 
-		wm := New()
+		wm := New[string, string]()
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -147,7 +147,7 @@ func TestWaitMap(t *testing.T) {
 
 			retrieved, ok := wm.WaitFor(ctx, key)
 			require.True(t, ok)
-			require.Equal(t, value, retrieved.(string))
+			require.Equal(t, value, retrieved)
 		}()
 
 		// Delay so that the goroutine actually has to wait.
@@ -166,7 +166,7 @@ func TestWaitMap(t *testing.T) {
 			timeout = 10 * time.Millisecond
 		)
 
-		wm := New()
+		wm := New[string, string]()
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -192,6 +192,6 @@ func TestWaitMap(t *testing.T) {
 
 		retrieved, ok := wm.WaitFor(ctx, key)
 		require.True(t, ok)
-		require.Equal(t, value, retrieved.(string))
+		require.Equal(t, value, retrieved)
 	})
 }

@@ -1,9 +1,13 @@
 package execute
 
 import (
+	"encoding/hex"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"time"
 
+	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetwork/b7s/models/codes"
@@ -12,7 +16,10 @@ import (
 // NodeResult is an annotated execution result.
 type NodeResult struct {
 	Result
-	Metadata any `json:"metadata,omitempty"`
+	// Signed digest of the response.
+	Signature string         `json:"signature,omitempty"`
+	PBFT      PBFTResultInfo `json:"pbft,omitempty"`
+	Metadata  any            `json:"metadata,omitempty"`
 }
 
 // Result describes an execution result.
@@ -44,6 +51,12 @@ type Usage struct {
 	MemoryMaxKB   int64         `json:"memory_max_kb,omitempty"`
 }
 
+type PBFTResultInfo struct {
+	View             uint      `json:"view"`
+	RequestTimestamp time.Time `json:"request_timestamp,omitempty"`
+	Replica          peer.ID   `json:"replica,omitempty"`
+}
+
 // ResultMap contains execution results from multiple peers.
 type ResultMap map[peer.ID]NodeResult
 
@@ -60,4 +73,52 @@ func (m ResultMap) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(em)
+}
+
+func (r *NodeResult) Sign(key crypto.PrivKey) error {
+
+	cp := *r
+	// Exclude some of the fields from the signature.
+	cp.Signature = ""
+
+	payload, err := json.Marshal(cp)
+	if err != nil {
+		return fmt.Errorf("could not get byte representation of the record: %w", err)
+	}
+
+	sig, err := key.Sign(payload)
+	if err != nil {
+		return fmt.Errorf("could not sign digest: %w", err)
+	}
+
+	r.Signature = hex.EncodeToString(sig)
+	return nil
+}
+
+func (r NodeResult) VerifySignature(key crypto.PubKey) error {
+
+	cp := r
+	// Exclude some of the fields from the signature.
+	cp.Signature = ""
+
+	payload, err := json.Marshal(cp)
+	if err != nil {
+		return fmt.Errorf("could not get byte representation of the record: %w", err)
+	}
+
+	sig, err := hex.DecodeString(r.Signature)
+	if err != nil {
+		return fmt.Errorf("could not decode signature from hex: %w", err)
+	}
+
+	ok, err := key.Verify(payload, sig)
+	if err != nil {
+		return fmt.Errorf("could not verify signature: %w", err)
+	}
+
+	if !ok {
+		return errors.New("invalid signature")
+	}
+
+	return nil
 }

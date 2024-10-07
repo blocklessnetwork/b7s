@@ -29,6 +29,8 @@ func (a *API) ExecutionResult(ctx echo.Context) error {
 		return ctx.NoContent(http.StatusNotFound)
 	}
 
+	// TODO: Output format fixed.
+
 	// Send the response back.
 	return ctx.JSON(http.StatusOK, result)
 }

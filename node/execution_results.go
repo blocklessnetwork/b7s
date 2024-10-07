@@ -9,7 +9,6 @@ import (
 
 	"github.com/blocklessnetwork/b7s/consensus/pbft"
 	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/models/response"
 )
 
 // gatherExecutionResultsPBFT collects execution results from a PBFT cluster. This means f+1 identical results.
@@ -33,6 +32,12 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 		out     execute.ResultMap = make(map[peer.ID]execute.NodeResult)
 	)
 
+	// We use a map as a simple way to count identical results.
+	// Equality means same result (process outputs) and same request timestamp.
+	peerResultMapKey := func(res execute.NodeResult) string {
+		return fmt.Sprintf("%+#v-%s", res.Result.Result, res.PBFT.RequestTimestamp.String())
+	}
+
 	wg.Add(len(peers))
 
 	for _, rp := range peers {
@@ -47,7 +52,10 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 
 			n.log.Info().Str("peer", sender.String()).Str("request", requestID).Msg("accounted execution response from peer")
 
-			er := res.(response.Execute)
+			er, ok := res[sender]
+			if !ok {
+				return
+			}
 
 			pub, err := sender.ExtractPublicKey()
 			if err != nil {
@@ -61,25 +69,19 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 				return
 			}
 
-			exres, ok := er.Results[sender]
-			if !ok {
-				return
-			}
-
 			lock.Lock()
 			defer lock.Unlock()
 
-			// Equality means same result (output) and same timestamp.
-			reskey := fmt.Sprintf("%+#v-%s", exres.Result.Result, er.PBFT.RequestTimestamp.String())
+			reskey := peerResultMapKey(er)
 			result, ok := results[reskey]
 			if !ok {
 				results[reskey] = aggregatedResult{
-					result: exres.Result,
+					result: er.Result,
 					peers: []peer.ID{
 						sender,
 					},
 					metadata: map[peer.ID]any{
-						sender: exres.Metadata,
+						sender: er.Metadata,
 					},
 				}
 				return
@@ -87,7 +89,7 @@ func (n *Node) gatherExecutionResultsPBFT(ctx context.Context, requestID string,
 
 			// Record which peers have this result, and their metadata.
 			result.peers = append(result.peers, sender)
-			result.metadata[sender] = exres.Metadata
+			result.metadata[sender] = er.Metadata
 
 			if uint(len(result.peers)) >= count {
 				n.log.Info().Str("request", requestID).Int("peers", len(peers)).Uint("matching_results", count).Msg("have enough matching results")
@@ -130,6 +132,7 @@ func (n *Node) gatherExecutionResults(ctx context.Context, requestID string, pee
 		go func() {
 			defer wg.Done()
 			key := executionResultKey(requestID, rp)
+			// XXX: cache response.Execute
 			res, ok := n.executeResponses.WaitFor(exctx, key)
 			if !ok {
 				return
@@ -137,9 +140,7 @@ func (n *Node) gatherExecutionResults(ctx context.Context, requestID string, pee
 
 			n.log.Info().Str("peer", rp.String()).Msg("accounted execution response from peer")
 
-			er := res.(response.Execute)
-
-			exres, ok := er.Results[rp]
+			exres, ok := res[rp]
 			if !ok {
 				return
 			}
@@ -153,4 +154,10 @@ func (n *Node) gatherExecutionResults(ctx context.Context, requestID string, pee
 	wg.Wait()
 
 	return results
+}
+
+func singleNodeResultMap(id peer.ID, res execute.NodeResult) execute.ResultMap {
+	return map[peer.ID]execute.NodeResult{
+		id: res,
+	}
 }
