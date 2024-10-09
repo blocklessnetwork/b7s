@@ -1,4 +1,4 @@
-package waitmap
+package waitmap_test
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blocklessnetwork/b7s/node/internal/waitmap"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,12 +24,9 @@ func TestWaitMap(t *testing.T) {
 			value = "dummy-value"
 		)
 
-		wm := New[string, string]()
+		wm := waitmap.New[string, string](0)
 
 		wm.Set(key, value)
-		require.Len(t, wm.m, 1)
-		require.Equal(t, value, wm.m[key][0])
-
 		retrieved, ok := wm.Get(key)
 		require.True(t, ok)
 		require.Equal(t, value, retrieved)
@@ -40,7 +38,7 @@ func TestWaitMap(t *testing.T) {
 			key = "dummy-key"
 		)
 
-		wm := New[string, string]()
+		wm := waitmap.New[string, string](0)
 
 		_, ok := wm.Get(key)
 		require.False(t, ok)
@@ -57,7 +55,7 @@ func TestWaitMap(t *testing.T) {
 			retrieved string
 		)
 
-		wm := New[string, string]()
+		wm := waitmap.New[string, string](0)
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -91,7 +89,7 @@ func TestWaitMap(t *testing.T) {
 			value = "dummy-value"
 		)
 
-		wm := New[string, string]()
+		wm := waitmap.New[string, string](0)
 
 		wm.Set(key, value)
 
@@ -106,7 +104,7 @@ func TestWaitMap(t *testing.T) {
 			value = "dummy-value"
 		)
 
-		wm := New[string, string]()
+		wm := waitmap.New[string, string](0)
 
 		var wg sync.WaitGroup
 		wg.Add(3)
@@ -135,7 +133,7 @@ func TestWaitMap(t *testing.T) {
 			value = "dummy-value"
 		)
 
-		wm := New[string, string]()
+		wm := waitmap.New[string, string](0)
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -166,7 +164,7 @@ func TestWaitMap(t *testing.T) {
 			timeout = 10 * time.Millisecond
 		)
 
-		wm := New[string, string]()
+		wm := waitmap.New[string, string](0)
 
 		var wg sync.WaitGroup
 		wg.Add(1)

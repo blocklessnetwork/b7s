@@ -89,8 +89,8 @@ func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore 
 
 		rollCall:           newQueue(rollCallQueueBufferSize),
 		clusters:           make(map[string]consensusExecutor),
-		executeResponses:   waitmap.New[string, execute.ResultMap](),
-		consensusResponses: waitmap.New[string, response.FormCluster](),
+		executeResponses:   waitmap.New[string, execute.ResultMap](executionResultCacheSize),
+		consensusResponses: waitmap.New[string, response.FormCluster](0),
 
 		tracer:  tracing.NewTracer(tracerName),
 		metrics: metrics.Default(),

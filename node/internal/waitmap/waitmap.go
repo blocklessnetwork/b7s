@@ -2,27 +2,34 @@ package waitmap
 
 import (
 	"context"
+	"math"
 	"sync"
+
+	"github.com/hashicorp/golang-lru/simplelru"
 )
 
 // WaitMap is a key-value store that enables not only setting and getting
 // values from a map, but also waiting until value for a key becomes available.
-// Important: Since this implementation is tied pretty closely to how it will be used,
-// (as an internal package), it has the peculiar behavior of only the first `Set` setting
-// the value. Subsequent `Sets()` are recorded, but don't change the returned value.
 type WaitMap[K comparable, V any] struct {
 	sync.Mutex
 
-	m    map[K][]V
-	subs map[K][]chan V
+	cache *simplelru.LRU
+	subs  map[K][]chan V
 }
 
 // New creates a new WaitMap.
-func New[K comparable, V any]() *WaitMap[K, V] {
+func New[K comparable, V any](size int) *WaitMap[K, V] {
+
+	if size <= 0 {
+		size = math.MaxInt
+	}
+
+	// Only possible cause of an error is providing an invalid size value
+	cache, _ := simplelru.NewLRU(size, nil)
 
 	wm := WaitMap[K, V]{
-		m:    make(map[K][]V),
-		subs: make(map[K][]chan V),
+		cache: cache,
+		subs:  make(map[K][]chan V),
 	}
 
 	return &wm
@@ -33,12 +40,7 @@ func (w *WaitMap[K, V]) Set(key K, value V) {
 	w.Lock()
 	defer w.Unlock()
 
-	_, ok := w.m[key]
-	if !ok {
-		w.m[key] = make([]V, 0)
-	}
-
-	w.m[key] = append(w.m[key], value)
+	w.cache.Add(key, value)
 
 	// Send the new value to any waiting subscribers of the key.
 	for _, sub := range w.subs[key] {
@@ -52,10 +54,10 @@ func (w *WaitMap[K, V]) Wait(key K) V {
 	w.Lock()
 	// Unlock cannot be deferred so we can ublock Set() while waiting.
 
-	values, ok := w.m[key]
+	value, ok := w.cache.Get(key)
 	if ok {
 		w.Unlock()
-		return values[0]
+		return value.(V)
 	}
 
 	// If there's no value yet, subscribe to any new values for this key.
@@ -71,10 +73,10 @@ func (w *WaitMap[K, V]) WaitFor(ctx context.Context, key K) (V, bool) {
 	w.Lock()
 	// Unlock cannot be deferred so we can ublock Set() while waiting.
 
-	values, ok := w.m[key]
+	value, ok := w.cache.Get(key)
 	if ok {
 		w.Unlock()
-		return values[0], true
+		return value.(V), true
 	}
 
 	// If there's no value yet, subscribe to any new values for this key.
@@ -97,15 +99,11 @@ func (w *WaitMap[K, V]) Get(key K) (V, bool) {
 	w.Lock()
 	defer w.Unlock()
 
-	values, ok := w.m[key]
+	value, ok := w.cache.Get(key)
 	if !ok {
 		zero := *new(V)
 		return zero, ok
 	}
 
-	// As noted in the comment at the beginning of this file,
-	// this is special behavior because of the way this map will be used.
-	// Get will always return the first value.
-	value := values[0]
-	return value, true
+	return value.(V), true
 }
