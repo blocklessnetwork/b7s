@@ -21,6 +21,15 @@ import (
 // NOTE: head node typically receives execution requests from the REST API. This message handling is not cognizant of subgroups.
 func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request.Execute) error {
 
+	err := req.Valid()
+	if err != nil {
+		err = n.send(ctx, from, req.Response(codes.Invalid).WithErrorMessage(err))
+		if err != nil {
+			return fmt.Errorf("could not send response: %w", err)
+		}
+		return nil
+	}
+
 	requestID := newRequestID()
 
 	log := n.log.With().Str("request", req.RequestID).Str("peer", from.String()).Str("function", req.FunctionID).Logger()
@@ -35,7 +44,7 @@ func (n *Node) headProcessExecute(ctx context.Context, from peer.ID, req request
 	res := req.Response(code).WithResults(results).WithCluster(cluster)
 	// Communicate the reason for failure in these cases.
 	if errors.Is(err, blockless.ErrRollCallTimeout) || errors.Is(err, blockless.ErrExecutionNotEnoughNodes) {
-		res.Message = err.Error()
+		res.ErrorMessage = err.Error()
 	}
 
 	// Send the response, whatever it may be (success or failure).
@@ -70,7 +79,7 @@ func (n *Node) headExecute(ctx context.Context, requestID string, req execute.Re
 	// Create a logger with relevant context.
 	log := n.log.With().Str("request", requestID).Str("function", req.FunctionID).Int("node_count", nodeCount).Logger()
 
-	consensusAlgo, err := parseConsensusAlgorithm(req.Config.ConsensusAlgorithm)
+	consensusAlgo, err := consensus.Parse(req.Config.ConsensusAlgorithm)
 	if err != nil {
 		log.Error().Str("value", req.Config.ConsensusAlgorithm).Str("default", n.cfg.DefaultConsensus.String()).Err(err).Msg("could not parse consensus algorithm from the user request, using default")
 		consensusAlgo = n.cfg.DefaultConsensus

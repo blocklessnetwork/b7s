@@ -9,6 +9,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetwork/b7s/consensus"
+	"github.com/blocklessnetwork/b7s/consensus/pbft"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
@@ -94,7 +95,7 @@ func (n *Node) executeRollCall(
 	requestID string,
 	functionID string,
 	nodeCount int,
-	consensus consensus.Type,
+	consensusAlgo consensus.Type,
 	topic string,
 	attributes *execute.Attributes,
 	timeout int,
@@ -108,7 +109,7 @@ func (n *Node) executeRollCall(
 	n.rollCall.create(requestID)
 	defer n.rollCall.remove(requestID)
 
-	err := n.publishRollCall(ctx, requestID, functionID, consensus, topic, attributes)
+	err := n.publishRollCall(ctx, requestID, functionID, consensusAlgo, topic, attributes)
 	if err != nil {
 		return nil, fmt.Errorf("could not publish roll call: %w", err)
 	}
@@ -167,6 +168,10 @@ rollCallResponseLoop:
 				break rollCallResponseLoop
 			}
 		}
+	}
+
+	if consensusAlgo == consensus.PBFT && len(reportingPeers) < pbft.MinimumReplicaCount {
+		return nil, fmt.Errorf("not enough peers reported for PBFT consensus (have: %v, need: %v)", len(reportingPeers), pbft.MinimumReplicaCount)
 	}
 
 	return reportingPeers, nil
