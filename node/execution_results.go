@@ -132,7 +132,6 @@ func (n *Node) gatherExecutionResults(ctx context.Context, requestID string, pee
 		go func() {
 			defer wg.Done()
 			key := executionResultKey(requestID, rp)
-			// XXX: cache response.Execute
 			res, ok := n.executeResponses.WaitFor(exctx, key)
 			if !ok {
 				return
