@@ -42,6 +42,7 @@ func (h *Host) ConnectToKnownPeers(ctx context.Context) error {
 			case <-ctx.Done():
 				ticker.Stop()
 				h.log.Debug().Msg("stopping boot node reachability monitoring")
+				return
 			}
 		}
 	}(ctx)

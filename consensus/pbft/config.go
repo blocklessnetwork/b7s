@@ -14,7 +14,7 @@ import (
 type Option func(*Config)
 
 // PostProcessFunc is invoked by the replica after execution is done.
-type PostProcessFunc func(requestID string, origin peer.ID, request execute.Request, result execute.Result)
+type PostProcessFunc func(requestID string, origin peer.ID, request execute.Request, result execute.NodeResult)
 
 var DefaultConfig = Config{
 	NetworkTimeout:   NetworkTimeout,

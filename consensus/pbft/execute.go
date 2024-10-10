@@ -95,21 +95,26 @@ func (r *Replica) execute(ctx context.Context, view uint, sequence uint, digest 
 		log.Warn().Err(err).Msg("could not get metadata")
 	}
 
-	msg := response.Execute{
-		BaseMessage: blockless.BaseMessage{TraceInfo: r.cfg.TraceInfo},
-		Code:        res.Code,
-		RequestID:   request.ID,
-		Results: execute.ResultMap{
-			r.id: execute.NodeResult{
-				Result:   res,
-				Metadata: metadata,
-			},
-		},
-		PBFT: response.PBFTResultInfo{
+	nres := execute.NodeResult{
+		Result:   res,
+		Metadata: metadata,
+		PBFT: execute.PBFTResultInfo{
 			View:             r.view,
 			RequestTimestamp: request.Timestamp,
 			Replica:          r.id,
 		},
+	}
+
+	err = nres.Sign(r.host.PrivateKey())
+	if err != nil {
+		return fmt.Errorf("could not sign execution result: %w", err)
+	}
+
+	msg := response.Execute{
+		BaseMessage: blockless.BaseMessage{TraceInfo: r.cfg.TraceInfo},
+		Code:        res.Code,
+		RequestID:   request.ID,
+		Results:     execute.ResultMap{r.id: nres},
 	}
 
 	// Save this executions in case it's requested again.
@@ -117,12 +122,7 @@ func (r *Replica) execute(ctx context.Context, view uint, sequence uint, digest 
 
 	// Invoke specified post processor functions.
 	for _, proc := range r.cfg.PostProcessors {
-		proc(request.ID, request.Origin, request.Execute, res)
-	}
-
-	err = msg.Sign(r.host.PrivateKey())
-	if err != nil {
-		return fmt.Errorf("could not sign execution request: %w", err)
+		proc(request.ID, request.Origin, request.Execute, nres)
 	}
 
 	err = r.send(ctx, request.Origin, &msg, blockless.ProtocolID)

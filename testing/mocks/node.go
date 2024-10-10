@@ -11,7 +11,7 @@ import (
 // Node implements the `Node` interface expected by the API.
 type Node struct {
 	ExecuteFunctionFunc        func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error)
-	ExecutionResultFunc        func(id string) (execute.Result, bool)
+	ExecutionResultFunc        func(id string) (execute.ResultMap, bool)
 	PublishFunctionInstallFunc func(ctx context.Context, uri string, cid string, subgroup string) error
 }
 
@@ -21,17 +21,11 @@ func BaselineNode(t *testing.T) *Node {
 	node := Node{
 		ExecuteFunctionFunc: func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 
-			results := execute.ResultMap{
-				GenericPeerID: execute.NodeResult{
-					Result: GenericExecutionResult,
-				},
-			}
-
 			// TODO: Add a generic cluster info
-			return GenericExecutionResult.Code, GenericUUID.String(), results, execute.Cluster{}, nil
+			return GenericExecutionResult.Code, GenericUUID.String(), GenericExecutionResultMap, execute.Cluster{}, nil
 		},
-		ExecutionResultFunc: func(id string) (execute.Result, bool) {
-			return GenericExecutionResult, true
+		ExecutionResultFunc: func(id string) (execute.ResultMap, bool) {
+			return GenericExecutionResultMap, true
 		},
 		PublishFunctionInstallFunc: func(ctx context.Context, uri string, cid string, subgroup string) error {
 			return nil
@@ -45,7 +39,7 @@ func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request, subgrou
 	return n.ExecuteFunctionFunc(ctx, req, subgroup)
 }
 
-func (n *Node) ExecutionResult(id string) (execute.Result, bool) {
+func (n *Node) ExecutionResult(id string) (execute.ResultMap, bool) {
 	return n.ExecutionResultFunc(id)
 }
 

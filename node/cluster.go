@@ -135,14 +135,13 @@ func (n *Node) formCluster(ctx context.Context, requestID string, replicas []pee
 		go func() {
 			defer rw.Done()
 			key := consensusResponseKey(requestID, rp)
-			res, ok := n.consensusResponses.WaitFor(clusterCtx, key)
+			fc, ok := n.consensusResponses.WaitFor(clusterCtx, key)
 			if !ok {
 				return
 			}
 
 			n.log.Info().Str("request", requestID).Str("peer", rp.String()).Msg("accounted consensus cluster response from roll called peer")
 
-			fc := res.(response.FormCluster)
 			if fc.Code != codes.OK {
 				log.Warn().Str("peer", rp.String()).Msg("peer failed to join consensus cluster")
 				return

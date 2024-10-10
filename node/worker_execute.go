@@ -49,11 +49,11 @@ func (n *Node) workerProcessExecute(ctx context.Context, from peer.ID, req reque
 
 	log.Info().Str("code", code.String()).Msg("execution complete")
 
-	// Cache the execution result.
-	n.executeResponses.Set(requestID, result)
-
 	// Create the execution response from the execution result.
 	rm := execute.ResultMap{n.host.ID(): {Result: result, Metadata: metadata}}
+
+	n.executeResponses.Set(requestID, rm)
+
 	res := req.Response(code).WithResults(rm)
 
 	// Send the response, whatever it may be (success or failure).

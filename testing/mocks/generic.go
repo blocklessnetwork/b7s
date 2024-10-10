@@ -40,6 +40,12 @@ var (
 		},
 	}
 
+	GenericExecutionResultMap = execute.ResultMap{
+		GenericPeerID: {
+			Result: GenericExecutionResult,
+		},
+	}
+
 	GenericExecutionRequest = execute.Request{
 		FunctionID: "generic-function-id",
 		Method:     "wasm",
