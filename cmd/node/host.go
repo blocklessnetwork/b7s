@@ -30,6 +30,7 @@ func createHost(log zerolog.Logger, cfg config.Config, role blockless.NodeRole, 
 		host.WithMustReachBootNodes(cfg.Connectivity.MustReachBootNodes),
 		host.WithDisabledResourceLimits(cfg.Connectivity.DisableConnectionLimits),
 		host.WithEnableP2PRelay(role == blockless.HeadNode),
+		host.WithConnectionLimit(cfg.Connectivity.ConnectionCount),
 	}
 
 	// Create libp2p host.

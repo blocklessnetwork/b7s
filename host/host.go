@@ -11,7 +11,9 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/peer"
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
+	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
 	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ma "github.com/multiformats/go-multiaddr"
@@ -120,6 +122,29 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 		})
 
 		opts = append(opts, addrFactory)
+	}
+
+	if cfg.ConnectionLimit > 0 {
+
+		lo := cfg.ConnectionLimit
+		hi := float64(cfg.ConnectionLimit) * 1.2
+
+		cm, err := connmgr.NewConnManager(int(lo), int(hi))
+		if err != nil {
+			return nil, fmt.Errorf("could not create connection manager (lo: %v, hi: %v)", lo, hi)
+		}
+
+		// Protect boot nodes from pruning.
+		for _, addr := range cfg.BootNodes {
+			info, err := peer.AddrInfoFromP2pAddr(addr)
+			if err != nil {
+				continue
+			}
+
+			cm.Protect(info.ID, "boot-node")
+		}
+
+		opts = append(opts, libp2p.ConnectionManager(cm))
 	}
 
 	// Create libp2p host.
