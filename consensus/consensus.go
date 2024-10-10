@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Type identifies consensus protocols suported by Blockless.
@@ -30,4 +31,21 @@ func (t Type) Valid() bool {
 	default:
 		return false
 	}
+}
+
+func Parse(s string) (Type, error) {
+
+	if s == "" {
+		return 0, nil
+	}
+
+	switch strings.ToLower(s) {
+	case "raft":
+		return Raft, nil
+
+	case "pbft":
+		return PBFT, nil
+	}
+
+	return 0, fmt.Errorf("unknown consensus value (%s)", s)
 }

@@ -30,7 +30,7 @@ type Execute struct {
 	Signature string `json:"signature,omitempty"`
 
 	// Used to communicate the reason for failure to the user.
-	Message string `json:"message,omitempty"`
+	ErrorMessage string `json:"message,omitempty"`
 }
 
 func (e *Execute) WithResults(r execute.ResultMap) *Execute {
@@ -40,6 +40,11 @@ func (e *Execute) WithResults(r execute.ResultMap) *Execute {
 
 func (e *Execute) WithCluster(c execute.Cluster) *Execute {
 	e.Cluster = c
+	return e
+}
+
+func (e *Execute) WithErrorMessage(err error) *Execute {
+	e.ErrorMessage = err.Error()
 	return e
 }
 
