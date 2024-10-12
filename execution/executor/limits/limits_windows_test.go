@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows"
 
-	"github.com/blocklessnetwork/b7s/executor/limits"
+	"github.com/blocklessnetwork/b7s/execution/executor/limits"
 	"github.com/blocklessnetwork/b7s/models/execute"
 )
 

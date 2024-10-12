@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/blocklessnetwork/b7s/executor/internal/process"
+	"github.com/blocklessnetwork/b7s/execution/executor/internal/process"
 	"github.com/blocklessnetwork/b7s/models/execute"
 )
 

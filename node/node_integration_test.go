@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetwork/b7s/consensus"
-	"github.com/blocklessnetwork/b7s/executor"
+	"github.com/blocklessnetwork/b7s/execution/executor"
 	"github.com/blocklessnetwork/b7s/fstore"
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"

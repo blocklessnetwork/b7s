@@ -19,8 +19,8 @@ import (
 
 	"github.com/blocklessnetwork/b7s/api"
 	"github.com/blocklessnetwork/b7s/config"
-	"github.com/blocklessnetwork/b7s/executor"
-	"github.com/blocklessnetwork/b7s/executor/limits"
+	"github.com/blocklessnetwork/b7s/execution/executor"
+	"github.com/blocklessnetwork/b7s/execution/executor/limits"
 	"github.com/blocklessnetwork/b7s/fstore"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node"

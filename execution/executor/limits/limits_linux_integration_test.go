@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/executor/limits"
+	"github.com/blocklessnetwork/b7s/execution/executor/limits"
 	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
