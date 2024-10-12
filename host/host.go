@@ -15,7 +15,6 @@ import (
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
 	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
 	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
-	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ma "github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
 )
@@ -58,7 +57,6 @@ func New(log zerolog.Logger, address string, port uint, options ...func(*Config)
 	opts := []libp2p.Option{
 		libp2p.ListenAddrStrings(addresses...),
 		libp2p.DefaultTransports,
-		libp2p.Transport(webrtc.New),
 		libp2p.DefaultMuxers,
 		libp2p.DefaultSecurity,
 		libp2p.NATPortMap(),
