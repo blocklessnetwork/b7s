@@ -10,6 +10,7 @@ require (
 	github.com/blocklessnetwork/b7s-attributes v0.0.0
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cockroachdb/pebble v1.1.0
+	github.com/coder/websocket v1.8.12
 	github.com/containerd/cgroups/v3 v3.0.3
 	github.com/fatih/camelcase v1.0.0
 	github.com/fatih/color v1.16.0
@@ -47,7 +48,6 @@ require (
 	go.opentelemetry.io/otel/sdk v1.27.0
 	go.opentelemetry.io/otel/trace v1.27.0
 	gopkg.in/yaml.v2 v2.4.0
-	nhooyr.io/websocket v1.8.17
 )
 
 require (

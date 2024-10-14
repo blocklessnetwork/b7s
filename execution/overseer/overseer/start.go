@@ -10,11 +10,11 @@ import (
 	"syscall"
 	"time"
 
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
+	"github.com/google/uuid"
 
 	"github.com/blocklessnetwork/b7s/execution/overseer/job"
 	"github.com/blocklessnetwork/b7s/execution/overseer/limits"
-	"github.com/google/uuid"
 )
 
 type handle struct {

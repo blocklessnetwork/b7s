@@ -3,7 +3,7 @@ package overseer
 import (
 	"os"
 
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 // Collect any artefacts created and remove traces of an executed job.

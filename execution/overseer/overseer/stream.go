@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/rs/zerolog"
-	"nhooyr.io/websocket"
 )
 
 const (
