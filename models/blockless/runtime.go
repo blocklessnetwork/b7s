@@ -6,6 +6,10 @@ import (
 
 const (
 	runtimeCLI = "bls-runtime"
+
+	// This environment variable contains the names of environment variables
+	// that are set, that originate from the execution request config.
+	RuntimeEnvVarList = "BLS_LIST_VARS"
 )
 
 // RuntimeCLI returns the name of the Blockless Runtime executable.

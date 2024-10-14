@@ -128,7 +128,7 @@ func getExpectedEnvVars(t *testing.T, environment []execute.EnvVar) []string {
 		names = append(names, env.Name)
 	}
 
-	list := fmt.Sprintf("%s=%s", blsListEnvName, strings.Join(names, ";"))
+	list := fmt.Sprintf("%s=%s", blockless.RuntimeEnvVarList, strings.Join(names, ";"))
 	out = append(out, list)
 
 	return out

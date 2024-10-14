@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
@@ -67,7 +68,7 @@ func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd 
 	// Third and final - set the `BLS_LIST_VARS` variable with
 	// the list of names of the variables from the execution request.
 	blsList := strings.Join(names, ";")
-	blsEnv := fmt.Sprintf("%s=%s", blsListEnvName, blsList)
+	blsEnv := fmt.Sprintf("%s=%s", blockless.RuntimeEnvVarList, blsList)
 	cmd.Env = append(cmd.Env, blsEnv)
 
 	return cmd
