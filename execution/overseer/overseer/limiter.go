@@ -1,7 +1,7 @@
 package overseer
 
 import (
-	"github.com/blocklessnetwork/b7s/execution/overseer/limits"
+	"github.com/blocklessnetwork/b7s/execution/limits"
 )
 
 type Limiter interface {

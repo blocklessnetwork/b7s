@@ -7,11 +7,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/rs/zerolog"
+
 	"github.com/blocklessnetwork/b7s/execution/overseer/job"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/rs/zerolog"
 )
+
+// Enforce interface compatibility.
+var _ (blockless.Executor) = (*executor)(nil)
 
 type executor struct {
 	log      zerolog.Logger

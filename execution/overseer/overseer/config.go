@@ -58,9 +58,10 @@ func WithFS(fs afero.Fs) Option {
 
 // WithAllowlist specifies the executables the overseer is allowed to start.
 // Executables should be listed using their full paths.
-func WithAllowlist(executables []string) Option {
+func WithAllowlist(executables ...string) Option {
 	return func(cfg *Config) {
-		cfg.Allowlist = executables
+		// TODO: Test this.
+		cfg.Allowlist = append([]string{}, executables...)
 	}
 }
 
@@ -68,7 +69,8 @@ func WithAllowlist(executables []string) Option {
 // Executables should be listed using their full paths. Denylist overrides allowlist.
 func WithDenylist(executables []string) Option {
 	return func(cfg *Config) {
-		cfg.Denylist = executables
+		// TODO: Test this.
+		cfg.Denylist = append([]string{}, executables...)
 	}
 }
 

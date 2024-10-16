@@ -1,8 +1,6 @@
 package config
 
 import (
-	"time"
-
 	"github.com/blocklessnetwork/b7s/node"
 )
 
@@ -60,56 +58,8 @@ type Log struct {
 	Level string `koanf:"level" flag:"log-level,l"`
 }
 
-// Connectivity describes the libp2p host that the node will use.
-type Connectivity struct {
-	Address                 string `koanf:"address"                   flag:"address,a"`
-	Port                    uint   `koanf:"port"                      flag:"port,p"`
-	PrivateKey              string `koanf:"private-key"               flag:"private-key"`
-	DialbackAddress         string `koanf:"dialback-address"          flag:"dialback-address"`
-	DialbackPort            uint   `koanf:"dialback-port"             flag:"dialback-port"`
-	Websocket               bool   `koanf:"websocket"                 flag:"websocket,w"`
-	WebsocketPort           uint   `koanf:"websocket-port"            flag:"websocket-port"`
-	WebsocketDialbackPort   uint   `koanf:"websocket-dialback-port"   flag:"websocket-dialback-port"`
-	NoDialbackPeers         bool   `koanf:"no-dialback-peers"         flag:"no-dialback-peers"`
-	MustReachBootNodes      bool   `koanf:"must-reach-boot-nodes"     flag:"must-reach-boot-nodes"`
-	DisableConnectionLimits bool   `koanf:"disable-connection-limits" flag:"disable-connection-limits"`
-	ConnectionCount         uint   `koanf:"connection-count"          flag:"connection-count"`
-}
-
 type Head struct {
 	RestAPI string `koanf:"rest-api" flag:"rest-api"`
-}
-
-type Worker struct {
-	RuntimePath        string  `koanf:"runtime-path"         flag:"runtime-path"`
-	RuntimeCLI         string  `koanf:"runtime-cli"          flag:"runtime-cli"`
-	CPUPercentageLimit float64 `koanf:"cpu-percentage-limit" flag:"cpu-percentage-limit"`
-	MemoryLimitKB      int64   `koanf:"memory-limit"         flag:"memory-limit"`
-}
-
-type Telemetry struct {
-	Tracing Tracing `koanf:"tracing"`
-	Metrics Metrics `koanf:"metrics"`
-}
-
-type Tracing struct {
-	Enable               bool          `koanf:"enable" flag:"enable-tracing"`
-	ExporterBatchTimeout time.Duration `koanf:"exporter-batch-timeout"`
-	GRPC                 GRPCTracing   `koanf:"grpc"`
-	HTTP                 HTTPTracing   `koanf:"http"`
-}
-
-type GRPCTracing struct {
-	Endpoint string `koanf:"endpoint" flag:"tracing-grpc-endpoint"`
-}
-
-type HTTPTracing struct {
-	Endpoint string `koanf:"endpoint" flag:"tracing-http-endpoint"`
-}
-
-type Metrics struct {
-	Enable            bool   `koanf:"enable" flag:"enable-metrics"`
-	PrometheusAddress string `koanf:"prometheus-address" flag:"prometheus-address"`
 }
 
 // ConfigOptionInfo describes a specific configuration option, it's location in the config file and

@@ -19,8 +19,6 @@ import (
 
 	"github.com/blocklessnetwork/b7s/api"
 	"github.com/blocklessnetwork/b7s/config"
-	"github.com/blocklessnetwork/b7s/execution/executor"
-	"github.com/blocklessnetwork/b7s/execution/executor/limits"
 	"github.com/blocklessnetwork/b7s/fstore"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node"
@@ -217,40 +215,9 @@ func run() int {
 	// If this is a worker node, initialize an executor.
 	if nodeRole == blockless.WorkerNode {
 
-		// Executor options.
-		execOptions := []executor.Option{
-			executor.WithWorkDir(cfg.Workspace),
-			executor.WithRuntimeDir(cfg.Worker.RuntimePath),
-			executor.WithExecutableName(cfg.Worker.RuntimeCLI),
-		}
-
-		if needLimiter(cfg) {
-			limiter, err := limits.New(limits.WithCPUPercentage(cfg.Worker.CPUPercentageLimit), limits.WithMemoryKB(cfg.Worker.MemoryLimitKB))
-			if err != nil {
-				log.Error().Err(err).Msg("could not create resource limiter")
-				return failure
-			}
-
-			defer func() {
-				err = limiter.Shutdown()
-				if err != nil {
-					log.Error().Err(err).Msg("could not shutdown resource limiter")
-				}
-			}()
-
-			execOptions = append(execOptions, executor.WithLimiter(limiter))
-		}
-
-		// Create an executor.
-		executor, err := executor.New(log.With().Str("component", "executor").Logger(), execOptions...)
+		executor, err := createExecutor(log.With().Str("component", "executor").Logger(), *cfg)
 		if err != nil {
-			log.Error().
-				Err(err).
-				Str("workspace", cfg.Workspace).
-				Str("runtime_path", cfg.Worker.RuntimePath).
-				Str("runtime_cli", cfg.Worker.RuntimeCLI).
-				Msg("could not create an executor")
-			return failure
+			log.Error().Err(err).Msg("could not create executor")
 		}
 
 		opts = append(opts, node.WithExecutor(executor))
@@ -355,10 +322,6 @@ func createEchoServer(log zerolog.Logger) *echo.Echo {
 	server.Use(lecho.Middleware(lecho.Config{Logger: elog}))
 
 	return server
-}
-
-func needLimiter(cfg *config.Config) bool {
-	return (cfg.Worker.CPUPercentageLimit > 0 && cfg.Worker.CPUPercentageLimit < 1.0) || cfg.Worker.MemoryLimitKB > 0
 }
 
 func updateDirPaths(root string, cfg *config.Config) {

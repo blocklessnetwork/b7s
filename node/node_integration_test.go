@@ -108,10 +108,10 @@ func createNode(t *testing.T, dir string, logger zerolog.Logger, host *host.Host
 
 	if role == blockless.WorkerNode {
 
-		runtimeDir := os.Getenv(runtimeDirEnv)
+		runtimePath := filepath.Join(os.Getenv(runtimeDirEnv), blockless.RuntimeCLI())
 
 		executor, err := executor.New(logger,
-			executor.WithRuntimeDir(runtimeDir),
+			executor.WithRuntimePath(runtimePath),
 			executor.WithWorkDir(workdir),
 		)
 		require.NoError(t, err)

@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetwork/b7s/execution/executor"
+	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/telemetry"
@@ -55,6 +56,7 @@ func TestExecutor_Execute(t *testing.T) {
 		fsRoot      = filepath.Join(workdir, "fs")             // function FS root
 		functiondir = filepath.Join(workspace, functionID)     // function location
 		registry    = prometheus.NewRegistry()
+		runtimePath = filepath.Join(os.Getenv(runtimeDirEnv), blockless.RuntimeCLI())
 	)
 
 	sink, err := telemetry.CreateMetricSink(registry, telemetry.MetricsConfig{Counters: executor.Counters})
@@ -76,7 +78,7 @@ func TestExecutor_Execute(t *testing.T) {
 	executor, err := executor.New(
 		mocks.NoopLogger,
 		executor.WithWorkDir(workspace),
-		executor.WithRuntimeDir(os.Getenv(runtimeDirEnv)),
+		executor.WithRuntimePath(runtimePath),
 		executor.WithMetrics(metrics),
 	)
 	require.NoError(t, err)

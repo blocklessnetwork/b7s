@@ -10,8 +10,7 @@ import (
 // defaultConfig used to create Executor.
 var defaultConfig = Config{
 	WorkDir:         "workspace",
-	RuntimeDir:      "",
-	ExecutableName:  blockless.RuntimeCLI(),
+	RuntimePath:     blockless.RuntimeCLI(),
 	FS:              afero.NewOsFs(),
 	Limiter:         &noopLimiter{},
 	DriversRootPath: "",
@@ -20,8 +19,7 @@ var defaultConfig = Config{
 // Config represents the Executor configuration.
 type Config struct {
 	WorkDir         string           // directory where files needed for the execution are stored
-	RuntimeDir      string           // directory where the executable can be found
-	ExecutableName  string           // name for the executable
+	RuntimePath     string           // full path to the runtime
 	DriversRootPath string           // where are cgi drivers stored
 	FS              afero.Fs         // FS accessor
 	Limiter         Limiter          // Resource limiter for executed processes
@@ -37,10 +35,10 @@ func WithWorkDir(dir string) Option {
 	}
 }
 
-// WithRuntimeDir sets the runtime directory for the executor.
-func WithRuntimeDir(dir string) Option {
+// WithRuntimePath sets the path to the runtime.
+func WithRuntimePath(path string) Option {
 	return func(cfg *Config) {
-		cfg.RuntimeDir = dir
+		cfg.RuntimePath = path
 	}
 }
 
@@ -48,13 +46,6 @@ func WithRuntimeDir(dir string) Option {
 func WithFS(fs afero.Fs) Option {
 	return func(cfg *Config) {
 		cfg.FS = fs
-	}
-}
-
-// WithExecutableName sets the name of the executable that should be ran.
-func WithExecutableName(name string) Option {
-	return func(cfg *Config) {
-		cfg.ExecutableName = name
 	}
 }
 

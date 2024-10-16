@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -16,8 +15,6 @@ import (
 func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd {
 
 	// Prepare command to be executed.
-	exePath := filepath.Join(e.cfg.RuntimeDir, e.cfg.ExecutableName)
-
 	cfg := req.Config.Runtime
 	cfg.Input = paths.input
 	cfg.FSRoot = paths.fsRoot
@@ -42,7 +39,7 @@ func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd 
 		}
 	}
 
-	cmd := exec.Command(exePath, args...)
+	cmd := exec.Command(e.cfg.RuntimePath, args...)
 	cmd.Dir = paths.workdir
 
 	// Setup stdin of the command.

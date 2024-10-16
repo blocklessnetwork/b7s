@@ -46,9 +46,8 @@ func TestExecute_CreateCMD(t *testing.T) {
 	executor := Executor{
 		log: mocks.NoopLogger,
 		cfg: Config{
-			RuntimeDir:     runtimeDir,
-			WorkDir:        workdir,
-			ExecutableName: blockless.RuntimeCLI(),
+			RuntimePath: executablePath,
+			WorkDir:     workdir,
 		},
 	}
 	paths := executor.generateRequestPaths(requestID, functionID, functionMethod)

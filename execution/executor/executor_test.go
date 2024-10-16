@@ -17,16 +17,15 @@ func TestExecutor_Create(t *testing.T) {
 	t.Run("nominal case", func(t *testing.T) {
 
 		var (
-			runtimeDir = os.TempDir()
-			cliPath    = filepath.Join(runtimeDir, blockless.RuntimeCLI())
-			fs         = afero.NewMemMapFs()
+			cliPath = filepath.Join(os.TempDir(), blockless.RuntimeCLI())
+			fs      = afero.NewMemMapFs()
 		)
 
 		_, err := fs.Create(cliPath)
 		require.NoError(t, err)
 
 		_, err = executor.New(mocks.NoopLogger,
-			executor.WithRuntimeDir(runtimeDir),
+			executor.WithRuntimePath(cliPath),
 			executor.WithFS(fs),
 		)
 		require.NoError(t, err)
@@ -39,7 +38,7 @@ func TestExecutor_Create(t *testing.T) {
 
 		// Use empty FS that surely will not have the runtime anywhere.
 		executor, err := executor.New(mocks.NoopLogger,
-			executor.WithRuntimeDir(runtimeDir),
+			executor.WithRuntimePath(runtimeDir),
 			executor.WithFS(afero.NewMemMapFs()),
 		)
 		require.Error(t, err)

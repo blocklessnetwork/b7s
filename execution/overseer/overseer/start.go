@@ -13,8 +13,8 @@ import (
 	"github.com/coder/websocket"
 	"github.com/google/uuid"
 
+	"github.com/blocklessnetwork/b7s/execution/limits"
 	"github.com/blocklessnetwork/b7s/execution/overseer/job"
-	"github.com/blocklessnetwork/b7s/execution/overseer/limits"
 )
 
 type handle struct {
