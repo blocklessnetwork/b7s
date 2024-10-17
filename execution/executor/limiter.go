@@ -10,7 +10,3 @@ type noopLimiter struct{}
 func (n *noopLimiter) LimitProcess(proc execute.ProcessID) error {
 	return nil
 }
-
-func (n *noopLimiter) ListProcesses() ([]int, error) {
-	return []int{}, nil
-}

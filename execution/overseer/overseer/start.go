@@ -172,6 +172,7 @@ func (o *Overseer) createCmd(id string, execJob *job.Job) (*exec.Cmd, error) {
 		jobLimits.NoExec = true
 	}
 
+	// TODO: Rework this part.
 	// TODO: Set no exec for root group if required.
 
 	if o.cfg.useLimiter {
@@ -183,16 +184,16 @@ func (o *Overseer) createCmd(id string, execJob *job.Job) (*exec.Cmd, error) {
 		)
 
 		if jobLimits == nil {
-			fd, err = o.cfg.Limiter.GetHandle("")
+			fd, err = o.cfg.Limiter.GetGroupHandle("")
 		} else {
 
 			opts := getLimitOpts(*jobLimits)
-			err := o.cfg.Limiter.CreateGroup(id, opts...)
+			err = o.cfg.Limiter.CreateGroup(id, opts...)
 			if err != nil {
 				return nil, fmt.Errorf("could not create limit group for job: %w", err)
 			}
 
-			fd, err = o.cfg.Limiter.GetHandle(id)
+			fd, err = o.cfg.Limiter.GetGroupHandle(id)
 		}
 
 		if err != nil {

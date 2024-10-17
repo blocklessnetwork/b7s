@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/blocklessnetwork/b7s/execution/limits"
 	"github.com/blocklessnetwork/b7s/node"
 )
 
@@ -30,6 +31,12 @@ var DefaultConfig = Config{
 		Address:   DefaultAddress,
 		Port:      DefaultPort,
 		Websocket: DefaultUseWebsocket,
+	},
+	Worker: Worker{
+		CgroupMountpoint:   limits.DefaultMountpoint,
+		CgroupName:         "b7s",
+		CPUPercentageLimit: 1.0,
+		MemoryLimitKB:      -1,
 	},
 }
 

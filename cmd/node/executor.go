@@ -7,7 +7,6 @@ import (
 
 	"github.com/blocklessnetwork/b7s/config"
 	"github.com/blocklessnetwork/b7s/execution/executor"
-	legacylimits "github.com/blocklessnetwork/b7s/execution/executor/limits"
 	"github.com/blocklessnetwork/b7s/execution/limits"
 	"github.com/blocklessnetwork/b7s/execution/overseer/overseer"
 	"github.com/blocklessnetwork/b7s/models/blockless"
@@ -15,12 +14,28 @@ import (
 
 func createExecutor(log zerolog.Logger, cfg config.Config) (blockless.Executor, error) {
 
-	cumulativeExecutionLimits := haveExecutionLimits(cfg.Worker)
+	totalExecutionLimits := haveExecutionLimits(cfg.Worker)
 	perExecutionLimits := cfg.Worker.SupportPerExecutionLimits
 
-	// TODO: Use new limiter for both cases.
+	// TODO: Create noop limiter
 	// TODO: Limiter gets shutdown via defer when done.
+	var limiter *limits.Limiter
+	if totalExecutionLimits || perExecutionLimits {
 
+		var err error
+		limiter, err = limits.New(
+			log,
+			cfg.Worker.CgroupMountpoint,
+			cfg.Worker.CgroupName,
+			limits.WithCPUPercentage(cfg.Worker.CPUPercentageLimit),
+			limits.WithMemoryKB(cfg.Worker.MemoryLimitKB),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("could not create limiter: %w", err)
+		}
+	}
+
+	// TODO: Switch over fully to the new executor/oversseer.
 	// Unless explicitly instructed otherwise, use the classic executor, like before.
 	if !cfg.Worker.UseEnhancedExecutor {
 
@@ -29,15 +44,10 @@ func createExecutor(log zerolog.Logger, cfg config.Config) (blockless.Executor, 
 			executor.WithRuntimePath(cfg.Worker.RuntimePath),
 		}
 
-		// TODO: Perhaps the new limiter could create a legacy limiter with the same old interface?
-		if cumulativeExecutionLimits {
-			limiter, err := legacylimits.New(legacylimits.WithCPUPercentage(cfg.Worker.CPUPercentageLimit), legacylimits.WithMemoryKB(cfg.Worker.MemoryLimitKB))
-			if err != nil {
-				return nil, fmt.Errorf("could not create legacy limiter: %w", err)
-			}
-
-			opts = append(opts, executor.WithLimiter(limiter))
-		}
+		// TODO: Switch over to the new limiter.
+		// if totalExecutionLimits {
+		// 	opts = append(opts, executor.WithLimiter(limiter))
+		// }
 
 		// Create an executor.
 		executor, err := executor.New(log, opts...)
@@ -55,13 +65,7 @@ func createExecutor(log zerolog.Logger, cfg config.Config) (blockless.Executor, 
 		overseer.WithWorkdir(cfg.Workspace),
 	}
 
-	if cumulativeExecutionLimits || perExecutionLimits {
-		var err error
-		limiter, err := limits.New(log, cfg.Worker.CgroupMountpoint, cfg.Worker.CgroupName)
-		if err != nil {
-			return nil, fmt.Errorf("could not create limiter: %w", err)
-		}
-
+	if limiter != nil {
 		opts = append(opts, overseer.WithLimiter(limiter))
 	}
 

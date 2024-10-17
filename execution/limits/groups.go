@@ -15,14 +15,12 @@ func (l *Limiter) CreateGroup(name string, opts ...LimitOption) error {
 
 	_, ok := l.limits[name]
 	if ok {
-		return fmt.Errorf("limits with id %v already exist", name)
+		return fmt.Errorf("limit group with id %v already exists", name)
 	}
 
 	l.log.Info().Str("name", name).Msg("creating limit group")
 
-	limits := getLimits(opts...)
-	specs := limitsToResources(limits)
-
+	specs := limitsToResources(getLimits(opts...))
 	cg, err := l.limits[""].manager.NewChild(name, specs)
 	if err != nil {
 		return fmt.Errorf("could not create cgroup (name: %v): %w", name, err)
@@ -37,6 +35,8 @@ func (l *Limiter) CreateGroup(name string, opts ...LimitOption) error {
 	return nil
 }
 
+// NOTE: Non-recursive
+// TODO: Check if needed at all in a mature setup.
 func (l *Limiter) ListGroups() ([]string, error) {
 
 	path := path.Join(l.mountpoint, l.cgroup)
@@ -120,6 +120,7 @@ func (l *Limiter) loadRootGroup(opts ...LimitOption) error {
 		return fmt.Errorf("could not set limits for root cgroup: %w", err)
 	}
 
+	// TODO: Also open it to have a handle too. We can have both, no?
 	l.limits[""] = &limitHandler{
 		manager: cg,
 	}

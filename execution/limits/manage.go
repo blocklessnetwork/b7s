@@ -7,7 +7,12 @@ import (
 	"path/filepath"
 )
 
-func (l *Limiter) AssignToGroup(name string, pid uint64) error {
+func (l *Limiter) AssignProcessToRootGroup(pid uint64) error {
+	return l.AssignProcessToGroup(pid, "")
+}
+
+// TODO: PID type - int vs uint64
+func (l *Limiter) AssignProcessToGroup(pid uint64, name string) error {
 
 	l.Lock()
 	defer l.Unlock()
@@ -17,7 +22,7 @@ func (l *Limiter) AssignToGroup(name string, pid uint64) error {
 		return errors.New("unknown group")
 	}
 
-	l.log.Info().Str("name", name).Uint64("pid", pid).Msg("assigning process to limit group")
+	l.log.Info().Str("name", name).Uint64("pid", uint64(pid)).Msg("assigning process to limit group")
 
 	err := lh.manager.AddProc(pid)
 	if err != nil {
@@ -29,7 +34,8 @@ func (l *Limiter) AssignToGroup(name string, pid uint64) error {
 	return nil
 }
 
-func (l *Limiter) GetHandle(name string) (uintptr, error) {
+// GetGroupHandle returns a handle to the limit group which can be used to assign a newly created process to a cgroup immediately.
+func (l *Limiter) GetGroupHandle(name string) (uintptr, error) {
 
 	l.Lock()
 	defer l.Unlock()

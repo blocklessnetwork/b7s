@@ -7,14 +7,12 @@ import (
 
 type Limiter interface {
 	LimitProcess(proc execute.ProcessID) error
-	ListProcesses() ([]int, error)
 }
 
-// TODO: Nested nature of the groups - we want to have cumulative limit for all jo
+// TODO: Nested nature of the groups - we want to have cumulative limit for all jobs, but also per-job limit.
 type LimiterV2 interface {
-	CreateGroup(id string, opts ...limits.LimitOption) (uintptr, error)
-	AssignToGroup(proc execute.ProcessID) error
-	GetGroupHandle(id string) (uintptr, error)
+	CreateGroup(id string, opts ...limits.LimitOption) error
+	AssignProcessToGroup(id string, proc execute.ProcessID) error
 	DeleteGroup(id string) error
 	// TODO: Enumerate groups/limited processes.
 }
