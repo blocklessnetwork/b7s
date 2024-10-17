@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/blocklessnetwork/b7s/execution/overseer/internal/process"
 	"github.com/blocklessnetwork/b7s/execution/overseer/job"
-	"github.com/blocklessnetwork/b7s/execution/overseer/overseer/internal/process"
 )
 
 func (o *Overseer) Kill(id string) (job.State, error) {

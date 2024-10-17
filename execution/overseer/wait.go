@@ -4,11 +4,11 @@ import (
 	"errors"
 	"time"
 
+	"github.com/blocklessnetwork/b7s/execution/overseer/internal/process"
 	"github.com/blocklessnetwork/b7s/execution/overseer/job"
-	"github.com/blocklessnetwork/b7s/execution/overseer/overseer/internal/process"
 )
 
-func (o *Overseer) Stats(id string) (job.State, error) {
+func (o *Overseer) Wait(id string) (job.State, error) {
 
 	o.Lock()
 	h, ok := o.jobs[id]
@@ -21,23 +21,29 @@ func (o *Overseer) Stats(id string) (job.State, error) {
 	h.Lock()
 	defer h.Unlock()
 
+	defer o.harvest(id)
+
+	err := h.cmd.Wait()
+	if err != nil {
+		o.log.Error().Err(err).Msg("error waiting on job")
+		// No return - continue.
+	}
+
+	endTime := time.Now()
+
 	state := job.State{
-		Status:       job.StatusRunning,
+		Status:       job.StatusDone,
 		Stdout:       h.stdout.String(),
 		Stderr:       h.stderr.String(),
 		StartTime:    h.start,
+		EndTime:      &endTime,
 		ObservedTime: time.Now(),
-		// TODO: Process stats.
 	}
 
-	exitCode, status := determineProcessStatus(h.cmd.ProcessState)
-	state.ExitCode = exitCode
-	state.Status = status
-
-	if h.cmd.ProcessState != nil {
-		// NOTE: Perhaps wait on process in a goroutine to have accurate end time.
-		endTime := time.Now()
-		state.EndTime = &endTime
+	exitCode := h.cmd.ProcessState.ExitCode()
+	state.ExitCode = &exitCode
+	if *state.ExitCode != 0 {
+		state.Status = job.StatusFailed
 	}
 
 	usage, err := process.GetUsage(h.cmd)

@@ -8,7 +8,7 @@ import (
 	"github.com/blocklessnetwork/b7s/config"
 	"github.com/blocklessnetwork/b7s/execution/executor"
 	"github.com/blocklessnetwork/b7s/execution/limits"
-	"github.com/blocklessnetwork/b7s/execution/overseer/overseer"
+	"github.com/blocklessnetwork/b7s/execution/overseer"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
 
