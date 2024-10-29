@@ -27,9 +27,8 @@ func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request, subgrou
 }
 
 // ExecutionResult fetches the execution result from the node cache.
-func (n *Node) ExecutionResult(id string) (execute.Result, bool) {
-	res, ok := n.executeResponses.Get(id)
-	return res.(execute.Result), ok
+func (n *Node) ExecutionResult(id string) (execute.ResultMap, bool) {
+	return n.executeResponses.Get(id)
 }
 
 // PublishFunctionInstall publishes a function install message.

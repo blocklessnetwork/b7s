@@ -29,17 +29,17 @@ func TestAPI_ExecutionResult(t *testing.T) {
 		err = srv.ExecutionResult(ctx)
 		require.NoError(t, err)
 
-		var res execute.Result
+		var res execute.ResultMap
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 
 		require.Equal(t, http.StatusOK, rec.Result().StatusCode)
-		require.Equal(t, mocks.GenericExecutionResult, res)
+		require.Equal(t, mocks.GenericExecutionResultMap, res)
 	})
 	t.Run("response not found", func(t *testing.T) {
 
 		node := mocks.BaselineNode(t)
-		node.ExecutionResultFunc = func(id string) (execute.Result, bool) {
-			return execute.Result{}, false
+		node.ExecutionResultFunc = func(id string) (execute.ResultMap, bool) {
+			return execute.ResultMap{}, false
 		}
 
 		srv := api.New(mocks.NoopLogger, node)

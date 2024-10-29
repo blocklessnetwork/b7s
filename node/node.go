@@ -13,6 +13,8 @@ import (
 	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/info"
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/models/response"
 	"github.com/blocklessnetwork/b7s/node/internal/waitmap"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
@@ -45,8 +47,8 @@ type Node struct {
 	// clusterLock is used to synchronize access to the `clusters` map.
 	clusterLock sync.RWMutex
 
-	executeResponses   *waitmap.WaitMap
-	consensusResponses *waitmap.WaitMap
+	executeResponses   *waitmap.WaitMap[string, execute.ResultMap]
+	consensusResponses *waitmap.WaitMap[string, response.FormCluster]
 
 	// Telemetry
 	tracer  *tracing.Tracer
@@ -87,8 +89,8 @@ func New(log zerolog.Logger, host *host.Host, store blockless.PeerStore, fstore 
 
 		rollCall:           newQueue(rollCallQueueBufferSize),
 		clusters:           make(map[string]consensusExecutor),
-		executeResponses:   waitmap.New(),
-		consensusResponses: waitmap.New(),
+		executeResponses:   waitmap.New[string, execute.ResultMap](executionResultCacheSize),
+		consensusResponses: waitmap.New[string, response.FormCluster](0),
 
 		tracer:  tracing.NewTracer(tracerName),
 		metrics: metrics.Default(),

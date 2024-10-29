@@ -22,7 +22,7 @@ type FSMLogEntry struct {
 	Execute   execute.Request `json:"execute,omitempty"`
 }
 
-type FSMProcessFunc func(req FSMLogEntry, res execute.Result)
+type FSMProcessFunc func(req FSMLogEntry, res execute.NodeResult)
 
 type fsmExecutor struct {
 	log        zerolog.Logger
@@ -36,7 +36,7 @@ func newFsmExecutor(log zerolog.Logger, executor blockless.Executor, processors 
 	ps = append(ps, processors...)
 
 	start := time.Now()
-	ps = append(ps, func(req FSMLogEntry, res execute.Result) {
+	ps = append(ps, func(req FSMLogEntry, _ execute.NodeResult) {
 		// Global metrics handle.
 		metrics.MeasureSinceWithLabels(raftExecutionTimeMetric, start, []metrics.Label{{Name: "function", Value: req.Execute.FunctionID}})
 	})
@@ -50,7 +50,7 @@ func newFsmExecutor(log zerolog.Logger, executor blockless.Executor, processors 
 	return &fsm
 }
 
-func (f fsmExecutor) Apply(log *raft.Log) interface{} {
+func (f fsmExecutor) Apply(log *raft.Log) any {
 
 	f.log.Info().Msg("applying log entry")
 
@@ -70,9 +70,13 @@ func (f fsmExecutor) Apply(log *raft.Log) interface{} {
 		return fmt.Errorf("could not execute function: %w", err)
 	}
 
+	nres := execute.NodeResult{
+		Result: res,
+	}
+
 	// Execute processors.
 	for _, proc := range f.processors {
-		proc(logEntry, res)
+		proc(logEntry, nres)
 	}
 
 	f.log.Info().Str("request", logEntry.RequestID).Msg("FSM successfully executed function")

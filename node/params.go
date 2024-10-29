@@ -28,6 +28,8 @@ const (
 	syncInterval = time.Hour // How often do we recheck function installations.
 
 	allowErrorLeakToTelemetry = false // By default we will not send processing errors to telemetry tracers.
+
+	executionResultCacheSize = 1000
 )
 
 // Raft and consensus related parameters.

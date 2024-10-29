@@ -28,37 +28,34 @@ type consensusExecutor interface {
 
 func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.FormCluster) error {
 
-	// Add a callback function to cache the execution result
-	cacheFn := func(req raft.FSMLogEntry, res execute.Result) {
-		n.executeResponses.Set(req.RequestID, res)
-	}
-
 	// Add a callback function to send the execution result to origin.
-	sendFn := func(req raft.FSMLogEntry, res execute.Result) {
+	sendFn := func(req raft.FSMLogEntry, res execute.NodeResult) {
 
 		ctx, cancel := context.WithTimeout(context.Background(), consensusClusterSendTimeout)
 		defer cancel()
 
-		metadata, err := n.cfg.MetadataProvider.Metadata(req.Execute, res.Result)
+		metadata, err := n.cfg.MetadataProvider.Metadata(req.Execute, res.Result.Result)
 		if err != nil {
 			n.log.Warn().Err(err).Msg("could not get metadata")
 		}
 
+		res.Metadata = metadata
+
 		msg := response.Execute{
 			Code:      res.Code,
 			RequestID: req.RequestID,
-			Results: execute.ResultMap{
-				n.host.ID(): execute.NodeResult{
-					Result:   res,
-					Metadata: metadata,
-				},
-			},
+			Results:   singleNodeResultMap(n.host.ID(), res),
 		}
 
 		err = n.send(ctx, req.Origin, &msg)
 		if err != nil {
 			n.log.Error().Err(err).Str("peer", req.Origin.String()).Msg("could not send execution result to node")
 		}
+	}
+
+	// Add a callback function to cache the execution result
+	cacheFn := func(req raft.FSMLogEntry, res execute.NodeResult) {
+		n.executeResponses.Set(req.RequestID, singleNodeResultMap(n.host.ID(), res))
 	}
 
 	rh, err := raft.New(
@@ -88,8 +85,8 @@ func (n *Node) createRaftCluster(ctx context.Context, from peer.ID, fc request.F
 
 func (n *Node) createPBFTCluster(ctx context.Context, from peer.ID, fc request.FormCluster) error {
 
-	cacheFn := func(requestID string, origin peer.ID, request execute.Request, result execute.Result) {
-		n.executeResponses.Set(requestID, result)
+	cacheFn := func(requestID string, origin peer.ID, request execute.Request, result execute.NodeResult) {
+		n.executeResponses.Set(requestID, singleNodeResultMap(n.host.ID(), result))
 	}
 
 	// If we have tracing enabled we will have trace info in the context.

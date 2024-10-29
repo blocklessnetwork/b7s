@@ -193,7 +193,7 @@ This is the end of my program
 	// Wait for the installation request to be processed.
 	installWG.Wait()
 
-	t.Log("worker node installed function")
+	t.Log("worker nodes installed function")
 
 	// Phase 5: Request execution from the head node.
 
