@@ -19,7 +19,7 @@ Head Nodes also serve a REST API that can be used to query or trigger certain ac
 
 ## Usage
 
-There are two ways of specifying configuration options - the CLI flags and a config file.
+There are two main ways of specifying configuration options - the CLI flags and a config file.
 CLI flags override any configuration options in the config file.
 
 List of supported CLI flags is listed below.
@@ -43,11 +43,19 @@ Usage of b7s-node:
       --websocket-port uint            port to use for websocket connections
       --websocket-dialback-port uint   external port that the b7s host will advertise for websocket connections
       --no-dialback-peers              start without dialing back peers from previous runs
+      --must-reach-boot-nodes          halt node if we fail to reach boot nodes on start
+      --disable-connection-limits      disable libp2p connection limits (experimental)
+      --connection-count uint          maximum number of connections the b7s host will aim to have
       --rest-api string                address where the head node REST API will listen on
       --runtime-path string            Blockless Runtime location (used by the worker node)
       --runtime-cli string             runtime CLI name (used by the worker node)
       --cpu-percentage-limit float     amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited
       --memory-limit int               memory limit (kB) for Blockless Functions
+      --enable-tracing                 emit tracing data
+      --tracing-grpc-endpoint string   tracing exporter GRPC endpoint
+      --tracing-http-endpoint string   tracing exporter HTTP endpoint
+      --enable-metrics                 emit metrics
+      --prometheus-address string      address where prometheus metrics will be served
       --config string                  path to a config file
 ```
 
@@ -61,7 +69,7 @@ Example configuration for a worker node:
 role: worker
 concurrency: 10
 workspace: /tmp/workspace
-attributes: false
+load-attributes: false
 
 log:
   level: debug
@@ -76,6 +84,15 @@ connectivity:
 worker:
   runtime-path: /home/user/.local/blockless-runtime/bin
   cpu-percentage-limit: 0.8
+
+telemetry:
+  tracing:
+    enable: true
+    http:
+      endpoint:
+  metrics:
+    enable: true
+    prometeus-address: 0.0.0.0:8080
 
 ```
 
