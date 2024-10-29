@@ -37,7 +37,7 @@ For a more detailed overview of the configuration options, see the [b7s-node Rea
 | workspace                 | N/A        | "./workspace"           | Directory that the node will use for file storage.                                      |
 | concurrency               | -c         | node.DefaultConcurrency | Maximum number of requests the node will process in parallel.                           |
 | load-attributes           | N/A        | false                   | Load attributes from the environment.                                                   |
-| topics                    | N/A        | N/A                     | Topics that the node sould subscribe to.                                                |
+| topics                    | N/A        | N/A                     | Topics that the node should subscribe to.                                                |
 
 ### Connectivity
 
