@@ -3,7 +3,7 @@ package main
 import "fmt"
 import "github.com/blocklessnetwork/b7s/config"
 
-templ page(configs []config.ConfigOption) {
+templ page(version string, configs []config.ConfigOption) {
     <html>
         <head>
             <title>Blockless B7S Node Configuration</title>
@@ -12,16 +12,23 @@ templ page(configs []config.ConfigOption) {
         </head>
         <body>
             <h1>Blockless B7S Node Configuration</h1>
+
             <p>
                 This page lists all of the configuration options supported by the b7s daemon.
                 It showcases the configuration structure, as accepted in a YAML config file, environment variables that can be used to set those options and, where applicable, the CLI flags and their default values.
             </p>
 
             @b7sdocs(configs)
+
+            if version != "" {
+                <footer>
+                    <small>Node version: {version}</small>
+                </footer>
+            }
+
         </body>
     </html>
 }
-
 
 templ b7sdocs(configs []config.ConfigOption) {
 
