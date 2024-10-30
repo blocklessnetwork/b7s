@@ -2,8 +2,6 @@ package config
 
 import (
 	"time"
-
-	"github.com/blocklessnetwork/b7s/node"
 )
 
 // Default values.
@@ -11,7 +9,7 @@ const (
 	DefaultPort         = uint(0)
 	DefaultAddress      = "0.0.0.0"
 	DefaultRole         = "worker"
-	DefaultConcurrency  = uint(node.DefaultConcurrency)
+	DefaultConcurrency  = 10
 	DefaultUseWebsocket = false
 	DefaultLogLevel     = "info"
 )

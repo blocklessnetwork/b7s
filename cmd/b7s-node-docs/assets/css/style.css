@@ -13,11 +13,6 @@ h1 {
     margin-bottom: 20px;
 }
 
-h3 {
-    color: #666;
-    margin-top: 20px;
-}
-
 ul {
     list-style-type: none;
     padding: 0;
@@ -28,7 +23,11 @@ li {
     padding: 20px;
 }
 
-li.cfg {
+div.cfg-list {
+    padding: 0;
+}
+
+div.cfg {
    background-color: #fff;
    border-radius: 15px;
    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -56,13 +55,17 @@ li.cli {
     margin-left: 20px;
 }
 
-h3 {
+h2 {
     color: #333;
     margin-top: 0;
 }
 
 p {
     margin: 5px 0;
+}
+
+p.description {
+    margin: 10px 10px;
 }
 
 dl {

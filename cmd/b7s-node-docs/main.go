@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"embed"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/a-h/templ"
 	"github.com/spf13/pflag"
 
@@ -21,12 +23,14 @@ var assets embed.FS
 func main() {
 
 	var (
-		flagAddress string
-		flagOutput  string
-		flagEmbed   bool
+		flagAddress  string
+		flagOutput   string
+		flagMarkdown bool
+		flagEmbed    bool
 	)
 	pflag.StringVarP(&flagAddress, "address", "a", "127.0.0.1:8080", "address to serve on")
 	pflag.StringVarP(&flagOutput, "output", "o", "", "output file to write the documentation to")
+	pflag.BoolVarP(&flagMarkdown, "markdown", "m", false, "use markdown instead of HTML for the output file")
 	pflag.BoolVarP(&flagEmbed, "embed", "e", true, "use embedded files for assets")
 	pflag.Parse()
 
@@ -40,9 +44,27 @@ func main() {
 			log.Fatalf("could not open file: %s", err)
 		}
 
-		err = component.Render(context.Background(), f)
+		buf := new(bytes.Buffer)
+		err = component.Render(context.Background(), buf)
 		if err != nil {
 			log.Fatalf("could not render component: %s", err)
+		}
+
+		if flagMarkdown {
+
+			converter := md.NewConverter("", true, nil)
+
+			markdown, err := converter.ConvertString(buf.String())
+			if err != nil {
+				log.Fatalf("could not convert to markdown: %s", err)
+			}
+
+			buf = bytes.NewBufferString(markdown)
+		}
+
+		_, err = buf.WriteTo(f)
+		if err != nil {
+			log.Fatalf("could not write to file: %s", err)
 		}
 
 		f.Close()

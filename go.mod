@@ -3,6 +3,7 @@ module github.com/blocklessnetwork/b7s
 go 1.23.2
 
 require (
+	github.com/JohannesKaufmann/html-to-markdown v1.6.0
 	github.com/Microsoft/go-winio v0.6.1
 	github.com/a-h/templ v0.2.778
 	github.com/armon/go-metrics v0.4.1
@@ -50,6 +51,8 @@ require (
 )
 
 require (
+	github.com/PuerkitoBio/goquery v1.9.2 // indirect
+	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cilium/ebpf v0.16.0 // indirect
@@ -152,7 +155,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/golang-lru v1.0.2 // indirect
+	github.com/hashicorp/golang-lru v1.0.2
 	github.com/huin/goupnp v1.3.0 // indirect
 	github.com/ipfs/go-cid v0.4.1 // indirect
 	github.com/ipfs/go-datastore v0.6.0 // indirect

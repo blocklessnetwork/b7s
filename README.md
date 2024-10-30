@@ -24,9 +24,10 @@ You can also use Docker to install b7s. See the [Docker documentation](/docker/R
 
 ## Usage
 
-For a more detailed overview of the configuration options, see the [b7s-node Readme](/cmd/node/README.md#usage).
+For a more detailed overview of the node options and their meaning see [b7s-node Readme](/cmd/node/README.md#usage).
+You can see an example YAML config file [here](/cmd/node/example.yaml).
 
-### General
+### General Flags
 
 | Flag                      | Short Form | Default Value           | Description                                                                             |
 | ------------------------- | ---------- | ----------------------- | --------------------------------------------------------------------------------------- |
