@@ -18,14 +18,17 @@ import (
 var _ (blockless.Executor) = (*executor)(nil)
 
 type executor struct {
-	log      zerolog.Logger
+	log zerolog.Logger
+
+	runtime  string
 	overseer *Overseer
 }
 
-func CreateExecutor(overseer *Overseer) blockless.Executor {
+func CreateExecutor(overseer *Overseer, runtime string) blockless.Executor {
 
 	exec := &executor{
 		log:      overseer.log,
+		runtime:  runtime,
 		overseer: overseer,
 	}
 
@@ -34,9 +37,7 @@ func CreateExecutor(overseer *Overseer) blockless.Executor {
 
 func (e *executor) ExecuteFunction(ctx context.Context, requestID string, req execute.Request) (execute.Result, error) {
 
-	// TODO: Runtime
-	var runtime string
-	job := createJob(runtime, req)
+	job := createJob(e.runtime, req)
 	state, err := e.overseer.Run(job)
 	if err != nil {
 		e.log.Error().Err(err).Msg("job run failed")
@@ -78,11 +79,10 @@ func createJob(runtime string, req execute.Request) job.Job {
 
 	job := job.Job{
 		Exec: job.Command{
-			// TODO: Workdir handle.
-			// WorkDir: req.Config.Runtime.Workdir,
-			Path: runtime,
-			Args: createArgs(req),
-			Env:  createEnv(req),
+			WorkDir: "", // NOTE: Overseer will set it.
+			Path:    runtime,
+			Args:    createArgs(req),
+			Env:     createEnv(req),
 		},
 		Stdin: stdin,
 	}

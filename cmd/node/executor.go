@@ -5,9 +5,9 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/Maelkum/limits/limits"
 	"github.com/blocklessnetwork/b7s/config"
 	"github.com/blocklessnetwork/b7s/execution/executor"
-	"github.com/blocklessnetwork/b7s/execution/limits"
 	"github.com/blocklessnetwork/b7s/execution/overseer"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 )
@@ -24,11 +24,10 @@ func createExecutor(log zerolog.Logger, cfg config.Config) (blockless.Executor, 
 
 		var err error
 		limiter, err = limits.New(
-			log,
-			cfg.Worker.CgroupMountpoint,
-			cfg.Worker.CgroupName,
-			limits.WithCPUPercentage(cfg.Worker.CPUPercentageLimit),
-			limits.WithMemoryKB(cfg.Worker.MemoryLimitKB),
+			limits.WithGlobalLimits(
+				limits.MaxCPU(cfg.Worker.CPUPercentageLimit),
+				limits.MaxMemory(cfg.Worker.MemoryLimitKB),
+			),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("could not create limiter: %w", err)
@@ -74,7 +73,7 @@ func createExecutor(log zerolog.Logger, cfg config.Config) (blockless.Executor, 
 		return nil, fmt.Errorf("could not create overseer: %w", err)
 	}
 
-	executor := overseer.CreateExecutor(ov)
+	executor := overseer.CreateExecutor(ov, cfg.Worker.RuntimePath)
 
 	return executor, nil
 }

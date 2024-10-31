@@ -13,7 +13,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/google/uuid"
 
-	"github.com/blocklessnetwork/b7s/execution/limits"
+	"github.com/Maelkum/limits/limits"
 	"github.com/blocklessnetwork/b7s/execution/overseer/job"
 )
 
@@ -136,7 +136,7 @@ func (o *Overseer) startJob(id string, job job.Job) (*handle, error) {
 	return &handle, nil
 }
 
-func (o *Overseer) prepareJob(id string, job job.Job) error {
+func (o *Overseer) prepareJob(id string, _ job.Job) error {
 
 	workdir := o.workdir(id)
 	err := o.cfg.FS.MkdirAll(workdir, defaultFSPermissions)
@@ -188,12 +188,10 @@ func (o *Overseer) createCmd(id string, execJob *job.Job) (*exec.Cmd, error) {
 		} else {
 
 			opts := getLimitOpts(*jobLimits)
-			err = o.cfg.Limiter.CreateGroup(id, opts...)
+			fd, err = o.cfg.Limiter.CreateGroup(id, opts...)
 			if err != nil {
 				return nil, fmt.Errorf("could not create limit group for job: %w", err)
 			}
-
-			fd, err = o.cfg.Limiter.GetGroupHandle(id)
 		}
 
 		if err != nil {
@@ -227,16 +225,17 @@ func getLimitOpts(jobLimits job.Limits) []limits.LimitOption {
 
 	var opts []limits.LimitOption
 	if jobLimits.CPUPercentage > 0 {
-		opts = append(opts, limits.WithCPUPercentage(jobLimits.CPUPercentage))
+		opts = append(opts, limits.MaxCPU(jobLimits.CPUPercentage))
 	}
 
 	if jobLimits.MemoryLimitKB > 0 {
-		opts = append(opts, limits.WithMemoryKB(int64(jobLimits.MemoryLimitKB)))
+		opts = append(opts, limits.MaxMemory(int64(jobLimits.MemoryLimitKB)))
 	}
 
-	if jobLimits.NoExec {
-		opts = append(opts, limits.WithProcLimit(1))
-	}
+	// TODO: Removed for now.
+	// if jobLimits.NoExec {
+	// 	opts = append(opts, limits.WithProcLimit(1))
+	// }
 
 	return opts
 }

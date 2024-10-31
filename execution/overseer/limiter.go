@@ -1,11 +1,11 @@
 package overseer
 
 import (
-	"github.com/blocklessnetwork/b7s/execution/limits"
+	"github.com/Maelkum/limits/limits"
 )
 
 type Limiter interface {
-	CreateGroup(id string, opts ...limits.LimitOption) error
+	CreateGroup(name string, opts ...limits.LimitOption) (uintptr, error)
 	GetGroupHandle(id string) (uintptr, error)
 	AssignProcessToGroup(pid uint64, groupID string) error
 	DeleteGroup(id string) error

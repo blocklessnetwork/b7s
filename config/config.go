@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/blocklessnetwork/b7s/execution/limits"
+	"github.com/Maelkum/limits/limits"
 	"github.com/blocklessnetwork/b7s/node"
 )
 

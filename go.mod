@@ -1,6 +1,6 @@
 module github.com/blocklessnetwork/b7s
 
-go 1.22.0
+go 1.23.2
 
 require (
 	github.com/Microsoft/go-winio v0.6.2
@@ -51,6 +51,7 @@ require (
 )
 
 require (
+	github.com/Maelkum/limits v0.0.0-20241023181721-d6e95b4d5752 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cilium/ebpf v0.16.0 // indirect
