@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/blocklessnetwork/b7s/config"
+	"github.com/blocklessnetwork/b7s/info"
 )
 
 //go:embed assets/*
@@ -30,7 +31,7 @@ func main() {
 	pflag.Parse()
 
 	configs := config.GetConfigDocumentation()
-	component := page(configs)
+	component := page(info.VcsVersion(), configs)
 
 	if flagOutput != "" {
 
@@ -44,7 +45,10 @@ func main() {
 			log.Fatalf("could not render component: %s", err)
 		}
 
-		f.Close()
+		err = f.Close()
+		if err != nil {
+			log.Fatalf("could not close file: %s", err)
+		}
 		return
 	}
 

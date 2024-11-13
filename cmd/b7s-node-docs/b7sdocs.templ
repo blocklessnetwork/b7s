@@ -3,7 +3,7 @@ package main
 import "fmt"
 import "github.com/blocklessnetwork/b7s/config"
 
-templ page(configs []config.ConfigOption) {
+templ page(version string, configs []config.ConfigOption) {
     <html>
         <head>
             <title>Blockless B7S Node Configuration</title>
@@ -12,26 +12,33 @@ templ page(configs []config.ConfigOption) {
         </head>
         <body>
             <h1>Blockless B7S Node Configuration</h1>
-            <p>
+
+            <p class="description">
                 This page lists all of the configuration options supported by the b7s daemon.
                 It showcases the configuration structure, as accepted in a YAML config file, environment variables that can be used to set those options and, where applicable, the CLI flags and their default values.
             </p>
 
             @b7sdocs(configs)
+
+            if version != "" {
+                <footer>
+                    <small>Node version: {version}</small>
+                </footer>
+            }
+
         </body>
     </html>
 }
 
-
 templ b7sdocs(configs []config.ConfigOption) {
 
-    <ul>
-    for _, cfg := range configs {
-        <li class="cfg">
-            @configOption(cfg) 
-        </li>      
-    }
-    </ul>
+    <div class="cfg-list">
+        for _, cfg := range configs {
+            <div class="cfg">
+                @configOption(cfg) 
+            </div>      
+        }
+    </div>
 }
 
 func formatCLIDefault(def any) string {
@@ -45,7 +52,7 @@ func formatCLIDefault(def any) string {
 
 templ configOption(cfg config.ConfigOption) {
 
-    <h3 id={cfg.FullPath}>{cfg.Name} <a class="link-icon" href={ templ.URL(fmt.Sprintf("#%s", cfg.FullPath)) }><span >&#128279;</span></a></h3>
+    <h2 id={cfg.FullPath}>{cfg.Name} <a class="link-icon" href={ templ.URL(fmt.Sprintf("#%s", cfg.FullPath)) }><span >&#128279;</span></a></h2>
     
     if cfg.Type() != "" {
         <p>Type: {cfg.Type()}</p>

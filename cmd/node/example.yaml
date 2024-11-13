@@ -14,7 +14,10 @@
 # boot-nodes: []
 
 # should the node load its attributes from IPFS/IPNS
-# attributes: false
+# load-attributes: false
+
+# topics this node should subscribe to
+# topics: []
 
 # log information
 # log:
@@ -45,6 +48,18 @@
   # external port the node will advertise for websocket communication
   # websocket-dialback-port: 9010
 
+  # do not dial back peers known from past runs
+  # no-dialback-peers: false
+
+  # halt if the node cannot reach boot nodes
+  # must-reach-dialback-peers: false
+
+  # try to maintain as many connections as possible (useful for head nodes that need to be connected to many workers)
+  # disablle-connection-limits: false
+
+  # number of connections node will aim to have
+  # connection-count: 512
+
 
 # head node configuration
 # head:
@@ -56,8 +71,37 @@
   # local path to Blockless Runtime
   # runtime-path: /path/to/blockless/runtime
 
+  # name of the Runtime executable
+  # runtime-cli: bls-runtime
+
   # max percentage of CPU time Blockless will use for execution (1.0 for 100%)
   # cpu-percentage-limit: 1.0
 
   # max amount of memory (in kB) Blockless will use for execution (0 is unlimited)
   # memory-limit: 0
+
+# telemetry:
+  # tracing:
+    # should node emit tracing information
+    # enable: false
+
+    # how often should tracing information be sent
+    # exporter-batch-timeout: 5s
+
+    # configuration for tracing over GRPC
+    # grpc:
+      # endpoint where tracing data will be sent over GRPC.
+      # endpoint: localhost:4317
+
+    # configuration for tracing over HTTP
+    # http:
+      # endpoint where tracing data will be sent over HTTP.
+      # endpoint: localhost:4318
+
+  # metrics:
+    # should node publish metrics
+    # enable: false
+
+    # address where node should serve metrics on
+    # prometheus-address: localhost:8888
+
