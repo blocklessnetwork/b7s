@@ -173,10 +173,10 @@ func TestNode_InstallFunction(t *testing.T) {
 		hostAddNewPeer(t, node.host, receiver)
 
 		fstore := mocks.BaselineFStore(t)
-		fstore.InstalledFunc = func(string) (bool, error) {
+		fstore.IsInstalledFunc = func(string) (bool, error) {
 			return false, nil
 		}
-		fstore.InstallFunc = func(string, string) error {
+		fstore.InstallFunc = func(context.Context, string, string) error {
 			return mocks.GenericError
 		}
 		node.fstore = fstore

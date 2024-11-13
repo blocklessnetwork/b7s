@@ -1,12 +1,13 @@
 package pbft
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-func (r *Replica) maybeSendCommit(view uint, sequenceNo uint, digest string) error {
+func (r *Replica) maybeSendCommit(ctx context.Context, view uint, sequenceNo uint, digest string) error {
 
 	log := r.log.With().Uint("view", view).Uint("sequence_number", sequenceNo).Str("digest", digest).Logger()
 
@@ -17,7 +18,7 @@ func (r *Replica) maybeSendCommit(view uint, sequenceNo uint, digest string) err
 
 	log.Info().Msg("request prepared, broadcasting commit")
 
-	err := r.sendCommit(view, sequenceNo, digest)
+	err := r.sendCommit(ctx, view, sequenceNo, digest)
 	if err != nil {
 		return fmt.Errorf("could not send commit message: %w", err)
 	}
@@ -29,7 +30,7 @@ func (r *Replica) maybeSendCommit(view uint, sequenceNo uint, digest string) err
 
 	log.Info().Msg("request committed, executing")
 
-	return r.execute(view, sequenceNo, digest)
+	return r.execute(ctx, view, sequenceNo, digest)
 }
 
 func (r *Replica) shouldSendCommit(view uint, sequenceNo uint, digest string) bool {
@@ -55,7 +56,7 @@ func (r *Replica) shouldSendCommit(view uint, sequenceNo uint, digest string) bo
 	return true
 }
 
-func (r *Replica) sendCommit(view uint, sequenceNo uint, digest string) error {
+func (r *Replica) sendCommit(ctx context.Context, view uint, sequenceNo uint, digest string) error {
 
 	log := r.log.With().Uint("view", view).Uint("sequence_number", sequenceNo).Str("digest", digest).Logger()
 
@@ -72,7 +73,7 @@ func (r *Replica) sendCommit(view uint, sequenceNo uint, digest string) error {
 		return fmt.Errorf("could not sign commit message: %w", err)
 	}
 
-	err = r.broadcast(commit)
+	err = r.broadcast(ctx, &commit)
 	if err != nil {
 		return fmt.Errorf("could not broadcast commit message: %w", err)
 	}
@@ -85,7 +86,7 @@ func (r *Replica) sendCommit(view uint, sequenceNo uint, digest string) error {
 	return nil
 }
 
-func (r *Replica) processCommit(replica peer.ID, commit Commit) error {
+func (r *Replica) processCommit(ctx context.Context, replica peer.ID, commit Commit) error {
 
 	log := r.log.With().Str("replica", replica.String()).Uint("view", commit.View).Uint("sequence_no", commit.SequenceNumber).Str("digest", commit.Digest).Logger()
 
@@ -107,7 +108,7 @@ func (r *Replica) processCommit(replica peer.ID, commit Commit) error {
 		return nil
 	}
 
-	err = r.execute(commit.View, commit.SequenceNumber, commit.Digest)
+	err = r.execute(ctx, commit.View, commit.SequenceNumber, commit.Digest)
 	if err != nil {
 		return fmt.Errorf("request execution failed: %w", err)
 

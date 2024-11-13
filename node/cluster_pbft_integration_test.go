@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
@@ -43,9 +44,11 @@ This is the end of my program
 `
 	)
 
-	cleanupDisabled := cleanupDisabled()
-
-	var verifiedExecution bool
+	var (
+		cleanupDisabled   = cleanupDisabled()
+		verifiedExecution bool
+		requestID         = uuid.New().String()
+	)
 
 	t.Log("starting test")
 
@@ -229,7 +232,7 @@ This is the end of my program
 		verifiedExecution = true
 	})
 
-	err := client.sendExecutionMessage(ctx, head.host.ID(), cid, functionMethod, consensus.PBFT, len(workers))
+	err := client.sendExecutionMessage(ctx, head.host.ID(), requestID, cid, functionMethod, consensus.PBFT, len(workers))
 	require.NoError(t, err)
 
 	executeWG.Wait()

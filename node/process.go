@@ -5,19 +5,55 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
+	otelcodes "go.opentelemetry.io/otel/codes"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blocklessnetwork/b7s/node/internal/pipeline"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // processMessage will determine which message was received and how to process it.
-func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline messagePipeline) error {
+func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline pipeline.Pipeline) (procError error) {
 
 	// Determine message type.
 	msgType, err := getMessageType(payload)
 	if err != nil {
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
+
+	n.metrics.IncrCounterWithLabels(messagesProcessedMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+	defer func() {
+		switch procError {
+		case nil:
+			n.metrics.IncrCounterWithLabels(messagesProcessedOkMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+		default:
+			n.metrics.IncrCounterWithLabels(messagesProcessedErrMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
+		}
+	}()
+
+	ctx, err = tracing.TraceContextFromMessage(ctx, payload)
+	if err != nil {
+		n.log.Error().Err(err).Msg("could not get trace context from message")
+	}
+
+	ctx, span := n.tracer.Start(ctx, msgProcessSpanName(msgType), msgProcessSpanOpts(from, msgType, pipeline)...)
+	defer span.End()
+	// NOTE: This function checks the named return error value in order to set the span status accordingly.
+	defer func() {
+		if procError == nil {
+			span.SetStatus(otelcodes.Ok, spanStatusOK)
+			return
+		}
+
+		if allowErrorLeakToTelemetry {
+			span.SetStatus(otelcodes.Error, procError.Error())
+			return
+		}
+
+		span.SetStatus(otelcodes.Error, spanStatusErr)
+	}()
 
 	log := n.log.With().Str("peer", from.String()).Str("type", msgType).Str("pipeline", pipeline.String()).Logger()
 

@@ -1,10 +1,13 @@
 package raft
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/hashicorp/raft"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
@@ -32,6 +35,12 @@ func newFsmExecutor(log zerolog.Logger, executor blockless.Executor, processors 
 	ps := make([]FSMProcessFunc, 0, len(processors))
 	ps = append(ps, processors...)
 
+	start := time.Now()
+	ps = append(ps, func(req FSMLogEntry, res execute.Result) {
+		// Global metrics handle.
+		metrics.MeasureSinceWithLabels(raftExecutionTimeMetric, start, []metrics.Label{{Name: "function", Value: req.Execute.FunctionID}})
+	})
+
 	fsm := fsmExecutor{
 		log:        log.With().Str("module", "fsm").Logger(),
 		executor:   executor,
@@ -56,7 +65,7 @@ func (f fsmExecutor) Apply(log *raft.Log) interface{} {
 
 	f.log.Info().Str("request", logEntry.RequestID).Str("function", logEntry.Execute.FunctionID).Msg("FSM executing function")
 
-	res, err := f.executor.ExecuteFunction(logEntry.RequestID, logEntry.Execute)
+	res, err := f.executor.ExecuteFunction(context.Background(), logEntry.RequestID, logEntry.Execute)
 	if err != nil {
 		return fmt.Errorf("could not execute function: %w", err)
 	}

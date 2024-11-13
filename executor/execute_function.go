@@ -1,14 +1,43 @@
 package executor
 
 import (
+	"context"
 	"fmt"
+	"time"
+
+	"github.com/armon/go-metrics"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
 
 // ExecuteFunction will run the Blockless function defined by the execution request.
-func (e *Executor) ExecuteFunction(requestID string, req execute.Request) (execute.Result, error) {
+func (e *Executor) ExecuteFunction(ctx context.Context, requestID string, req execute.Request) (result execute.Result, retErr error) {
+
+	ml := []metrics.Label{{Name: "function", Value: req.FunctionID}}
+	e.metrics.IncrCounterWithLabels(functionExecutionsMetric, 1, ml)
+
+	defer e.metrics.MeasureSinceWithLabels(functionDurationMetric, time.Now(), ml)
+
+	defer func() {
+
+		e.metrics.IncrCounter(functionCPUUserTimeMetric, float32(result.Usage.CPUUserTime.Milliseconds()))
+		e.metrics.IncrCounter(functionCPUSysTimeMetric, float32(result.Usage.CPUSysTime.Milliseconds()))
+
+		switch retErr {
+		case nil:
+			e.metrics.IncrCounterWithLabels(functionOkMetric, 1, ml)
+		default:
+			e.metrics.IncrCounterWithLabels(functionErrMetric, 1, ml)
+		}
+	}()
+
+	_, span := e.tracer.Start(ctx, "ExecuteFunction",
+		trace.WithSpanKind(trace.SpanKindClient),
+		trace.WithAttributes(tracing.ExecutionAttributes(requestID, req)...))
+	defer span.End()
 
 	// Execute the function.
 	out, usage, err := e.executeFunction(requestID, req)

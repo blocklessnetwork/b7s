@@ -11,6 +11,7 @@ var _ (json.Marshaler) = (*InstallFunction)(nil)
 
 // InstallFunction describes the response to the `MessageInstallFunction` message.
 type InstallFunction struct {
+	blockless.BaseMessage
 	Code    codes.Code `json:"code,omitempty"`
 	Message string     `json:"message,omitempty"`
 	CID     string     `json:"cid,omitempty"`

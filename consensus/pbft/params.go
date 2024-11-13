@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/armon/go-metrics/prometheus"
 	"github.com/libp2p/go-libp2p/core/protocol"
 )
 
@@ -21,6 +22,10 @@ const (
 	RequestTimeout = 10 * time.Second
 
 	EnvVarByzantine = "B7S_PBFT_BYZANTINE"
+
+	tracerName = "b7s.PBFTCluster"
+
+	allowErrorLeakToTelemetry = false // By default we will not send processing errors to telemetry tracers.
 )
 
 var (
@@ -33,3 +38,20 @@ var (
 var (
 	NullRequest = Request{}
 )
+
+// Tracing span status messages.
+const (
+	spanStatusOK  = "message processed ok"
+	spanStatusErr = "error processing message"
+)
+
+var (
+	pbftExecutionsTimeMetric = []string{"pbft", "execute", "milliseconds"}
+)
+
+var Summaries = []prometheus.SummaryDefinition{
+	{
+		Name: pbftExecutionsTimeMetric,
+		Help: "Time needed to reach pBFT consensus.",
+	},
+}

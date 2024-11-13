@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/blocklessnetwork/b7s/node"
 )
 
@@ -50,6 +52,7 @@ type Config struct {
 	Connectivity Connectivity `koanf:"connectivity"`
 	Head         Head         `koanf:"head"`
 	Worker       Worker       `koanf:"worker"`
+	Telemetry    Telemetry    `koanf:"telemetry"`
 }
 
 // Log describes the logging configuration.
@@ -70,6 +73,7 @@ type Connectivity struct {
 	NoDialbackPeers         bool   `koanf:"no-dialback-peers"         flag:"no-dialback-peers"`
 	MustReachBootNodes      bool   `koanf:"must-reach-boot-nodes"     flag:"must-reach-boot-nodes"`
 	DisableConnectionLimits bool   `koanf:"disable-connection-limits" flag:"disable-connection-limits"`
+	ConnectionCount         uint   `koanf:"connection-count"          flag:"connection-count"`
 }
 
 type Head struct {
@@ -81,6 +85,31 @@ type Worker struct {
 	RuntimeCLI         string  `koanf:"runtime-cli"          flag:"runtime-cli"`
 	CPUPercentageLimit float64 `koanf:"cpu-percentage-limit" flag:"cpu-percentage-limit"`
 	MemoryLimitKB      int64   `koanf:"memory-limit"         flag:"memory-limit"`
+}
+
+type Telemetry struct {
+	Tracing Tracing `koanf:"tracing"`
+	Metrics Metrics `koanf:"metrics"`
+}
+
+type Tracing struct {
+	Enable               bool          `koanf:"enable" flag:"enable-tracing"`
+	ExporterBatchTimeout time.Duration `koanf:"exporter-batch-timeout"`
+	GRPC                 GRPCTracing   `koanf:"grpc"`
+	HTTP                 HTTPTracing   `koanf:"http"`
+}
+
+type GRPCTracing struct {
+	Endpoint string `koanf:"endpoint" flag:"tracing-grpc-endpoint"`
+}
+
+type HTTPTracing struct {
+	Endpoint string `koanf:"endpoint" flag:"tracing-http-endpoint"`
+}
+
+type Metrics struct {
+	Enable            bool   `koanf:"enable" flag:"enable-metrics"`
+	PrometheusAddress string `koanf:"prometheus-address" flag:"prometheus-address"`
 }
 
 // ConfigOptionInfo describes a specific configuration option, it's location in the config file and
@@ -129,6 +158,8 @@ func getFlagDescription(flag string) string {
 		return "port to use for websocket connections"
 	case "websocket-dialback-port":
 		return "external port that the b7s host will advertise for websocket connections"
+	case "connection-count":
+		return "maximum number of connections the b7s host will aim to have"
 	case "rest-api":
 		return "address where the head node REST API will listen on"
 	case "runtime-path":
@@ -145,6 +176,16 @@ func getFlagDescription(flag string) string {
 		return "halt node if we fail to reach boot nodes on start"
 	case "disable-connection-limits":
 		return "disable libp2p connection limits (experimental)"
+	case "enable-tracing":
+		return "emit tracing data"
+	case "enable-metrics":
+		return "emit metrics"
+	case "tracing-grpc-endpoint":
+		return "tracing exporter GRPC endpoint"
+	case "tracing-http-endpoint":
+		return "tracing exporter HTTP endpoint"
+	case "prometheus-address":
+		return "address where prometheus metrics will be served"
 	default:
 		return ""
 	}

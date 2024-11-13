@@ -17,6 +17,7 @@ var defaultConfig = Config{
 	Websocket:                          false,
 	BootNodesReachabilityCheckInterval: 1 * time.Minute,
 	MustReachBootNodes:                 defaultMustReachBootNodes,
+	EnableP2PRelay:                     false,
 }
 
 // Config represents the Host configuration.
@@ -28,6 +29,7 @@ type Config struct {
 	DialBackPeers       []blockless.Peer
 	DialBackPeersLimit  uint
 	DiscoveryInterval   time.Duration
+	ConnectionLimit     uint
 
 	Websocket     bool
 	WebsocketPort uint
@@ -39,6 +41,7 @@ type Config struct {
 	BootNodesReachabilityCheckInterval time.Duration
 	MustReachBootNodes                 bool
 	DisableResourceLimits              bool
+	EnableP2PRelay                     bool
 }
 
 // WithPrivateKey specifies the private key for the Host.
@@ -134,5 +137,20 @@ func WithBootNodesReachabilityInterval(d time.Duration) func(cfg *Config) {
 func WithDisabledResourceLimits(b bool) func(cfg *Config) {
 	return func(cfg *Config) {
 		cfg.DisableResourceLimits = b
+	}
+}
+
+// EnableP2PRelay allows user to control whether the b7s can act as a p2p relayer for worker nodes
+func WithEnableP2PRelay(b bool) func(cfg *Config) {
+	return func(cfg *Config) {
+		cfg.EnableP2PRelay = b
+	}
+}
+
+// WithConnectionLimit will specify the connection count threshold.
+// We allow this limit to be surpassed by 20% before trimming back to this limit.
+func WithConnectionLimit(n uint) func(cfg *Config) {
+	return func(cfg *Config) {
+		cfg.ConnectionLimit = n
 	}
 }

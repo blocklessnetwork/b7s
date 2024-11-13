@@ -2,6 +2,7 @@ package fstore_test
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -31,6 +32,7 @@ func TestFunction_Install(t *testing.T) {
 
 		testCID = "dummy-cid"
 	)
+	ctx := context.Background()
 
 	workdir, err := os.MkdirTemp("", "b7s-function-get-")
 	require.NoError(t, err)
@@ -51,14 +53,19 @@ func TestFunction_Install(t *testing.T) {
 
 	t.Run("function install works", func(t *testing.T) {
 
-		_, err = fh.Get(testCID)
-		require.ErrorIs(t, err, blockless.ErrNotFound)
+		installed, err := fh.IsInstalled(testCID)
+		require.NoError(t, err)
+		require.False(t, installed)
 
 		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
-		err = fh.Install(address, testCID)
+		err = fh.Install(ctx, address, testCID)
 		require.NoError(t, err)
 
-		function, err := fh.Get(testCID)
+		installed, err = fh.IsInstalled(testCID)
+		require.NoError(t, err)
+		require.True(t, installed)
+
+		function, err := fh.Get(ctx, testCID)
 		require.NoError(t, err)
 
 		// Verify downloaded file.
@@ -70,7 +77,7 @@ func TestFunction_Install(t *testing.T) {
 	})
 	t.Run("function installation info ok", func(t *testing.T) {
 
-		ok, err := fh.Installed(testCID)
+		ok, err := fh.IsInstalled(testCID)
 		require.NoError(t, err)
 
 		require.True(t, ok, "function installation info incorrect")
@@ -80,7 +87,7 @@ func TestFunction_Install(t *testing.T) {
 		err = os.RemoveAll(workdir)
 		require.NoError(t, err)
 
-		ok, err := fh.Installed(testCID)
+		ok, err := fh.IsInstalled(testCID)
 		require.NoError(t, err)
 
 		require.False(t, ok, "function installation info incorrect")
@@ -96,6 +103,7 @@ func TestFunction_InstallHandlesErrors(t *testing.T) {
 
 		testCID = "dummy-cid"
 	)
+	ctx := context.Background()
 
 	functionPayload, err := os.ReadFile(testFile)
 	require.NoError(t, err)
@@ -112,14 +120,14 @@ func TestFunction_InstallHandlesErrors(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := mocks.BaselineStore(t)
-		store.SaveFunctionFunc = func(blockless.FunctionRecord) error {
+		store.SaveFunctionFunc = func(context.Context, blockless.FunctionRecord) error {
 			return mocks.GenericError
 		}
 
 		fh := fstore.New(mocks.NoopLogger, store, workdir)
 
 		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
-		err = fh.Install(address, testCID)
+		err = fh.Install(ctx, address, testCID)
 		require.NoError(t, err)
 	})
 	t.Run("handles failure to download function", func(t *testing.T) {
@@ -135,7 +143,7 @@ func TestFunction_InstallHandlesErrors(t *testing.T) {
 		fh := fstore.New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
-		err = fh.Install(address, testCID)
+		err = fh.Install(context.Background(), address, testCID)
 		require.Error(t, err)
 	})
 	t.Run("handles failure to fetch manifest", func(t *testing.T) {
@@ -151,7 +159,7 @@ func TestFunction_InstallHandlesErrors(t *testing.T) {
 		fh := fstore.New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
 		address := fmt.Sprintf("%s/%v", msrv.URL, manifestURL)
-		err = fh.Install(address, testCID)
+		err = fh.Install(context.Background(), address, testCID)
 		require.Error(t, err)
 	})
 }
@@ -171,13 +179,13 @@ func TestFunction_InstalledHandlesError(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := mocks.BaselineStore(t)
-		store.RetrieveFunctionFunc = func(string) (blockless.FunctionRecord, error) {
+		store.RetrieveFunctionFunc = func(context.Context, string) (blockless.FunctionRecord, error) {
 			return blockless.FunctionRecord{}, mocks.GenericError
 		}
 
 		fh := fstore.New(mocks.NoopLogger, store, workdir)
 
-		_, err = fh.Installed(testCID)
+		_, err = fh.IsInstalled(testCID)
 		require.Error(t, err)
 	})
 	t.Run("installed handles non installed function", func(t *testing.T) {
@@ -193,13 +201,13 @@ func TestFunction_InstalledHandlesError(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := mocks.BaselineStore(t)
-		store.RetrieveFunctionFunc = func(string) (blockless.FunctionRecord, error) {
+		store.RetrieveFunctionFunc = func(context.Context, string) (blockless.FunctionRecord, error) {
 			return blockless.FunctionRecord{}, blockless.ErrNotFound
 		}
 
 		fh := fstore.New(mocks.NoopLogger, store, workdir)
 
-		ok, err := fh.Installed(testCID)
+		ok, err := fh.IsInstalled(testCID)
 		require.NoError(t, err)
 		require.False(t, ok)
 	})

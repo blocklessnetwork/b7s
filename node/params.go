@@ -26,6 +26,8 @@ const (
 	defaultExecutionThreshold = 0.6
 
 	syncInterval = time.Hour // How often do we recheck function installations.
+
+	allowErrorLeakToTelemetry = false // By default we will not send processing errors to telemetry tracers.
 )
 
 // Raft and consensus related parameters.

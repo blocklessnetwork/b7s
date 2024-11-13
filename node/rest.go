@@ -17,11 +17,7 @@ func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request, subgrou
 		return codes.NotAvailable, "", nil, execute.Cluster{}, fmt.Errorf("action not supported on this node type")
 	}
 
-	requestID, err := newRequestID()
-	if err != nil {
-		return codes.Error, "", nil, execute.Cluster{}, fmt.Errorf("could not generate request ID: %w", err)
-	}
-
+	requestID := newRequestID()
 	code, results, cluster, err := n.headExecute(ctx, requestID, req, subgroup)
 	if err != nil {
 		n.log.Error().Str("request", requestID).Err(err).Msg("execution failed")
@@ -56,7 +52,7 @@ func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid strin
 
 	n.log.Debug().Str("subgroup", subgroup).Str("url", req.ManifestURL).Str("cid", req.CID).Msg("publishing function install message")
 
-	err := n.publishToTopic(ctx, subgroup, req)
+	err := n.publishToTopic(ctx, subgroup, &req)
 	if err != nil {
 		return fmt.Errorf("could not publish message: %w", err)
 	}
