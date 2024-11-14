@@ -146,12 +146,12 @@ func handleMessage[T blockless.Message](ctx context.Context, from peer.ID, paylo
 
 	// If the message provides a validation mechanism - use it.
 	type validator interface {
-		Validate() error
+		Valid() error
 	}
 
 	vmsg, ok := any(msg).(validator)
 	if ok {
-		err = vmsg.Validate()
+		err = vmsg.Valid()
 		if err != nil {
 			return fmt.Errorf("rejecting message that failed validation: %w", err)
 		}

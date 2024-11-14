@@ -22,11 +22,11 @@ func (r Request) Valid() error {
 	var err *multierror.Error
 
 	if r.FunctionID == "" {
-		multierror.Append(err, errors.New("function ID is required"))
+		err = multierror.Append(err, errors.New("function ID is required"))
 	}
 
 	if r.Method == "" {
-		multierror.Append(err, errors.New("method is required"))
+		err = multierror.Append(err, errors.New("method is required"))
 	}
 
 	return err.ErrorOrNil()
