@@ -23,7 +23,7 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
-	log := n.log.With().Str("peer", from.String()).Str("type", msgType).Str("pipeline", pipeline.String()).Logger()
+	log := n.log.With().Stringer("peer", from).Str("type", msgType).Stringer("pipeline", pipeline).Logger()
 
 	if !messageAllowedOnPipeline(msgType, pipeline) {
 		log.Debug().Msg("message not allowed on pipeline")
