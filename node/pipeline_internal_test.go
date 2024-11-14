@@ -33,7 +33,7 @@ func TestNode_DisallowedMessages(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := allowedMessage(test.message, test.pipeline)
-		require.ErrorIsf(t, err, errDisallowedMessage, "message: %s, pipeline: %s", test.message, test.pipeline)
+		ok := messageAllowedOnPipeline(test.message, test.pipeline)
+		require.False(t, ok, "message: %s, pipeline: %s", test.message, test.pipeline)
 	}
 }

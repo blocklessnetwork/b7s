@@ -29,6 +29,11 @@ func (a *API) ExecuteFunction(ctx echo.Context) error {
 		Parameters: req.Parameters,
 	}
 
+	err = exr.Valid()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid request: %w", err))
+	}
+
 	// Get the execution result.
 	code, id, results, cluster, err := a.Node.ExecuteFunction(ctx.Request().Context(), exr, req.Topic)
 	if err != nil {

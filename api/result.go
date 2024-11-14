@@ -8,6 +8,15 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func (r FunctionResultRequest) Valid() error {
+
+	if r.Id == "" {
+		return errors.New("request ID is required")
+	}
+
+	return nil
+}
+
 // ExecutionResult implements the REST API endpoint for retrieving the result of a function execution.
 func (a *API) ExecutionResult(ctx echo.Context) error {
 
@@ -18,13 +27,13 @@ func (a *API) ExecutionResult(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("could not unpack request: %w", err))
 	}
 
-	requestID := request.Id
-	if requestID == "" {
+	err = request.Valid()
+	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, errors.New("missing request ID"))
 	}
 
 	// Lookup execution result.
-	result, ok := a.Node.ExecutionResult(requestID)
+	result, ok := a.Node.ExecutionResult(request.Id)
 	if !ok {
 		return ctx.NoContent(http.StatusNotFound)
 	}

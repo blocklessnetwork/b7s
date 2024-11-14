@@ -11,6 +11,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/response"
+	"github.com/hashicorp/go-multierror"
 )
 
 var _ (json.Marshaler) = (*Execute)(nil)
@@ -50,16 +51,23 @@ func (e Execute) MarshalJSON() ([]byte, error) {
 
 func (e Execute) Valid() error {
 
+	var multierr *multierror.Error
+	err := e.Request.Valid()
+	if err != nil {
+		multierr = multierror.Append(multierr, err)
+	}
+
 	c, err := consensus.Parse(e.Config.ConsensusAlgorithm)
 	if err != nil {
-		return fmt.Errorf("could not parse consensus algorithm: %w", err)
+		multierr = multierror.Append(multierr, fmt.Errorf("could not parse consensus algorithm: %w", err))
 	}
 
 	if c == consensus.PBFT &&
 		e.Config.NodeCount > 0 &&
 		e.Config.NodeCount < pbft.MinimumReplicaCount {
-		return fmt.Errorf("minimum %v nodes needed for PBFT consensus", pbft.MinimumReplicaCount)
+
+		multierr = multierror.Append(multierr, fmt.Errorf("minimum %v nodes needed for PBFT consensus", pbft.MinimumReplicaCount))
 	}
 
-	return nil
+	return multierr.ErrorOrNil()
 }

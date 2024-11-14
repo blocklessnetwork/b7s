@@ -10,7 +10,7 @@ import (
 )
 
 type TraceInfo struct {
-	Carrier propagation.MapCarrier
+	Carrier propagation.MapCarrier `json:"carrier,omitempty"`
 }
 
 // Empty returns true if the TraceInfo structure contains any tracing information.

@@ -1,5 +1,11 @@
 package execute
 
+import (
+	"errors"
+
+	"github.com/hashicorp/go-multierror"
+)
+
 // Request describes an execution request.
 type Request struct {
 	FunctionID string      `json:"function_id"`
@@ -9,6 +15,21 @@ type Request struct {
 
 	// Optional signature of the request.
 	Signature string `json:"signature,omitempty"`
+}
+
+func (r Request) Valid() error {
+
+	var err *multierror.Error
+
+	if r.FunctionID == "" {
+		multierror.Append(err, errors.New("function ID is required"))
+	}
+
+	if r.Method == "" {
+		multierror.Append(err, errors.New("method is required"))
+	}
+
+	return err.ErrorOrNil()
 }
 
 // Parameter represents an execution parameter, modeled as a key-value pair.

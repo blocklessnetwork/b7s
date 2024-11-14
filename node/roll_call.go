@@ -18,12 +18,6 @@ import (
 
 func (n *Node) processRollCall(ctx context.Context, from peer.ID, req request.RollCall) error {
 
-	// Only workers respond to roll calls at the moment.
-	if n.cfg.Role != blockless.WorkerNode {
-		n.log.Debug().Msg("skipping roll call as a non-worker node")
-		return nil
-	}
-
 	n.metrics.IncrCounterWithLabels(rollCallsSeenMetric, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
 
 	log := n.log.With().Str("request", req.RequestID).Str("origin", req.Origin.String()).Str("function", req.FunctionID).Logger()

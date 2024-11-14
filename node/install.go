@@ -6,18 +6,11 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/request"
 )
 
 func (n *Node) processInstallFunction(ctx context.Context, from peer.ID, req request.InstallFunction) error {
-
-	// Only workers should respond to function install requests.
-	if n.cfg.Role != blockless.WorkerNode {
-		n.log.Debug().Msg("received function install request, ignoring")
-		return nil
-	}
 
 	// Install function.
 	err := n.installFunction(ctx, req.CID, req.ManifestURL)
