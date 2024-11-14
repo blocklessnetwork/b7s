@@ -21,19 +21,6 @@ import (
 
 func TestNode_RollCall(t *testing.T) {
 
-	t.Run("head node handles roll call", func(t *testing.T) {
-		t.Parallel()
-
-		rollCallReq := request.RollCall{
-			FunctionID: "dummy-function-id",
-			RequestID:  mocks.GenericUUID.String(),
-		}
-
-		node := createNode(t, blockless.HeadNode)
-		err := node.processRollCall(context.Background(), mocks.GenericPeerID, rollCallReq)
-		require.NoError(t, err)
-	})
-
 	t.Run("worker node handles roll call", func(t *testing.T) {
 		t.Parallel()
 

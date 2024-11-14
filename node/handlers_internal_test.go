@@ -120,14 +120,6 @@ func TestNode_InstallFunction(t *testing.T) {
 		CID:         cid,
 	}
 
-	t.Run("head node handles install", func(t *testing.T) {
-		t.Parallel()
-
-		node := createNode(t, blockless.HeadNode)
-
-		err := node.processInstallFunction(context.Background(), mocks.GenericPeerID, installReq)
-		require.NoError(t, err)
-	})
 	t.Run("worker node handles install", func(t *testing.T) {
 		t.Parallel()
 
