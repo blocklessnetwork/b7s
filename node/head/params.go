@@ -1,0 +1,22 @@
+package head
+
+import (
+	"time"
+
+	"github.com/blocklessnetwork/b7s/consensus"
+)
+
+const (
+	DefaultRollCallTimeout         = 5 * time.Second
+	DefaultExecutionTimeout        = 20 * time.Second
+	DefaultClusterFormationTimeout = 10 * time.Second
+	DefaultConsensusAlgorithm      = consensus.Raft
+
+	rollCallQueueBufferSize  = 1000
+	executionResultCacheSize = 1000
+
+	defaultExecutionThreshold = 0.6
+
+	// Timeout for the context used for sending disband request to cluster nodes.
+	consensusClusterSendTimeout = 10 * time.Second
+)

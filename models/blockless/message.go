@@ -15,8 +15,10 @@ const (
 	MessageInstallFunctionResponse = "MsgInstallFunctionResponse"
 	MessageRollCall                = "MsgRollCall"
 	MessageRollCallResponse        = "MsgRollCallResponse"
-	MessageExecute                 = "MsgExecute"
+	MessageExecute                 = "MsgExecute" // MessageExecute is the execution request, as expected by the head node.
 	MessageExecuteResponse         = "MsgExecuteResponse"
+	MessageWorkOrder               = "MsgWorkOrder" // MessageWorkOrder is the execution request, as expected by the worker node.
+	MessageWorkOrderResponse       = "MsgWorkOrderResponse"
 	MessageFormCluster             = "MsgFormCluster"
 	MessageFormClusterResponse     = "MsgFormClusterResponse"
 	MessageDisbandCluster          = "MsgDisbandCluster"

@@ -110,11 +110,11 @@ func (r *Replica) execute(ctx context.Context, view uint, sequence uint, digest 
 		return fmt.Errorf("could not sign execution result: %w", err)
 	}
 
-	msg := response.Execute{
+	msg := response.WorkOrder{
 		BaseMessage: blockless.BaseMessage{TraceInfo: r.cfg.TraceInfo},
 		Code:        res.Code,
 		RequestID:   request.ID,
-		Results:     execute.ResultMap{r.id: nres},
+		Result:      nres,
 	}
 
 	// Save this executions in case it's requested again.

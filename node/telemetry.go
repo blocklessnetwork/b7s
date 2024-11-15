@@ -9,32 +9,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
-	pp "github.com/blocklessnetwork/b7s/node/internal/pipeline"
 	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 )
-
-const (
-	tracerName = "b7s.Node"
-)
-
-func msgProcessSpanOpts(from peer.ID, msgType string, pipeline pp.Pipeline) []trace.SpanStartOption {
-
-	attrs := []attribute.KeyValue{
-		b7ssemconv.MessagePeer.String(from.String()),
-		b7ssemconv.MessageType.String(msgType),
-		b7ssemconv.MessagePipeline.String(pipeline.ID.String()),
-	}
-
-	if pipeline.ID == pp.PubSub {
-		attrs = append(attrs, b7ssemconv.MessageTopic.String(pipeline.Topic))
-	}
-
-	return []trace.SpanStartOption{
-		trace.WithSpanKind(trace.SpanKindConsumer),
-		trace.WithAttributes(attrs...),
-	}
-}
 
 func saveTraceContext(ctx context.Context, msg blockless.Message) {
 	tmsg, ok := msg.(blockless.TraceableMessage)
@@ -48,17 +25,17 @@ func saveTraceContext(ctx context.Context, msg blockless.Message) {
 	}
 }
 
-type msgSpanConfig struct {
-	msgPipeline pp.Pipeline
+type messageSpanConfig struct {
+	msgPipeline Pipeline
 	receivers   []peer.ID
 }
 
-func (c *msgSpanConfig) pipeline(p pp.Pipeline) *msgSpanConfig {
+func (c *messageSpanConfig) pipeline(p Pipeline) *messageSpanConfig {
 	c.msgPipeline = p
 	return c
 }
 
-func (c *msgSpanConfig) peer(id peer.ID) *msgSpanConfig {
+func (c *messageSpanConfig) peer(id peer.ID) *messageSpanConfig {
 	if c.receivers == nil {
 		c.receivers = make([]peer.ID, 0, 1)
 	}
@@ -67,7 +44,7 @@ func (c *msgSpanConfig) peer(id peer.ID) *msgSpanConfig {
 	return c
 }
 
-func (c *msgSpanConfig) peers(ids ...peer.ID) *msgSpanConfig {
+func (c *messageSpanConfig) peers(ids ...peer.ID) *messageSpanConfig {
 	if c.receivers == nil {
 		c.receivers = make([]peer.ID, 0, len(ids))
 	}
@@ -76,13 +53,13 @@ func (c *msgSpanConfig) peers(ids ...peer.ID) *msgSpanConfig {
 	return c
 }
 
-func (c *msgSpanConfig) spanOpts() []trace.SpanStartOption {
+func (c *messageSpanConfig) spanOpts() []trace.SpanStartOption {
 
 	attrs := []attribute.KeyValue{
 		b7ssemconv.MessagePipeline.String(c.msgPipeline.ID.String()),
 	}
 
-	if c.msgPipeline.ID == pp.PubSub {
+	if c.msgPipeline.ID == PubSub {
 		attrs = append(attrs, b7ssemconv.MessageTopic.String(c.msgPipeline.Topic))
 	}
 
@@ -96,6 +73,24 @@ func (c *msgSpanConfig) spanOpts() []trace.SpanStartOption {
 
 	return []trace.SpanStartOption{
 		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(attrs...),
+	}
+}
+
+func msgProcessSpanOpts(from peer.ID, msgType string, pipeline Pipeline) []trace.SpanStartOption {
+
+	attrs := []attribute.KeyValue{
+		b7ssemconv.MessagePeer.String(from.String()),
+		b7ssemconv.MessageType.String(msgType),
+		b7ssemconv.MessagePipeline.String(pipeline.ID.String()),
+	}
+
+	if pipeline.ID == PubSub {
+		attrs = append(attrs, b7ssemconv.MessageTopic.String(pipeline.Topic))
+	}
+
+	return []trace.SpanStartOption{
+		trace.WithSpanKind(trace.SpanKindConsumer),
 		trace.WithAttributes(attrs...),
 	}
 }

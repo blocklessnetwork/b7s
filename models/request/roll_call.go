@@ -3,8 +3,6 @@ package request
 import (
 	"encoding/json"
 
-	"github.com/libp2p/go-libp2p/core/peer"
-
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
@@ -17,7 +15,6 @@ var _ (json.Marshaler) = (*RollCall)(nil)
 // RollCall describes the `MessageRollCall` message payload.
 type RollCall struct {
 	blockless.BaseMessage
-	Origin     peer.ID             `json:"origin,omitempty"` // Origin is the peer that initiated the roll call.
 	FunctionID string              `json:"function_id,omitempty"`
 	RequestID  string              `json:"request_id,omitempty"`
 	Consensus  consensus.Type      `json:"consensus"`

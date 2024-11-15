@@ -8,17 +8,17 @@ import (
 	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
-// Node implements the `Node` interface expected by the API.
-type Node struct {
+// APINode implements the `APINode` interface expected by the API.
+type APINode struct {
 	ExecuteFunctionFunc        func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error)
 	ExecutionResultFunc        func(id string) (execute.ResultMap, bool)
 	PublishFunctionInstallFunc func(ctx context.Context, uri string, cid string, subgroup string) error
 }
 
-func BaselineNode(t *testing.T) *Node {
+func BaselineNode(t *testing.T) *APINode {
 	t.Helper()
 
-	node := Node{
+	node := APINode{
 		ExecuteFunctionFunc: func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 
 			// TODO: Add a generic cluster info
@@ -35,14 +35,14 @@ func BaselineNode(t *testing.T) *Node {
 	return &node
 }
 
-func (n *Node) ExecuteFunction(ctx context.Context, req execute.Request, subgroup string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
+func (n *APINode) ExecuteFunction(ctx context.Context, req execute.Request, subgroup string) (codes.Code, string, execute.ResultMap, execute.Cluster, error) {
 	return n.ExecuteFunctionFunc(ctx, req, subgroup)
 }
 
-func (n *Node) ExecutionResult(id string) (execute.ResultMap, bool) {
+func (n *APINode) ExecutionResult(id string) (execute.ResultMap, bool) {
 	return n.ExecutionResultFunc(id)
 }
 
-func (n *Node) PublishFunctionInstall(ctx context.Context, uri string, cid string, subgroup string) error {
+func (n *APINode) PublishFunctionInstall(ctx context.Context, uri string, cid string, subgroup string) error {
 	return n.PublishFunctionInstallFunc(ctx, uri, cid, subgroup)
 }

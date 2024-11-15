@@ -16,8 +16,8 @@ import (
 // NodeResult is an annotated execution result.
 type NodeResult struct {
 	Result
-	// Signed digest of the response.
-	Signature string         `json:"signature,omitempty"`
+
+	Signature string         `json:"signature,omitempty"` // Signed digest of the response.
 	PBFT      PBFTResultInfo `json:"pbft,omitempty"`
 	Metadata  any            `json:"metadata,omitempty"`
 }
