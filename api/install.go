@@ -15,6 +15,15 @@ const (
 	functionInstallTimeout = 10 * time.Second
 )
 
+func (r FunctionInstallRequest) Valid() error {
+
+	if r.Cid == "" {
+		return errors.New("function CID is required")
+	}
+
+	return nil
+}
+
 func (a *API) InstallFunction(ctx echo.Context) error {
 
 	// Unpack the API request.
@@ -24,8 +33,9 @@ func (a *API) InstallFunction(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("could not unpack request: %w", err))
 	}
 
-	if req.Uri == "" && req.Cid == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, errors.New("URI or CID are required"))
+	err = req.Valid()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("invalid request: %w", err))
 	}
 
 	// Add a deadline to the context.

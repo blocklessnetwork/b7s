@@ -18,13 +18,7 @@ import (
 
 func (n *Node) processFormCluster(ctx context.Context, from peer.ID, req request.FormCluster) error {
 
-	// Should never happen.
-	if !n.isWorker() {
-		n.log.Warn().Str("peer", from.String()).Msg("only worker nodes participate in consensus clusters")
-		return nil
-	}
-
-	n.log.Info().Str("request", req.RequestID).Strs("peers", blockless.PeerIDsToStr(req.Peers)).Str("consensus", req.Consensus.String()).Msg("received request to form consensus cluster")
+	n.log.Info().Str("request", req.RequestID).Strs("peers", blockless.PeerIDsToStr(req.Peers)).Stringer("consensus", req.Consensus).Msg("received request to form consensus cluster")
 
 	// Add connection info about peers if we're not already connected to them.
 	for _, addrInfo := range req.ConnectionInfo {
@@ -60,7 +54,7 @@ func (n *Node) processFormCluster(ctx context.Context, from peer.ID, req request
 // processFormClusterResponse will record the cluster formation response.
 func (n *Node) processFormClusterResponse(ctx context.Context, from peer.ID, res response.FormCluster) error {
 
-	n.log.Debug().Str("request", res.RequestID).Str("from", from.String()).Msg("received cluster formation response")
+	n.log.Debug().Str("request", res.RequestID).Stringer("from", from).Msg("received cluster formation response")
 
 	key := consensusResponseKey(res.RequestID, from)
 	n.consensusResponses.Set(key, res)
@@ -71,20 +65,14 @@ func (n *Node) processFormClusterResponse(ctx context.Context, from peer.ID, res
 // processDisbandCluster will start cluster shutdown command.
 func (n *Node) processDisbandCluster(ctx context.Context, from peer.ID, req request.DisbandCluster) error {
 
-	// Should never happen.
-	if !n.isWorker() {
-		n.log.Warn().Str("peer", from.String()).Msg("only worker nodes participate in consensus clusters")
-		return nil
-	}
-
-	n.log.Info().Str("peer", from.String()).Str("request", req.RequestID).Msg("received request to disband consensus cluster")
+	n.log.Info().Stringer("peer", from).Str("request", req.RequestID).Msg("received request to disband consensus cluster")
 
 	err := n.leaveCluster(req.RequestID, consensusClusterDisbandTimeout)
 	if err != nil {
 		return fmt.Errorf("could not disband cluster (request: %s): %w", req.RequestID, err)
 	}
 
-	n.log.Info().Str("peer", from.String()).Str("request", req.RequestID).Msg("left consensus cluster")
+	n.log.Info().Stringer("peer", from).Str("request", req.RequestID).Msg("left consensus cluster")
 
 	return nil
 }
@@ -140,10 +128,10 @@ func (n *Node) formCluster(ctx context.Context, requestID string, replicas []pee
 				return
 			}
 
-			n.log.Info().Str("request", requestID).Str("peer", rp.String()).Msg("accounted consensus cluster response from roll called peer")
+			n.log.Info().Str("request", requestID).Stringer("peer", rp).Msg("accounted consensus cluster response from roll called peer")
 
 			if fc.Code != codes.OK {
-				log.Warn().Str("peer", rp.String()).Msg("peer failed to join consensus cluster")
+				log.Warn().Stringer("peer", rp).Msg("peer failed to join consensus cluster")
 				return
 			}
 

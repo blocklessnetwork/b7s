@@ -1,15 +1,11 @@
 package node
 
 import (
-	"errors"
-
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	pp "github.com/blocklessnetwork/b7s/node/internal/pipeline"
 )
 
-var errDisallowedMessage = errors.New("disallowed message")
-
-func allowedMessage(msg string, pipeline pp.Pipeline) error {
+func messageAllowedOnPipeline(msg string, pipeline pp.Pipeline) bool {
 
 	if pipeline.ID == pp.DirectMessage {
 
@@ -22,10 +18,10 @@ func allowedMessage(msg string, pipeline pp.Pipeline) error {
 			// Technically we only publish InstallFunction. However, it's handy for tests to support
 			// direct install, and it's somewhat of a low risk.
 
-			return errDisallowedMessage
+			return false
 
 		default:
-			return nil
+			return true
 		}
 	}
 
@@ -40,9 +36,9 @@ func allowedMessage(msg string, pipeline pp.Pipeline) error {
 		blockless.MessageDisbandCluster,
 		blockless.MessageRollCallResponse:
 
-		return errDisallowedMessage
+		return false
 
 	default:
-		return nil
+		return true
 	}
 }

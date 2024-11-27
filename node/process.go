@@ -23,6 +23,18 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
 
+	log := n.log.With().Stringer("peer", from).Str("type", msgType).Stringer("pipeline", pipeline).Logger()
+
+	if !messageAllowedOnPipeline(msgType, pipeline) {
+		log.Debug().Msg("message not allowed on pipeline")
+		return nil
+	}
+
+	if !n.messageAllowedForRole(msgType) {
+		log.Debug().Msg("message not intended for our role")
+		return nil
+	}
+
 	n.metrics.IncrCounterWithLabels(messagesProcessedMetric, 1, []metrics.Label{{Name: "type", Value: msgType}})
 	defer func() {
 		switch procError {
@@ -54,14 +66,6 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 
 		span.SetStatus(otelcodes.Error, spanStatusErr)
 	}()
-
-	log := n.log.With().Str("peer", from.String()).Str("type", msgType).Str("pipeline", pipeline.String()).Logger()
-
-	err = allowedMessage(msgType, pipeline)
-	if err != nil {
-		log.Warn().Msg("message not allowed on pipeline")
-		return nil
-	}
 
 	log.Debug().Msg("received message from peer")
 
@@ -96,12 +100,61 @@ func (n *Node) processMessage(ctx context.Context, from peer.ID, payload []byte,
 	}
 }
 
+func (n *Node) messageAllowedForRole(msgType string) bool {
+
+	// Worker node allowed messages.
+	if n.isWorker() {
+		switch msgType {
+		case blockless.MessageHealthCheck,
+			blockless.MessageInstallFunction,
+			blockless.MessageRollCall,
+			blockless.MessageExecute,
+			blockless.MessageFormCluster,
+			blockless.MessageDisbandCluster:
+			return true
+
+		default:
+			return false
+		}
+	}
+
+	// Head node allowed messages.
+	switch msgType {
+
+	case blockless.MessageHealthCheck,
+		blockless.MessageInstallFunctionResponse,
+		blockless.MessageRollCallResponse,
+		blockless.MessageExecute,
+		blockless.MessageExecuteResponse,
+		blockless.MessageFormClusterResponse:
+
+		// NOTE: We provide a mechanism via the REST API to broadcast function install, so there's a case for this being supported.
+		return true
+
+	default:
+		return false
+	}
+}
+
 func handleMessage[T blockless.Message](ctx context.Context, from peer.ID, payload []byte, processFunc func(ctx context.Context, from peer.ID, msg T) error) error {
 
 	var msg T
 	err := json.Unmarshal(payload, &msg)
 	if err != nil {
 		return fmt.Errorf("could not unmarshal message: %w", err)
+	}
+
+	// If the message provides a validation mechanism - use it.
+	type validator interface {
+		Valid() error
+	}
+
+	vmsg, ok := any(msg).(validator)
+	if ok {
+		err = vmsg.Valid()
+		if err != nil {
+			return fmt.Errorf("rejecting message that failed validation: %w", err)
+		}
 	}
 
 	return processFunc(ctx, from, msg)

@@ -273,55 +273,47 @@ func TestNode_ProcessedMessageMetric(t *testing.T) {
 
 	node.metrics = m
 
-	// Messages to send. We will send multiple health check, execution response and install response messages.
+	// Messages to send. We will send multiple health check and disband cluster messages.
 	// Note that not all messages make sense in the context of a real-world node, but we just care about having
 	// a few messages flow through the system.
 	var (
 		// Do between 1 and 10 messages.
 		limit            = 10
 		healthcheckCount = rand.Intn(limit) + 1
-		execCount        = rand.Intn(limit) + 1
-		installCount     = rand.Intn(limit) + 1
+		disbandCount     = rand.Intn(limit) + 1
 
 		healthCheck = response.Health{}
 
-		execResponse = response.Execute{
+		disbandRequest = request.DisbandCluster{
 			RequestID: newRequestID(),
-			Results:   execute.ResultMap{mocks.GenericPeerID: execute.NodeResult{Result: mocks.GenericExecutionResult}},
-		}
-
-		instResponse = response.InstallFunction{
-			CID: mocks.GenericFunctionRecord.CID,
 		}
 	)
 
 	msgs := []struct {
-		count   int
-		payload []byte
+		count    int
+		pipeline pipeline.Pipeline
+		payload  []byte
 	}{
 		{
-			count:   healthcheckCount,
-			payload: serialize(t, healthCheck),
+			count:    healthcheckCount,
+			pipeline: pipeline.PubSubPipeline(DefaultTopic),
+			payload:  serialize(t, healthCheck),
 		},
 		{
-			count:   execCount,
-			payload: serialize(t, execResponse),
-		},
-		{
-			count:   installCount,
-			payload: serialize(t, instResponse),
+			count:    disbandCount,
+			pipeline: pipeline.DirectMessagePipeline(),
+			payload:  serialize(t, disbandRequest),
 		},
 	}
 
 	for _, msg := range msgs {
 		for i := 0; i < msg.count; i++ {
-			err = node.processMessage(ctx, mocks.GenericPeerID, msg.payload, pipeline.PubSubPipeline(DefaultTopic))
-			require.NoError(t, err)
+			// We don't care if the message was processed okay (disband cluster will fail).
+			_ = node.processMessage(ctx, mocks.GenericPeerID, msg.payload, msg.pipeline)
 		}
 	}
 
 	metricMap := helpers.MetricMap(t, registry)
 	helpers.CounterCmp(t, metricMap, float64(healthcheckCount), "b7s_node_messages_processed", "type", "MsgHealthCheck")
-	helpers.CounterCmp(t, metricMap, float64(execCount), "b7s_node_messages_processed", "type", "MsgExecuteResponse")
-	helpers.CounterCmp(t, metricMap, float64(installCount), "b7s_node_messages_processed", "type", "MsgInstallFunctionResponse")
+	helpers.CounterCmp(t, metricMap, float64(disbandCount), "b7s_node_messages_processed", "type", "MsgDisbandCluster")
 }

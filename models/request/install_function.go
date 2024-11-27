@@ -2,6 +2,7 @@ package request
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
@@ -38,4 +39,13 @@ func (f InstallFunction) MarshalJSON() ([]byte, error) {
 		Type:  f.Type(),
 	}
 	return json.Marshal(rec)
+}
+
+func (f InstallFunction) Valid() error {
+
+	if f.CID == "" {
+		return errors.New("function CID is required")
+	}
+
+	return nil
 }
