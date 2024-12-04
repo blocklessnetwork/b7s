@@ -15,14 +15,14 @@ this is the `json` specification for the manifests that describe how a function 
     // version of the function
     "version": "1.0.0",
 
-    // whats the runtime specification
+    // what's the runtime specification
     "runtime": "<1.0.0",
 
     // what extensions are needed to run this function
     "extensions": ["foundation/ipfs/>=1.0.0"]
   },
   "deployment": {
-    // a manifest can provide a CID meaning its
+    // a manifest can provide a CID meaning it's
     // been stored on filecoin
     // we will try to use multiple known filecoin portals
     // to retrieve the package
