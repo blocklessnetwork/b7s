@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -38,7 +37,11 @@ func (h *HeadNode) processExecute(ctx context.Context, from peer.ID, req request
 		Str("request", requestID).
 		Str("function", req.FunctionID).Logger()
 
-	code, results, cluster, err := h.execute(ctx, requestID, req.Request, req.Topic)
+	if req.Config.NodeCount == 0 {
+		req.Config.NodeCount = -1
+	}
+
+	code, results, cluster, err := h.execute(ctx, requestID, req)
 	if err != nil {
 		log.Error().Err(err).Msg("execution failed")
 	}
@@ -62,7 +65,7 @@ func (h *HeadNode) processExecute(ctx context.Context, from peer.ID, req request
 
 // headExecute is called on the head node. The head node will publish a roll call and delegate an execution request to chosen nodes.
 // The returned map contains execution results, mapped to the peer IDs of peers who reported them.
-func (h *HeadNode) execute(ctx context.Context, requestID string, req execute.Request, subgroup string) (codes.Code, execute.ResultMap, execute.Cluster, error) {
+func (h *HeadNode) execute(ctx context.Context, requestID string, req request.Execute) (codes.Code, execute.ResultMap, execute.Cluster, error) {
 
 	h.Metrics().IncrCounterWithLabels(executionsMetric, 1,
 		[]metrics.Label{
@@ -72,31 +75,35 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req execute.Re
 
 	ctx, span := h.Tracer().Start(ctx, spanExecute,
 		trace.WithSpanKind(trace.SpanKindClient),
-		trace.WithAttributes(tracing.ExecutionAttributes(requestID, req)...))
+		trace.WithAttributes(tracing.ExecutionAttributes(requestID, req.Request)...))
 	defer span.End()
 
-	nodeCount := -1
-	if req.Config.NodeCount >= 1 {
-		nodeCount = req.Config.NodeCount
-	}
-
 	// Create a logger with relevant context.
-	log := h.Log().With().Str("request", requestID).Str("function", req.FunctionID).Int("node_count", nodeCount).Logger()
+	log := h.Log().With().
+		Str("request", requestID).
+		Str("function", req.FunctionID).
+		Int("node_count", req.Config.NodeCount).
+		Logger()
 
 	consensusAlgo, err := consensus.Parse(req.Config.ConsensusAlgorithm)
 	if err != nil {
-		log.Error().Str("value", req.Config.ConsensusAlgorithm).Str("default", h.cfg.DefaultConsensus.String()).Err(err).Msg("could not parse consensus algorithm from the user request, using default")
+		log.Error().
+			Err(err).
+			Str("value", req.Config.ConsensusAlgorithm).
+			Stringer("default", h.cfg.DefaultConsensus).
+			Msg("could not parse consensus algorithm from the user request, using default")
+
 		consensusAlgo = h.cfg.DefaultConsensus
 	}
 
 	if consensusRequired(consensusAlgo) {
-		log = log.With().Str("consensus", consensusAlgo.String()).Logger()
+		log = log.With().Stringer("consensus", consensusAlgo).Logger()
 	}
 
 	log.Info().Msg("processing execution request")
 
 	// Phase 1. - Issue roll call to nodes.
-	reportingPeers, err := h.executeRollCall(ctx, requestID, req.FunctionID, nodeCount, consensusAlgo, subgroup, req.Config.Attributes, req.Config.Timeout)
+	reportingPeers, err := h.executeRollCall(ctx, requestID, req, consensusAlgo)
 	if err != nil {
 		code := codes.Error
 		if errors.Is(err, blockless.ErrRollCallTimeout) {
@@ -131,16 +138,11 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req execute.Re
 	// Phase 3. - Request execution.
 
 	// Send the work order to peers in the cluster. Non-leaders will drop the request.
-	// TODO: WorkerOrder request should be created from request.Execute
-	reqExecute := request.WorkOrder{
-		Request:   req,
-		RequestID: requestID,
-		Timestamp: time.Now().UTC(),
-	}
+	workOrder := req.WorkOrder(requestID)
 
 	// If we're working with PBFT, sign the request.
 	if consensusAlgo == consensus.PBFT {
-		err := reqExecute.Request.Sign(h.Host().PrivateKey())
+		err := workOrder.Request.Sign(h.Host().PrivateKey())
 		if err != nil {
 			return codes.Error, nil, cluster, fmt.Errorf("could not sign execution request (function: %s, request: %s): %w", req.FunctionID, requestID, err)
 		}
@@ -148,7 +150,7 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req execute.Re
 
 	err = h.SendToMany(ctx,
 		reportingPeers,
-		&reqExecute,
+		workOrder,
 		consensusRequired(consensusAlgo), // If we're using consensus, try to reach all peers.
 	)
 	if err != nil {
@@ -179,7 +181,7 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req execute.Re
 
 	// How many results do we have, and how many do we expect.
 	respondRatio := float64(len(results)) / float64(len(reportingPeers))
-	threshold := determineThreshold(req)
+	threshold := determineThreshold(req.Request)
 
 	retcode := codes.OK
 	if respondRatio == 0 {

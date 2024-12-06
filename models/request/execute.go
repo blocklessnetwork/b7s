@@ -3,6 +3,7 @@ package request
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/consensus/pbft"
@@ -28,6 +29,25 @@ func (e Execute) Response(c codes.Code, id string) *response.Execute {
 		BaseMessage: blockless.BaseMessage{TraceInfo: e.TraceInfo},
 		RequestID:   id,
 		Code:        c,
+	}
+}
+
+func (e Execute) RollCall(id string, c consensus.Type) *RollCall {
+	return &RollCall{
+		BaseMessage: blockless.BaseMessage{TraceInfo: e.TraceInfo},
+		RequestID:   id,
+		FunctionID:  e.FunctionID,
+		Consensus:   c,
+		Attributes:  e.Config.Attributes,
+	}
+}
+
+func (e Execute) WorkOrder(id string) *WorkOrder {
+	return &WorkOrder{
+		BaseMessage: blockless.BaseMessage{TraceInfo: e.TraceInfo},
+		RequestID:   id,
+		Request:     e.Request,
+		Timestamp:   time.Now().UTC(),
 	}
 }
 

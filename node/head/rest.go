@@ -16,7 +16,7 @@ func (h *HeadNode) ExecuteFunction(ctx context.Context, req execute.Request, sub
 
 	requestID := newRequestID()
 
-	code, results, cluster, err := h.execute(ctx, requestID, req, subgroup)
+	code, results, cluster, err := h.execute(ctx, requestID, request.Execute{Request: req})
 	if err != nil {
 		h.Log().Error().Str("request", requestID).Err(err).Msg("execution failed")
 	}

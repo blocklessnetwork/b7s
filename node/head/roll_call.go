@@ -1,6 +1,7 @@
 package head
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/blocklessnetwork/b7s/consensus/pbft"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
 	"github.com/blocklessnetwork/b7s/models/response"
 )
@@ -20,20 +20,16 @@ import (
 func (h *HeadNode) executeRollCall(
 	ctx context.Context,
 	requestID string,
-	functionID string,
-	nodeCount int,
+	req request.Execute,
 	consensusAlgo consensus.Type,
-	topic string,
-	attributes *execute.Attributes,
-	timeout int,
 ) ([]peer.ID, error) {
 
 	// Create a logger with relevant context.
 	log := h.Log().With().
 		Str("request", requestID).
-		Str("function", functionID).
-		Int("node_count", nodeCount).
-		Str("topic", topic).
+		Str("function", req.FunctionID).
+		Int("node_count", req.Config.NodeCount).
+		Str("topic", req.Topic).
 		Logger()
 
 	log.Info().Msg("performing roll call for request")
@@ -41,7 +37,7 @@ func (h *HeadNode) executeRollCall(
 	h.rollCall.create(requestID)
 	defer h.rollCall.remove(requestID)
 
-	err := h.publishRollCall(ctx, requestID, functionID, consensusAlgo, topic, attributes)
+	err := h.publishRollCall(ctx, req.RollCall(requestID, consensusAlgo), req.Topic)
 	if err != nil {
 		return nil, fmt.Errorf("could not publish roll call: %w", err)
 	}
@@ -49,13 +45,14 @@ func (h *HeadNode) executeRollCall(
 	log.Info().Msg("roll call published")
 
 	// Limit for how long we wait for responses.
-	t := h.cfg.RollCallTimeout
-	if timeout > 0 {
-		t = time.Duration(timeout) * time.Second
-	}
-
+	t := cmp.Or(
+		time.Duration(req.Config.Timeout)*time.Second,
+		h.cfg.RollCallTimeout,
+	)
 	tctx, exCancel := context.WithTimeout(ctx, t)
 	defer exCancel()
+
+	nodeCount := req.Config.NodeCount
 
 	// Peers that have reported on roll call.
 	var reportingPeers []peer.ID
@@ -78,19 +75,24 @@ rollCallResponseLoop:
 		case reply := <-h.rollCall.responses(requestID):
 
 			// Check if this is the reply we want - shouldn't really happen.
-			if reply.FunctionID != functionID {
-				log.Info().Str("peer", reply.From.String()).Str("function_got", reply.FunctionID).Msg("skipping inadequate roll call response - wrong function")
+			if reply.FunctionID != req.FunctionID {
+				log.Info().
+					Stringer("peer", reply.From).
+					Str("function_got", reply.FunctionID).
+					Msg("skipping inadequate roll call response - wrong function")
 				continue
 			}
 
 			// Check if we are connected to this peer.
 			// Since we receive responses to roll call via direct messages - should not happen.
 			if !h.Connected(reply.From) {
-				h.Log().Info().Str("peer", reply.From.String()).Msg("skipping roll call response from unconnected peer")
+				h.Log().Info().
+					Stringer("peer", reply.From).
+					Msg("skipping roll call response from unconnected peer")
 				continue
 			}
 
-			log.Info().Str("peer", reply.From.String()).Msg("roll called peer chosen for execution")
+			log.Info().Stringer("peer", reply.From).Msg("roll called peer chosen for execution")
 
 			reportingPeers = append(reportingPeers, reply.From)
 
@@ -111,25 +113,15 @@ rollCallResponseLoop:
 
 // publishRollCall will create a roll call request for executing the given function.
 // On successful issuance of the roll call request, we return the ID of the issued request.
-func (h *HeadNode) publishRollCall(ctx context.Context, requestID string, functionID string, consensus consensus.Type, topic string, attributes *execute.Attributes) error {
+func (h *HeadNode) publishRollCall(ctx context.Context, rc *request.RollCall, subgroup string) error {
 
-	h.Metrics().IncrCounterWithLabels(rollCallsPublishedMetric, 1, []metrics.Label{{Name: "function", Value: functionID}})
+	h.Metrics().IncrCounterWithLabels(rollCallsPublishedMetric, 1, []metrics.Label{
+		{Name: "function", Value: rc.FunctionID},
+	})
 
-	// Create a roll call request.
-	rollCall := request.RollCall{
-		Origin:     h.Host().ID(),
-		FunctionID: functionID,
-		RequestID:  requestID,
-		Consensus:  consensus,
-		Attributes: attributes,
-	}
+	subgroup = cmp.Or(subgroup, blockless.DefaultTopic)
 
-	if topic == "" {
-		topic = blockless.DefaultTopic
-	}
-
-	// Publish the mssage.
-	err := h.PublishToTopic(ctx, topic, &rollCall)
+	err := h.PublishToTopic(ctx, subgroup, rc)
 	if err != nil {
 		return fmt.Errorf("could not publish to topic: %w", err)
 	}
