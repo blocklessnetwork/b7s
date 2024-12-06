@@ -93,7 +93,11 @@ func (c *core) Run(ctx context.Context, process ProcessFunc) error {
 					continue
 				}
 
-				c.log.Trace().Str("topic", name).Str("peer", msg.ReceivedFrom.String()).Hex("id", []byte(msg.ID)).Msg("received message")
+				c.log.Trace().
+					Str("topic", name).
+					Stringer("peer", msg.ReceivedFrom).
+					Stringer("origin", msg.GetFrom()).
+					Hex("id", []byte(msg.ID)).Msg("received message")
 
 				// Try to get a slot for processing the request.
 				sema <- struct{}{}
@@ -106,7 +110,7 @@ func (c *core) Run(ctx context.Context, process ProcessFunc) error {
 
 					c.metrics.IncrCounterWithLabels(topicMessagesMetric, 1, []metrics.Label{{Name: "topic", Value: name}})
 
-					err = c.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), PubSubPipeline(name), process)
+					err = c.processMessage(ctx, msg.GetFrom(), msg.GetData(), PubSubPipeline(name), process)
 					if err != nil {
 						c.log.Error().Err(err).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("could not process message")
 						return

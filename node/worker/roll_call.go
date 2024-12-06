@@ -5,10 +5,11 @@ import (
 	"fmt"
 
 	"github.com/armon/go-metrics"
+	"github.com/libp2p/go-libp2p/core/peer"
+
 	"github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 func (w *Worker) processRollCall(ctx context.Context, from peer.ID, req request.RollCall) error {
@@ -16,7 +17,7 @@ func (w *Worker) processRollCall(ctx context.Context, from peer.ID, req request.
 	w.Metrics().IncrCounterWithLabels(rollCallsSeenMetric, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
 
 	log := w.Log().With().
-		Stringer("origin", req.Origin).
+		Stringer("origin", from).
 		Str("request", req.RequestID).
 		Str("function", req.FunctionID).Logger()
 
@@ -46,10 +47,10 @@ func (w *Worker) processRollCall(ctx context.Context, from peer.ID, req request.
 	installed, err := w.fstore.IsInstalled(req.FunctionID)
 	if err != nil {
 
-		sendErr := w.Send(ctx, req.Origin, req.Response(codes.Error))
+		sendErr := w.Send(ctx, from, req.Response(codes.Error))
 		if sendErr != nil {
 			// Log send error but choose to return the original error.
-			log.Error().Err(sendErr).Stringer("to", req.Origin).Msg("could not send response")
+			log.Error().Err(sendErr).Stringer("to", from).Msg("could not send response")
 		}
 
 		return fmt.Errorf("could not check if function is installed: %w", err)
@@ -62,10 +63,10 @@ func (w *Worker) processRollCall(ctx context.Context, from peer.ID, req request.
 
 		err = w.installFunction(ctx, req.FunctionID, manifestURLFromCID(req.FunctionID))
 		if err != nil {
-			sendErr := w.Send(ctx, req.Origin, req.Response(codes.Error))
+			sendErr := w.Send(ctx, from, req.Response(codes.Error))
 			if sendErr != nil {
 				// Log send error but choose to return the original error.
-				log.Error().Err(sendErr).Stringer("to", req.Origin).Msg("could not send response")
+				log.Error().Err(sendErr).Stringer("to", from).Msg("could not send response")
 			}
 			return fmt.Errorf("could not install function: %w", err)
 		}
@@ -76,7 +77,7 @@ func (w *Worker) processRollCall(ctx context.Context, from peer.ID, req request.
 	w.Metrics().IncrCounterWithLabels(rollCallsAppliedMetric, 1, []metrics.Label{{Name: "function", Value: req.FunctionID}})
 
 	// Send positive response.
-	err = w.Send(ctx, req.Origin, req.Response(codes.Accepted))
+	err = w.Send(ctx, from, req.Response(codes.Accepted))
 	if err != nil {
 		return fmt.Errorf("could not send response: %w", err)
 	}

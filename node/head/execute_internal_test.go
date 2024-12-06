@@ -112,7 +112,11 @@ func TestHead_Execute(t *testing.T) {
 	start = time.Now()
 
 	// Test the function execution.
-	code, results, cluster, err := head.execute(context.Background(), requestID, req, subgroup)
+	er := request.Execute{
+		Request: req,
+		Topic:   subgroup,
+	}
+	code, results, cluster, err := head.execute(context.Background(), requestID, er)
 	require.NoError(t, err)
 
 	// Verify code signals success.
