@@ -23,21 +23,21 @@ func (w *WorkOrder) WithMetadata(m any) *WorkOrder {
 	return w
 }
 
-func (e *WorkOrder) WithErrorMessage(err error) *WorkOrder {
-	e.ErrorMessage = err.Error()
-	return e
+func (w *WorkOrder) WithErrorMessage(err error) *WorkOrder {
+	w.ErrorMessage = err.Error()
+	return w
 }
 
 func (WorkOrder) Type() string { return blockless.MessageWorkOrderResponse }
 
-func (e WorkOrder) MarshalJSON() ([]byte, error) {
+func (w WorkOrder) MarshalJSON() ([]byte, error) {
 	type Alias WorkOrder
 	rec := struct {
 		Alias
 		Type string `json:"type"`
 	}{
-		Alias: Alias(e),
-		Type:  e.Type(),
+		Alias: Alias(w),
+		Type:  w.Type(),
 	}
 	return json.Marshal(rec)
 }

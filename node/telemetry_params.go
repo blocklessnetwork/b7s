@@ -12,10 +12,8 @@ const (
 	spanMessageSend    = "MessageSend"
 	spanMessagePublish = "MessagePublish"
 	spanMessageProcess = "MessageProcess"
-)
 
-// Tracing span status messages.
-const (
+	// Tracing span status messages.
 	spanStatusOK  = "message processed ok"
 	spanStatusErr = "error processing message"
 )
@@ -41,8 +39,6 @@ var (
 
 	NodeInfoMetric = []string{"node", "info"}
 )
-
-// TODO: Descriptions for metrics
 
 var Counters = []prometheus.CounterDefinition{
 	{

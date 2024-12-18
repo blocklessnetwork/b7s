@@ -37,8 +37,6 @@ func (c *core) Subscribe(ctx context.Context, topic string) error {
 	return nil
 }
 
-// TODO: Reintroduce telemetry here
-
 // send serializes the message and sends it to the specified peer.
 func (c *core) Send(ctx context.Context, to peer.ID, msg blockless.Message) error {
 
@@ -138,7 +136,6 @@ func (c *core) PublishToTopic(ctx context.Context, topic string, msg blockless.M
 		return fmt.Errorf("could not encode record: %w", err)
 	}
 
-	// TODO: fix this
 	topicInfo, ok := c.topics.Get(topic)
 	if !ok {
 		err = c.JoinTopic(topic)

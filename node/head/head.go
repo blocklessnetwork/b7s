@@ -37,8 +37,6 @@ func New(core node.Core, options ...Option) (*HeadNode, error) {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
 
-	// TODO: Tracing.
-
 	head := &HeadNode{
 		Core: core,
 		cfg:  cfg,

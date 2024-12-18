@@ -81,10 +81,10 @@ func (w *Worker) leaveCluster(requestID string, timeout time.Duration) error {
 		return errors.New("no cluster with that ID")
 	}
 
-	// TODO: Fix this logging.
-	w.Log().Info().
+	log := w.Log().With().Str("request", requestID).Logger()
+
+	log.Info().
 		Stringer("consensus", cluster.Consensus()).
-		Str("request", requestID).
 		Msg("leaving consensus cluster")
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -93,7 +93,6 @@ func (w *Worker) leaveCluster(requestID string, timeout time.Duration) error {
 	// We know that the request is done executing when we have a result for it.
 	_, ok = w.executeResponses.WaitFor(ctx, requestID)
 
-	log := w.Log().With().Str("request", requestID).Logger()
 	log.Info().Bool("executed_work", ok).Msg("waiting for execution done, leaving cluster")
 
 	err := cluster.Shutdown()

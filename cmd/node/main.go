@@ -226,11 +226,24 @@ func run() int {
 		node.Topics(cfg.Topics),
 	)
 
-	var node Node
+	var (
+		node         Node
+		nodeshutdown func() error
+	)
 
 	switch nodeRole {
 	case blockless.WorkerNode:
-		node, err = createWorkerNode(core, store, cfg)
+		node, nodeshutdown, err = createWorkerNode(core, store, cfg)
+
+		if nodeshutdown != nil {
+			defer func() {
+				err = nodeshutdown()
+				if err != nil {
+					log.Error().Err(err).Msg("node shutdown function failed")
+				}
+			}()
+		}
+
 	case blockless.HeadNode:
 		node, err = createHeadNode(core, cfg)
 	}

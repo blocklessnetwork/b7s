@@ -10,7 +10,6 @@ import (
 	"github.com/blocklessnetwork/b7s/node"
 )
 
-// TODO: Perhaps create a map: message ID => handler
 func (w *Worker) process(ctx context.Context, from peer.ID, msg string, payload []byte) error {
 
 	switch msg {

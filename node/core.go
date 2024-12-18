@@ -27,7 +27,7 @@ type Logger interface {
 }
 
 type Network interface {
-	Host() *host.Host // TODO Further abstract away Host()
+	Host() *host.Host
 	Messaging
 }
 

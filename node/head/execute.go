@@ -9,7 +9,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/consensus"
+	cons "github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
 	"github.com/blocklessnetwork/b7s/models/execute"
@@ -85,7 +85,7 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req request.Ex
 		Int("node_count", req.Config.NodeCount).
 		Logger()
 
-	consensusAlgo, err := consensus.Parse(req.Config.ConsensusAlgorithm)
+	consensus, err := cons.Parse(req.Config.ConsensusAlgorithm)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -93,17 +93,17 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req request.Ex
 			Stringer("default", h.cfg.DefaultConsensus).
 			Msg("could not parse consensus algorithm from the user request, using default")
 
-		consensusAlgo = h.cfg.DefaultConsensus
+		consensus = h.cfg.DefaultConsensus
 	}
 
-	if consensusRequired(consensusAlgo) {
-		log = log.With().Stringer("consensus", consensusAlgo).Logger()
+	if consensusRequired(consensus) {
+		log = log.With().Stringer("consensus", consensus).Logger()
 	}
 
 	log.Info().Msg("processing execution request")
 
 	// Phase 1. - Issue roll call to nodes.
-	reportingPeers, err := h.executeRollCall(ctx, requestID, req, consensusAlgo)
+	reportingPeers, err := h.executeRollCall(ctx, requestID, req, consensus)
 	if err != nil {
 		code := codes.Error
 		if errors.Is(err, blockless.ErrRollCallTimeout) {
@@ -118,11 +118,11 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req request.Ex
 	}
 
 	// Phase 2. - Request cluster formation, if we need consensus.
-	if consensusRequired(consensusAlgo) {
+	if consensusRequired(consensus) {
 
 		log.Info().Strs("peers", blockless.PeerIDsToStr(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
 
-		err := h.formCluster(ctx, requestID, reportingPeers, consensusAlgo)
+		err := h.formCluster(ctx, requestID, reportingPeers, consensus)
 		if err != nil {
 			return codes.Error, nil, execute.Cluster{}, fmt.Errorf("could not form cluster (request: %s): %w", requestID, err)
 		}
@@ -141,7 +141,7 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req request.Ex
 	workOrder := req.WorkOrder(requestID)
 
 	// If we're working with PBFT, sign the request.
-	if consensusAlgo == consensus.PBFT {
+	if consensus == cons.PBFT {
 		err := workOrder.Request.Sign(h.Host().PrivateKey())
 		if err != nil {
 			return codes.Error, nil, cluster, fmt.Errorf("could not sign execution request (function: %s, request: %s): %w", req.FunctionID, requestID, err)
@@ -151,7 +151,7 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req request.Ex
 	err = h.SendToMany(ctx,
 		reportingPeers,
 		workOrder,
-		consensusRequired(consensusAlgo), // If we're using consensus, try to reach all peers.
+		consensusRequired(consensus), // If we're using consensus, try to reach all peers.
 	)
 	if err != nil {
 		return codes.Error, nil, cluster, fmt.Errorf("could not send execution request to peers (function: %s, request: %s): %w", req.FunctionID, requestID, err)
@@ -160,7 +160,7 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req request.Ex
 	log.Debug().Msg("waiting for execution responses")
 
 	var results execute.ResultMap
-	if consensusAlgo == consensus.PBFT {
+	if consensus == cons.PBFT {
 		results = h.gatherExecutionResultsPBFT(ctx, requestID, reportingPeers)
 
 		log.Info().Msg("received PBFT execution responses")
@@ -221,6 +221,6 @@ func peerRequestKey(requestID string, peer peer.ID) string {
 }
 
 // helper function just for the sake of readibility.
-func consensusRequired(c consensus.Type) bool {
+func consensusRequired(c cons.Type) bool {
 	return c != 0
 }

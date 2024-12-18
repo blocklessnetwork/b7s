@@ -6,11 +6,6 @@ import (
 
 // Tracing span names.
 const (
-	// notifiee events
-	spanPeerConnected    = "PeerConnected"
-	spanPeerDisconnected = "PeerDisconnected"
-
-	// execution events
 	spanExecute = "Execute"
 )
 

@@ -39,7 +39,6 @@ func (w *Worker) createRaftCluster(ctx context.Context, from peer.ID, fc request
 		}
 		res.Metadata = metadata
 
-		// TODO: Think: response.WorkOrder vs execute.Result vs execute.NodeResult => which one makes the most sense where
 		msg := response.WorkOrder{
 			Code:      res.Code,
 			RequestID: fc.RequestID,

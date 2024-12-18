@@ -14,11 +14,6 @@ import (
 func (h *HeadNode) process(ctx context.Context, from peer.ID, msg string, payload []byte) error {
 
 	switch msg {
-
-	// TODO: Consider function install.
-	// case blockless.MessageInstallFunction:
-	// 	return handleMessage(ctx, from, payload, n.processInstallFunction)
-
 	case blockless.MessageHealthCheck:
 		return node.HandleMessage(ctx, from, payload, h.processHealthCheck)
 	case blockless.MessageInstallFunctionResponse:

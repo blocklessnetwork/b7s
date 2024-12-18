@@ -10,8 +10,6 @@ import (
 	"github.com/blocklessnetwork/b7s/models/response"
 )
 
-// TODO: Perhaps the work order can include parsed consensus and similar things.
-
 type WorkOrder struct {
 	blockless.BaseMessage
 

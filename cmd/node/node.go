@@ -18,7 +18,7 @@ type Node interface {
 	Run(context.Context) error
 }
 
-func createWorkerNode(core node.Core, store blockless.Store, cfg *config.Config) (Node, error) {
+func createWorkerNode(core node.Core, store blockless.Store, cfg *config.Config) (Node, func() error, error) {
 
 	// Create function store.
 	fstore := fstore.New(log.With().Str("component", "fstore").Logger(), store, cfg.Workspace)
@@ -30,19 +30,18 @@ func createWorkerNode(core node.Core, store blockless.Store, cfg *config.Config)
 		executor.WithExecutableName(cfg.Worker.RuntimeCLI),
 	}
 
+	shutdown := func() error {
+		return nil
+	}
 	if needLimiter(cfg) {
 		limiter, err := limits.New(limits.WithCPUPercentage(cfg.Worker.CPUPercentageLimit), limits.WithMemoryKB(cfg.Worker.MemoryLimitKB))
 		if err != nil {
-			return nil, fmt.Errorf("could not create resource limiter")
+			return nil, shutdown, fmt.Errorf("could not create resource limiter")
 		}
 
-		// TODO: Handle this.
-		// defer func() {
-		// 	err = limiter.Shutdown()
-		// 	if err != nil {
-		// 		log.Error().Err(err).Msg("could not shutdown resource limiter")
-		// 	}
-		// }()
+		shutdown = func() error {
+			return limiter.Shutdown()
+		}
 
 		execOptions = append(execOptions, executor.WithLimiter(limiter))
 	}
@@ -50,7 +49,7 @@ func createWorkerNode(core node.Core, store blockless.Store, cfg *config.Config)
 	// Create an executor.
 	executor, err := executor.New(log.With().Str("component", "executor").Logger(), execOptions...)
 	if err != nil {
-		return nil, fmt.Errorf("could not create an executor: %w", err)
+		return nil, shutdown, fmt.Errorf("could not create an executor: %w", err)
 	}
 
 	worker, err := worker.New(core, fstore, executor,
@@ -58,10 +57,10 @@ func createWorkerNode(core node.Core, store blockless.Store, cfg *config.Config)
 		worker.Workspace(cfg.Workspace),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("could not create a worker node: %w", err)
+		return nil, shutdown, fmt.Errorf("could not create a worker node: %w", err)
 	}
 
-	return worker, nil
+	return worker, shutdown, nil
 }
 
 func createHeadNode(core node.Core, cfg *config.Config) (Node, error) {

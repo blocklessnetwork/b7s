@@ -9,8 +9,6 @@ const (
 	spanWorkOrder = "WorkOrder"
 )
 
-// TODO: Check - duplicate span/metric definitions.
-
 var (
 	rollCallsSeenMetric    = []string{"node", "rollcalls", "seen"}
 	rollCallsAppliedMetric = []string{"node", "rollcalls", "applied"}

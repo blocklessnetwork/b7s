@@ -98,7 +98,6 @@ func deriveCIDFromURI(uri string) (string, error) {
 	return cid, nil
 }
 
-// TODO: Move to a different package.
 func manifestURLFromCID(cid string) string {
 	return fmt.Sprintf("https://%s.ipfs.w3s.link/manifest.json", cid)
 }

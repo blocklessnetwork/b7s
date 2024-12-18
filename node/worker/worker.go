@@ -25,11 +25,7 @@ type Worker struct {
 
 	attributes *attributes.Attestation
 
-	// TODO: Update cluster map, don't use this.
-	// clusters maps request ID to the cluster the node belongs to.
-	clusters *syncmap.Map[string, consensusExecutor]
-
-	// TODO: This no longer needs to be a waitmap for the worker.
+	clusters         *syncmap.Map[string, consensusExecutor] // clusters maps request ID to the cluster the node belongs to.
 	executeResponses *waitmap.WaitMap[string, execute.NodeResult]
 }
 
@@ -45,8 +41,6 @@ func New(core node.Core, fstore FStore, executor blockless.Executor, options ...
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
-
-	// TODO: Tracing
 
 	worker := &Worker{
 		Core: core,

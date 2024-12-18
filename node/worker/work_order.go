@@ -54,8 +54,6 @@ func (w *Worker) processWorkOrder(ctx context.Context, from peer.ID, req request
 		w.executeResponses.Set(requestID, execute.NodeResult{Result: result, Metadata: metadata})
 	}
 
-	// TODO: Remaining response fields.
-
 	// Prepare a work order response.
 	res := req.Response(code, result).WithMetadata(metadata)
 
