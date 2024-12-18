@@ -3,7 +3,6 @@ package node_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"math/rand/v2"
 	"testing"
 	"time"
@@ -97,36 +96,35 @@ func TestNode_SendMessageToMany(t *testing.T) {
 		core = node.NewCore(log, helpers.NewLoopbackHost(t, log))
 	)
 
-	helpers.HostAddNewPeer(t, core.Host(), client1)
-	helpers.HostAddNewPeer(t, core.Host(), client2)
-
-	client1.SetStreamHandler(blockless.ProtocolID, func(network.Stream) {
-		fmt.Printf("### client1 got message\n")
-	})
-	client2.SetStreamHandler(blockless.ProtocolID, func(network.Stream) {
-		fmt.Printf("### client2 got message\n")
-	})
+	client1.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {})
+	client2.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {})
 
 	// NOTE: These subtests are sequential.
-	t.Run("nominal case - sending to two online peers is ok", func(t *testing.T) {
-		err := core.SendToMany(context.Background(), []peer.ID{client1.ID(), client2.ID()}, newDummyRecord(), true)
-		require.NoError(t, err)
+
+	// At this point we don't know how to dial the clients so sends will fail.
+	t.Run("all sends failing produces an error", func(t *testing.T) {
+		err := core.SendToMany(context.Background(), []peer.ID{client1.ID(), client2.ID()}, newDummyRecord(), false)
+		require.Error(t, err)
 	})
+
+	// Add client1 to peerstore - now one send can succeed.
+	helpers.HostAddNewPeer(t, core.Host(), client1)
+
 	t.Run("peer is down with requireAll is an error", func(t *testing.T) {
-		client1.Close()
 		err := core.SendToMany(context.Background(), []peer.ID{client1.ID(), client2.ID()}, newDummyRecord(), true)
 		require.Error(t, err)
 	})
 	t.Run("peer is down with partial delivery is ok", func(t *testing.T) {
-		client1.Close()
 		err := core.SendToMany(context.Background(), []peer.ID{client1.ID(), client2.ID()}, newDummyRecord(), false)
 		require.NoError(t, err)
 	})
-	t.Run("all sends failing produces an error", func(t *testing.T) {
-		client1.Close()
-		client2.Close()
-		err := core.SendToMany(context.Background(), []peer.ID{client1.ID(), client2.ID()}, newDummyRecord(), false)
-		require.Error(t, err)
+
+	// Add client2 to the peerstore - now both sends can succeed.
+	helpers.HostAddNewPeer(t, core.Host(), client2)
+
+	t.Run("nominal case - sending to two online peers is ok", func(t *testing.T) {
+		err := core.SendToMany(context.Background(), []peer.ID{client1.ID(), client2.ID()}, newDummyRecord(), true)
+		require.NoError(t, err)
 	})
 }
 

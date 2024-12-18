@@ -80,12 +80,12 @@ func (c *core) SendToMany(ctx context.Context, peers []peer.ID, msg blockless.Me
 		return fmt.Errorf("could not encode record: %w", err)
 	}
 
-	var errGroup multierror.Group
+	var eg multierror.Group
 	for i, peer := range peers {
 		i := i
 		peer := peer
 
-		errGroup.Go(func() error {
+		eg.Go(func() error {
 			err := c.host.SendMessage(ctx, peer, payload)
 			if err != nil {
 				return fmt.Errorf("peer %v/%v send error (peer: %s): %w", i+1, len(peers), peer, err)
@@ -97,8 +97,8 @@ func (c *core) SendToMany(ctx context.Context, peers []peer.ID, msg blockless.Me
 
 	c.metrics.IncrCounterWithLabels(messagesSentMetric, float32(len(peers)), []metrics.Label{{Name: "type", Value: msg.Type()}})
 
-	retErr := errGroup.Wait()
-	if retErr.ErrorOrNil() == nil {
+	retErr := eg.Wait()
+	if retErr == nil || len(retErr.Errors) == 0 {
 		// If everything succeeded => ok.
 		return nil
 	}
@@ -114,7 +114,7 @@ func (c *core) SendToMany(ctx context.Context, peers []peer.ID, msg blockless.Me
 			return fmt.Errorf("some sends failed: %w", retErr)
 		}
 
-		c.log.Warn().Err(retErr).Msg("some sends failed, proceeding")
+		c.log.Warn().Err(retErr.ErrorOrNil()).Msg("some sends failed, proceeding")
 
 		return nil
 	}
