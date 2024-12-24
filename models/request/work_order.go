@@ -15,8 +15,8 @@ type WorkOrder struct {
 
 	execute.Request // execute request is embedded
 
-	RequestID string    `json:"request_id,omitempty"` // RequestID may be set initially, if the execution request is relayed via roll-call.
-	Timestamp time.Time `json:"timestamp,omitempty"`  // Execution request timestamp is a factor for PBFT.
+	RequestID string    `json:"request_id,omitempty"`
+	Timestamp time.Time `json:"timestamp,omitempty"` // Execution request timestamp is a factor for PBFT.
 }
 
 func (w WorkOrder) Response(c codes.Code, res execute.Result) *response.WorkOrder {

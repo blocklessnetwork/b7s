@@ -32,13 +32,13 @@ func (w *Worker) processRollCall(ctx context.Context, from peer.ID, req request.
 	if req.Attributes != nil {
 
 		if w.attributes == nil {
-			log.Info().Msg("skipping attributed execution requested")
+			log.Info().Msg("skipping attributed roll call - no attributes set")
 			return nil
 		}
 
 		err := haveAttributes(*w.attributes, *req.Attributes)
 		if err != nil {
-			log.Info().Err(err).Msg("skipping attributed execution request - we do not match requested attributes")
+			log.Info().Err(err).Msg("skipping attributed roll call - we do not match requested attributes")
 			return nil
 		}
 	}

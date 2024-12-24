@@ -9,7 +9,7 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/consensus"
+	cons "github.com/blocklessnetwork/b7s/consensus"
 	"github.com/blocklessnetwork/b7s/consensus/pbft"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/models/codes"
@@ -21,7 +21,7 @@ func (h *HeadNode) executeRollCall(
 	ctx context.Context,
 	requestID string,
 	req request.Execute,
-	consensusAlgo consensus.Type,
+	consensus cons.Type,
 ) ([]peer.ID, error) {
 
 	// Create a logger with relevant context.
@@ -37,7 +37,7 @@ func (h *HeadNode) executeRollCall(
 	h.rollCall.create(requestID)
 	defer h.rollCall.remove(requestID)
 
-	err := h.publishRollCall(ctx, req.RollCall(requestID, consensusAlgo), req.Topic)
+	err := h.publishRollCall(ctx, req.RollCall(requestID, consensus), req.Topic)
 	if err != nil {
 		return nil, fmt.Errorf("could not publish roll call: %w", err)
 	}
@@ -49,8 +49,8 @@ func (h *HeadNode) executeRollCall(
 		time.Duration(req.Config.Timeout)*time.Second,
 		h.cfg.RollCallTimeout,
 	)
-	tctx, exCancel := context.WithTimeout(ctx, t)
-	defer exCancel()
+	tctx, cancel := context.WithTimeout(ctx, t)
+	defer cancel()
 
 	nodeCount := req.Config.NodeCount
 
@@ -104,7 +104,7 @@ rollCallResponseLoop:
 		}
 	}
 
-	if consensusAlgo == consensus.PBFT && len(reportingPeers) < pbft.MinimumReplicaCount {
+	if consensus == cons.PBFT && len(reportingPeers) < pbft.MinimumReplicaCount {
 		return nil, fmt.Errorf("not enough peers reported for PBFT consensus (have: %v, need: %v)", len(reportingPeers), pbft.MinimumReplicaCount)
 	}
 
@@ -115,16 +115,16 @@ rollCallResponseLoop:
 // On successful issuance of the roll call request, we return the ID of the issued request.
 func (h *HeadNode) publishRollCall(ctx context.Context, rc *request.RollCall, subgroup string) error {
 
-	h.Metrics().IncrCounterWithLabels(rollCallsPublishedMetric, 1, []metrics.Label{
-		{Name: "function", Value: rc.FunctionID},
-	})
-
 	subgroup = cmp.Or(subgroup, blockless.DefaultTopic)
 
 	err := h.PublishToTopic(ctx, subgroup, rc)
 	if err != nil {
 		return fmt.Errorf("could not publish to topic: %w", err)
 	}
+
+	h.Metrics().IncrCounterWithLabels(rollCallsPublishedMetric, 1, []metrics.Label{
+		{Name: "function", Value: rc.FunctionID},
+	})
 
 	return nil
 }

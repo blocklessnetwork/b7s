@@ -47,7 +47,7 @@ func (c *core) Run(ctx context.Context, process func(context.Context, peer.ID, s
 		go func(topic string) {
 
 			// TODO: Check DHT initialization, now that we're working with multiple topics, may not need to repeat ALL work per topic.
-			err := c.Host().DiscoverPeers(ctx, topic)
+			err := c.host.DiscoverPeers(ctx, topic)
 			if err != nil {
 				c.Log().Error().Err(err).Msg("could not discover peers")
 			}
@@ -85,7 +85,7 @@ func (c *core) Run(ctx context.Context, process func(context.Context, peer.ID, s
 				}
 
 				// Skip messages we published.
-				if msg.ReceivedFrom == c.host.ID() {
+				if msg.GetFrom() == c.host.ID() {
 					continue
 				}
 

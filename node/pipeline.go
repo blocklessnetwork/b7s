@@ -46,7 +46,7 @@ func PubSubPipeline(topic string) Pipeline {
 	return Pipeline{PubSub, topic}
 }
 
-func CorrectPipeline(msg string, pipeline Pipeline) bool {
+func correctPipeline(msg string, pipeline Pipeline) bool {
 
 	if pipeline.ID == DirectMessage {
 

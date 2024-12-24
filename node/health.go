@@ -26,6 +26,7 @@ func (c *core) emitHealthPing(ctx context.Context, interval time.Duration) {
 			err := c.Publish(ctx, &msg)
 			if err != nil {
 				c.log.Warn().Err(err).Msg("could not publish health signal")
+				return
 			}
 
 			c.log.Trace().Msg("emitted health ping")

@@ -8,7 +8,7 @@ import (
 	"github.com/blocklessnetwork/b7s/models/execute"
 )
 
-// APINode implements the `APINode` interface expected by the API.
+// APINode implements the `Node` interface expected by the API.
 type APINode struct {
 	ExecuteFunctionFunc        func(context.Context, execute.Request, string) (codes.Code, string, execute.ResultMap, execute.Cluster, error)
 	ExecutionResultFunc        func(id string) (execute.ResultMap, bool)

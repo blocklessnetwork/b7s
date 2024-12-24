@@ -15,10 +15,11 @@ func (w *Worker) runSyncLoop(ctx context.Context) {
 		case <-ticker.C:
 			err := w.fstore.Sync(ctx, false)
 			if err != nil {
-				w.Log().Error().Err(err).Msg("function sync unsuccessful")
-			} else {
-				w.Log().Debug().Msg("function sync ok")
+				w.Log().Error().Err(err).Msg("function sync failed")
+				return
 			}
+
+			w.Log().Debug().Msg("function sync ok")
 
 		case <-ctx.Done():
 			return

@@ -20,8 +20,6 @@ type topicInfo struct {
 
 func (c *core) Subscribe(ctx context.Context, topic string) error {
 
-	c.metrics.IncrCounter(subscriptionsMetric, 1)
-
 	h, sub, err := c.host.Subscribe(topic)
 	if err != nil {
 		return fmt.Errorf("could not subscribe to topic: %w", err)
@@ -33,6 +31,8 @@ func (c *core) Subscribe(ctx context.Context, topic string) error {
 	}
 
 	c.topics.Set(topic, ti)
+
+	c.metrics.IncrCounter(subscriptionsMetric, 1)
 
 	return nil
 }
@@ -93,6 +93,7 @@ func (c *core) SendToMany(ctx context.Context, peers []peer.ID, msg blockless.Me
 		})
 	}
 
+	// Might be off in the case of partial success.
 	c.metrics.IncrCounterWithLabels(messagesSentMetric, float32(len(peers)), []metrics.Label{{Name: "type", Value: msg.Type()}})
 
 	retErr := eg.Wait()

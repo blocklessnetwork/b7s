@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/libp2p/go-libp2p/core/peer"
+
 	"github.com/blocklessnetwork/b7s/consensus/pbft"
 	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 // gatherExecutionResultsPBFT collects execution results from a PBFT cluster. This means f+1 identical results.

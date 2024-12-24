@@ -32,7 +32,7 @@ func TestNode_DisallowedMessages(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		ok := CorrectPipeline(test.message, test.pipeline)
+		ok := correctPipeline(test.message, test.pipeline)
 		require.False(t, ok, "message: %s, pipeline: %s", test.message, test.pipeline)
 	}
 }

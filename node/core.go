@@ -14,6 +14,7 @@ import (
 )
 
 type Core interface {
+	// ID returns the node ID.
 	ID() string
 
 	Logger
@@ -28,12 +29,11 @@ type Logger interface {
 
 type Network interface {
 	Host() *host.Host
+	Connected(peer.ID) bool
 	Messaging
 }
 
 type Messaging interface {
-	Connected(peer.ID) bool
-
 	Send(context.Context, peer.ID, blockless.Message) error
 	SendToMany(context.Context, []peer.ID, blockless.Message, bool) error
 
@@ -84,7 +84,6 @@ func NewCore(log zerolog.Logger, host *host.Host, opts ...Option) *core {
 	return core
 }
 
-// ID returns the ID of this node.
 func (c *core) ID() string {
 	return c.host.ID().String()
 }

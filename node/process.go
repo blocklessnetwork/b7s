@@ -16,7 +16,7 @@ import (
 func (c *core) processMessage(ctx context.Context, from peer.ID, payload []byte, pipeline Pipeline, process func(context.Context, peer.ID, string, []byte) error) (procError error) {
 
 	// Determine message type.
-	typ, err := GetMessageType(payload)
+	typ, err := getMessageType(payload)
 	if err != nil {
 		return fmt.Errorf("could not unpack message: %w", err)
 	}
@@ -55,7 +55,7 @@ func (c *core) processMessage(ctx context.Context, from peer.ID, payload []byte,
 		span.SetStatus(otelcodes.Error, spanStatusErr)
 	}()
 
-	if !CorrectPipeline(typ, pipeline) {
+	if !correctPipeline(typ, pipeline) {
 		log.Warn().Msg("message not allowed on pipeline")
 		return nil
 	}
@@ -87,8 +87,8 @@ func HandleMessage[T blockless.Message](ctx context.Context, from peer.ID, paylo
 	return processFunc(ctx, from, msg)
 }
 
-// GetMessageType will return the `type` string field from the JSON payload.
-func GetMessageType(payload []byte) (string, error) {
+// getMessageType will return the `type` string field from the JSON payload.
+func getMessageType(payload []byte) (string, error) {
 
 	type baseMessage struct {
 		Type string `json:"type,omitempty"`
