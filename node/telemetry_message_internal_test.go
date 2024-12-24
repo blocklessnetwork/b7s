@@ -121,8 +121,8 @@ func TestNode_ProcessedMessageMetric(t *testing.T) {
 	var (
 		// Do between 1 and 10 messages.
 		limit            = 10
-		healthcheckCount = rand.Intn(limit) + 1
-		disbandCount     = rand.Intn(limit) + 1
+		healthcheckCount = rand.IntN(limit) + 1
+		disbandCount     = rand.IntN(limit) + 1
 
 		healthCheck = response.Health{}
 

@@ -58,7 +58,7 @@ func TestWorker_ProcessWorkOrder(t *testing.T) {
 				WallClockTime: time.Duration(rand.Int()),
 				CPUUserTime:   time.Duration(rand.Int()),
 				CPUSysTime:    time.Duration(rand.Int()),
-				MemoryMaxKB:   rand.Int63(),
+				MemoryMaxKB:   rand.Int64(),
 			},
 		}
 	)
@@ -103,7 +103,7 @@ func TestWorker_ProcessWorkOrder_Metadata(t *testing.T) {
 		}
 	)
 	data := make(map[string]any)
-	keys := rand.Intn(10)
+	keys := rand.IntN(10)
 	for i := 0; i < keys; i++ {
 
 		key := fmt.Sprintf("key-%v", rand.Int())
@@ -231,7 +231,7 @@ func TestWorker_ProcessWorkOrder_HandlesErrors(t *testing.T) {
 					WallClockTime: time.Duration(rand.Int()),
 					CPUUserTime:   time.Duration(rand.Int()),
 					CPUSysTime:    time.Duration(rand.Int()),
-					MemoryMaxKB:   rand.Int63(),
+					MemoryMaxKB:   rand.Int64(),
 				},
 			}
 		)

@@ -11,7 +11,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -269,10 +268,10 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 func getRandomPayload(t *testing.T, len int) []byte {
 	t.Helper()
 
-	rand.Seed(time.Now().UnixNano())
-
+	var seed = [32]byte([]byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"))
+	r := rand.NewChaCha8(seed)
 	buf := make([]byte, len)
-	_, err := rand.Read(buf)
+	_, err := r.Read(buf)
 	require.NoError(t, err)
 
 	return buf
