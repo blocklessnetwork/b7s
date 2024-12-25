@@ -88,21 +88,17 @@ func (w *Worker) processRollCall(ctx context.Context, from peer.ID, req request.
 // Temporary measure - we can't have multiple Raft clusters at this point. Remove when we remove this limitation.
 func (w *Worker) haveRaftClusters() bool {
 
-	for _, id := range w.clusters.Keys() {
-
-		// TODO: Check - we might have a data race here - if we get list of keys
-		// but a new raft cluster appears after that, we might miss it.
-		cluster, ok := w.clusters.Get(id)
-		if !ok {
-			continue
+	found := false
+	w.clusters.WithRLock(func(data map[string]consensusExecutor) {
+		for _, cluster := range data {
+			if cluster.Consensus() == consensus.Raft {
+				found = true
+				return
+			}
 		}
+	})
 
-		if cluster.Consensus() == consensus.Raft {
-			return true
-		}
-	}
-
-	return false
+	return found
 }
 
 func manifestURLFromCID(cid string) string {

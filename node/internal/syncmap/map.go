@@ -57,3 +57,17 @@ func (m *Map[K, V]) Keys() []K {
 
 	return keys
 }
+
+func (m *Map[K, V]) WithRLock(fn func(map[K]V)) {
+	m.RLock()
+	defer m.RUnlock()
+
+	fn(m.data)
+}
+
+func (m *Map[K, V]) WithLock(fn func(map[K]V)) {
+	m.Lock()
+	defer m.Unlock()
+
+	fn(m.data)
+}

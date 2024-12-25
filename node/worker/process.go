@@ -28,5 +28,4 @@ func (w *Worker) process(ctx context.Context, from peer.ID, msg string, payload 
 	}
 
 	return fmt.Errorf("unsupported message: %s", msg)
-
 }
