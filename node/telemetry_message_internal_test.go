@@ -2,26 +2,21 @@ package node
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"math/rand"
+	"encoding/json"
+	"math/rand/v2"
 	"testing"
 	"time"
 
-	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
 	otelcodes "go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s/models/request"
 	"github.com/blocklessnetwork/b7s/models/response"
-	"github.com/blocklessnetwork/b7s/node/internal/pipeline"
 	"github.com/blocklessnetwork/b7s/telemetry"
 	"github.com/blocklessnetwork/b7s/telemetry/tracing"
 	"github.com/blocklessnetwork/b7s/testing/helpers"
@@ -39,17 +34,22 @@ func TestNode_TraceHealthCheck(t *testing.T) {
 		exporter, tp = helpers.CreateTracerProvider(t, resource)
 		from         = mocks.GenericPeerIDs[0]
 
-		node = createNode(t, role)
+		log  = mocks.NoopLogger
+		core = NewCore(log, helpers.NewLoopbackHost(t, log))
 	)
 
-	node.tracer = tracing.NewTracerFromProvider(tp, "test-tracer")
+	core.tracer = tracing.NewTracerFromProvider(tp, "test-tracer")
 
 	payload := []byte(`{ "type": "MsgHealthCheck" }`)
 
 	pre := time.Now()
 
-	pipeline := pipeline.PubSubPipeline(DefaultTopic)
-	err := node.processMessage(ctx, from, payload, pipeline)
+	process := func(context.Context, peer.ID, string, []byte) error {
+		return nil
+	}
+
+	pipeline := PubSubPipeline(blockless.DefaultTopic)
+	err := core.processMessage(ctx, from, payload, pipeline, process)
 	require.NoError(t, err)
 
 	post := time.Now()
@@ -86,166 +86,6 @@ func TestNode_TraceHealthCheck(t *testing.T) {
 	require.Equal(t, resource, span.Resource)
 }
 
-func TestNode_TraceExecution(t *testing.T) {
-
-	// This is a more involved test, somewhere close to an integration test. It covers the scenario of a worker node processing an execution request,
-	// where it creates a span for the execution request, invokes the executor, and sends the response to the client. We create a trace exporter to
-	// collect these traces and verify their correctness and completness (span attributes-wise), as well as their relationship - executor and
-	// message sending spans should be children of the original span created for the execution.
-
-	var (
-		ctx = context.Background()
-
-		peerID       = mocks.GenericPeerID
-		role         = blockless.WorkerNode
-		resource, _  = telemetry.CreateResource(ctx, peerID.String(), role)
-		exporter, tp = helpers.CreateTracerProvider(t, resource)
-
-		executorTestSpan = fmt.Sprintf("test-span-%v", rand.Int())
-	)
-
-	// Create worker node.
-	node := createNode(t, role)
-	tracer := tracing.NewTracerFromProvider(tp, "test-tracer")
-	node.tracer = tracer
-
-	// Prepare a side to receive the response.
-	receiver, err := host.New(mocks.NoopLogger, loopback, 0)
-	require.NoError(t, err)
-	hostAddNewPeer(t, node.host, receiver)
-
-	// Register a processor just so we receive the message.
-	receiver.SetStreamHandler(blockless.ProtocolID, func(_ network.Stream) {})
-
-	tests := []struct {
-		name    string
-		req     request.Execute
-		wantErr error
-	}{
-		{
-			name: "execution failed",
-			req: request.Execute{
-				RequestID: newRequestID(),
-				Request: execute.Request{
-					FunctionID: fmt.Sprintf("test-function-cid-1-%v", rand.Int()),
-					Method:     fmt.Sprintf("test-method-%v.wasm", rand.Int()),
-					Config: execute.Config{
-						NodeCount:          rand.Intn(16),
-						ConsensusAlgorithm: "",
-					},
-				},
-			},
-			wantErr: errors.New("test-error"),
-		},
-		{
-			name: "execution ok",
-			req: request.Execute{
-				RequestID: newRequestID(),
-				Request: execute.Request{
-					FunctionID: fmt.Sprintf("test-function-cid-2-%v", rand.Int()),
-					Method:     fmt.Sprintf("test-method-%v.wasm", rand.Int()),
-					Config: execute.Config{
-						NodeCount:          rand.Intn(16),
-						ConsensusAlgorithm: "",
-					},
-				},
-			},
-			wantErr: nil,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-
-			executor := mocks.BaselineExecutor(t)
-			// Populate the span in the executor and verify span chain (parent).
-			executor.ExecFunctionFunc = func(ctx context.Context, requestID string, req execute.Request) (execute.Result, error) {
-				_, span := tracer.Start(ctx, executorTestSpan)
-				defer span.End()
-
-				return execute.Result{}, test.wantErr
-			}
-
-			node.executor = executor
-
-			verifySendSpan := func(t *testing.T, span tracetest.SpanStub) {
-				t.Helper()
-
-				require.True(t, span.Parent.IsValid())
-
-				attributes := attributeMap(span.Attributes)
-
-				require.Equal(t, receiver.ID().String(), attributes["message.peer"].AsString())
-				require.Equal(t, pipeline.DirectMessage.String(), attributes["message.pipeline"].AsString())
-			}
-			verifyExecutionSpan := func(t *testing.T, span tracetest.SpanStub) {
-				t.Helper()
-
-				// In this case we know this is a root span so verify parent field is empty.
-				require.False(t, span.Parent.IsValid())
-
-				attributes := attributeMap(span.Attributes)
-
-				require.Equal(t, test.req.Request.FunctionID, attributes["function.cid"].AsString())
-				require.Equal(t, test.req.Request.Method, attributes["function.method"].AsString())
-				require.Equal(t, int64(test.req.Request.Config.NodeCount), attributes["execution.node.count"].AsInt64())
-				require.Equal(t, test.req.Request.Config.ConsensusAlgorithm, attributes["execution.consensus"].AsString())
-				require.Equal(t, test.req.RequestID, attributes["execution.request.id"].AsString())
-
-				require.Equal(t, resource, span.Resource)
-			}
-
-			pre := time.Now()
-
-			err := node.workerProcessExecute(ctx, receiver.ID(), test.req)
-			require.NoError(t, err)
-
-			post := time.Now()
-
-			// Now, verify the spans were recorded correctly.
-			// We expect at minimum spans for:
-			// 1. workerProcessExecute function
-			// 2. executor
-			// 3. message sending
-
-			spans := make(map[string]tracetest.SpanStub)
-			for _, span := range exporter.GetSpans() {
-
-				// Verify all span times are correct.
-				require.Truef(t, span.StartTime.After(pre), "unexpected timestamp, pre: %s, span start time: %s", pre.Format(time.RFC3339), span.StartTime.Format(time.RFC3339))
-				require.Truef(t, span.EndTime.Before(post), "unexpected timestamp, post: %s, span end time: %s", post.Format(time.RFC3339), span.EndTime.Format(time.RFC3339))
-
-				// Verify span IDs are valid.
-				sctx := span.SpanContext
-				require.True(t, sctx.HasSpanID())
-				require.True(t, sctx.HasTraceID())
-
-				spans[span.Name] = span
-			}
-
-			// Verify worker execute span.
-			workerExecuteSpan, ok := spans[spanWorkerExecute]
-			require.True(t, ok)
-			verifyExecutionSpan(t, workerExecuteSpan)
-
-			// Verify executor span.
-			span, ok := spans[executorTestSpan]
-			require.True(t, ok)
-
-			require.True(t, span.Parent.IsValid())
-			require.True(t, span.Parent.Equal(workerExecuteSpan.SpanContext))
-
-			// Verify send span.
-			span, ok = spans[msgSendSpanName(spanMessageSend, blockless.MessageExecuteResponse)]
-			require.True(t, ok)
-			verifySendSpan(t, span)
-
-			// Clear state of the exporter so subsequent tests have a clear slate.
-			exporter.Reset()
-		})
-	}
-}
-
 func attributeMap(attrs []attribute.KeyValue) map[attribute.Key]attribute.Value {
 
 	// Convert attributes to a map for easier lookup.
@@ -262,7 +102,9 @@ func TestNode_ProcessedMessageMetric(t *testing.T) {
 	var (
 		ctx      = context.Background()
 		registry = prometheus.NewRegistry()
-		node     = createNode(t, blockless.WorkerNode)
+		log      = mocks.NoopLogger
+
+		core = NewCore(log, helpers.NewLoopbackHost(t, log))
 	)
 
 	sink, err := telemetry.CreateMetricSink(registry, telemetry.MetricsConfig{Counters: Counters})
@@ -271,7 +113,7 @@ func TestNode_ProcessedMessageMetric(t *testing.T) {
 	m, err := telemetry.CreateMetrics(sink, false)
 	require.NoError(t, err)
 
-	node.metrics = m
+	core.metrics = m
 
 	// Messages to send. We will send multiple health check and disband cluster messages.
 	// Note that not all messages make sense in the context of a real-world node, but we just care about having
@@ -279,37 +121,45 @@ func TestNode_ProcessedMessageMetric(t *testing.T) {
 	var (
 		// Do between 1 and 10 messages.
 		limit            = 10
-		healthcheckCount = rand.Intn(limit) + 1
-		disbandCount     = rand.Intn(limit) + 1
+		healthcheckCount = rand.IntN(limit) + 1
+		disbandCount     = rand.IntN(limit) + 1
 
 		healthCheck = response.Health{}
 
 		disbandRequest = request.DisbandCluster{
-			RequestID: newRequestID(),
+			RequestID: "request-id",
 		}
 	)
 
 	msgs := []struct {
 		count    int
-		pipeline pipeline.Pipeline
-		payload  []byte
+		pipeline Pipeline
+		rec      any
 	}{
 		{
 			count:    healthcheckCount,
-			pipeline: pipeline.PubSubPipeline(DefaultTopic),
-			payload:  serialize(t, healthCheck),
+			pipeline: PubSubPipeline(blockless.DefaultTopic),
+			rec:      healthCheck,
 		},
 		{
 			count:    disbandCount,
-			pipeline: pipeline.DirectMessagePipeline(),
-			payload:  serialize(t, disbandRequest),
+			pipeline: DirectMessagePipeline,
+			rec:      disbandRequest,
 		},
+	}
+
+	process := func(context.Context, peer.ID, string, []byte) error {
+		return nil
 	}
 
 	for _, msg := range msgs {
 		for i := 0; i < msg.count; i++ {
+
+			payload, err := json.Marshal(msg.rec)
+			require.NoError(t, err)
+
 			// We don't care if the message was processed okay (disband cluster will fail).
-			_ = node.processMessage(ctx, mocks.GenericPeerID, msg.payload, msg.pipeline)
+			_ = core.processMessage(ctx, mocks.GenericPeerID, payload, msg.pipeline, process)
 		}
 	}
 

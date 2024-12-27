@@ -6,18 +6,17 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/node/internal/pipeline"
 )
 
 func TestNode_DisallowedMessages(t *testing.T) {
 
 	var (
-		pubsub = pipeline.PubSubPipeline(DefaultTopic)
-		direct = pipeline.DirectMessagePipeline()
+		pubsub = PubSubPipeline(blockless.DefaultTopic)
+		direct = DirectMessagePipeline
 	)
 
 	tests := []struct {
-		pipeline pipeline.Pipeline
+		pipeline Pipeline
 		message  string
 	}{
 		// Messages disallowed for publishing.
@@ -33,7 +32,7 @@ func TestNode_DisallowedMessages(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		ok := messageAllowedOnPipeline(test.message, test.pipeline)
+		ok := correctPipeline(test.message, test.pipeline)
 		require.False(t, ok, "message: %s, pipeline: %s", test.message, test.pipeline)
 	}
 }

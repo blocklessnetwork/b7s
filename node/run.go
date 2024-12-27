@@ -11,61 +11,62 @@ import (
 	"github.com/armon/go-metrics"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/node/internal/pipeline"
 )
 
 // Run will start the main loop for the node.
-func (n *Node) Run(ctx context.Context) error {
+func (c *core) Run(ctx context.Context, process func(context.Context, peer.ID, string, []byte) error) error {
 
-	err := n.subscribeToTopics(ctx)
+	err := c.host.InitPubSub(ctx)
 	if err != nil {
-		return fmt.Errorf("could not subscribe to topics: %w", err)
+		return fmt.Errorf("coould not initialize pubsub: %w", err)
 	}
 
-	err = n.host.ConnectToKnownPeers(ctx)
+	topics := c.cfg.Topics
+	for _, topic := range topics {
+		err = c.Subscribe(ctx, topic)
+		if err != nil {
+			return fmt.Errorf("could not subscribe to topic (topic: %s): %w", topic, err)
+		}
+	}
+
+	err = c.host.ConnectToKnownPeers(ctx)
 	if err != nil {
 		return fmt.Errorf("could not connect to known peers: %w", err)
 	}
 
-	// Sync functions now in case they were removed from the storage.
-	err = n.fstore.Sync(ctx, false)
-	if err != nil {
-		return fmt.Errorf("could not sync functions: %w", err)
-	}
-
 	// Set the handler for direct messages.
-	n.listenDirectMessages(ctx)
+	c.listenDirectMessages(ctx, process)
 
 	// Discover peers.
 	// NOTE: Potentially signal any error here so that we abort the node
 	// run loop if anything failed.
-	for _, topic := range n.cfg.Topics {
+	for _, topic := range topics {
 		go func(topic string) {
 
 			// TODO: Check DHT initialization, now that we're working with multiple topics, may not need to repeat ALL work per topic.
-			err = n.host.DiscoverPeers(ctx, topic)
+			err := c.host.DiscoverPeers(ctx, topic)
 			if err != nil {
-				n.log.Error().Err(err).Msg("could not discover peers")
+				c.Log().Error().Err(err).Msg("could not discover peers")
 			}
-
 		}(topic)
 	}
 
-	// Start the health signal emitter in a separate goroutine.
-	go n.HealthPing(ctx)
+	c.log.Info().Uint("concurrency", c.cfg.Concurrency).Msg("starting node main loop")
 
-	// Start the function sync in the background to periodically check functions.
-	go n.runSyncLoop(ctx)
-
-	n.log.Info().Uint("concurrency", n.cfg.Concurrency).Msg("starting node main loop")
-
-	var workers sync.WaitGroup
+	var (
+		workers sync.WaitGroup
+		wg      sync.WaitGroup
+		sema    chan struct{} = make(chan struct{}, c.cfg.Concurrency)
+	)
 
 	// Process topic messages - spin up a goroutine for each topic that will feed the main processing loop below.
 	// No need for locking since we're still single threaded here and these (subscribed) topics will not be touched by other code.
-	for name, topic := range n.subgroups.topics {
+	for _, topicName := range c.topics.Keys() {
+
+		topic, _ := c.topics.Get(topicName)
 
 		workers.Add(1)
 
@@ -79,72 +80,77 @@ func (n *Node) Run(ctx context.Context) error {
 				msg, err := subscription.Next(ctx)
 				if err != nil {
 					// NOTE: Cancelling the context will lead us here.
-					n.log.Error().Err(err).Msg("could not receive message")
+					c.log.Error().Err(err).Msg("could not receive message")
 					break
 				}
 
 				// Skip messages we published.
-				if msg.ReceivedFrom == n.host.ID() {
+				if msg.GetFrom() == c.host.ID() {
 					continue
 				}
 
-				n.log.Trace().Str("topic", name).Str("peer", msg.ReceivedFrom.String()).Hex("id", []byte(msg.ID)).Msg("received message")
+				c.log.Trace().
+					Str("topic", name).
+					Stringer("peer", msg.ReceivedFrom).
+					Stringer("origin", msg.GetFrom()).
+					Hex("id", []byte(msg.ID)).Msg("received message")
 
 				// Try to get a slot for processing the request.
-				n.sema <- struct{}{}
-				n.wg.Add(1)
+				sema <- struct{}{}
+				wg.Add(1)
 
 				go func(msg *pubsub.Message) {
 					// Free up slot after we're done.
-					defer n.wg.Done()
-					defer func() { <-n.sema }()
+					defer wg.Done()
+					defer func() { <-sema }()
 
-					n.metrics.IncrCounterWithLabels(topicMessagesMetric, 1, []metrics.Label{{Name: "topic", Value: name}})
+					c.metrics.IncrCounterWithLabels(topicMessagesMetric, 1, []metrics.Label{{Name: "topic", Value: name}})
 
-					err = n.processMessage(ctx, msg.ReceivedFrom, msg.GetData(), pipeline.PubSubPipeline(name))
+					err = c.processMessage(ctx, msg.GetFrom(), msg.GetData(), PubSubPipeline(name), process)
 					if err != nil {
-						n.log.Error().Err(err).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("could not process message")
+						c.log.Error().Err(err).Str("id", msg.ID).Str("peer", msg.ReceivedFrom.String()).Msg("could not process message")
 						return
 					}
 
 				}(msg)
 			}
-		}(name, topic.subscription)
+		}(topicName, topic.subscription)
 	}
 
 	workers.Wait()
 
-	n.log.Debug().Msg("waiting for messages being processed")
-	n.wg.Wait()
+	c.log.Debug().Msg("waiting for messages being processed")
+	wg.Wait()
+
+	// Start the health signal emitter in a separate goroutine.
+	go c.emitHealthPing(ctx, c.cfg.HealthInterval)
 
 	return nil
 }
 
 // listenDirectMessages will process messages sent directly to the peer (as opposed to published messages).
-func (n *Node) listenDirectMessages(ctx context.Context) {
-
-	n.host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+func (c *core) listenDirectMessages(ctx context.Context, process func(context.Context, peer.ID, string, []byte) error) {
+	c.host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
 		defer stream.Close()
 
 		from := stream.Conn().RemotePeer()
 
-		n.metrics.IncrCounter(directMessagesMetric, 1)
+		c.metrics.IncrCounter(directMessagesMetric, 1)
 
 		buf := bufio.NewReader(stream)
 		msg, err := buf.ReadBytes('\n')
 		if err != nil && !errors.Is(err, io.EOF) {
 			stream.Reset()
-			n.log.Error().Err(err).Msg("error receiving direct message")
+			c.log.Error().Err(err).Msg("error receiving direct message")
 			return
 		}
 
-		n.log.Trace().Str("peer", from.String()).Msg("received direct message")
+		c.log.Trace().Stringer("peer", from).Msg("received direct message")
 
-		err = n.processMessage(ctx, from, msg, pipeline.DirectMessagePipeline())
+		err = c.processMessage(ctx, from, msg, DirectMessagePipeline, process)
 		if err != nil {
-			n.log.Error().Err(err).Str("peer", from.String()).Msg("could not process direct message")
+			c.log.Error().Err(err).Str("peer", from.String()).Msg("could not process direct message")
 			return
 		}
-
 	})
 }

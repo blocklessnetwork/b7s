@@ -9,9 +9,10 @@ import (
 )
 
 // HealthPing will run a long running loop, publishing health signal until cancelled.
-func (n *Node) HealthPing(ctx context.Context) {
+func (c *core) emitHealthPing(ctx context.Context, interval time.Duration) {
 
-	ticker := time.NewTicker(n.cfg.HealthInterval)
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
 
 	for {
 		select {
@@ -22,16 +23,16 @@ func (n *Node) HealthPing(ctx context.Context) {
 				Code: http.StatusOK,
 			}
 
-			err := n.publish(ctx, &msg)
+			err := c.Publish(ctx, &msg)
 			if err != nil {
-				n.log.Warn().Err(err).Msg("could not publish health signal")
+				c.log.Warn().Err(err).Msg("could not publish health signal")
+				return
 			}
 
-			n.log.Trace().Msg("emitted health ping")
+			c.log.Trace().Msg("emitted health ping")
 
 		case <-ctx.Done():
-			ticker.Stop()
-			n.log.Info().Msg("stopping health ping")
+			c.log.Info().Msg("stopping health ping")
 			return
 		}
 	}

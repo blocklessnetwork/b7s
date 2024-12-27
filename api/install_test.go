@@ -2,11 +2,8 @@ package api_test
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
@@ -57,43 +54,6 @@ func TestAPI_FunctionInstall_HandlesErrors(t *testing.T) {
 		require.True(t, ok)
 
 		require.Equal(t, http.StatusBadRequest, echoErr.Code)
-	})
-	t.Run("node install takes too long", func(t *testing.T) {
-		t.Parallel()
-
-		const (
-			// The API times out after 10 seconds.
-			installDuration = 11 * time.Second
-		)
-
-		node := mocks.BaselineNode(t)
-		node.PublishFunctionInstallFunc = func(context.Context, string, string, string) error {
-			time.Sleep(installDuration)
-			return nil
-		}
-
-		req := api.FunctionInstallRequest{
-			Uri: "dummy-uri",
-			Cid: "dummy-cid",
-		}
-
-		srv := api.New(mocks.NoopLogger, node)
-
-		rec, ctx, err := setupRecorder(installEndpoint, req)
-		require.NoError(t, err)
-
-		err = srv.InstallFunction(ctx)
-		require.NoError(t, err)
-
-		require.Equal(t, http.StatusOK, rec.Result().StatusCode)
-
-		var res api.FunctionInstallResponse
-		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
-
-		num, err := strconv.Atoi(res.Code)
-		require.NoError(t, err)
-
-		require.Equal(t, http.StatusRequestTimeout, num)
 	})
 	t.Run("node fails to install function", func(t *testing.T) {
 		t.Parallel()

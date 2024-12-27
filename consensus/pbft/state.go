@@ -33,7 +33,7 @@ type replicaState struct {
 	viewChanges map[uint]*viewChangeReceipts
 
 	// Keep track of past executions. Results are mapped to request IDs, not digests.
-	executions map[string]response.Execute
+	executions map[string]response.WorkOrder
 }
 
 func newState() replicaState {
@@ -48,7 +48,7 @@ func newState() replicaState {
 		prepares:    make(map[messageID]*prepareReceipts),
 		commits:     make(map[messageID]*commitReceipts),
 		viewChanges: make(map[uint]*viewChangeReceipts),
-		executions:  make(map[string]response.Execute),
+		executions:  make(map[string]response.WorkOrder),
 	}
 
 	return state

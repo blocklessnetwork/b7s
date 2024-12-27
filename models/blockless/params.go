@@ -2,6 +2,7 @@ package blockless
 
 import (
 	"errors"
+	"time"
 
 	"github.com/libp2p/go-libp2p/core/protocol"
 )
@@ -16,4 +17,8 @@ var (
 const (
 	ProtocolID protocol.ID = "/b7s/work/1.0.0"
 	EnvPrefix  string      = "B7S_"
+
+	DefaultTopic          = "blockless/b7s/general"
+	DefaultHealthInterval = 1 * time.Minute
+	DefaultConcurrency    = 10
 )

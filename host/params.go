@@ -9,6 +9,10 @@ const (
 	errNoGoodAddresses = "no good addresses"
 
 	defaultMustReachBootNodes = false
+
+	// Notifiee tracing span names.
+	spanPeerConnected    = "PeerConnected"
+	spanPeerDisconnected = "PeerDisconnected"
 )
 
 var (

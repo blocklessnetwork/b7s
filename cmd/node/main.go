@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"slices"
 
 	"github.com/cockroachdb/pebble"
 	"github.com/labstack/echo-contrib/echoprometheus"
@@ -19,9 +20,7 @@ import (
 
 	"github.com/blocklessnetwork/b7s/api"
 	"github.com/blocklessnetwork/b7s/config"
-	"github.com/blocklessnetwork/b7s/executor"
-	"github.com/blocklessnetwork/b7s/executor/limits"
-	"github.com/blocklessnetwork/b7s/fstore"
+	b7shost "github.com/blocklessnetwork/b7s/host"
 	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/blocklessnetwork/b7s/node"
 	"github.com/blocklessnetwork/b7s/store"
@@ -201,72 +200,53 @@ func run() int {
 	}
 	defer host.Close()
 
+	host.Network().Notify(b7shost.NewNotifee(
+		log.With().Str("component", "notifiee").Logger(),
+		store,
+	))
+
 	log.Info().
 		Str("id", host.ID().String()).
 		Strs("addresses", host.Addresses()).
 		Strs("boot_nodes", cfg.BootNodes).
 		Msg("created host")
 
-	// Set node options.
-	opts := []node.Option{
-		node.WithRole(nodeRole),
-		node.WithConcurrency(cfg.Concurrency),
-		node.WithAttributeLoading(cfg.LoadAttributes),
-	}
-
-	// If this is a worker node, initialize an executor.
-	if nodeRole == blockless.WorkerNode {
-
-		// Executor options.
-		execOptions := []executor.Option{
-			executor.WithWorkDir(cfg.Workspace),
-			executor.WithRuntimeDir(cfg.Worker.RuntimePath),
-			executor.WithExecutableName(cfg.Worker.RuntimeCLI),
-		}
-
-		if needLimiter(cfg) {
-			limiter, err := limits.New(limits.WithCPUPercentage(cfg.Worker.CPUPercentageLimit), limits.WithMemoryKB(cfg.Worker.MemoryLimitKB))
-			if err != nil {
-				log.Error().Err(err).Msg("could not create resource limiter")
-				return failure
-			}
-
-			defer func() {
-				err = limiter.Shutdown()
-				if err != nil {
-					log.Error().Err(err).Msg("could not shutdown resource limiter")
-				}
-			}()
-
-			execOptions = append(execOptions, executor.WithLimiter(limiter))
-		}
-
-		// Create an executor.
-		executor, err := executor.New(log.With().Str("component", "executor").Logger(), execOptions...)
-		if err != nil {
-			log.Error().
-				Err(err).
-				Str("workspace", cfg.Workspace).
-				Str("runtime_path", cfg.Worker.RuntimePath).
-				Str("runtime_cli", cfg.Worker.RuntimeCLI).
-				Msg("could not create an executor")
-			return failure
-		}
-
-		opts = append(opts, node.WithExecutor(executor))
-		opts = append(opts, node.WithWorkspace(cfg.Workspace))
-	}
-
-	// Create function store.
-	fstore := fstore.New(log.With().Str("component", "fstore").Logger(), store, cfg.Workspace)
-
-	// If we have topics specified, use those.
-	if len(cfg.Topics) > 0 {
-		opts = append(opts, node.WithTopics(cfg.Topics))
+	// Ensure default topic is included in the topic list.
+	if !slices.Contains(cfg.Topics, blockless.DefaultTopic) {
+		cfg.Topics = append(cfg.Topics, blockless.DefaultTopic)
 	}
 
 	// Instantiate node.
-	node, err := node.New(log.With().Str("component", "node").Logger(), host, store, fstore, opts...)
+
+	// First, initialize the node core, common for both node types.
+	core := node.NewCore(
+		log.With().Str("component", "node").Logger(),
+		host,
+		node.Concurrency(cfg.Concurrency),
+		node.Topics(cfg.Topics),
+	)
+
+	var (
+		node         Node
+		nodeshutdown func() error
+	)
+
+	switch nodeRole {
+	case blockless.WorkerNode:
+		node, nodeshutdown, err = createWorkerNode(core, store, cfg)
+
+		if nodeshutdown != nil {
+			defer func() {
+				err = nodeshutdown()
+				if err != nil {
+					log.Error().Err(err).Msg("node shutdown function failed")
+				}
+			}()
+		}
+
+	case blockless.HeadNode:
+		node, err = createHeadNode(core, cfg)
+	}
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")
 		return failure
@@ -299,7 +279,12 @@ func run() int {
 		// Create an API handler if we're a head node.
 		if nodeRole == blockless.HeadNode {
 
-			apiHandler := api.New(log.With().Str("component", "api").Logger(), node)
+			headNode, ok := any(node).(api.Node)
+			if !ok {
+				log.Error().Msg("invalid node type - not a head node")
+			}
+
+			apiHandler := api.New(log.With().Str("component", "api").Logger(), headNode)
 			api.RegisterHandlers(server, apiHandler)
 		}
 
