@@ -4,7 +4,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-// Peer identifies another node in the Blockless network.
+// Peer identifies another node in the Bless network.
 type Peer struct {
 	ID        peer.ID       `json:"id,omitempty"`
 	MultiAddr string        `json:"multiaddress,omitempty"`

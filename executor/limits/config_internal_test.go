@@ -8,7 +8,7 @@ import (
 
 func TestConfig_Cgroup(t *testing.T) {
 
-	const cgroup = "/blockless-test"
+	const cgroup = "/bless-test"
 
 	cfg := Config{
 		Cgroup: DefaultCgroup,
@@ -44,7 +44,7 @@ func TestConfig_WithMemoryKB(t *testing.T) {
 
 func TestConfig_JobName(t *testing.T) {
 
-	const jobName = "blockless-test"
+	const jobName = "bless-test"
 
 	cfg := Config{
 		JobName: DefaultJobObjectName,

@@ -260,17 +260,17 @@ func run() int {
 
 		log.Info().
 			Stringer("role", nodeRole).
-			Msg("Blockless Node starting")
+			Msg("Bless Node starting")
 
 		err := node.Run(ctx)
 		if err != nil {
-			log.Error().Err(err).Msg("Blockless Node failed")
+			log.Error().Err(err).Msg("Bless Node failed")
 			close(failed)
 		} else {
 			close(done)
 		}
 
-		log.Info().Msg("Blockless Node stopped")
+		log.Info().Msg("Bless Node stopped")
 	}()
 
 	// Start the HTTP server if needed.
@@ -311,11 +311,11 @@ func run() int {
 
 	select {
 	case <-sig:
-		log.Info().Msg("Blockless Node stopping")
+		log.Info().Msg("Bless Node stopping")
 	case <-done:
-		log.Info().Msg("Blockless Node done")
+		log.Info().Msg("Bless Node done")
 	case <-failed:
-		log.Info().Msg("Blockless Node aborted")
+		log.Info().Msg("Bless Node aborted")
 		return failure
 	}
 

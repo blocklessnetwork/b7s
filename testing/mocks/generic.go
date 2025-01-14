@@ -71,8 +71,8 @@ var (
 			Checksum: "1234567890",
 			URI:      "generic-uri",
 		},
-		FSRootPath: "/var/tmp/blockless/",
-		Entry:      "/var/tmp/blockless/app.wasm",
+		FSRootPath: "/var/tmp/bless/",
+		Entry:      "/var/tmp/bless/app.wasm",
 	}
 
 	// List of a few peer IDs in case multiple are required.

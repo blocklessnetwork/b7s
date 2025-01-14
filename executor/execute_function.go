@@ -13,7 +13,7 @@ import (
 	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
-// ExecuteFunction will run the Blockless function defined by the execution request.
+// ExecuteFunction will run the Bless function defined by the execution request.
 func (e *Executor) ExecuteFunction(ctx context.Context, requestID string, req execute.Request) (result execute.Result, retErr error) {
 
 	ml := []metrics.Label{{Name: "function", Value: req.FunctionID}}
@@ -61,7 +61,7 @@ func (e *Executor) ExecuteFunction(ctx context.Context, requestID string, req ex
 	return res, nil
 }
 
-// executeFunction handles the actual execution of the Blockless function. It returns the
+// executeFunction handles the actual execution of the Bless function. It returns the
 // execution information like standard output, standard error, exit code and resource usage.
 func (e *Executor) executeFunction(requestID string, req execute.Request) (execute.RuntimeOutput, execute.Usage, error) {
 

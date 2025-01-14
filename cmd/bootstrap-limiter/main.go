@@ -165,7 +165,7 @@ func run() int {
 	}
 
 	// Get group name for gid.
-	color.Red("please ensure user '%v' is a member of '%v' group in order to be able to set resource limits for Blockless Functions\n", runningUser, group.Name)
+	color.Red("please ensure user '%v' is a member of '%v' group in order to be able to set resource limits for Bless Functions\n", runningUser, group.Name)
 	color.Red("e.g. by running sudo usermod -a -G <group> <user>")
 
 	return success
@@ -175,7 +175,7 @@ func haveConsent() bool {
 
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Printf("This command will attempt to setup the system to set resource limits for Blockless Functions. Would you like to continue? [yes/no]: ")
+	fmt.Printf("This command will attempt to setup the system to set resource limits for Bless Functions. Would you like to continue? [yes/no]: ")
 
 	answer, _ := reader.ReadString('\n')
 	answer = strings.TrimSpace(strings.ToLower(answer))

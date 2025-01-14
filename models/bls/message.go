@@ -8,7 +8,7 @@ type Message interface {
 	Type() string
 }
 
-// Message types in the Blockless protocol.
+// Message types in the bls protocol.
 const (
 	MessageHealthCheck             = "MsgHealthCheck"
 	MessageInstallFunction         = "MsgInstallFunction"

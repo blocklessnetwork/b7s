@@ -34,7 +34,7 @@ type ExecutionRequest struct {
 	// Method Name of the WASM file to execute
 	Method string `json:"method"`
 
-	// Parameters CLI arguments for the Blockless Function
+	// Parameters CLI arguments for the Bless Function
 	Parameters []ExecutionParameter `json:"parameters,omitempty"`
 
 	// Topic In the scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier

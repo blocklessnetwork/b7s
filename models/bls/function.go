@@ -1,6 +1,6 @@
 package bls
 
-// FunctionManifest describes some important configuration options for a Blockless function.
+// FunctionManifest describes some important configuration options for a Bless function.
 type FunctionManifest struct {
 	ID          string        `json:"id,omitempty"`
 	Name        string        `json:"name,omitempty"`
@@ -26,7 +26,7 @@ type Runtime struct {
 	URL      string `json:"url,omitempty"`
 }
 
-// Function represents a Blockless function that can be executed.
+// Function represents a Bless function that can be executed.
 type Function struct {
 	ID         string   `json:"id,omitempty"`
 	Name       string   `json:"name,omitempty"`

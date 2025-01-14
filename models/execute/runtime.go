@@ -19,7 +19,7 @@ type BLSRuntimeConfig struct {
 }
 
 const (
-	// Blockless Runtime flag names.
+	// Bless Runtime flag names.
 	BLSRuntimeFlagEntry         = "entry"
 	BLSRuntimeFlagExecutionTime = "run-time"
 	BLSRuntimeFlagDebug         = "debug-info"

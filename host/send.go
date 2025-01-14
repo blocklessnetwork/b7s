@@ -11,7 +11,7 @@ import (
 	"github.com/blessnetwork/b7s/models/bls"
 )
 
-// SendMessage sends a message directly to the specified peer, on the standard blockless protocol.
+// SendMessage sends a message directly to the specified peer, on the standard bls protocol.
 func (h *Host) SendMessage(ctx context.Context, to peer.ID, payload []byte) error {
 	return h.SendMessageOnProtocol(ctx, to, payload, bls.ProtocolID)
 }

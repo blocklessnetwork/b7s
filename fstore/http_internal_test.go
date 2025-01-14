@@ -78,8 +78,8 @@ func TestFunction_GetJSONHandlesErrors(t *testing.T) {
 				"uri":"generic-uri"
 			},
 			"runtime":{},
-			"fs_root_path":"/var/tmp/blockless/",
-			"entry":"/var/tmp/blockless/app.wasm"`), // <- missing closing brace
+			"fs_root_path":"/var/tmp/bless/",
+			"entry":"/var/tmp/bless/app.wasm"`), // <- missing closing brace
 		},
 		{
 			name: "handles unexpected format",
@@ -101,7 +101,7 @@ func TestFunction_GetJSONHandlesErrors(t *testing.T) {
 					"uri":"generic-uri"
 				},
 				"runtime":{},
-				"fs_root_path":"/var/tmp/blockless/",
+				"fs_root_path":"/var/tmp/bless/",
 				"entry":999
 			}`),
 		},

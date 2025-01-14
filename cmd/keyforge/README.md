@@ -52,4 +52,4 @@ Use OpenSSL to verify a signature:
 
 $ openssl dgst -sha256 -verify -signature message.sig -in
 
-These commands enable you to manage cryptographic keys and perform signing and verification operations, including using OpenSSL for verification, conveniently within the Blockless b7s Node network.
+These commands enable you to manage cryptographic keys and perform signing and verification operations, including using OpenSSL for verification, conveniently within the Bless b7s Node network.

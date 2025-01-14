@@ -2,7 +2,7 @@
 
 This is a pretty easy process documented here!
 
-Here is the `Akash` SDL used to launch a `worker` node on `Blockless`!
+Here is the `Akash` SDL used to launch a `worker` node on `Bless`!
 
 ```yaml
 # this is an example of launching a node on akash

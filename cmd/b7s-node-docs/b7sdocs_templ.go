@@ -32,7 +32,7 @@ func page(version string, configs []config.ConfigOption) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<html><head><title>Blockless B7S Node Configuration</title><link rel=\"icon\" href=\"/assets/favicon/favicon.ico\" type=\"image/x-icon\" sizes=\"16x16\"><link rel=\"stylesheet\" href=\"/assets/css/style.css\"></head><body><h1>Blockless B7S Node Configuration</h1><p class=\"description\">This page lists all of the configuration options supported by the b7s daemon. It showcases the configuration structure, as accepted in a YAML config file, environment variables that can be used to set those options and, where applicable, the CLI flags and their default values.</p>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<html><head><title>Bless B7S Node Configuration</title><link rel=\"icon\" href=\"/assets/favicon/favicon.ico\" type=\"image/x-icon\" sizes=\"16x16\"><link rel=\"stylesheet\" href=\"/assets/css/style.css\"></head><body><h1>Blockless B7S Node Configuration</h1><p class=\"description\">This page lists all of the configuration options supported by the b7s daemon. It showcases the configuration structure, as accepted in a YAML config file, environment variables that can be used to set those options and, where applicable, the CLI flags and their default values.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

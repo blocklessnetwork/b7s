@@ -35,7 +35,7 @@ You can see an example YAML config file [here](/cmd/node/example.yaml).
 | config                    | N/A        | N/A                     | Config file to load.                                                                    |
 | log-level                 | -l         | "info"                  | Level of logging to use.                                                                |
 | db                        | N/A        | "db"                    | Path to database used for persisting peer and function data.                            |
-| role                      | -r         | "worker"                | Role this node will have in the Blockless protocol (head or worker).                    |
+| role                      | -r         | "worker"                | Role this node will have in the Bless protocol (head or worker).                    |
 | workspace                 | N/A        | "./workspace"           | Directory that the node will use for file storage.                                      |
 | concurrency               | -c         | node.DefaultConcurrency | Maximum number of requests the node will process in parallel.                           |
 | load-attributes           | N/A        | false                   | Load attributes from the environment.                                                   |
@@ -63,10 +63,10 @@ You can see an example YAML config file [here](/cmd/node/example.yaml).
 
 | Flag                      | Short Form | Default Value           | Description                                                                                   |
 | ------------------------- | ---------- | ----------------------- | --------------------------------------------------------------------------------------------- |
-| runtime-path              | N/A        | N/A                     | Local path to the Blockless Runtime.                                                          |
-| runtime-cli               | N/A        | "bls-runtime"           | Name of the Blockless Runtime executable, as found in the runtime-path.                       |
-| cpu-percentage-limit      | N/A        | 1.0                     | Amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited (100%) |
-| memory-limit              | N/A        | N/A                     | Memory limit for Blockless Functions, in kB.                                                  |
+| runtime-path              | N/A        | N/A                     | Local path to the Bless Runtime.                                                          |
+| runtime-cli               | N/A        | "bls-runtime"           | Name of the Bless Runtime executable, as found in the runtime-path.                       |
+| cpu-percentage-limit      | N/A        | 1.0                     | Amount of CPU time allowed for Bless Functions in the 0-1 range, 1 being unlimited (100%) |
+| memory-limit              | N/A        | N/A                     | Memory limit for Bless Functions, in kB.                                                  |
 
 ### Head Node
 

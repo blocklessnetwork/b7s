@@ -27,7 +27,7 @@ func createServiceAndStartB7s(binPath string) {
 
 func createLinuxService(binPath string) {
 	serviceContent := `[Unit]
-Description=Blockless b7s CLI Service
+Description=Bless b7s CLI Service
 After=network.target
 
 [Service]
@@ -73,10 +73,10 @@ func createMacOSService(binPath string) {
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.blockless.b7s</string>
+	<string>com.bless.b7s</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>%s/Blockless Compute Engine</string>
+		<string>%s/Bless Compute Engine</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>
@@ -94,7 +94,7 @@ func createMacOSService(binPath string) {
 	launchAgentsPath := filepath.Join(usr.HomeDir, "Library", "LaunchAgents")
 	os.MkdirAll(launchAgentsPath, os.ModePerm)
 
-	plistFilePath := filepath.Join(launchAgentsPath, "com.blockless.b7s.plist")
+	plistFilePath := filepath.Join(launchAgentsPath, "com.bless.b7s.plist")
 	plistContent = fmt.Sprintf(plistContent, binPath)
 
 	err = os.WriteFile(plistFilePath, []byte(plistContent), 0644)
@@ -160,7 +160,7 @@ func removeMacOSService() {
 		log.Fatal(err)
 	}
 
-	plistFilePath := filepath.Join(usr.HomeDir, "Library", "LaunchAgents", "com.blockless.b7s.plist")
+	plistFilePath := filepath.Join(usr.HomeDir, "Library", "LaunchAgents", "com.bless.b7s.plist")
 
 	cmd := exec.Command("launchctl", "unload", plistFilePath)
 	err = cmd.Run()
