@@ -8,7 +8,7 @@ import (
 	"github.com/blessnetwork/b7s/executor"
 	"github.com/blessnetwork/b7s/executor/limits"
 	"github.com/blessnetwork/b7s/fstore"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/node"
 	"github.com/blessnetwork/b7s/node/head"
 	"github.com/blessnetwork/b7s/node/worker"
@@ -18,7 +18,7 @@ type Node interface {
 	Run(context.Context) error
 }
 
-func createWorkerNode(core node.Core, store blockless.Store, cfg *config.Config) (Node, func() error, error) {
+func createWorkerNode(core node.Core, store bls.Store, cfg *config.Config) (Node, func() error, error) {
 
 	// Create function store.
 	fstore := fstore.New(log.With().Str("component", "fstore").Logger(), store, cfg.Workspace)

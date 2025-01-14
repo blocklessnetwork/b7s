@@ -6,10 +6,10 @@ import (
 
 	"github.com/cockroachdb/pebble"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
-func (s *Store) SavePeer(_ context.Context, peer blockless.Peer) error {
+func (s *Store) SavePeer(_ context.Context, peer bls.Peer) error {
 
 	id, err := peer.ID.MarshalBinary()
 	if err != nil {
@@ -25,7 +25,7 @@ func (s *Store) SavePeer(_ context.Context, peer blockless.Peer) error {
 	return nil
 }
 
-func (s *Store) SaveFunction(_ context.Context, function blockless.FunctionRecord) error {
+func (s *Store) SaveFunction(_ context.Context, function bls.FunctionRecord) error {
 
 	key := encodeKey(PrefixFunction, function.CID)
 	err := s.save(key, function)

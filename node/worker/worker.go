@@ -7,7 +7,7 @@ import (
 	"github.com/armon/go-metrics"
 
 	"github.com/blessnetwork/b7s/info"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/node"
 	"github.com/blessnetwork/b7s/node/internal/syncmap"
@@ -20,7 +20,7 @@ type Worker struct {
 
 	cfg Config
 
-	executor blockless.Executor
+	executor bls.Executor
 	fstore   FStore
 
 	attributes *attributes.Attestation
@@ -29,7 +29,7 @@ type Worker struct {
 	executeResponses *waitmap.WaitMap[string, execute.NodeResult]
 }
 
-func New(core node.Core, fstore FStore, executor blockless.Executor, options ...Option) (*Worker, error) {
+func New(core node.Core, fstore FStore, executor bls.Executor, options ...Option) (*Worker, error) {
 
 	// Initialize config.
 	cfg := DefaultConfig

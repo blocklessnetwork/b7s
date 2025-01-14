@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
@@ -16,7 +16,7 @@ const (
 )
 
 func saveTraceContext(ctx context.Context, msg any) {
-	tmsg, ok := msg.(blockless.TraceableMessage)
+	tmsg, ok := msg.(bls.TraceableMessage)
 	if !ok {
 		return
 	}
@@ -41,7 +41,7 @@ func messageType(msg any) string {
 		return pmsg.Type().String()
 	}
 
-	bmsg, ok := msg.(blockless.Message)
+	bmsg, ok := msg.(bls.Message)
 	if ok {
 		return bmsg.Type()
 	}

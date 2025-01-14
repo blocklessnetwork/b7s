@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/telemetry"
 )
 
@@ -15,7 +15,7 @@ func TestTelemetry_Resource(t *testing.T) {
 
 	var (
 		id   = "resource-id"
-		role = blockless.WorkerNode
+		role = bls.WorkerNode
 	)
 
 	resource, err := telemetry.CreateResource(context.Background(), id, role)

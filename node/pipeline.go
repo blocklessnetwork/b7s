@@ -3,7 +3,7 @@ package node
 import (
 	"fmt"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 type PipelineID int
@@ -53,8 +53,8 @@ func correctPipeline(msg string, pipeline Pipeline) bool {
 		switch msg {
 		// Messages we don't expect as direct messages.
 		case
-			blockless.MessageHealthCheck,
-			blockless.MessageRollCall:
+			bls.MessageHealthCheck,
+			bls.MessageRollCall:
 
 			// Technically we only publish InstallFunction. However, it's handy for tests to support
 			// direct install, and it's somewhat of a low risk.
@@ -69,13 +69,13 @@ func correctPipeline(msg string, pipeline Pipeline) bool {
 	switch msg {
 	// Messages we don't allow to be published.
 	case
-		blockless.MessageInstallFunctionResponse,
-		blockless.MessageExecute,
-		blockless.MessageExecuteResponse,
-		blockless.MessageFormCluster,
-		blockless.MessageFormClusterResponse,
-		blockless.MessageDisbandCluster,
-		blockless.MessageRollCallResponse:
+		bls.MessageInstallFunctionResponse,
+		bls.MessageExecute,
+		bls.MessageExecuteResponse,
+		bls.MessageFormCluster,
+		bls.MessageFormClusterResponse,
+		bls.MessageDisbandCluster,
+		bls.MessageRollCallResponse:
 
 		return false
 

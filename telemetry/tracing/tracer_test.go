@@ -12,7 +12,7 @@ import (
 	otelcodes "go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/telemetry"
 	"github.com/blessnetwork/b7s/telemetry/tracing"
 	"github.com/blessnetwork/b7s/testing/helpers"
@@ -25,7 +25,7 @@ func TestTracer_TraceFunction(t *testing.T) {
 		fnErr      = errors.New("function-error")
 	)
 
-	resource, err := telemetry.CreateResource(context.Background(), "instance-id", blockless.WorkerNode)
+	resource, err := telemetry.CreateResource(context.Background(), "instance-id", bls.WorkerNode)
 	require.NoError(t, err)
 
 	tests := []struct {

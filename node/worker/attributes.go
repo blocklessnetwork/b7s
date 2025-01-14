@@ -10,7 +10,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blocklessnetwork/b7s-attributes/attributes"
 )
@@ -93,7 +93,7 @@ func haveAttributes(have attributes.Attestation, want execute.Attributes) error 
 			}
 		}
 		if !found {
-			return fmt.Errorf("at least one attestor wanted but none found (wanted: %s)", blockless.PeerIDsToStr(want.Attestors.OneOf))
+			return fmt.Errorf("at least one attestor wanted but none found (wanted: %s)", bls.PeerIDsToStr(want.Attestors.OneOf))
 		}
 	}
 

@@ -12,7 +12,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/execute"
 )
 
@@ -26,11 +26,11 @@ type FSMProcessFunc func(req FSMLogEntry, res execute.NodeResult)
 
 type fsmExecutor struct {
 	log        zerolog.Logger
-	executor   blockless.Executor
+	executor   bls.Executor
 	processors []FSMProcessFunc
 }
 
-func newFsmExecutor(log zerolog.Logger, executor blockless.Executor, processors ...FSMProcessFunc) *fsmExecutor {
+func newFsmExecutor(log zerolog.Logger, executor bls.Executor, processors ...FSMProcessFunc) *fsmExecutor {
 
 	ps := make([]FSMProcessFunc, 0, len(processors))
 	ps = append(ps, processors...)

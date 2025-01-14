@@ -21,7 +21,7 @@ import (
 	"github.com/blessnetwork/b7s/api"
 	"github.com/blessnetwork/b7s/config"
 	b7shost "github.com/blessnetwork/b7s/host"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/node"
 	"github.com/blessnetwork/b7s/store"
 	"github.com/blessnetwork/b7s/store/codec"
@@ -67,7 +67,7 @@ func run() int {
 		// HTTP server will be created in two scenarios:
 		// - node is a head node (head node always has a REST API)
 		// - node has prometheus metrics enabled
-		needHTTPServer = nodeRole == blockless.HeadNode || cfg.Telemetry.Metrics.Enable
+		needHTTPServer = nodeRole == bls.HeadNode || cfg.Telemetry.Metrics.Enable
 		server         *echo.Echo
 
 		// If we have a REST API address, serve metrics there.
@@ -184,7 +184,7 @@ func run() int {
 	store := traceable.New(store.New(db, codec.NewJSONCodec()))
 
 	// Create host.
-	var dialbackPeers []blockless.Peer
+	var dialbackPeers []bls.Peer
 	if !cfg.Connectivity.NoDialbackPeers {
 		dialbackPeers, err = store.RetrievePeers(ctx)
 		if err != nil {
@@ -212,8 +212,8 @@ func run() int {
 		Msg("created host")
 
 	// Ensure default topic is included in the topic list.
-	if !slices.Contains(cfg.Topics, blockless.DefaultTopic) {
-		cfg.Topics = append(cfg.Topics, blockless.DefaultTopic)
+	if !slices.Contains(cfg.Topics, bls.DefaultTopic) {
+		cfg.Topics = append(cfg.Topics, bls.DefaultTopic)
 	}
 
 	// Instantiate node.
@@ -232,7 +232,7 @@ func run() int {
 	)
 
 	switch nodeRole {
-	case blockless.WorkerNode:
+	case bls.WorkerNode:
 		node, nodeshutdown, err = createWorkerNode(core, store, cfg)
 
 		if nodeshutdown != nil {
@@ -244,7 +244,7 @@ func run() int {
 			}()
 		}
 
-	case blockless.HeadNode:
+	case bls.HeadNode:
 		node, err = createHeadNode(core, cfg)
 	}
 	if err != nil {
@@ -277,7 +277,7 @@ func run() int {
 	if needHTTPServer {
 
 		// Create an API handler if we're a head node.
-		if nodeRole == blockless.HeadNode {
+		if nodeRole == bls.HeadNode {
 
 			headNode, ok := any(node).(api.Node)
 			if !ok {

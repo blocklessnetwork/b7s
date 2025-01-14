@@ -4,14 +4,14 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/spf13/afero"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 // defaultConfig used to create Executor.
 var defaultConfig = Config{
 	WorkDir:         "workspace",
 	RuntimeDir:      "",
-	ExecutableName:  blockless.RuntimeCLI(),
+	ExecutableName:  bls.RuntimeCLI(),
 	FS:              afero.NewOsFs(),
 	Limiter:         &noopLimiter{},
 	DriversRootPath: "",

@@ -9,7 +9,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	otelcodes "go.opentelemetry.io/otel/codes"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
@@ -63,7 +63,7 @@ func (c *core) processMessage(ctx context.Context, from peer.ID, payload []byte,
 	return process(ctx, from, typ, payload)
 }
 
-func HandleMessage[T blockless.Message](ctx context.Context, from peer.ID, payload []byte, processFunc func(ctx context.Context, from peer.ID, msg T) error) error {
+func HandleMessage[T bls.Message](ctx context.Context, from peer.ID, payload []byte, processFunc func(ctx context.Context, from peer.ID, msg T) error) error {
 
 	var msg T
 	err := json.Unmarshal(payload, &msg)

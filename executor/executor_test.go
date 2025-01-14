@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blessnetwork/b7s/executor"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/testing/mocks"
 )
 
@@ -18,7 +18,7 @@ func TestExecutor_Create(t *testing.T) {
 
 		var (
 			runtimeDir = os.TempDir()
-			cliPath    = filepath.Join(runtimeDir, blockless.RuntimeCLI())
+			cliPath    = filepath.Join(runtimeDir, bls.RuntimeCLI())
 			fs         = afero.NewMemMapFs()
 		)
 

@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blessnetwork/b7s/fstore"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/store"
 	"github.com/blessnetwork/b7s/store/codec"
 	"github.com/blessnetwork/b7s/testing/helpers"
@@ -115,14 +115,14 @@ func cleanupDisabled() bool {
 	return os.Getenv(cleanupDisableEnv) == "yes"
 }
 
-func getManifest(t *testing.T, url string) blockless.FunctionManifest {
+func getManifest(t *testing.T, url string) bls.FunctionManifest {
 	t.Helper()
 
 	res, err := http.Get(url)
 	require.NoError(t, err)
 	defer res.Body.Close()
 
-	var manifest blockless.FunctionManifest
+	var manifest bls.FunctionManifest
 	err = json.NewDecoder(res.Body).Decode(&manifest)
 	require.NoError(t, err)
 

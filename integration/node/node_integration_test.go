@@ -24,7 +24,7 @@ import (
 	"github.com/blessnetwork/b7s/executor"
 	"github.com/blessnetwork/b7s/fstore"
 	"github.com/blessnetwork/b7s/host"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/request"
 	"github.com/blessnetwork/b7s/node"
@@ -57,7 +57,7 @@ type nodeScaffolding struct {
 	node    runnable
 }
 
-func instantiateNode(t *testing.T, nodeDir string, role blockless.NodeRole) *nodeScaffolding {
+func instantiateNode(t *testing.T, nodeDir string, role bls.NodeRole) *nodeScaffolding {
 	t.Helper()
 
 	// Bootstrap node directory.
@@ -77,7 +77,7 @@ func instantiateNode(t *testing.T, nodeDir string, role blockless.NodeRole) *nod
 	core := node.NewCore(logger, host)
 
 	// If we're creating a head node - we have everything we need.
-	if role == blockless.HeadNode {
+	if role == bls.HeadNode {
 
 		headNode, err := head.New(core)
 		require.NoError(t, err)
@@ -188,7 +188,7 @@ func (c *client) sendExecutionMessage(ctx context.Context, to peer.ID, cid strin
 
 func createFunctionServer(t *testing.T, manifestPath string, deploymentPath string, archivePath string, cid string) *helpers.FunctionServer {
 
-	manifest := blockless.FunctionManifest{
+	manifest := bls.FunctionManifest{
 		Name:            "hello",
 		FSRootPath:      "./",
 		DriversRootPath: "",

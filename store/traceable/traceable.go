@@ -7,7 +7,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/store"
 	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
 	"github.com/blessnetwork/b7s/telemetry/tracing"
@@ -29,7 +29,7 @@ func New(store *store.Store) *Store {
 	return &s
 }
 
-func (s *Store) SavePeer(ctx context.Context, peer blockless.Peer) error {
+func (s *Store) SavePeer(ctx context.Context, peer bls.Peer) error {
 
 	callback := func() error {
 		return s.store.SavePeer(ctx, peer)
@@ -39,7 +39,7 @@ func (s *Store) SavePeer(ctx context.Context, peer blockless.Peer) error {
 	return s.tracer.WithSpanFromContext(ctx, "SavePeer", callback, opts...)
 }
 
-func (s *Store) SaveFunction(ctx context.Context, function blockless.FunctionRecord) error {
+func (s *Store) SaveFunction(ctx context.Context, function bls.FunctionRecord) error {
 
 	callback := func() error {
 		return s.store.SaveFunction(ctx, function)
@@ -49,9 +49,9 @@ func (s *Store) SaveFunction(ctx context.Context, function blockless.FunctionRec
 	return s.tracer.WithSpanFromContext(ctx, "SaveFunction", callback, opts...)
 }
 
-func (s *Store) RetrievePeer(ctx context.Context, id peer.ID) (blockless.Peer, error) {
+func (s *Store) RetrievePeer(ctx context.Context, id peer.ID) (bls.Peer, error) {
 
-	var peer blockless.Peer
+	var peer bls.Peer
 	var err error
 	callback := func() error {
 		peer, err = s.store.RetrievePeer(ctx, id)
@@ -63,9 +63,9 @@ func (s *Store) RetrievePeer(ctx context.Context, id peer.ID) (blockless.Peer, e
 	return peer, err
 }
 
-func (s *Store) RetrievePeers(ctx context.Context) ([]blockless.Peer, error) {
+func (s *Store) RetrievePeers(ctx context.Context) ([]bls.Peer, error) {
 
-	var peers []blockless.Peer
+	var peers []bls.Peer
 	var err error
 	callback := func() error {
 		peers, err = s.store.RetrievePeers(ctx)
@@ -76,9 +76,9 @@ func (s *Store) RetrievePeers(ctx context.Context) ([]blockless.Peer, error) {
 	return peers, err
 }
 
-func (s *Store) RetrieveFunction(ctx context.Context, cid string) (blockless.FunctionRecord, error) {
+func (s *Store) RetrieveFunction(ctx context.Context, cid string) (bls.FunctionRecord, error) {
 
-	var function blockless.FunctionRecord
+	var function bls.FunctionRecord
 	var err error
 	callback := func() error {
 		function, err = s.store.RetrieveFunction(ctx, cid)
@@ -90,9 +90,9 @@ func (s *Store) RetrieveFunction(ctx context.Context, cid string) (blockless.Fun
 	return function, err
 }
 
-func (s *Store) RetrieveFunctions(ctx context.Context) ([]blockless.FunctionRecord, error) {
+func (s *Store) RetrieveFunctions(ctx context.Context) ([]bls.FunctionRecord, error) {
 
-	var functions []blockless.FunctionRecord
+	var functions []bls.FunctionRecord
 	var err error
 	callback := func() error {
 		functions, err = s.store.RetrieveFunctions(ctx)
@@ -123,7 +123,7 @@ func (s *Store) RemoveFunction(ctx context.Context, cid string) error {
 		opts...)
 }
 
-func peerAttributes(peer blockless.Peer) []attribute.KeyValue {
+func peerAttributes(peer bls.Peer) []attribute.KeyValue {
 	return []attribute.KeyValue{
 		b7ssemconv.PeerID.String(peer.ID.String()),
 		b7ssemconv.PeerMultiaddr.String(peer.MultiAddr),

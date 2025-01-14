@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blessnetwork/b7s/host"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/telemetry"
 	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
@@ -25,12 +25,12 @@ type NodeCore struct {
 	LogFunc            func() *zerolog.Logger
 	HostFunc           func() *host.Host
 	ConnectedFunc      func(peer.ID) bool
-	SendFunc           func(context.Context, peer.ID, blockless.Message) error
-	SendToManyFunc     func(context.Context, []peer.ID, blockless.Message, bool) error
+	SendFunc           func(context.Context, peer.ID, bls.Message) error
+	SendToManyFunc     func(context.Context, []peer.ID, bls.Message, bool) error
 	JoinTopicFunc      func(string) error
 	SubscribeFunc      func(context.Context, string) error
-	PublishFunc        func(context.Context, blockless.Message) error
-	PublishToTopicFunc func(context.Context, string, blockless.Message) error
+	PublishFunc        func(context.Context, bls.Message) error
+	PublishToTopicFunc func(context.Context, string, bls.Message) error
 	TracerFunc         func() *tracing.Tracer
 	MetricsFunc        func() *metrics.Metrics
 	RunFunc            func(context.Context, func(context.Context, peer.ID, string, []byte) error) error
@@ -64,10 +64,10 @@ func BaselineNodeCore(t *testing.T) *NodeCore {
 		ConnectedFunc: func(peer.ID) bool {
 			return false
 		},
-		SendFunc: func(context.Context, peer.ID, blockless.Message) error {
+		SendFunc: func(context.Context, peer.ID, bls.Message) error {
 			return nil
 		},
-		SendToManyFunc: func(context.Context, []peer.ID, blockless.Message, bool) error {
+		SendToManyFunc: func(context.Context, []peer.ID, bls.Message, bool) error {
 			return nil
 		},
 		JoinTopicFunc: func(string) error {
@@ -76,10 +76,10 @@ func BaselineNodeCore(t *testing.T) *NodeCore {
 		SubscribeFunc: func(context.Context, string) error {
 			return nil
 		},
-		PublishFunc: func(context.Context, blockless.Message) error {
+		PublishFunc: func(context.Context, bls.Message) error {
 			return nil
 		},
-		PublishToTopicFunc: func(context.Context, string, blockless.Message) error {
+		PublishToTopicFunc: func(context.Context, string, bls.Message) error {
 			return nil
 		},
 		TracerFunc: func() *tracing.Tracer {
@@ -112,11 +112,11 @@ func (c NodeCore) Connected(peerID peer.ID) bool {
 	return c.ConnectedFunc(peerID)
 }
 
-func (c NodeCore) Send(ctx context.Context, peerID peer.ID, msg blockless.Message) error {
+func (c NodeCore) Send(ctx context.Context, peerID peer.ID, msg bls.Message) error {
 	return c.SendFunc(ctx, peerID, msg)
 }
 
-func (c NodeCore) SendToMany(ctx context.Context, peerIDs []peer.ID, msg blockless.Message, flag bool) error {
+func (c NodeCore) SendToMany(ctx context.Context, peerIDs []peer.ID, msg bls.Message, flag bool) error {
 	return c.SendToManyFunc(ctx, peerIDs, msg, flag)
 }
 
@@ -128,11 +128,11 @@ func (c NodeCore) Subscribe(ctx context.Context, topic string) error {
 	return c.SubscribeFunc(ctx, topic)
 }
 
-func (c NodeCore) Publish(ctx context.Context, msg blockless.Message) error {
+func (c NodeCore) Publish(ctx context.Context, msg bls.Message) error {
 	return c.PublishFunc(ctx, msg)
 }
 
-func (c NodeCore) PublishToTopic(ctx context.Context, topic string, msg blockless.Message) error {
+func (c NodeCore) PublishToTopic(ctx context.Context, topic string, msg bls.Message) error {
 	return c.PublishToTopicFunc(ctx, topic, msg)
 }
 

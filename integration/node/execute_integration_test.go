@@ -16,7 +16,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/response"
 	"github.com/blessnetwork/b7s/testing/helpers"
@@ -53,13 +53,13 @@ This is the end of my program
 
 	// Phase 0: Create libp2p hosts, loggers, temporary directories and nodes.
 
-	headNode := instantiateNode(t, dirPattern, blockless.HeadNode)
+	headNode := instantiateNode(t, dirPattern, bls.HeadNode)
 	defer headNode.logFile.Close()
 	if !cleanupDisabled {
 		defer os.RemoveAll(headNode.dir)
 	}
 
-	workerNode := instantiateNode(t, dirPattern, blockless.WorkerNode)
+	workerNode := instantiateNode(t, dirPattern, bls.WorkerNode)
 	defer workerNode.db.Close()
 	defer workerNode.logFile.Close()
 	if !cleanupDisabled {
@@ -120,7 +120,7 @@ This is the end of my program
 	installWG.Add(1)
 
 	// Setup verifier for the response we expect.
-	client.host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+	client.host.SetStreamHandler(bls.ProtocolID, func(stream network.Stream) {
 		defer installWG.Done()
 		defer stream.Close()
 
@@ -150,7 +150,7 @@ This is the end of my program
 	var executeWG sync.WaitGroup
 
 	executeWG.Add(1)
-	client.host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+	client.host.SetStreamHandler(bls.ProtocolID, func(stream network.Stream) {
 		defer executeWG.Done()
 		defer stream.Close()
 

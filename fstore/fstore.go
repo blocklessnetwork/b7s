@@ -11,14 +11,14 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 // FStore - function store - deals with all of the function-related actions - saving/reading them from backing storage,
 // downloading them, unpacking them etc.
 type FStore struct {
 	log        zerolog.Logger
-	store      blockless.FunctionStore
+	store      bls.FunctionStore
 	http       *http.Client
 	downloader *grab.Client
 
@@ -30,7 +30,7 @@ type FStore struct {
 }
 
 // New creates a new function store.
-func New(log zerolog.Logger, store blockless.FunctionStore, workdir string) *FStore {
+func New(log zerolog.Logger, store bls.FunctionStore, workdir string) *FStore {
 
 	// Create an HTTP client.
 	cli := &http.Client{

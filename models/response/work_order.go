@@ -3,13 +3,13 @@ package response
 import (
 	"encoding/json"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/execute"
 )
 
 type WorkOrder struct {
-	blockless.BaseMessage
+	bls.BaseMessage
 
 	RequestID string             `json:"request_id,omitempty"`
 	Code      codes.Code         `json:"code,omitempty"`
@@ -28,7 +28,7 @@ func (w *WorkOrder) WithErrorMessage(err error) *WorkOrder {
 	return w
 }
 
-func (WorkOrder) Type() string { return blockless.MessageWorkOrderResponse }
+func (WorkOrder) Type() string { return bls.MessageWorkOrderResponse }
 
 func (w WorkOrder) MarshalJSON() ([]byte, error) {
 	type Alias WorkOrder

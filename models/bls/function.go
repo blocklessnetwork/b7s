@@ -1,4 +1,4 @@
-package blockless
+package bls
 
 // FunctionManifest describes some important configuration options for a Blockless function.
 type FunctionManifest struct {

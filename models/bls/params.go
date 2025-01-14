@@ -1,4 +1,4 @@
-package blockless
+package bls
 
 import (
 	"errors"

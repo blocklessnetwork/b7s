@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 func TestFunction_UpdateDeploymentInfo(t *testing.T) {
@@ -20,12 +20,12 @@ func TestFunction_UpdateDeploymentInfo(t *testing.T) {
 			manifestURL = "https://example.com"
 		)
 
-		manifest := blockless.FunctionManifest{
-			Runtime: blockless.Runtime{
+		manifest := bls.FunctionManifest{
+			Runtime: bls.Runtime{
 				URL:      runtimeURL,
 				Checksum: checksum,
 			},
-			Deployment: blockless.Deployment{
+			Deployment: bls.Deployment{
 				URI:      "",
 				Checksum: "",
 			},
@@ -46,12 +46,12 @@ func TestFunction_UpdateDeploymentInfo(t *testing.T) {
 			manifestURL = "https://example.com/manifest-address"
 		)
 
-		manifest := blockless.FunctionManifest{
-			Runtime: blockless.Runtime{
+		manifest := bls.FunctionManifest{
+			Runtime: bls.Runtime{
 				URL:      runtimeURL,
 				Checksum: checksum,
 			},
-			Deployment: blockless.Deployment{
+			Deployment: bls.Deployment{
 				URI:      "",
 				Checksum: "",
 			},
@@ -81,12 +81,12 @@ func TestFunction_UpdateDeploymentInfo(t *testing.T) {
 			manifestURL = "https://example.com/manifest-address"
 		)
 
-		manifest := blockless.FunctionManifest{
-			Runtime: blockless.Runtime{
+		manifest := bls.FunctionManifest{
+			Runtime: bls.Runtime{
 				URL:      runtimeURL,
 				Checksum: checksum,
 			},
-			Deployment: blockless.Deployment{
+			Deployment: bls.Deployment{
 				URI:      "",
 				Checksum: "",
 			},
@@ -104,12 +104,12 @@ func TestFunction_UpdateDeploymentInfo(t *testing.T) {
 			manifestURL = "https://example.com/manifest-address\r"
 		)
 
-		manifest := blockless.FunctionManifest{
-			Runtime: blockless.Runtime{
+		manifest := bls.FunctionManifest{
+			Runtime: bls.Runtime{
 				URL:      runtimeURL,
 				Checksum: checksum,
 			},
-			Deployment: blockless.Deployment{
+			Deployment: bls.Deployment{
 				URI:      "",
 				Checksum: "",
 			},

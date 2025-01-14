@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/blessnetwork/b7s/consensus"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 )
 
@@ -12,7 +12,7 @@ var _ (json.Marshaler) = (*FormCluster)(nil)
 
 // FormCluster describes the `MessageFormClusteRr` response.
 type FormCluster struct {
-	blockless.BaseMessage
+	bls.BaseMessage
 	RequestID string         `json:"request_id,omitempty"`
 	Code      codes.Code     `json:"code,omitempty"`
 	Consensus consensus.Type `json:"consensus,omitempty"`
@@ -23,7 +23,7 @@ func (f *FormCluster) WithConsensus(c consensus.Type) *FormCluster {
 	return f
 }
 
-func (FormCluster) Type() string { return blockless.MessageFormClusterResponse }
+func (FormCluster) Type() string { return bls.MessageFormClusterResponse }
 
 func (f FormCluster) MarshalJSON() ([]byte, error) {
 	type Alias FormCluster

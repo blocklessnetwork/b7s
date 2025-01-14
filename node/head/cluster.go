@@ -8,7 +8,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blessnetwork/b7s/consensus"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/request"
 	"github.com/blessnetwork/b7s/models/response"
@@ -111,7 +111,7 @@ func (h *HeadNode) disbandCluster(requestID string, replicas []peer.ID) error {
 	h.Log().Info().
 		Err(err).
 		Str("request", requestID).
-		Strs("peers", blockless.PeerIDsToStr(replicas)).
+		Strs("peers", bls.PeerIDsToStr(replicas)).
 		Msg("sent cluster disband request")
 
 	return nil

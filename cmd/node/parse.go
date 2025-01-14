@@ -3,18 +3,18 @@ package main
 import (
 	"strings"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
-func parseNodeRole(role string) blockless.NodeRole {
+func parseNodeRole(role string) bls.NodeRole {
 
 	switch strings.ToLower(role) {
 
-	case blockless.HeadNodeLabel:
-		return blockless.HeadNode
+	case bls.HeadNodeLabel:
+		return bls.HeadNode
 
-	case blockless.WorkerNodeLabel:
-		return blockless.WorkerNode
+	case bls.WorkerNodeLabel:
+		return bls.WorkerNode
 
 	default:
 		panic("invalid node role specified")

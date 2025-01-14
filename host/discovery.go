@@ -12,7 +12,7 @@ import (
 	"github.com/multiformats/go-multiaddr"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 func (h *Host) ConnectToKnownPeers(ctx context.Context) error {
@@ -53,7 +53,7 @@ func (h *Host) ConnectToKnownPeers(ctx context.Context) error {
 func (h *Host) ConnectToBootNodes(ctx context.Context) error {
 
 	// Bootstrap nodes we try to connect to on start.
-	var peers []blockless.Peer
+	var peers []bls.Peer
 	for _, addr := range h.cfg.BootNodes {
 
 		addrInfo, err := peer.AddrInfoFromP2pAddr(addr)
@@ -67,7 +67,7 @@ func (h *Host) ConnectToBootNodes(ctx context.Context) error {
 			continue
 		}
 
-		node := blockless.Peer{
+		node := bls.Peer{
 			ID:       addrInfo.ID,
 			AddrInfo: *addrInfo,
 		}
@@ -94,7 +94,7 @@ func (h *Host) ConnectToDialbackPeers(ctx context.Context) error {
 	added := uint(0)
 	addLimit := h.cfg.DialBackPeersLimit
 
-	var peers []blockless.Peer
+	var peers []bls.Peer
 	for _, peer := range h.cfg.DialBackPeers {
 
 		// If the limit of dial-back peers is set and we've reached it - stop now.
@@ -129,7 +129,7 @@ func (h *Host) ConnectToDialbackPeers(ctx context.Context) error {
 	return nil
 }
 
-func (h *Host) connectToPeers(ctx context.Context, peers []blockless.Peer) error {
+func (h *Host) connectToPeers(ctx context.Context, peers []bls.Peer) error {
 
 	// Connect to the bootstrap nodes.
 	var errGroup errgroup.Group

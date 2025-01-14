@@ -7,7 +7,7 @@ import (
 
 	"github.com/blessnetwork/b7s/consensus"
 	"github.com/blessnetwork/b7s/consensus/pbft"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/response"
@@ -18,7 +18,7 @@ var _ (json.Marshaler) = (*Execute)(nil)
 
 // Execute describes the `MessageExecute` request payload.
 type Execute struct {
-	blockless.BaseMessage
+	bls.BaseMessage
 
 	execute.Request // execute request is embedded.
 
@@ -27,7 +27,7 @@ type Execute struct {
 
 func (e Execute) Response(c codes.Code, id string) *response.Execute {
 	return &response.Execute{
-		BaseMessage: blockless.BaseMessage{TraceInfo: e.TraceInfo},
+		BaseMessage: bls.BaseMessage{TraceInfo: e.TraceInfo},
 		RequestID:   id,
 		Code:        c,
 	}
@@ -35,7 +35,7 @@ func (e Execute) Response(c codes.Code, id string) *response.Execute {
 
 func (e Execute) RollCall(id string, c consensus.Type) *RollCall {
 	return &RollCall{
-		BaseMessage: blockless.BaseMessage{TraceInfo: e.TraceInfo},
+		BaseMessage: bls.BaseMessage{TraceInfo: e.TraceInfo},
 		RequestID:   id,
 		FunctionID:  e.FunctionID,
 		Consensus:   c,
@@ -45,14 +45,14 @@ func (e Execute) RollCall(id string, c consensus.Type) *RollCall {
 
 func (e Execute) WorkOrder(id string) *WorkOrder {
 	return &WorkOrder{
-		BaseMessage: blockless.BaseMessage{TraceInfo: e.TraceInfo},
+		BaseMessage: bls.BaseMessage{TraceInfo: e.TraceInfo},
 		RequestID:   id,
 		Request:     e.Request,
 		Timestamp:   time.Now().UTC(),
 	}
 }
 
-func (Execute) Type() string { return blockless.MessageExecute }
+func (Execute) Type() string { return bls.MessageExecute }
 
 func (e Execute) MarshalJSON() ([]byte, error) {
 	type Alias Execute

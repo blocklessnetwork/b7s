@@ -10,7 +10,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	cons "github.com/blessnetwork/b7s/consensus"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/request"
@@ -50,7 +50,7 @@ func (h *HeadNode) processExecute(ctx context.Context, from peer.ID, req request
 
 	res := req.Response(code, requestID).WithResults(results).WithCluster(cluster)
 	// Communicate the reason for failure in these cases.
-	if errors.Is(err, blockless.ErrRollCallTimeout) || errors.Is(err, blockless.ErrExecutionNotEnoughNodes) {
+	if errors.Is(err, bls.ErrRollCallTimeout) || errors.Is(err, bls.ErrExecutionNotEnoughNodes) {
 		res.ErrorMessage = err.Error()
 	}
 
@@ -106,7 +106,7 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req request.Ex
 	reportingPeers, err := h.executeRollCall(ctx, requestID, req, consensus)
 	if err != nil {
 		code := codes.Error
-		if errors.Is(err, blockless.ErrRollCallTimeout) {
+		if errors.Is(err, bls.ErrRollCallTimeout) {
 			code = codes.Timeout
 		}
 
@@ -120,7 +120,7 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req request.Ex
 	// Phase 2. - Request cluster formation, if we need consensus.
 	if consensusRequired(consensus) {
 
-		log.Info().Strs("peers", blockless.PeerIDsToStr(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
+		log.Info().Strs("peers", bls.PeerIDsToStr(reportingPeers)).Msg("requesting cluster formation from peers who reported for roll call")
 
 		err := h.formCluster(ctx, requestID, reportingPeers, consensus)
 		if err != nil {

@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blessnetwork/b7s/fstore"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/store"
 	"github.com/blessnetwork/b7s/store/codec"
 	"github.com/blessnetwork/b7s/testing/helpers"
@@ -120,7 +120,7 @@ func TestFunction_InstallHandlesErrors(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := mocks.BaselineStore(t)
-		store.SaveFunctionFunc = func(context.Context, blockless.FunctionRecord) error {
+		store.SaveFunctionFunc = func(context.Context, bls.FunctionRecord) error {
 			return mocks.GenericError
 		}
 
@@ -179,8 +179,8 @@ func TestFunction_InstalledHandlesError(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := mocks.BaselineStore(t)
-		store.RetrieveFunctionFunc = func(context.Context, string) (blockless.FunctionRecord, error) {
-			return blockless.FunctionRecord{}, mocks.GenericError
+		store.RetrieveFunctionFunc = func(context.Context, string) (bls.FunctionRecord, error) {
+			return bls.FunctionRecord{}, mocks.GenericError
 		}
 
 		fh := fstore.New(mocks.NoopLogger, store, workdir)
@@ -201,8 +201,8 @@ func TestFunction_InstalledHandlesError(t *testing.T) {
 		defer os.RemoveAll(workdir)
 
 		store := mocks.BaselineStore(t)
-		store.RetrieveFunctionFunc = func(context.Context, string) (blockless.FunctionRecord, error) {
-			return blockless.FunctionRecord{}, blockless.ErrNotFound
+		store.RetrieveFunctionFunc = func(context.Context, string) (bls.FunctionRecord, error) {
+			return bls.FunctionRecord{}, bls.ErrNotFound
 		}
 
 		fh := fstore.New(mocks.NoopLogger, store, workdir)
@@ -232,8 +232,8 @@ func createServers(t *testing.T, manifestURL string, functionURL string, functio
 	// Setup manifest that points to the function server.
 	functionAddress := fmt.Sprintf("%s/%s", fsrv.URL, functionURL)
 	hash := sha256.Sum256(functionPayload)
-	sourceManifest := blockless.FunctionManifest{
-		Deployment: blockless.Deployment{
+	sourceManifest := bls.FunctionManifest{
+		Deployment: bls.Deployment{
 			URI:      functionAddress,
 			Checksum: fmt.Sprintf("%x", hash),
 		},

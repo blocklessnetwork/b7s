@@ -3,7 +3,7 @@ package telemetry
 import (
 	"time"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 var DefaultTraceConfig = TraceConfig{
@@ -28,7 +28,7 @@ type TraceConfig struct {
 	// Node ID, registered as service instance ID attribute.
 	ID string
 	// Node role, registered as service role attribute.
-	Role blockless.NodeRole
+	Role bls.NodeRole
 	// Maximum time after which exporters will send batched span.
 	ExporterBatchTimeout time.Duration
 	// Configuration for GRPC trace exporter.
@@ -61,7 +61,7 @@ type TraceInMemConfig struct {
 
 type TraceOption func(*TraceConfig)
 
-func WithNodeRole(r blockless.NodeRole) TraceOption {
+func WithNodeRole(r bls.NodeRole) TraceOption {
 	return func(cfg *TraceConfig) {
 		cfg.Role = r
 	}

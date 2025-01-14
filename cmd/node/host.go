@@ -7,10 +7,10 @@ import (
 
 	"github.com/blessnetwork/b7s/config"
 	"github.com/blessnetwork/b7s/host"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
-func createHost(log zerolog.Logger, cfg config.Config, role blockless.NodeRole, dialbackPeers ...blockless.Peer) (*host.Host, error) {
+func createHost(log zerolog.Logger, cfg config.Config, role bls.NodeRole, dialbackPeers ...bls.Peer) (*host.Host, error) {
 
 	// Get the list of boot nodes addresses.
 	bootNodes, err := getBootNodeAddresses(cfg.BootNodes)
@@ -29,7 +29,7 @@ func createHost(log zerolog.Logger, cfg config.Config, role blockless.NodeRole, 
 		host.WithDialBackPeers(dialbackPeers),
 		host.WithMustReachBootNodes(cfg.Connectivity.MustReachBootNodes),
 		host.WithDisabledResourceLimits(cfg.Connectivity.DisableConnectionLimits),
-		host.WithEnableP2PRelay(role == blockless.HeadNode),
+		host.WithEnableP2PRelay(role == bls.HeadNode),
 		host.WithConnectionLimit(cfg.Connectivity.ConnectionCount),
 	}
 

@@ -10,7 +10,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/store"
 	"github.com/blessnetwork/b7s/store/codec"
 	"github.com/blessnetwork/b7s/testing/helpers"
@@ -41,7 +41,7 @@ func TestStore_PeerOperations(t *testing.T) {
 
 		// Verify peer is gone.
 		_, err = store.RetrievePeer(ctx, peer.ID)
-		require.ErrorIs(t, err, blockless.ErrNotFound)
+		require.ErrorIs(t, err, bls.ErrNotFound)
 	})
 }
 
@@ -52,7 +52,7 @@ func TestStore_RetrievePeers(t *testing.T) {
 	ctx := context.Background()
 
 	count := 10
-	peers := make(map[peer.ID]blockless.Peer)
+	peers := make(map[peer.ID]bls.Peer)
 	generated := helpers.CreateRandomPeers(t, count)
 	for _, peer := range generated {
 		peers[peer.ID] = peer
@@ -99,7 +99,7 @@ func TestStore_FunctionOperations(t *testing.T) {
 
 		// Verify function is gone.
 		_, err = store.RetrieveFunction(ctx, function.CID)
-		require.ErrorIs(t, err, blockless.ErrNotFound)
+		require.ErrorIs(t, err, bls.ErrNotFound)
 	})
 }
 
@@ -110,10 +110,10 @@ func TestStore_RetrieveFunctions(t *testing.T) {
 	ctx := context.Background()
 
 	count := 10
-	functions := make(map[string]blockless.FunctionRecord)
+	functions := make(map[string]bls.FunctionRecord)
 	for i := 0; i < count; i++ {
 
-		fn := blockless.FunctionRecord{
+		fn := bls.FunctionRecord{
 			CID:      fmt.Sprintf("dummy-cid-%v", i),
 			URL:      fmt.Sprintf("https://example.com/dummy-url-%v", i),
 			Manifest: mocks.GenericManifest,

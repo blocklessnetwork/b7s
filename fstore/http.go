@@ -11,7 +11,7 @@ import (
 
 	"github.com/cavaliergopher/grab/v3"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 func (f *FStore) getJSON(address string, out interface{}) error {
@@ -35,7 +35,7 @@ func (f *FStore) getJSON(address string, out interface{}) error {
 // download will retrieve the function with the given manifest. It returns the full path
 // of the file where the function is saved on the local storage or any error that might have
 // occurred in the process. The function blocks until the download is complete.
-func (f *FStore) download(ctx context.Context, cid string, manifest blockless.FunctionManifest) (string, error) {
+func (f *FStore) download(ctx context.Context, cid string, manifest bls.FunctionManifest) (string, error) {
 
 	// Determine directory where files should be stored.
 	fdir := filepath.Join(f.workdir, cid)

@@ -9,7 +9,7 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
 )
 
@@ -37,7 +37,7 @@ func (f *FStore) Install(ctx context.Context, address string, cid string) (retEr
 		Msg("installing function")
 
 	// Retrieve function manifest from the given address.
-	var manifest blockless.FunctionManifest
+	var manifest bls.FunctionManifest
 	err := f.getJSON(address, &manifest)
 	if err != nil {
 		return fmt.Errorf("could not retrieve manifest: %w", err)
@@ -70,7 +70,7 @@ func (f *FStore) Install(ctx context.Context, address string, cid string) (retEr
 	manifest.Deployment.File = functionPath
 
 	// Store the function record.
-	fn := blockless.FunctionRecord{
+	fn := bls.FunctionRecord{
 		CID:      cid,
 		URL:      address,
 		Manifest: manifest,
@@ -97,7 +97,7 @@ func (f *FStore) Install(ctx context.Context, address string, cid string) (retEr
 func (f *FStore) IsInstalled(cid string) (bool, error) {
 
 	fn, err := f.getFunction(context.Background(), cid)
-	if err != nil && errors.Is(err, blockless.ErrNotFound) {
+	if err != nil && errors.Is(err, bls.ErrNotFound) {
 		return false, nil
 	}
 	if err != nil {

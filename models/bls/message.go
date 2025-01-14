@@ -1,4 +1,4 @@
-package blockless
+package bls
 
 import (
 	"github.com/blessnetwork/b7s/telemetry/tracing"

@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/blessnetwork/b7s/host"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/node/internal/syncmap"
 	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
@@ -34,13 +34,13 @@ type Network interface {
 }
 
 type Messaging interface {
-	Send(context.Context, peer.ID, blockless.Message) error
-	SendToMany(context.Context, []peer.ID, blockless.Message, bool) error
+	Send(context.Context, peer.ID, bls.Message) error
+	SendToMany(context.Context, []peer.ID, bls.Message, bool) error
 
 	JoinTopic(string) error
 	Subscribe(context.Context, string) error
-	Publish(context.Context, blockless.Message) error
-	PublishToTopic(context.Context, string, blockless.Message) error
+	Publish(context.Context, bls.Message) error
+	PublishToTopic(context.Context, string, bls.Message) error
 }
 
 type Telemetry interface {

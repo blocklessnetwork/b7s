@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/telemetry"
 	"github.com/blessnetwork/b7s/telemetry/tracing"
 	"github.com/blessnetwork/b7s/testing/helpers"
@@ -20,7 +20,7 @@ func TestTraceInfo(t *testing.T) {
 
 	var (
 		ctx         = context.Background()
-		resource, _ = telemetry.CreateResource(ctx, "instance-id", blockless.WorkerNode)
+		resource, _ = telemetry.CreateResource(ctx, "instance-id", bls.WorkerNode)
 		_, tp       = helpers.CreateTracerProvider(t, resource)
 		tracer      = tracing.NewTracerFromProvider(tp, fmt.Sprintf("test-tracer-%v", rand.Int()))
 	)

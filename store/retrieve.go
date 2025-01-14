@@ -8,29 +8,29 @@ import (
 	"github.com/cockroachdb/pebble"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
-func (s *Store) RetrievePeer(_ context.Context, id peer.ID) (blockless.Peer, error) {
+func (s *Store) RetrievePeer(_ context.Context, id peer.ID) (bls.Peer, error) {
 
 	idBytes, err := id.MarshalBinary()
 	if err != nil {
-		return blockless.Peer{}, fmt.Errorf("could not serialize peer ID: %w", err)
+		return bls.Peer{}, fmt.Errorf("could not serialize peer ID: %w", err)
 	}
 
 	key := encodeKey(PrefixPeer, idBytes)
-	var peer blockless.Peer
+	var peer bls.Peer
 	err = s.retrieve(key, &peer)
 	if err != nil {
-		return blockless.Peer{}, fmt.Errorf("could not retrieve value: %w", err)
+		return bls.Peer{}, fmt.Errorf("could not retrieve value: %w", err)
 	}
 
 	return peer, nil
 }
 
-func (s *Store) RetrievePeers(_ context.Context) ([]blockless.Peer, error) {
+func (s *Store) RetrievePeers(_ context.Context) ([]bls.Peer, error) {
 
-	peers := make([]blockless.Peer, 0)
+	peers := make([]bls.Peer, 0)
 
 	opts := prefixIterOptions([]byte{PrefixPeer})
 	it, err := s.db.NewIter(opts)
@@ -39,7 +39,7 @@ func (s *Store) RetrievePeers(_ context.Context) ([]blockless.Peer, error) {
 	}
 	for it.First(); it.Valid(); it.Next() {
 
-		var peer blockless.Peer
+		var peer bls.Peer
 		err := s.retrieve(it.Key(), &peer)
 		if err != nil {
 			return nil, fmt.Errorf("could not retrieve peer (key: %x): %w", it.Key(), err)
@@ -51,21 +51,21 @@ func (s *Store) RetrievePeers(_ context.Context) ([]blockless.Peer, error) {
 	return peers, nil
 }
 
-func (s *Store) RetrieveFunction(_ context.Context, cid string) (blockless.FunctionRecord, error) {
+func (s *Store) RetrieveFunction(_ context.Context, cid string) (bls.FunctionRecord, error) {
 
 	key := encodeKey(PrefixFunction, cid)
-	var function blockless.FunctionRecord
+	var function bls.FunctionRecord
 	err := s.retrieve(key, &function)
 	if err != nil {
-		return blockless.FunctionRecord{}, fmt.Errorf("could not retrieve function record: %w", err)
+		return bls.FunctionRecord{}, fmt.Errorf("could not retrieve function record: %w", err)
 	}
 
 	return function, nil
 }
 
-func (s *Store) RetrieveFunctions(_ context.Context) ([]blockless.FunctionRecord, error) {
+func (s *Store) RetrieveFunctions(_ context.Context) ([]bls.FunctionRecord, error) {
 
-	functions := make([]blockless.FunctionRecord, 0)
+	functions := make([]bls.FunctionRecord, 0)
 
 	opts := prefixIterOptions([]byte{PrefixFunction})
 	it, err := s.db.NewIter(opts)
@@ -74,7 +74,7 @@ func (s *Store) RetrieveFunctions(_ context.Context) ([]blockless.FunctionRecord
 	}
 	for it.First(); it.Valid(); it.Next() {
 
-		var function blockless.FunctionRecord
+		var function bls.FunctionRecord
 		err := s.retrieve(it.Key(), &function)
 		if err != nil {
 			return nil, fmt.Errorf("could not retrieve functioN (key: %x): %w", it.Key(), err)
@@ -91,7 +91,7 @@ func (s *Store) retrieve(key []byte, out any) error {
 	value, closer, err := s.db.Get(key)
 	if err != nil {
 		if errors.Is(err, pebble.ErrNotFound) {
-			return blockless.ErrNotFound
+			return bls.ErrNotFound
 		}
 		return fmt.Errorf("could not retrieve value: %w", err)
 	}

@@ -6,24 +6,24 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/node"
 )
 
 func (w *Worker) process(ctx context.Context, from peer.ID, msg string, payload []byte) error {
 
 	switch msg {
-	case blockless.MessageHealthCheck:
+	case bls.MessageHealthCheck:
 		return node.HandleMessage(ctx, from, payload, w.processHealthCheck)
-	case blockless.MessageInstallFunction:
+	case bls.MessageInstallFunction:
 		return node.HandleMessage(ctx, from, payload, w.processInstallFunction)
-	case blockless.MessageRollCall:
+	case bls.MessageRollCall:
 		return node.HandleMessage(ctx, from, payload, w.processRollCall)
-	case blockless.MessageWorkOrder:
+	case bls.MessageWorkOrder:
 		return node.HandleMessage(ctx, from, payload, w.processWorkOrder)
-	case blockless.MessageFormCluster:
+	case bls.MessageFormCluster:
 		return node.HandleMessage(ctx, from, payload, w.processFormCluster)
-	case blockless.MessageDisbandCluster:
+	case bls.MessageDisbandCluster:
 		return node.HandleMessage(ctx, from, payload, w.processDisbandCluster)
 	}
 

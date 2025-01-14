@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blessnetwork/b7s/consensus"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/request"
@@ -75,7 +75,7 @@ func TestWorker_ProcessWorkOrder(t *testing.T) {
 	// Create node core with overrridden Send function.
 	// Send function verifies that the result it is passed to it is what the executor returned.
 	core := mocks.BaselineNodeCore(t)
-	core.SendFunc = func(_ context.Context, _ peer.ID, msg blockless.Message) error {
+	core.SendFunc = func(_ context.Context, _ peer.ID, msg bls.Message) error {
 		er, ok := any(msg).(*response.WorkOrder)
 		require.True(t, ok)
 
@@ -126,7 +126,7 @@ func TestWorker_ProcessWorkOrder_Metadata(t *testing.T) {
 
 	// Setup Send function to verify metadata is correctly set
 	core := mocks.BaselineNodeCore(t)
-	core.SendFunc = func(_ context.Context, _ peer.ID, msg blockless.Message) error {
+	core.SendFunc = func(_ context.Context, _ peer.ID, msg bls.Message) error {
 		er, ok := any(msg).(*response.WorkOrder)
 		require.True(t, ok)
 		require.Equal(t, data, er.Result.Metadata)
@@ -161,7 +161,7 @@ func TestWorker_ProcessWorkOrder_HandlesErrors(t *testing.T) {
 
 		// Override Send function to verify that the result it is passed to it is what the executor returned, and it was sent despite an execution error.
 		core := mocks.BaselineNodeCore(t)
-		core.SendFunc = func(_ context.Context, _ peer.ID, msg blockless.Message) error {
+		core.SendFunc = func(_ context.Context, _ peer.ID, msg bls.Message) error {
 			er, ok := any(msg).(*response.WorkOrder)
 			require.True(t, ok)
 
@@ -204,7 +204,7 @@ func TestWorker_ProcessWorkOrder_HandlesErrors(t *testing.T) {
 		worker := createWorkerNode(t)
 		// Setup send failure.
 		core := mocks.BaselineNodeCore(t)
-		core.SendFunc = func(_ context.Context, _ peer.ID, _ blockless.Message) error {
+		core.SendFunc = func(_ context.Context, _ peer.ID, _ bls.Message) error {
 			return sendErr
 		}
 		worker.Core = core
@@ -247,7 +247,7 @@ func TestWorker_ProcessWorkOrder_HandlesErrors(t *testing.T) {
 
 		// Override Send function to verify that the result it is passed to it is what the executor returned, and it was sent despite an execution error.
 		core := mocks.BaselineNodeCore(t)
-		core.SendFunc = func(_ context.Context, _ peer.ID, msg blockless.Message) error {
+		core.SendFunc = func(_ context.Context, _ peer.ID, msg bls.Message) error {
 			er, ok := any(msg).(*response.WorkOrder)
 			require.True(t, ok)
 
@@ -275,7 +275,7 @@ func TestWorker_ProcessWorkOrder_HandlesErrors(t *testing.T) {
 		worker := createWorkerNode(t)
 
 		core := mocks.BaselineNodeCore(t)
-		core.SendFunc = func(_ context.Context, _ peer.ID, msg blockless.Message) error {
+		core.SendFunc = func(_ context.Context, _ peer.ID, msg bls.Message) error {
 			er, ok := any(msg).(*response.WorkOrder)
 			require.True(t, ok)
 

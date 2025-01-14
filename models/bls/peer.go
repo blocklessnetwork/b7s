@@ -1,4 +1,4 @@
-package blockless
+package bls
 
 import (
 	"github.com/libp2p/go-libp2p/core/peer"

@@ -12,14 +12,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 type FunctionServer struct {
 	*httptest.Server
 }
 
-func CreateFunctionServer(t *testing.T, manifestEndpoint string, manifest blockless.FunctionManifest, deploymentEndpoint string, archivePath string, cid string) *FunctionServer {
+func CreateFunctionServer(t *testing.T, manifestEndpoint string, manifest bls.FunctionManifest, deploymentEndpoint string, archivePath string, cid string) *FunctionServer {
 	t.Helper()
 
 	// Archive to serve.
@@ -44,7 +44,7 @@ func CreateFunctionServer(t *testing.T, manifestEndpoint string, manifest blockl
 					Path:   deploymentEndpoint,
 				}
 
-				manifest.Deployment = blockless.Deployment{
+				manifest.Deployment = bls.Deployment{
 					CID:      cid,
 					Checksum: fmt.Sprintf("%x", checksum),
 					URI:      deploymentURL.String(),

@@ -8,13 +8,13 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
 	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
-func saveTraceContext(ctx context.Context, msg blockless.Message) {
-	tmsg, ok := msg.(blockless.TraceableMessage)
+func saveTraceContext(ctx context.Context, msg bls.Message) {
+	tmsg, ok := msg.(bls.TraceableMessage)
 	if !ok {
 		return
 	}
@@ -67,7 +67,7 @@ func (c *messageSpanConfig) spanOpts() []trace.SpanStartOption {
 		attrs = append(attrs, b7ssemconv.MessagePeer.String(c.receivers[0].String()))
 	} else if len(c.receivers) > 1 {
 		attrs = append(attrs, b7ssemconv.MessagePeers.String(
-			strings.Join(blockless.PeerIDsToStr(c.receivers), ","),
+			strings.Join(bls.PeerIDsToStr(c.receivers), ","),
 		))
 	}
 

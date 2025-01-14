@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/request"
@@ -45,7 +45,7 @@ func (h *HeadNode) PublishFunctionInstall(ctx context.Context, uri string, cid s
 	}
 
 	if subgroup == "" {
-		subgroup = blockless.DefaultTopic
+		subgroup = bls.DefaultTopic
 	}
 
 	h.Log().Debug().Str("subgroup", subgroup).Str("url", req.ManifestURL).Str("cid", req.CID).Msg("publishing function install message")

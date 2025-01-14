@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 type ConfigOption struct {
@@ -128,7 +128,7 @@ func envName(name string, parents ...string) string {
 	}
 
 	var components []string
-	components = append(components, strings.TrimSuffix(blockless.EnvPrefix, EnvDelimiter)) // Trim trailing underscore so we don't repeat it.
+	components = append(components, strings.TrimSuffix(bls.EnvPrefix, EnvDelimiter)) // Trim trailing underscore so we don't repeat it.
 	components = append(components, parts...)
 	components = append(components, formattedName)
 

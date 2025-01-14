@@ -19,7 +19,7 @@ import (
 
 	"github.com/blessnetwork/b7s/consensus"
 	"github.com/blessnetwork/b7s/consensus/pbft"
-	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/response"
 	"github.com/blessnetwork/b7s/testing/helpers"
@@ -55,14 +55,14 @@ This is the end of my program
 
 	// Phase 0: Create libp2p hosts, loggers, temporary directories and nodes.
 	nodeDir := fmt.Sprintf("%v-head-", dirPattern)
-	head := instantiateNode(t, nodeDir, blockless.HeadNode)
+	head := instantiateNode(t, nodeDir, bls.HeadNode)
 	t.Logf("head node workspace: %s", head.dir)
 
 	var workers []*nodeScaffolding
 	for i := 0; i < 4; i++ {
 		nodeDir := fmt.Sprintf("%v-worker-%v-", dirPattern, i)
 
-		worker := instantiateNode(t, nodeDir, blockless.WorkerNode)
+		worker := instantiateNode(t, nodeDir, bls.WorkerNode)
 		t.Logf("worker node #%v workspace: %s", i, worker.dir)
 
 		workers = append(workers, worker)
@@ -164,7 +164,7 @@ This is the end of my program
 	installWG.Add(len(workers))
 
 	// Setup verifier for the response we expect.
-	client.host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+	client.host.SetStreamHandler(bls.ProtocolID, func(stream network.Stream) {
 		defer installWG.Done()
 		defer stream.Close()
 
@@ -199,7 +199,7 @@ This is the end of my program
 	var executeWG sync.WaitGroup
 
 	executeWG.Add(1)
-	client.host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+	client.host.SetStreamHandler(bls.ProtocolID, func(stream network.Stream) {
 		defer executeWG.Done()
 		defer stream.Close()
 

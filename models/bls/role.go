@@ -1,4 +1,4 @@
-package blockless
+package bls
 
 // NodeRole is a representation of the node's role.
 type NodeRole uint8
