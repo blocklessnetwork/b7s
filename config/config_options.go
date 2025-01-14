@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/blockless"
 )
 
 type ConfigOption struct {

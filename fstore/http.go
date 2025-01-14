@@ -11,7 +11,7 @@ import (
 
 	"github.com/cavaliergopher/grab/v3"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/blockless"
 )
 
 func (f *FStore) getJSON(address string, out interface{}) error {

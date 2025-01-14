@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/node/internal/syncmap"
+	"github.com/blessnetwork/b7s/node/internal/syncmap"
 )
 
 func TestSyncMap(t *testing.T) {

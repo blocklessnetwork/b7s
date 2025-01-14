@@ -12,10 +12,10 @@ import (
 	otelcodes "go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/telemetry"
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
-	"github.com/blocklessnetwork/b7s/testing/helpers"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/telemetry"
+	"github.com/blessnetwork/b7s/telemetry/tracing"
+	"github.com/blessnetwork/b7s/testing/helpers"
 )
 
 func TestTracer_TraceFunction(t *testing.T) {

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/libp2p/go-libp2p/core/peer"
 	ma "github.com/multiformats/go-multiaddr"
 	mh "github.com/multiformats/go-multihash"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/blessnetwork/b7s/models/blockless"
 )
 
 // NOTE: Inspiration by go-libp2p/core/test

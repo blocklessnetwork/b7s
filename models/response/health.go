@@ -3,7 +3,7 @@ package response
 import (
 	"encoding/json"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/blockless"
 )
 
 var _ (json.Marshaler) = (*Health)(nil)

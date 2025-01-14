@@ -3,7 +3,7 @@ package blockless
 import (
 	"context"
 
-	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/execute"
 )
 
 type Executor interface {

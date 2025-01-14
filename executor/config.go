@@ -4,7 +4,7 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/spf13/afero"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/blockless"
 )
 
 // defaultConfig used to create Executor.

@@ -8,7 +8,7 @@ import (
 	"github.com/cockroachdb/pebble"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/blockless"
 )
 
 func (s *Store) RetrievePeer(_ context.Context, id peer.ID) (blockless.Peer, error) {

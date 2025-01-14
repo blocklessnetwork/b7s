@@ -7,9 +7,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/node/aggregate"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/node/aggregate"
 )
 
 // ExecuteFunction implements the REST API endpoint for function execution.

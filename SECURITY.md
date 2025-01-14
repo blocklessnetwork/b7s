@@ -2,9 +2,9 @@
 
 ## Reporting a Vulnerability
 
-At Blockless Network, we take security very seriously. If you discover any security vulnerabilities, we encourage you to report them responsibly.
+At Bless Network, we take security very seriously. If you discover any security vulnerabilities, we encourage you to report them responsibly.
 
-Please report any security issues to our Security Advisories page: [Blockless Network Security Advisories](https://github.com/blocklessnetwork/b7s/security/advisories)
+Please report any security issues to our Security Advisories page: [Bless Network Security Advisories](https://github.com/blessnetwork/b7s/security/advisories)
 
 ### Guidelines for Reporting
 
@@ -16,4 +16,4 @@ Please report any security issues to our Security Advisories page: [Blockless Ne
 
 At this time, we do not offer a bounty award for reported vulnerabilities. However, we greatly appreciate your efforts in helping us maintain the security and integrity of our project.
 
-Thank you for contributing to the security of Blockless Network.
+Thank you for contributing to the security of Bless Network.

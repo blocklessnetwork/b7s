@@ -10,7 +10,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/codes"
 )
 
 // NodeResult is an annotated execution result.

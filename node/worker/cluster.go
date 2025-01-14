@@ -8,9 +8,9 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/consensus"
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/request"
+	"github.com/blessnetwork/b7s/consensus"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/request"
 )
 
 func (w *Worker) processFormCluster(ctx context.Context, from peer.ID, req request.FormCluster) error {

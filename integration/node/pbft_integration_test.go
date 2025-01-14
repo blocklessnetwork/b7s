@@ -17,12 +17,12 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/consensus"
-	"github.com/blocklessnetwork/b7s/consensus/pbft"
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/response"
-	"github.com/blocklessnetwork/b7s/testing/helpers"
+	"github.com/blessnetwork/b7s/consensus"
+	"github.com/blessnetwork/b7s/consensus/pbft"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/response"
+	"github.com/blessnetwork/b7s/testing/helpers"
 )
 
 func TestNode_PBFT_ExecuteComplete(t *testing.T) {

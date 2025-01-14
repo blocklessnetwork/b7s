@@ -3,7 +3,7 @@ package pbft
 import (
 	"sync"
 
-	"github.com/blocklessnetwork/b7s/models/response"
+	"github.com/blessnetwork/b7s/models/response"
 )
 
 type replicaState struct {

@@ -69,19 +69,19 @@ function install {
 	VERSION=${1:-$DEFAULT_VERSION}
 	case "${OS}_${ARCH}" in
 	"darwin_amd64")
-		URL="https://github.com/blocklessnetwork/b7s/releases/download/${VERSION}/b7s-darwin.amd64.tar.gz"
+		URL="https://github.com/blessnetwork/b7s/releases/download/${VERSION}/b7s-darwin.amd64.tar.gz"
 		FTYPE=".tar.gz"
 		;;
 	"darwin_arm64")
-		URL="https://github.com/blocklessnetwork/b7s/releases/download/${VERSION}/b7s-darwin.arm64.tar.gz"
+		URL="https://github.com/blessnetwork/b7s/releases/download/${VERSION}/b7s-darwin.arm64.tar.gz"
 		FTYPE=".tar.gz"
 		;;
 	"linux_amd64")
-		URL="https://github.com/blocklessnetwork/b7s/releases/download/${VERSION}/b7s-linux.amd64.tar.gz"
+		URL="https://github.com/blessnetwork/b7s/releases/download/${VERSION}/b7s-linux.amd64.tar.gz"
 		FTYPE=".tar.gz"
 		;;
 	"linux_arm64")
-		URL="https://github.com/blocklessnetwork/b7s/releases/download/${VERSION}/b7s-linux.arm64.tar.gz"
+		URL="https://github.com/blessnetwork/b7s/releases/download/${VERSION}/b7s-linux.arm64.tar.gz"
 		FTYPE=".tar.gz"
 		;;
 	*) fail "No asset for platform ${OS}-${ARCH}";;

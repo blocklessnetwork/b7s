@@ -1,7 +1,7 @@
 package telemetry
 
 import (
-	"github.com/blocklessnetwork/b7s/info"
+	"github.com/blessnetwork/b7s/info"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )

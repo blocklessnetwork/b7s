@@ -9,12 +9,12 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	cons "github.com/blocklessnetwork/b7s/consensus"
-	"github.com/blocklessnetwork/b7s/consensus/pbft"
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
+	cons "github.com/blessnetwork/b7s/consensus"
+	"github.com/blessnetwork/b7s/consensus/pbft"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/request"
+	"github.com/blessnetwork/b7s/models/response"
 )
 
 func (h *HeadNode) executeRollCall(

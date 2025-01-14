@@ -3,7 +3,7 @@ package head
 import (
 	"time"
 
-	"github.com/blocklessnetwork/b7s/consensus"
+	"github.com/blessnetwork/b7s/consensus"
 )
 
 // Option can be used to set Node configuration options.

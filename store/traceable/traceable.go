@@ -7,10 +7,10 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/store"
-	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/store"
+	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
+	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
 // Store is a thin wrapper around the standard b7s store, adding a tracer to it.

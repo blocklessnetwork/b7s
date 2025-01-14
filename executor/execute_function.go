@@ -8,9 +8,9 @@ import (
 	"github.com/armon/go-metrics"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
+	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
 // ExecuteFunction will run the Blockless function defined by the execution request.

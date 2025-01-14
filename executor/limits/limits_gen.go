@@ -6,7 +6,7 @@ package limits
 import (
 	"errors"
 
-	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/execute"
 )
 
 // NOTE: Placeholder for operating systems where we do not support limiters yet.

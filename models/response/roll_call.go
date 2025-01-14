@@ -3,8 +3,8 @@ package response
 import (
 	"encoding/json"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/codes"
 )
 
 var _ (json.Marshaler) = (*RollCall)(nil)

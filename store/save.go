@@ -6,7 +6,7 @@ import (
 
 	"github.com/cockroachdb/pebble"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/blockless"
 )
 
 func (s *Store) SavePeer(_ context.Context, peer blockless.Peer) error {

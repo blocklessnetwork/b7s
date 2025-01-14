@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/execute"
 )
 
 var _ (blockless.Executor) = (*Executor)(nil)

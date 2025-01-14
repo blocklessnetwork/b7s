@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 func (f *FStore) Sync(ctx context.Context, haltOnError bool) error {

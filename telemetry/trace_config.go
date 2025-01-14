@@ -3,7 +3,7 @@ package telemetry
 import (
 	"time"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/blockless"
 )
 
 var DefaultTraceConfig = TraceConfig{

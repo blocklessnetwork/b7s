@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/execute"
 )
 
 // APINode implements the `Node` interface expected by the API.

@@ -9,13 +9,13 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.opentelemetry.io/otel/trace"
 
-	cons "github.com/blocklessnetwork/b7s/consensus"
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
+	cons "github.com/blessnetwork/b7s/consensus"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/request"
+	"github.com/blessnetwork/b7s/models/response"
+	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
 // NOTE: head node typically receives execution requests from the REST API. This message handling is not cognizant of subgroups.

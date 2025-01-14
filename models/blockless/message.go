@@ -1,7 +1,7 @@
 package blockless
 
 import (
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
+	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
 type Message interface {

@@ -7,11 +7,11 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/google/uuid"
 
-	"github.com/blocklessnetwork/b7s/info"
-	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/models/response"
-	"github.com/blocklessnetwork/b7s/node"
-	"github.com/blocklessnetwork/b7s/node/internal/waitmap"
+	"github.com/blessnetwork/b7s/info"
+	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/response"
+	"github.com/blessnetwork/b7s/node"
+	"github.com/blessnetwork/b7s/node/internal/waitmap"
 )
 
 type HeadNode struct {

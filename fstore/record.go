@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/blockless"
 )
 
 // Get retrieves a function manifest for the given function from storage.

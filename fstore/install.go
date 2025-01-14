@@ -9,8 +9,8 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 // Install will download and install function identified by the manifest/CID.

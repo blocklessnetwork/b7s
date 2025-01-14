@@ -37,6 +37,6 @@ clean:
 setup:
 	@echo "\n📥 Downloading and extracting runtime...\n"
 	mkdir -p /tmp/runtime
-	wget -O /tmp/blockless-runtime.tar.gz https://github.com/blocklessnetwork/runtime/releases/download/v0.3.4/blockless-runtime.darwin-latest.x86_64.tar.gz
+	wget -O /tmp/blockless-runtime.tar.gz https://github.com/blessnetwork/bls-runtime/releases/download/v0.3.4/blockless-runtime.darwin-latest.x86_64.tar.gz
 	tar -xzf /tmp/blockless-runtime.tar.gz -C /tmp/runtime
 	@echo "\n✅ Done.\n"

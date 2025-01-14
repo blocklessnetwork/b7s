@@ -18,15 +18,15 @@ import (
 	"github.com/ziflex/lecho/v3"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
-	"github.com/blocklessnetwork/b7s/api"
-	"github.com/blocklessnetwork/b7s/config"
-	b7shost "github.com/blocklessnetwork/b7s/host"
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/node"
-	"github.com/blocklessnetwork/b7s/store"
-	"github.com/blocklessnetwork/b7s/store/codec"
-	"github.com/blocklessnetwork/b7s/store/traceable"
-	"github.com/blocklessnetwork/b7s/telemetry"
+	"github.com/blessnetwork/b7s/api"
+	"github.com/blessnetwork/b7s/config"
+	b7shost "github.com/blessnetwork/b7s/host"
+	"github.com/blessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/node"
+	"github.com/blessnetwork/b7s/store"
+	"github.com/blessnetwork/b7s/store/codec"
+	"github.com/blessnetwork/b7s/store/traceable"
+	"github.com/blessnetwork/b7s/telemetry"
 )
 
 const (

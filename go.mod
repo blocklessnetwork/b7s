@@ -1,4 +1,4 @@
-module github.com/blocklessnetwork/b7s
+module github.com/blessnetwork/b7s
 
 go 1.23.2
 

@@ -3,7 +3,7 @@ package node
 import (
 	"fmt"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/blockless"
 )
 
 type PipelineID int
