@@ -103,7 +103,7 @@ type NodeCluster = execute.Cluster
 // ResultAggregation defines model for ResultAggregation.
 type ResultAggregation = execute.ResultAggregation
 
-// RuntimeConfig Configuration options for the Blockless Runtime
+// RuntimeConfig Configuration options for the Bless Runtime
 type RuntimeConfig = execute.BLSRuntimeConfig
 
 // ExecuteFunctionJSONRequestBody defines body for ExecuteFunction for application/json ContentType.
