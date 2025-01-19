@@ -8,8 +8,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/api"
-	"github.com/blocklessnetwork/b7s/testing/mocks"
+	"github.com/blessnetwork/b7s/api"
+	"github.com/blessnetwork/b7s/testing/mocks"
 )
 
 func TestAPI_FunctionInstall(t *testing.T) {

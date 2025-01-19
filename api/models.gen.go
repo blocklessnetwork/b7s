@@ -4,8 +4,8 @@
 package api
 
 import (
-	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/node/aggregate"
+	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/node/aggregate"
 )
 
 // AggregatedResult Result of an Execution Request
@@ -34,7 +34,7 @@ type ExecutionRequest struct {
 	// Method Name of the WASM file to execute
 	Method string `json:"method"`
 
-	// Parameters CLI arguments for the Blockless Function
+	// Parameters CLI arguments for the Bless Function
 	Parameters []ExecutionParameter `json:"parameters,omitempty"`
 
 	// Topic In the scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier
@@ -103,7 +103,7 @@ type NodeCluster = execute.Cluster
 // ResultAggregation defines model for ResultAggregation.
 type ResultAggregation = execute.ResultAggregation
 
-// RuntimeConfig Configuration options for the Blockless Runtime
+// RuntimeConfig Configuration options for the Bless Runtime
 type RuntimeConfig = execute.BLSRuntimeConfig
 
 // ExecuteFunctionJSONRequestBody defines body for ExecuteFunction for application/json ContentType.

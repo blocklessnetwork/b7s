@@ -14,11 +14,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/store"
-	"github.com/blocklessnetwork/b7s/store/codec"
-	"github.com/blocklessnetwork/b7s/testing/helpers"
-	"github.com/blocklessnetwork/b7s/testing/mocks"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/store"
+	"github.com/blessnetwork/b7s/store/codec"
+	"github.com/blessnetwork/b7s/testing/helpers"
+	"github.com/blessnetwork/b7s/testing/mocks"
 )
 
 func TestFunction_GetJSON(t *testing.T) {
@@ -39,7 +39,7 @@ func TestFunction_GetJSON(t *testing.T) {
 	store := store.New(helpers.InMemoryDB(t), codec.NewJSONCodec())
 	fh := New(mocks.NoopLogger, store, workdir)
 
-	var downloaded blockless.FunctionManifest
+	var downloaded bls.FunctionManifest
 	err := fh.getJSON(srv.URL, &downloaded)
 	require.NoError(t, err)
 
@@ -78,8 +78,8 @@ func TestFunction_GetJSONHandlesErrors(t *testing.T) {
 				"uri":"generic-uri"
 			},
 			"runtime":{},
-			"fs_root_path":"/var/tmp/blockless/",
-			"entry":"/var/tmp/blockless/app.wasm"`), // <- missing closing brace
+			"fs_root_path":"/var/tmp/bless/",
+			"entry":"/var/tmp/bless/app.wasm"`), // <- missing closing brace
 		},
 		{
 			name: "handles unexpected format",
@@ -101,7 +101,7 @@ func TestFunction_GetJSONHandlesErrors(t *testing.T) {
 					"uri":"generic-uri"
 				},
 				"runtime":{},
-				"fs_root_path":"/var/tmp/blockless/",
+				"fs_root_path":"/var/tmp/bless/",
 				"entry":999
 			}`),
 		},
@@ -127,7 +127,7 @@ func TestFunction_GetJSONHandlesErrors(t *testing.T) {
 
 			fh := New(mocks.NoopLogger, newInMemoryStore(t), workdir)
 
-			var response blockless.FunctionManifest
+			var response bls.FunctionManifest
 			err := fh.getJSON(srv.URL, &response)
 			require.Error(t, err)
 		})
@@ -158,8 +158,8 @@ func TestFunction_Download(t *testing.T) {
 	address := fmt.Sprintf("%s/test-file", srv.URL)
 	hash := sha256.Sum256(payload)
 
-	manifest := blockless.FunctionManifest{
-		Deployment: blockless.Deployment{
+	manifest := bls.FunctionManifest{
+		Deployment: bls.Deployment{
 			URI:      address,
 			Checksum: fmt.Sprintf("%x", hash),
 		},
@@ -207,8 +207,8 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 
 		invalidChecksum := fmt.Sprintf("%x", hash) + "Z"
 
-		manifest := blockless.FunctionManifest{
-			Deployment: blockless.Deployment{
+		manifest := bls.FunctionManifest{
+			Deployment: bls.Deployment{
 				URI:      address,
 				Checksum: invalidChecksum,
 			},
@@ -229,8 +229,8 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 		address := fmt.Sprintf("%s/test-file", srv.URL) + "\n"
 		hash := sha256.Sum256(payload)
 
-		manifest := blockless.FunctionManifest{
-			Deployment: blockless.Deployment{
+		manifest := bls.FunctionManifest{
+			Deployment: bls.Deployment{
 				URI:      address,
 				Checksum: fmt.Sprintf("%x", hash),
 			},
@@ -253,8 +253,8 @@ func TestFunction_DownloadHandlesErrors(t *testing.T) {
 		address := fmt.Sprintf("%s/test-file", srv.URL)
 		hash := sha256.Sum256(payload)
 
-		manifest := blockless.FunctionManifest{
-			Deployment: blockless.Deployment{
+		manifest := bls.FunctionManifest{
+			Deployment: bls.Deployment{
 				URI:      address,
 				Checksum: fmt.Sprintf("%x", hash),
 			},

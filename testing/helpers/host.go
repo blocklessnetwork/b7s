@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/host"
+	"github.com/blessnetwork/b7s/host"
 )
 
 const (

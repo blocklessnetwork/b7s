@@ -1,10 +1,10 @@
-module github.com/blocklessnetwork/b7s
+module github.com/blessnetwork/b7s
 
 go 1.23.2
 
 require (
 	github.com/Microsoft/go-winio v0.6.1
-	github.com/a-h/templ v0.2.778
+	github.com/a-h/templ v0.3.819
 	github.com/armon/go-metrics v0.4.1
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/blocklessnetwork/b7s-attributes v0.0.0

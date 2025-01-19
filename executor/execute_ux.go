@@ -9,8 +9,8 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/blocklessnetwork/b7s/executor/internal/process"
-	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/executor/internal/process"
+	"github.com/blessnetwork/b7s/models/execute"
 )
 
 // executeCommand on non-windows systems is pretty straightforward and equivalent to the ordinary `cmd.Run()` or `cmd.Output`.

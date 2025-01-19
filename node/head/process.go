@@ -6,25 +6,25 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/node"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/node"
 )
 
 // processMessage will determine which message was received and how to process it.
 func (h *HeadNode) process(ctx context.Context, from peer.ID, msg string, payload []byte) error {
 
 	switch msg {
-	case blockless.MessageHealthCheck:
+	case bls.MessageHealthCheck:
 		return node.HandleMessage(ctx, from, payload, h.processHealthCheck)
-	case blockless.MessageInstallFunctionResponse:
+	case bls.MessageInstallFunctionResponse:
 		return node.HandleMessage(ctx, from, payload, h.processInstallFunctionResponse)
-	case blockless.MessageExecute:
+	case bls.MessageExecute:
 		return node.HandleMessage(ctx, from, payload, h.processExecute)
-	case blockless.MessageRollCallResponse:
+	case bls.MessageRollCallResponse:
 		return node.HandleMessage(ctx, from, payload, h.processRollCallResponse)
-	case blockless.MessageWorkOrderResponse:
+	case bls.MessageWorkOrderResponse:
 		return node.HandleMessage(ctx, from, payload, h.processWorkOrderResponse)
-	case blockless.MessageFormClusterResponse:
+	case bls.MessageFormClusterResponse:
 		return node.HandleMessage(ctx, from, payload, h.processFormClusterResponse)
 	}
 

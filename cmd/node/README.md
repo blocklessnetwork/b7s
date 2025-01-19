@@ -1,19 +1,19 @@
 
-# Blockless Node 
+# Bless Node 
 
 ## Description
 
-Blockless b7s Node is a peer-to-peer networking daemon for the blockless network.
+Bless b7s Node is a peer-to-peer networking daemon for the Bless network.
 
-A Node in the Blockless network can have one of two roles - it can be a Head Node or a Worker Node.
+A Node in the Bless network can have one of two roles - it can be a Head Node or a Worker Node.
 
-In short, Worker Nodes are nodes that will be doing the actual execution of work within the Blockless P2P network.
-Worker Nodes do this by relying on the Blockless Runtime.
-Blockless Runtime needs to be available locally on the machine where the Node is run.
+In short, Worker Nodes are nodes that will be doing the actual execution of work within the Bless P2P network.
+Worker Nodes do this by relying on the Bless Runtime.
+Bless Runtime needs to be available locally on the machine where the Node is run.
 
 Head Nodes are nodes that are performing coordination of work between a number of Worker Nodes.
-When a Head Node receives an execution request to execute a piece of work (a Blockless Function), it will start a process of finding a Worker Node most suited to do this work.
-Head Node does not need to have access to Blockless Runtime.
+When a Head Node receives an execution request to execute a piece of work (a Bless Function), it will start a process of finding a Worker Node most suited to do this work.
+Head Node does not need to have access to Bless Runtime.
 
 Head Nodes also serve a REST API that can be used to query or trigger certain actions.
 
@@ -26,7 +26,7 @@ List of supported CLI flags is listed below.
 
 ```console
 Usage of b7s-node:
-  -r, --role string                    role this node will have in the Blockless protocol (head or worker) (default "worker")
+  -r, --role string                    role this node will have in the Bless protocol (head or worker) (default "worker")
   -c, --concurrency uint               maximum number of requests node will process in parallel (default 10)
       --boot-nodes strings             list of addresses that this node will connect to on startup, in multiaddr format
       --workspace string               directory that the node can use for file storage
@@ -47,10 +47,10 @@ Usage of b7s-node:
       --disable-connection-limits      disable libp2p connection limits (experimental)
       --connection-count uint          maximum number of connections the b7s host will aim to have
       --rest-api string                address where the head node REST API will listen on
-      --runtime-path string            Blockless Runtime location (used by the worker node)
+      --runtime-path string            Bless Runtime location (used by the worker node)
       --runtime-cli string             runtime CLI name (used by the worker node)
-      --cpu-percentage-limit float     amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited
-      --memory-limit int               memory limit (kB) for Blockless Functions
+      --cpu-percentage-limit float     amount of CPU time allowed for Bless Functions in the 0-1 range, 1 being unlimited
+      --memory-limit int               memory limit (kB) for Bless Functions
       --enable-tracing                 emit tracing data
       --tracing-grpc-endpoint string   tracing exporter GRPC endpoint
       --tracing-http-endpoint string   tracing exporter HTTP endpoint
@@ -82,7 +82,7 @@ connectivity:
 
 
 worker:
-  runtime-path: /home/user/.local/blockless-runtime/bin
+  runtime-path: /home/user/.local/Bless-runtime/bin
   cpu-percentage-limit: 0.8
 
 telemetry:
@@ -117,8 +117,8 @@ $ ./node --db /tmp/db --log-level debug --port 9000 --role worker --runtime ~/.l
 The created `node` will listen on all addresses on TCP port 9000.
 Database used to persist Node data between runs will be created in the `/tmp/db` subdirectory.
 
-Blockless Runtime path is given as `/home/user/.local/bin`.
-At startup, node will check if the Blockless Runtime is actually found there, namely the [bls-runtime](https://blockless.network/docs/protocol/runtime).
+Bless Runtime path is given as `/home/user/.local/bin`.
+At startup, node will check if the Bless Runtime is actually found there, namely the [bls-runtime](https://Bless.network/docs/protocol/runtime).
 
 Node Identity will be determined by the private key found in `priv.bin` file in the `keys` subdirectory.
 

@@ -11,8 +11,8 @@ import (
 	"github.com/a-h/templ"
 	"github.com/spf13/pflag"
 
-	"github.com/blocklessnetwork/b7s/config"
-	"github.com/blocklessnetwork/b7s/info"
+	"github.com/blessnetwork/b7s/config"
+	"github.com/blessnetwork/b7s/info"
 )
 
 //go:embed assets/*

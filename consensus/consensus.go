@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Type identifies consensus protocols suported by Blockless.
+// Type identifies consensus protocols suported by Bless.
 type Type uint
 
 const (

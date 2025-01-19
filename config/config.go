@@ -33,7 +33,7 @@ var DefaultConfig = Config{
 	},
 }
 
-// Config describes the Blockless configuration options.
+// Config describes the Bless configuration options.
 // NOTE: DO NOT use TABS in struct tags - spaces only!
 // NOTE: When adding CLI flags (using the `flag` struct tag) - add the description for (for the flag long version, not the shorthand) it in getFlagDescription() below.
 type Config struct {
@@ -125,7 +125,7 @@ func getFlagDescription(flag string) string {
 
 	switch flag {
 	case "role":
-		return "role this node will have in the Blockless protocol (head or worker)"
+		return "role this node will have in the Bless protocol (head or worker)"
 	case "concurrency":
 		return "maximum number of requests node will process in parallel"
 	case "boot-nodes":
@@ -161,13 +161,13 @@ func getFlagDescription(flag string) string {
 	case "rest-api":
 		return "address where the head node REST API will listen on"
 	case "runtime-path":
-		return "Blockless Runtime location (used by the worker node)"
+		return "Bless Runtime location (used by the worker node)"
 	case "runtime-cli":
 		return "runtime CLI name (used by the worker node)"
 	case "cpu-percentage-limit":
-		return "amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited"
+		return "amount of CPU time allowed for Bless Functions in the 0-1 range, 1 being unlimited"
 	case "memory-limit":
-		return "memory limit (kB) for Blockless Functions"
+		return "memory limit (kB) for Bless Functions"
 	case "no-dialback-peers":
 		return "start without dialing back peers from previous runs"
 	case "must-reach-boot-nodes":

@@ -8,12 +8,12 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
-// SendMessage sends a message directly to the specified peer, on the standard blockless protocol.
+// SendMessage sends a message directly to the specified peer, on the standard bls protocol.
 func (h *Host) SendMessage(ctx context.Context, to peer.ID, payload []byte) error {
-	return h.SendMessageOnProtocol(ctx, to, payload, blockless.ProtocolID)
+	return h.SendMessageOnProtocol(ctx, to, payload, bls.ProtocolID)
 }
 
 // SendMessageOnProtocol sends a message directly to the specified peer, using the specified protocol.

@@ -10,9 +10,9 @@ import (
 	"github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/execute"
 )
 
 // Global variables that can be used for testing. They are valid non-nil values for commonly needed types.
@@ -57,22 +57,22 @@ var (
 		},
 	}
 
-	GenericManifest = blockless.FunctionManifest{
+	GenericManifest = bls.FunctionManifest{
 		ID:          "generic-id",
 		Name:        "generic-name",
 		Description: "generic-description",
-		Function: blockless.Function{
+		Function: bls.Function{
 			ID:      "function-id",
 			Name:    "function-name",
 			Runtime: "generic-runtime",
 		},
-		Deployment: blockless.Deployment{
+		Deployment: bls.Deployment{
 			CID:      "generic-cid",
 			Checksum: "1234567890",
 			URI:      "generic-uri",
 		},
-		FSRootPath: "/var/tmp/blockless/",
-		Entry:      "/var/tmp/blockless/app.wasm",
+		FSRootPath: "/var/tmp/bless/",
+		Entry:      "/var/tmp/bless/app.wasm",
 	}
 
 	// List of a few peer IDs in case multiple are required.
@@ -94,7 +94,7 @@ var (
 		peer.ID([]byte{0x0, 0x24, 0x8, 0x1, 0x12, 0x20, 0xc6, 0x8f, 0x95, 0xd3, 0x98, 0x66, 0x40, 0x6b, 0xc4, 0x6c, 0x19, 0x5e, 0x80, 0xe0, 0x8c, 0x9b, 0x15, 0x4f, 0x8c, 0x6b, 0xd0, 0x1d, 0x5b, 0x83, 0x23, 0x7b, 0x9a, 0x97, 0xc0, 0x9b, 0x9d, 0x9b}),
 	}
 
-	GenericPeer = blockless.Peer{
+	GenericPeer = bls.Peer{
 		ID:        GenericPeerID,
 		MultiAddr: GenericMultiaddress.String(),
 		AddrInfo: peer.AddrInfo{
@@ -103,7 +103,7 @@ var (
 		},
 	}
 
-	GenericFunctionRecord = blockless.FunctionRecord{
+	GenericFunctionRecord = bls.FunctionRecord{
 		CID:      "dummy-cid",
 		URL:      fmt.Sprintf("https://example.com/%v", GenericString),
 		Manifest: GenericManifest,

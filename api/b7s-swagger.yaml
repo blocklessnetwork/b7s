@@ -10,10 +10,10 @@ externalDocs:
   url: http://swagger.io
 tags:
   - name: functions
-    description: Everything about Blockless Functions
+    description: Everything about Bless Functions
     externalDocs:
       description: Find out more
-      url: https://blockless.network/docs/network
+      url: https://bless.network/docs/network
   - name: health
     description: Verify node health and availability
     
@@ -37,11 +37,11 @@ paths:
     post:
       tags:
         - functions
-      summary: Execute a Blockless Function
-      description: Execute a Blockless Function
+      summary: Execute a Bless Function
+      description: Execute a Bless Function
       operationId: executeFunction
       requestBody:
-        description: Execute a Blockless Function
+        description: Execute a Bless Function
         content:
           application/json:
             schema: 
@@ -89,11 +89,11 @@ paths:
     post:
       tags:
         - functions
-      summary: Install a Blockless Function
-      description: Install a Blockless Function
+      summary: Install a Bless Function
+      description: Install a Bless Function
       operationId: installFunction
       requestBody:
-        description: Install a Blockless Function
+        description: Install a Bless Function
         content:
           application/json:
             schema:
@@ -133,7 +133,7 @@ components:
           x-go-type-skip-optional-pointer: true
         parameters:
           type: array
-          description: CLI arguments for the Blockless Function
+          description: CLI arguments for the Bless Function
           items:
             $ref: '#/components/schemas/ExecutionParameter'
           example: 
@@ -157,7 +157,7 @@ components:
       x-go-type-skip-optional-pointer: true
       x-go-type: execute.Parameter
       x-go-type-import:
-        path: github.com/blocklessnetwork/b7s/models/execute
+        path: github.com/blessnetwork/b7s/models/execute
       properties:
         value:
           type: string
@@ -169,20 +169,20 @@ components:
       x-go-type-skip-optional-pointer: true
       x-go-type: execute.Config
       x-go-type-import:
-        path: github.com/blocklessnetwork/b7s/models/execute
+        path: github.com/blessnetwork/b7s/models/execute
       properties:
         runtime:
           $ref: '#/components/schemas/RuntimeConfig'
         env_vars:
-          description: Environment variables for the Blockless Function
+          description: Environment variables for the Bless Function
           type: array
           x-go-type-skip-optional-pointer: true
           items:
             $ref: '#/components/schemas/NamedValue'
         stdin:
-          description: Standard Input for the Blockless Function
+          description: Standard Input for the Bless Function
           type: string
-          example: Standard Input for the Blockless Function
+          example: Standard Input for the Bless Function
           x-go-type-skip-optional-pointer: true
         permissions:
           description: Permissions for the Execution
@@ -196,7 +196,7 @@ components:
         attributes:
           $ref: '#/components/schemas/NodeAttributes'
         number_of_nodes:
-          description: Number of nodes that should execute the Blockless Function
+          description: Number of nodes that should execute the Bless Function
           type: integer
           example: 1
           x-go-type-skip-optional-pointer: true
@@ -216,12 +216,12 @@ components:
           x-go-type-skip-optional-pointer: true
 
     RuntimeConfig:
-      description: Configuration options for the Blockless Runtime
+      description: Configuration options for the Bless Runtime
       type: object
       x-go-type-skip-optional-pointer: true
       x-go-type: execute.BLSRuntimeConfig
       x-go-type-import:
-        path: github.com/blocklessnetwork/b7s/models/execute
+        path: github.com/blessnetwork/b7s/models/execute
       properties:
         entry:
           type: string
@@ -254,7 +254,7 @@ components:
       x-go-type-skip-optional-pointer: true
       x-go-type: execute.Attributes
       x-go-type-import:
-        path: github.com/blocklessnetwork/b7s/models/execute
+        path: github.com/blessnetwork/b7s/models/execute
       properties:
         attestation_required:
           description: Is it necessary that the Node attributes are vouched for by an attestor
@@ -275,7 +275,7 @@ components:
       x-go-type-skip-optional-pointer: true
       x-go-type: execute.AttributeAttestors
       x-go-type-import:
-        path: github.com/blocklessnetwork/b7s/models/execute
+        path: github.com/blessnetwork/b7s/models/execute
       properties:
         each:
           description: LibP2P Peer IDs of each mandatory attestor
@@ -301,7 +301,7 @@ components:
       x-go-type-skip-optional-pointer: true
       x-go-type: execute.ResultAggregation
       x-go-type-import:
-        path: github.com/blocklessnetwork/b7s/models/execute
+        path: github.com/blessnetwork/b7s/models/execute
       properties:
         enable:
           type: boolean
@@ -341,7 +341,7 @@ components:
       x-go-type-skip-optional-pointer: true
       x-go-type: aggregate.Results
       x-go-type-import:
-        path: github.com/blocklessnetwork/b7s/node/aggregate
+        path: github.com/blessnetwork/b7s/node/aggregate
       items:
         $ref: '#/components/schemas/AggregatedResult'
 
@@ -351,7 +351,7 @@ components:
       x-go-type-skip-optional-pointer: true
       x-go-type: aggregate.Result
       x-go-type-import:
-        path: github.com/blocklessnetwork/b7s/node/aggregate
+        path: github.com/blessnetwork/b7s/node/aggregate
       properties:
         result:
           $ref: '#/components/schemas/ExecutionResult'
@@ -377,7 +377,7 @@ components:
       x-go-type-skip-optional-pointer: true
       x-go-type: execute.RuntimeOutput
       x-go-type-import:
-        path: github.com/blocklessnetwork/b7s/models/execute
+        path: github.com/blessnetwork/b7s/models/execute
       properties:
         stdout:
           description: Standard Output of the execution
@@ -398,7 +398,7 @@ components:
       x-go-type-skip-optional-pointer: true
       x-go-type: execute.Cluster
       x-go-type-import:
-        path: github.com/blocklessnetwork/b7s/models/execute
+        path: github.com/blessnetwork/b7s/models/execute
       properties:
         main:
           description: LibP2P ID of the Primary node for the cluster
@@ -422,7 +422,7 @@ components:
       x-go-type-skip-optional-pointer: true
       x-go-type: execute.EnvVar
       x-go-type-import:
-        path: github.com/blocklessnetwork/b7s/models/execute
+        path: github.com/blessnetwork/b7s/models/execute
       required:
         - name
         - value

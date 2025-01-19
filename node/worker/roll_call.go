@@ -7,9 +7,9 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/consensus"
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/request"
+	"github.com/blessnetwork/b7s/consensus"
+	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/request"
 )
 
 func (w *Worker) processRollCall(ctx context.Context, from peer.ID, req request.RollCall) error {

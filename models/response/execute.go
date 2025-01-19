@@ -3,16 +3,16 @@ package response
 import (
 	"encoding/json"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/execute"
 )
 
 var _ (json.Marshaler) = (*Execute)(nil)
 
 // Execute describes the response to the `MessageExecute` message.
 type Execute struct {
-	blockless.BaseMessage
+	bls.BaseMessage
 	RequestID string            `json:"request_id,omitempty"`
 	Code      codes.Code        `json:"code,omitempty"`
 	Results   execute.ResultMap `json:"results,omitempty"`
@@ -37,7 +37,7 @@ func (e *Execute) WithErrorMessage(err error) *Execute {
 	return e
 }
 
-func (Execute) Type() string { return blockless.MessageExecuteResponse }
+func (Execute) Type() string { return bls.MessageExecuteResponse }
 
 func (e Execute) MarshalJSON() ([]byte, error) {
 	type Alias Execute

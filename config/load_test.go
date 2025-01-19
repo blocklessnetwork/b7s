@@ -173,7 +173,7 @@ func TestConfig_CLIArgsWithConfigFile(t *testing.T) {
 
 	filepath := writeConfigFile(t, cfgMap)
 
-	// NOTE: For compatiblity with Windows we will manually append config param later because `shlex.Split` doesn't jive with Windows paths.
+	// NOTE: For compatibility with Windows we will manually append config param later because `shlex.Split` doesn't jive with Windows paths.
 	cmdline := fmt.Sprintf(
 		"--role %v --runtime-path %v --concurrency %v --workspace %v --boot-nodes %v --log-level %v --address %v --port %v --cpu-percentage-limit %v --rest-api %v",
 		role,

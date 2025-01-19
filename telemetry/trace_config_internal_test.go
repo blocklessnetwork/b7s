@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 func TestTraceConfig_ID(t *testing.T) {
@@ -23,10 +23,10 @@ func TestTraceConfig_ID(t *testing.T) {
 
 func TestTraceConfig_NodeRole(t *testing.T) {
 
-	const role = blockless.WorkerNode
+	const role = bls.WorkerNode
 
 	cfg := TraceConfig{
-		Role: blockless.HeadNode,
+		Role: bls.HeadNode,
 	}
 
 	WithNodeRole(role)(&cfg)

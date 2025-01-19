@@ -6,10 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/host"
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/testing/helpers"
-	"github.com/blocklessnetwork/b7s/testing/mocks"
+	"github.com/blessnetwork/b7s/host"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/testing/helpers"
+	"github.com/blessnetwork/b7s/testing/mocks"
 )
 
 const (
@@ -24,7 +24,7 @@ func TestNotifiee(t *testing.T) {
 
 	store := mocks.BaselineStore(t)
 	// Override the peerstore methods so we know if the node correctly handled incoming connection.
-	store.SavePeerFunc = func(context.Context, blockless.Peer) error {
+	store.SavePeerFunc = func(context.Context, bls.Peer) error {
 		storedPeer = true
 		return nil
 	}

@@ -13,7 +13,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 // Run will start the main loop for the node.
@@ -130,7 +130,7 @@ func (c *core) Run(ctx context.Context, process func(context.Context, peer.ID, s
 
 // listenDirectMessages will process messages sent directly to the peer (as opposed to published messages).
 func (c *core) listenDirectMessages(ctx context.Context, process func(context.Context, peer.ID, string, []byte) error) {
-	c.host.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {
+	c.host.SetStreamHandler(bls.ProtocolID, func(stream network.Stream) {
 		defer stream.Close()
 
 		from := stream.Conn().RemotePeer()

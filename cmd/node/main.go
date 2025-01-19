@@ -18,15 +18,15 @@ import (
 	"github.com/ziflex/lecho/v3"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
-	"github.com/blocklessnetwork/b7s/api"
-	"github.com/blocklessnetwork/b7s/config"
-	b7shost "github.com/blocklessnetwork/b7s/host"
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/node"
-	"github.com/blocklessnetwork/b7s/store"
-	"github.com/blocklessnetwork/b7s/store/codec"
-	"github.com/blocklessnetwork/b7s/store/traceable"
-	"github.com/blocklessnetwork/b7s/telemetry"
+	"github.com/blessnetwork/b7s/api"
+	"github.com/blessnetwork/b7s/config"
+	b7shost "github.com/blessnetwork/b7s/host"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/node"
+	"github.com/blessnetwork/b7s/store"
+	"github.com/blessnetwork/b7s/store/codec"
+	"github.com/blessnetwork/b7s/store/traceable"
+	"github.com/blessnetwork/b7s/telemetry"
 )
 
 const (
@@ -67,7 +67,7 @@ func run() int {
 		// HTTP server will be created in two scenarios:
 		// - node is a head node (head node always has a REST API)
 		// - node has prometheus metrics enabled
-		needHTTPServer = nodeRole == blockless.HeadNode || cfg.Telemetry.Metrics.Enable
+		needHTTPServer = nodeRole == bls.HeadNode || cfg.Telemetry.Metrics.Enable
 		server         *echo.Echo
 
 		// If we have a REST API address, serve metrics there.
@@ -184,7 +184,7 @@ func run() int {
 	store := traceable.New(store.New(db, codec.NewJSONCodec()))
 
 	// Create host.
-	var dialbackPeers []blockless.Peer
+	var dialbackPeers []bls.Peer
 	if !cfg.Connectivity.NoDialbackPeers {
 		dialbackPeers, err = store.RetrievePeers(ctx)
 		if err != nil {
@@ -212,8 +212,8 @@ func run() int {
 		Msg("created host")
 
 	// Ensure default topic is included in the topic list.
-	if !slices.Contains(cfg.Topics, blockless.DefaultTopic) {
-		cfg.Topics = append(cfg.Topics, blockless.DefaultTopic)
+	if !slices.Contains(cfg.Topics, bls.DefaultTopic) {
+		cfg.Topics = append(cfg.Topics, bls.DefaultTopic)
 	}
 
 	// Instantiate node.
@@ -232,7 +232,7 @@ func run() int {
 	)
 
 	switch nodeRole {
-	case blockless.WorkerNode:
+	case bls.WorkerNode:
 		node, nodeshutdown, err = createWorkerNode(core, store, cfg)
 
 		if nodeshutdown != nil {
@@ -244,7 +244,7 @@ func run() int {
 			}()
 		}
 
-	case blockless.HeadNode:
+	case bls.HeadNode:
 		node, err = createHeadNode(core, cfg)
 	}
 	if err != nil {
@@ -260,24 +260,24 @@ func run() int {
 
 		log.Info().
 			Stringer("role", nodeRole).
-			Msg("Blockless Node starting")
+			Msg("Bless Node starting")
 
 		err := node.Run(ctx)
 		if err != nil {
-			log.Error().Err(err).Msg("Blockless Node failed")
+			log.Error().Err(err).Msg("Bless Node failed")
 			close(failed)
 		} else {
 			close(done)
 		}
 
-		log.Info().Msg("Blockless Node stopped")
+		log.Info().Msg("Bless Node stopped")
 	}()
 
 	// Start the HTTP server if needed.
 	if needHTTPServer {
 
 		// Create an API handler if we're a head node.
-		if nodeRole == blockless.HeadNode {
+		if nodeRole == bls.HeadNode {
 
 			headNode, ok := any(node).(api.Node)
 			if !ok {
@@ -311,11 +311,11 @@ func run() int {
 
 	select {
 	case <-sig:
-		log.Info().Msg("Blockless Node stopping")
+		log.Info().Msg("Bless Node stopping")
 	case <-done:
-		log.Info().Msg("Blockless Node done")
+		log.Info().Msg("Bless Node done")
 	case <-failed:
-		log.Info().Msg("Blockless Node aborted")
+		log.Info().Msg("Bless Node aborted")
 		return failure
 	}
 

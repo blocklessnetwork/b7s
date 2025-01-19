@@ -1,4 +1,4 @@
-package blockless
+package bls
 
 import (
 	"runtime"
@@ -8,7 +8,7 @@ const (
 	runtimeCLI = "bls-runtime"
 )
 
-// RuntimeCLI returns the name of the Blockless Runtime executable.
+// RuntimeCLI returns the name of the Bless Runtime executable.
 func RuntimeCLI() string {
 
 	cli := runtimeCLI

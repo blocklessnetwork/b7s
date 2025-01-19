@@ -1,12 +1,13 @@
 [![Coverage](https://img.shields.io/badge/Coverage-64.5%25-yellow)](https://img.shields.io/badge/Coverage-64.5%25-yellow)
-[![Go Report Card](https://goreportcard.com/badge/github.com/blocklessnetwork/b7s)](https://goreportcard.com/report/github.com/blocklessnetwork/b7s) 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/blocklessnetwork/b7s/blob/main/LICENSE.md) 
-[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/blocklessnetwork/b7s)](https://img.shields.io/github/v/release/blocklessnetwork/b7s)
+[![Go Report Card](https://goreportcard.com/badge/github.com/blessnetwork/b7s)](https://goreportcard.com/report/github.com/blessnetwork/b7s) 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/blessnetwork/b7s/blob/main/LICENSE.md) 
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/blessnetwork/b7s)](https://img.shields.io/github/v/release/blessnetwork/b7s)
 
 
 # b7s daemon
 
-b7s is a peer-to-peer networking daemon for the blockless network. It is supported on Windows, Linux, and MacOS platforms for both x64 and arm64 architectures.
+b7s is a peer-to-peer networking daemon for the bless network.
+It is supported on Windows, Linux, and MacOS platforms for both x64 and arm64 architectures.
 
 ## Installation
 
@@ -14,10 +15,10 @@ You can install b7s using either curl or wget:
 
 ```bash
 # using curl
-sudo sh -c "curl https://raw.githubusercontent.com/blocklessnetwork/b7s/main/download.sh | bash"
+sudo sh -c "curl https://raw.githubusercontent.com/blessnetwork/b7s/main/download.sh | bash"
 
 # using wget
-sudo sh -c "wget https://raw.githubusercontent.com/blocklessnetwork/b7s/main/download.sh -v -O download.sh; chmod +x download.sh; ./download.sh; rm -rf download.sh"
+sudo sh -c "wget https://raw.githubusercontent.com/blessnetwork/b7s/main/download.sh -v -O download.sh; chmod +x download.sh; ./download.sh; rm -rf download.sh"
 ```
 
 You can also use Docker to install b7s. See the [Docker documentation](/docker/README.md) for more information.
@@ -34,7 +35,7 @@ You can see an example YAML config file [here](/cmd/node/example.yaml).
 | config                    | N/A        | N/A                     | Config file to load.                                                                    |
 | log-level                 | -l         | "info"                  | Level of logging to use.                                                                |
 | db                        | N/A        | "db"                    | Path to database used for persisting peer and function data.                            |
-| role                      | -r         | "worker"                | Role this node will have in the Blockless protocol (head or worker).                    |
+| role                      | -r         | "worker"                | Role this node will have in the Bless protocol (head or worker).                    |
 | workspace                 | N/A        | "./workspace"           | Directory that the node will use for file storage.                                      |
 | concurrency               | -c         | node.DefaultConcurrency | Maximum number of requests the node will process in parallel.                           |
 | load-attributes           | N/A        | false                   | Load attributes from the environment.                                                   |
@@ -62,10 +63,10 @@ You can see an example YAML config file [here](/cmd/node/example.yaml).
 
 | Flag                      | Short Form | Default Value           | Description                                                                                   |
 | ------------------------- | ---------- | ----------------------- | --------------------------------------------------------------------------------------------- |
-| runtime-path              | N/A        | N/A                     | Local path to the Blockless Runtime.                                                          |
-| runtime-cli               | N/A        | "bls-runtime"           | Name of the Blockless Runtime executable, as found in the runtime-path.                       |
-| cpu-percentage-limit      | N/A        | 1.0                     | Amount of CPU time allowed for Blockless Functions in the 0-1 range, 1 being unlimited (100%) |
-| memory-limit              | N/A        | N/A                     | Memory limit for Blockless Functions, in kB.                                                  |
+| runtime-path              | N/A        | N/A                     | Local path to the Bless Runtime.                                                          |
+| runtime-cli               | N/A        | "bls-runtime"           | Name of the Bless Runtime executable, as found in the runtime-path.                       |
+| cpu-percentage-limit      | N/A        | 1.0                     | Amount of CPU time allowed for Bless Functions in the 0-1 range, 1 being unlimited (100%) |
+| memory-limit              | N/A        | N/A                     | Memory limit for Bless Functions, in kB.                                                  |
 
 ### Head Node
 
@@ -87,8 +88,8 @@ You can see an example YAML config file [here](/cmd/node/example.yaml).
 
 b7s depends on the following repositories:
 
-- blocklessnetwork/runtime
-- blocklessnetwork/orchestration-chain
+- blessnetwork/runtime
+- blessnetwork/orchestration-chain
 
 ## Contributing
 

@@ -1,14 +1,14 @@
-package blockless
+package bls
 
 import (
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
+	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
 type Message interface {
 	Type() string
 }
 
-// Message types in the Blockless protocol.
+// Message types in the bls protocol.
 const (
 	MessageHealthCheck             = "MsgHealthCheck"
 	MessageInstallFunction         = "MsgInstallFunction"

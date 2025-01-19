@@ -6,7 +6,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 func (r *Replica) processRequest(ctx context.Context, from peer.ID, req Request) error {
@@ -32,7 +32,7 @@ func (r *Replica) processRequest(ctx context.Context, from peer.ID, req Request)
 	if ok {
 		log.Info().Msg("request already executed, sending result to client")
 
-		err := r.send(ctx, req.Origin, &result, blockless.ProtocolID)
+		err := r.send(ctx, req.Origin, &result, bls.ProtocolID)
 		if err != nil {
 			return fmt.Errorf("could not send execution result back to client (request: %s, client: %s): %w", req.ID, req.Origin.String(), err)
 		}

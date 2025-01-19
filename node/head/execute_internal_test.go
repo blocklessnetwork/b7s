@@ -11,13 +11,13 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/consensus"
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
-	"github.com/blocklessnetwork/b7s/testing/mocks"
+	"github.com/blessnetwork/b7s/consensus"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/request"
+	"github.com/blessnetwork/b7s/models/response"
+	"github.com/blessnetwork/b7s/testing/mocks"
 )
 
 func TestHead_Execute(t *testing.T) {
@@ -58,7 +58,7 @@ func TestHead_Execute(t *testing.T) {
 		return true
 	}
 	// Setup a publish func - we expect the head node to publish a roll call.
-	core.PublishToTopicFunc = func(_ context.Context, topic string, msg blockless.Message) error {
+	core.PublishToTopicFunc = func(_ context.Context, topic string, msg bls.Message) error {
 
 		lock.Lock()
 		defer lock.Unlock()
@@ -82,7 +82,7 @@ func TestHead_Execute(t *testing.T) {
 	}
 
 	// Setup a send func - we expect the head node to send the work order to the worker.
-	core.SendToManyFunc = func(_ context.Context, peers []peer.ID, msg blockless.Message, requireAll bool) error {
+	core.SendToManyFunc = func(_ context.Context, peers []peer.ID, msg bls.Message, requireAll bool) error {
 
 		lock.Lock()
 		defer lock.Unlock()

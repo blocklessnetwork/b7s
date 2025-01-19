@@ -8,8 +8,8 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
+	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 type Tracer struct {

@@ -10,9 +10,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/testing/mocks"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/testing/mocks"
 )
 
 func TestExecute_CreateCMD(t *testing.T) {
@@ -25,7 +25,7 @@ func TestExecute_CreateCMD(t *testing.T) {
 		runtimeLogger  = "whatever.log"
 		limitedMemory  = 256
 
-		executablePath = filepath.Join(runtimeDir, blockless.RuntimeCLI())
+		executablePath = filepath.Join(runtimeDir, bls.RuntimeCLI())
 
 		requestID   = mocks.GenericUUID.String()
 		stdin       = "dummy stdin payload"
@@ -48,7 +48,7 @@ func TestExecute_CreateCMD(t *testing.T) {
 		cfg: Config{
 			RuntimeDir:     runtimeDir,
 			WorkDir:        workdir,
-			ExecutableName: blockless.RuntimeCLI(),
+			ExecutableName: bls.RuntimeCLI(),
 		},
 	}
 	paths := executor.generateRequestPaths(requestID, functionID, functionMethod)

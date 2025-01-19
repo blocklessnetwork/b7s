@@ -9,7 +9,7 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/rs/zerolog"
 
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
+	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
 // Executor provides the capabilities to run external applications.

@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/models/response"
+	"github.com/blessnetwork/b7s/models/response"
 )
 
 func TestAPI_HealthResult(t *testing.T) {

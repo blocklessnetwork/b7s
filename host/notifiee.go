@@ -9,18 +9,18 @@ import (
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
+	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
 type Notifiee struct {
 	log    zerolog.Logger
-	store  blockless.PeerStore
+	store  bls.PeerStore
 	tracer *tracing.Tracer
 }
 
-func NewNotifee(log zerolog.Logger, store blockless.PeerStore) *Notifiee {
+func NewNotifee(log zerolog.Logger, store bls.PeerStore) *Notifiee {
 
 	cn := Notifiee{
 		log:    log.With().Str("component", "notifiee").Logger(),
@@ -41,7 +41,7 @@ func (n *Notifiee) Connected(network network.Network, conn network.Conn) {
 	maddr := conn.RemoteMultiaddr()
 	laddr := conn.LocalMultiaddr()
 
-	peer := blockless.Peer{
+	peer := bls.Peer{
 		ID:        peerID,
 		MultiAddr: maddr.String(),
 		// AddrInfo struct basically repeats the above info (multiaddress).

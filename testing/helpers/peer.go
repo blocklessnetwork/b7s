@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
 	"github.com/libp2p/go-libp2p/core/peer"
 	ma "github.com/multiformats/go-multiaddr"
 	mh "github.com/multiformats/go-multihash"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 // NOTE: Inspiration by go-libp2p/core/test
@@ -39,15 +39,15 @@ func GenerateTestAddrs(t *testing.T, n int) []ma.Multiaddr {
 	return out
 }
 
-func CreateRandomPeers(t *testing.T, count int) []blockless.Peer {
+func CreateRandomPeers(t *testing.T, count int) []bls.Peer {
 
-	peers := make([]blockless.Peer, count)
+	peers := make([]bls.Peer, count)
 	for i := 0; i < count; i++ {
 
 		id := RandPeerID(t)
 		addrs := GenerateTestAddrs(t, 1)
 
-		p := blockless.Peer{
+		p := bls.Peer{
 			ID:        id,
 			MultiAddr: addrs[0].String(),
 			AddrInfo: peer.AddrInfo{

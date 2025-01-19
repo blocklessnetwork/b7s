@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blocklessnetwork/b7s/node/internal/waitmap"
+	"github.com/blessnetwork/b7s/node/internal/waitmap"
 	"github.com/stretchr/testify/require"
 )
 

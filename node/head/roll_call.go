@@ -9,12 +9,12 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	cons "github.com/blocklessnetwork/b7s/consensus"
-	"github.com/blocklessnetwork/b7s/consensus/pbft"
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
+	cons "github.com/blessnetwork/b7s/consensus"
+	"github.com/blessnetwork/b7s/consensus/pbft"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/request"
+	"github.com/blessnetwork/b7s/models/response"
 )
 
 func (h *HeadNode) executeRollCall(
@@ -70,7 +70,7 @@ rollCallResponseLoop:
 			}
 
 			log.Warn().Msg("roll call timed out")
-			return nil, blockless.ErrRollCallTimeout
+			return nil, bls.ErrRollCallTimeout
 
 		case reply := <-h.rollCall.responses(requestID):
 
@@ -115,7 +115,7 @@ rollCallResponseLoop:
 // On successful issuance of the roll call request, we return the ID of the issued request.
 func (h *HeadNode) publishRollCall(ctx context.Context, rc *request.RollCall, subgroup string) error {
 
-	subgroup = cmp.Or(subgroup, blockless.DefaultTopic)
+	subgroup = cmp.Or(subgroup, bls.DefaultTopic)
 
 	err := h.PublishToTopic(ctx, subgroup, rc)
 	if err != nil {

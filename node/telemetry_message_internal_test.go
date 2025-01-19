@@ -14,13 +14,13 @@ import (
 	otelcodes "go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/request"
-	"github.com/blocklessnetwork/b7s/models/response"
-	"github.com/blocklessnetwork/b7s/telemetry"
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
-	"github.com/blocklessnetwork/b7s/testing/helpers"
-	"github.com/blocklessnetwork/b7s/testing/mocks"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/request"
+	"github.com/blessnetwork/b7s/models/response"
+	"github.com/blessnetwork/b7s/telemetry"
+	"github.com/blessnetwork/b7s/telemetry/tracing"
+	"github.com/blessnetwork/b7s/testing/helpers"
+	"github.com/blessnetwork/b7s/testing/mocks"
 )
 
 func TestNode_TraceHealthCheck(t *testing.T) {
@@ -29,7 +29,7 @@ func TestNode_TraceHealthCheck(t *testing.T) {
 		ctx = context.Background()
 
 		peerID       = mocks.GenericPeerID
-		role         = blockless.WorkerNode
+		role         = bls.WorkerNode
 		resource, _  = telemetry.CreateResource(ctx, peerID.String(), role)
 		exporter, tp = helpers.CreateTracerProvider(t, resource)
 		from         = mocks.GenericPeerIDs[0]
@@ -48,7 +48,7 @@ func TestNode_TraceHealthCheck(t *testing.T) {
 		return nil
 	}
 
-	pipeline := PubSubPipeline(blockless.DefaultTopic)
+	pipeline := PubSubPipeline(bls.DefaultTopic)
 	err := core.processMessage(ctx, from, payload, pipeline, process)
 	require.NoError(t, err)
 
@@ -81,7 +81,7 @@ func TestNode_TraceHealthCheck(t *testing.T) {
 	require.Equal(t, from.String(), attributes["message.peer"].AsString())
 	require.Equal(t, pipeline.ID.String(), attributes["message.pipeline"].AsString())
 	require.Equal(t, pipeline.Topic, attributes["message.topic"].AsString())
-	require.Equal(t, blockless.MessageHealthCheck, attributes["message.type"].AsString())
+	require.Equal(t, bls.MessageHealthCheck, attributes["message.type"].AsString())
 
 	require.Equal(t, resource, span.Resource)
 }
@@ -138,7 +138,7 @@ func TestNode_ProcessedMessageMetric(t *testing.T) {
 	}{
 		{
 			count:    healthcheckCount,
-			pipeline: PubSubPipeline(blockless.DefaultTopic),
+			pipeline: PubSubPipeline(bls.DefaultTopic),
 			rec:      healthCheck,
 		},
 		{

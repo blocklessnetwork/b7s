@@ -8,11 +8,11 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/codes"
-	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/models/response"
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/response"
+	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
 // Execute fullfils the consensus interface by inserting the request into the pipeline.
@@ -111,7 +111,7 @@ func (r *Replica) execute(ctx context.Context, view uint, sequence uint, digest 
 	}
 
 	msg := response.WorkOrder{
-		BaseMessage: blockless.BaseMessage{TraceInfo: r.cfg.TraceInfo},
+		BaseMessage: bls.BaseMessage{TraceInfo: r.cfg.TraceInfo},
 		Code:        res.Code,
 		RequestID:   request.ID,
 		Result:      nres,
@@ -125,7 +125,7 @@ func (r *Replica) execute(ctx context.Context, view uint, sequence uint, digest 
 		proc(request.ID, request.Origin, request.Execute, nres)
 	}
 
-	err = r.send(ctx, request.Origin, &msg, blockless.ProtocolID)
+	err = r.send(ctx, request.Origin, &msg, bls.ProtocolID)
 	if err != nil {
 		return fmt.Errorf("could not send execution response to node (target: %s, request: %s): %w", request.Origin.String(), request.ID, err)
 	}

@@ -19,11 +19,11 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
 
-	"github.com/blocklessnetwork/b7s/consensus"
-	"github.com/blocklessnetwork/b7s/host"
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
-	"github.com/blocklessnetwork/b7s/telemetry/tracing"
+	"github.com/blessnetwork/b7s/consensus"
+	"github.com/blessnetwork/b7s/host"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
+	"github.com/blessnetwork/b7s/telemetry/tracing"
 )
 
 // TODO (pbft): Request timestamp - execution exactly once, prevent multiple/out of order executions.
@@ -42,7 +42,7 @@ type Replica struct {
 	// Components.
 	log      zerolog.Logger
 	host     *host.Host
-	executor blockless.Executor
+	executor bls.Executor
 
 	// Cluster identity.
 	id         peer.ID
@@ -59,7 +59,7 @@ type Replica struct {
 }
 
 // NewReplica creates a new PBFT replica.
-func NewReplica(log zerolog.Logger, host *host.Host, executor blockless.Executor, peers []peer.ID, clusterID string, options ...Option) (*Replica, error) {
+func NewReplica(log zerolog.Logger, host *host.Host, executor bls.Executor, peers []peer.ID, clusterID string, options ...Option) (*Replica, error) {
 
 	total := uint(len(peers))
 

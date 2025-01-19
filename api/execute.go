@@ -7,9 +7,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/execute"
-	"github.com/blocklessnetwork/b7s/node/aggregate"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/node/aggregate"
 )
 
 // ExecuteFunction implements the REST API endpoint for function execution.
@@ -49,7 +49,7 @@ func (a *API) ExecuteFunction(ctx echo.Context) error {
 	}
 
 	// Communicate the reason for failure in these cases.
-	if errors.Is(err, blockless.ErrRollCallTimeout) || errors.Is(err, blockless.ErrExecutionNotEnoughNodes) {
+	if errors.Is(err, bls.ErrRollCallTimeout) || errors.Is(err, bls.ErrExecutionNotEnoughNodes) {
 		res.Message = err.Error()
 	}
 

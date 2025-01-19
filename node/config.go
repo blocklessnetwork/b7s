@@ -3,7 +3,7 @@ package node
 import (
 	"time"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 const (
@@ -17,9 +17,9 @@ type Option func(*Config)
 
 // DefaultConfig represents the default settings for the node core.
 var DefaultConfig = Config{
-	Topics:         []string{blockless.DefaultTopic},
-	HealthInterval: blockless.DefaultHealthInterval,
-	Concurrency:    blockless.DefaultConcurrency,
+	Topics:         []string{bls.DefaultTopic},
+	HealthInterval: bls.DefaultHealthInterval,
+	Concurrency:    bls.DefaultConcurrency,
 }
 
 type Config struct {

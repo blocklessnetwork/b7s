@@ -10,17 +10,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/response"
-	"github.com/blocklessnetwork/b7s/telemetry"
-	"github.com/blocklessnetwork/b7s/testing/helpers"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/response"
+	"github.com/blessnetwork/b7s/telemetry"
+	"github.com/blessnetwork/b7s/testing/helpers"
 )
 
 func TestTelemetry_SaveTraceContext(t *testing.T) {
 
 	var (
 		ctx         = context.Background()
-		resource, _ = telemetry.CreateResource(ctx, "instance-id", blockless.WorkerNode)
+		resource, _ = telemetry.CreateResource(ctx, "instance-id", bls.WorkerNode)
 		_, tp       = helpers.CreateTracerProvider(t, resource)
 		tracer      = tp.Tracer("test-tracer")
 		spanName    = fmt.Sprintf("test-span-%v", rand.Int())

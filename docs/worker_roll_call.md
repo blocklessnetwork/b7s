@@ -1,7 +1,7 @@
 ![](worker_roll_call.png)
 
 ```text
-title Blockless Node Execute Communication Flow
+title Bless Node Execute Communication Flow
 Work Request->Head: Request to work from Chain / API
 Head->PubSub: Roll Call
 note right of PubSub: Workers inventory installed functions, and capactity

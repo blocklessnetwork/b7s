@@ -11,11 +11,11 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/host"
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/node"
-	"github.com/blocklessnetwork/b7s/testing/helpers"
-	"github.com/blocklessnetwork/b7s/testing/mocks"
+	"github.com/blessnetwork/b7s/host"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/node"
+	"github.com/blessnetwork/b7s/testing/helpers"
+	"github.com/blessnetwork/b7s/testing/mocks"
 )
 
 const (
@@ -38,7 +38,7 @@ func TestNode_Publish(t *testing.T) {
 	var (
 		rec   = newDummyRecord()
 		ctx   = context.Background()
-		topic = blockless.DefaultTopic
+		topic = bls.DefaultTopic
 	)
 
 	client, err := host.New(mocks.NoopLogger, loopback, 0)
@@ -52,7 +52,7 @@ func TestNode_Publish(t *testing.T) {
 	err = core.Host().InitPubSub(ctx)
 	require.NoError(t, err)
 
-	err = core.Subscribe(ctx, blockless.DefaultTopic)
+	err = core.Subscribe(ctx, bls.DefaultTopic)
 	require.NoError(t, err)
 
 	// Establish a connection between peers.
@@ -96,8 +96,8 @@ func TestNode_SendMessageToMany(t *testing.T) {
 		core = node.NewCore(log, helpers.NewLoopbackHost(t, log))
 	)
 
-	client1.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {})
-	client2.SetStreamHandler(blockless.ProtocolID, func(stream network.Stream) {})
+	client1.SetStreamHandler(bls.ProtocolID, func(stream network.Stream) {})
+	client2.SetStreamHandler(bls.ProtocolID, func(stream network.Stream) {})
 
 	// NOTE: These subtests are sequential.
 

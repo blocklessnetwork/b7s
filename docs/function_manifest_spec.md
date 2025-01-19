@@ -7,7 +7,7 @@ this is the `json` specification for the manifests that describe how a function 
   "version" : 2.0,
   "function": {
     // organization and function identifier
-    "id": "org.blockless.functions.myfunction",
+    "id": "org.bless.functions.myfunction",
 
     // descriptive name of the function
     "name": "The Best Little Function In TX (Labs)",
@@ -28,7 +28,7 @@ this is the `json` specification for the manifests that describe how a function 
     // to retrieve the package
     "cid": "basy1234566",
 
-    // because we want blockless to remain decoupled
+    // because we want bless to remain decoupled
     // a uri can also be specified to retrieve the package
     "uri": "basy1234566",
 

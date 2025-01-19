@@ -13,7 +13,7 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/spf13/pflag"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 const (
@@ -43,7 +43,7 @@ func load(args []string) (*Config, error) {
 	delimiter := defaultDelimiter
 	konfig := koanf.New(delimiter)
 
-	err = konfig.Load(env.ProviderWithValue(blockless.EnvPrefix, EnvDelimiter, envClean), nil)
+	err = konfig.Load(env.ProviderWithValue(bls.EnvPrefix, EnvDelimiter, envClean), nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not load configuration from env: %w", err)
 	}
@@ -101,7 +101,7 @@ func cliFlagTranslate(mapping map[string]string, fs *pflag.FlagSet) func(*pflag.
 // Koanf then uses the underscore to determine structure and in which section the config option belongs.
 func envClean(key string, value string) (string, any) {
 
-	key = strings.TrimPrefix(key, blockless.EnvPrefix)
+	key = strings.TrimPrefix(key, bls.EnvPrefix)
 
 	sections := strings.Split(key, EnvDelimiter)
 	cleaned := make([]string, 0, len(sections))

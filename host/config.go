@@ -5,7 +5,7 @@ import (
 
 	"github.com/multiformats/go-multiaddr"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 // defaultConfig used to create Host.
@@ -26,7 +26,7 @@ type Config struct {
 
 	ConnectionThreshold uint
 	BootNodes           []multiaddr.Multiaddr
-	DialBackPeers       []blockless.Peer
+	DialBackPeers       []bls.Peer
 	DialBackPeersLimit  uint
 	DiscoveryInterval   time.Duration
 	ConnectionLimit     uint
@@ -66,7 +66,7 @@ func WithBootNodes(nodes []multiaddr.Multiaddr) func(*Config) {
 }
 
 // WithDialBackPeers specifies dial-back peers that the host initially tries to connect to.
-func WithDialBackPeers(peers []blockless.Peer) func(*Config) {
+func WithDialBackPeers(peers []bls.Peer) func(*Config) {
 	return func(cfg *Config) {
 		cfg.DialBackPeers = peers
 	}

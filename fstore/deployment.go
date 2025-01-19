@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 // updateDeployment info will add some missing information to the deployment info,
 // based on the info found in the manifest URL.
-func updateDeploymentInfo(manifest *blockless.FunctionManifest, manifestAddress string) error {
+func updateDeploymentInfo(manifest *bls.FunctionManifest, manifestAddress string) error {
 
 	// Parse the deployment address.
 	deploymentURL, err := url.Parse(manifest.Runtime.URL)
@@ -31,7 +31,7 @@ func updateDeploymentInfo(manifest *blockless.FunctionManifest, manifestAddress 
 		deploymentURL.Scheme = manifestURL.Scheme
 	}
 
-	manifest.Deployment = blockless.Deployment{
+	manifest.Deployment = bls.Deployment{
 		URI:      deploymentURL.String(),
 		Checksum: manifest.Runtime.Checksum,
 	}

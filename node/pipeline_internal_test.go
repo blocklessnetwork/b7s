@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 func TestNode_DisallowedMessages(t *testing.T) {
 
 	var (
-		pubsub = PubSubPipeline(blockless.DefaultTopic)
+		pubsub = PubSubPipeline(bls.DefaultTopic)
 		direct = DirectMessagePipeline
 	)
 
@@ -20,15 +20,15 @@ func TestNode_DisallowedMessages(t *testing.T) {
 		message  string
 	}{
 		// Messages disallowed for publishing.
-		{pubsub, blockless.MessageInstallFunctionResponse},
-		{pubsub, blockless.MessageExecute},
-		{pubsub, blockless.MessageExecuteResponse},
-		{pubsub, blockless.MessageFormCluster},
-		{pubsub, blockless.MessageFormClusterResponse},
-		{pubsub, blockless.MessageDisbandCluster},
+		{pubsub, bls.MessageInstallFunctionResponse},
+		{pubsub, bls.MessageExecute},
+		{pubsub, bls.MessageExecuteResponse},
+		{pubsub, bls.MessageFormCluster},
+		{pubsub, bls.MessageFormClusterResponse},
+		{pubsub, bls.MessageDisbandCluster},
 		// Messages disallowed for direct sending.
-		{direct, blockless.MessageHealthCheck},
-		{direct, blockless.MessageRollCall},
+		{direct, bls.MessageHealthCheck},
+		{direct, bls.MessageRollCall},
 	}
 
 	for _, test := range tests {

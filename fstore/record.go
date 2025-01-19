@@ -5,25 +5,25 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
+	"github.com/blessnetwork/b7s/models/bls"
 )
 
 // Get retrieves a function manifest for the given function from storage.
-func (f *FStore) Get(ctx context.Context, cid string) (blockless.FunctionRecord, error) {
+func (f *FStore) Get(ctx context.Context, cid string) (bls.FunctionRecord, error) {
 
 	fn, err := f.getFunction(ctx, cid)
 	if err != nil {
-		return blockless.FunctionRecord{}, fmt.Errorf("could not get function from store: %w", err)
+		return bls.FunctionRecord{}, fmt.Errorf("could not get function from store: %w", err)
 	}
 
 	return fn, nil
 }
 
-func (f *FStore) getFunction(ctx context.Context, cid string) (blockless.FunctionRecord, error) {
+func (f *FStore) getFunction(ctx context.Context, cid string) (bls.FunctionRecord, error) {
 
 	function, err := f.store.RetrieveFunction(ctx, cid)
 	if err != nil {
-		return blockless.FunctionRecord{}, fmt.Errorf("could not retrieve function record: %w", err)
+		return bls.FunctionRecord{}, fmt.Errorf("could not retrieve function record: %w", err)
 	}
 
 	go func() {
@@ -38,7 +38,7 @@ func (f *FStore) getFunction(ctx context.Context, cid string) (blockless.Functio
 	return function, nil
 }
 
-func (f *FStore) saveFunction(ctx context.Context, fn blockless.FunctionRecord) error {
+func (f *FStore) saveFunction(ctx context.Context, fn bls.FunctionRecord) error {
 
 	// Clean paths - make them relative to the current working directory.
 	fn.Archive = f.cleanPath(fn.Archive)

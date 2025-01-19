@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/telemetry/b7ssemconv"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
 )
 
 func (f *FStore) Sync(ctx context.Context, haltOnError bool) error {
@@ -50,7 +50,7 @@ func (f *FStore) Sync(ctx context.Context, haltOnError bool) error {
 
 // Sync will verify that the function identified by `cid` is still found on the local filesystem.
 // If the function archive of function files are missing, they will be recreated.
-func (f *FStore) sync(ctx context.Context, fn blockless.FunctionRecord) error {
+func (f *FStore) sync(ctx context.Context, fn bls.FunctionRecord) error {
 
 	ctx, span := f.tracer.Start(ctx, spanSync, trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(b7ssemconv.FunctionCID.String(fn.CID)))
 	defer span.End()
@@ -122,7 +122,7 @@ func (f *FStore) sync(ctx context.Context, fn blockless.FunctionRecord) error {
 
 // checkFunctionFiles checks if the files required by the function are found on local storage.
 // It returns two booleans indicating presence of the archive file, the unpacked files, and a potential error.
-func (f *FStore) checkFunctionFiles(fn blockless.FunctionRecord) (bool, bool, error) {
+func (f *FStore) checkFunctionFiles(fn bls.FunctionRecord) (bool, bool, error) {
 
 	// Check if the archive is found.
 	archiveFound := true

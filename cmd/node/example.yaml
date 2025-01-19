@@ -68,16 +68,16 @@
 
 # worker node configuration
 # worker:
-  # local path to Blockless Runtime
-  # runtime-path: /path/to/blockless/runtime
+  # local path to Bless Runtime
+  # runtime-path: /path/to/bls/runtime
 
   # name of the Runtime executable
   # runtime-cli: bls-runtime
 
-  # max percentage of CPU time Blockless will use for execution (1.0 for 100%)
+  # max percentage of CPU time Bless will use for execution (1.0 for 100%)
   # cpu-percentage-limit: 1.0
 
-  # max amount of memory (in kB) Blockless will use for execution (0 is unlimited)
+  # max amount of memory (in kB) Bless will use for execution (0 is unlimited)
   # memory-limit: 0
 
 # telemetry:

@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/blocklessnetwork/b7s/models/blockless"
-	"github.com/blocklessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/execute"
 )
 
-var _ (blockless.Executor) = (*Executor)(nil)
+var _ (bls.Executor) = (*Executor)(nil)
 
 type Executor struct {
 	ExecFunctionFunc func(context.Context, string, execute.Request) (execute.Result, error)
