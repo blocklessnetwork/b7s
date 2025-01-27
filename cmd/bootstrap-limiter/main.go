@@ -160,7 +160,7 @@ func run() int {
 	// If we don't know which group it is, print a generic message.
 	if group == nil {
 		fileList := strings.Join(requiredFiles, ", ")
-		color.Red("please ensure user '%v' is a member of a group with write acess to files %s", runningUser, fileList)
+		color.Red("please ensure user '%v' is a member of a group with write access to files %s", runningUser, fileList)
 		return success
 	}
 
