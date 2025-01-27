@@ -116,7 +116,7 @@ func (w *Worker) createPBFTCluster(ctx context.Context, from peer.ID, fc request
 	return nil
 }
 
-// helper function just for the sake of readibility.
+// helper function just for the sake of readability.
 func consensusRequired(c consensus.Type) bool {
 	return c != 0
 }
