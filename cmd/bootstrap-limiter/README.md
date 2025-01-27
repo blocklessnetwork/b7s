@@ -3,7 +3,7 @@
 ## Description
 
 This utility is aimed to provide an easy way to setup the system so that a non-privileged user can set resource limits for Blockless Functions.
-This tool is designed to be run a single time, before runing the Blockless Worker Node.
+This tool is designed to be run a single time, before running the Blockless Worker Node.
 If the user has no intention of using cgroups to set resource limits, there is no need in running this tool.
 
 ## Workaround
